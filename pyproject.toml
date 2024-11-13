@@ -10,7 +10,7 @@ packages = [{ include = "slate_quantum" }]
 python = ">=3.13,<3.14"
 numpy = "^2.0.0"
 matplotlib = { version = "^3.9.2", optional = true }
-slate = { git = "https://github.com/Matt-Ord/slate.git", rev = "b0c43bd" }
+slate = { git = "https://github.com/Matt-Ord/slate.git", rev = "3e764d3" }
 
 [tool.poetry.group.dev.dependencies]
 ruff = "*"
