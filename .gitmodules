@@ -1,6 +1,0 @@
-[submodule "lib/sse_solver"]
-	path = lib/sse_solver
-	url = https://github.com/Matt-Ord/sse_solver.git
-[submodule "lib/slate"]
-	path = lib/slate
-	url = https://github.com/Matt-Ord/slate.git
