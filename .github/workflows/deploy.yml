@@ -1,0 +1,51 @@
+name: Deploy Sphinx Docs
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install poetry
+        run: pipx install poetry
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13.0"
+          cache: "poetry"
+
+      - name: Install dependencies
+        run: poetry install
+
+      - name: Build Sphinx documentation
+        run: |
+          poetry run sphinx-apidoc --force --module-first -o docs/source/ slate/
+          cd docs
+          make html
+
+      - name: Upload Sphinx artifact
+        id: deployment
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs/build/html/
+
+  deploy:
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

@@ -10,10 +10,6 @@
 		},
 		"ghcr.io/devcontainers-contrib/features/poetry:2": {
 			"version": "latest"
-		},
-		"ghcr.io/devcontainers/features/rust:1": {
-			"version": "latest",
-			"profile": "minimal"
 		}
 	},
 	"customizations": {
@@ -37,10 +33,15 @@
 						]
 					}
 				},
+				"python.testing.pytestArgs": [
+					"tests"
+				],
+				"python.testing.unittestEnabled": false,
+				"python.testing.pytestEnabled": true,
 				"python.analysis.diagnosticMode": "workspace",
 				"python.analysis.typeCheckingMode": "strict",
 				"python.analysis.include": [
-					"surface_potential_analysis"
+					"slate_quantum"
 				],
 				"python.analysis.autoImportCompletions": true,
 				"cSpell.allowCompoundWords": true,
@@ -125,16 +126,19 @@
 					"ylabel",
 					"ylim",
 					"yscale"
-				],
+				]
 			},
 			"extensions": [
 				"donjayamanne.python-extension-pack",
 				"esbenp.prettier-vscode",
 				"streetsidesoftware.code-spell-checker",
 				"tamasfe.even-better-toml",
-				"charliermarsh.ruff"
+				"charliermarsh.ruff",
+				"peakchen90.open-html-in-browser",
+				"github.vscode-github-actions",
+				"GitHub.copilot"
 			]
 		}
 	},
-	"onCreateCommand": "rustup default nightly && poetry install",
+	"onCreateCommand": "poetry install --all-extras"
 }
