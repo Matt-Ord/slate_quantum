@@ -26,7 +26,7 @@ jobs:
 
       - name: Build Sphinx documentation
         run: |
-          poetry run sphinx-apidoc --force --module-first -o docs/source/ slate/
+          poetry run sphinx-apidoc --force --module-first -o docs/source/ slate_quantum/
           cd docs
           make html
 
