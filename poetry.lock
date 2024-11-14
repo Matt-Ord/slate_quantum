@@ -1079,8 +1079,8 @@ plot = ["matplotlib (>=3.9.2,<4.0.0)"]
 [package.source]
 type = "git"
 url = "https://github.com/Matt-Ord/slate.git"
-reference = "ab442b3"
-resolved_reference = "ab442b3fdec84d5cb265072cc25db478a8cc2082"
+reference = "3280de5"
+resolved_reference = "3280de595d4090c0dfcf44650cdb0998ffe8a0d4"
 
 [[package]]
 name = "snowballstemmer"
@@ -1256,4 +1256,4 @@ qutip = ["qutip"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.13,<3.14"
-content-hash = "cbe2ee6e118e0fd29a30ad9da236962f6e4e9776888530780e3c3fa4b02f884e"
+content-hash = "3715f0ff46fd85a346f5667a6f16ce78feca958de81f4c9440c31a10963430be"
