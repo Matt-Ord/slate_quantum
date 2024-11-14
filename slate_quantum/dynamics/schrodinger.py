@@ -27,21 +27,20 @@ if TYPE_CHECKING:
 
     from slate_quantum.model import TimeMetadata
     from slate_quantum.model.operator._operator import Operator
+    from slate_quantum.model.state.eigenstate_basis import EigenstateBasis
 
 
 def _solve_schrodinger_equation_diagonal[
-    M: BasisMetadata,
+    B: Basis[BasisMetadata, np.complex128],
     TB: Basis[TimeMetadata, np.complex128],
 ](
-    initial_state: State[Basis[M, np.complex128]],
+    initial_state: State[Basis[BasisMetadata, np.complex128]],
     times: TB,
     hamiltonian: Operator[
         np.number[Any],
-        DiagonalBasis[
-            np.complex128, Basis[M, np.complex128], Basis[M, np.complex128], Any
-        ],
+        DiagonalBasis[np.complex128, B, B, Any],
     ],
-) -> StateList[VariadicTupleBasis[np.complex128, TB, Basis[M, np.complex128], None]]:
+) -> StateList[VariadicTupleBasis[np.complex128, TB, B, None]]:
     coefficients = initial_state.with_basis(hamiltonian.basis.inner[0]).raw_data
     eigenvalues = hamiltonian.raw_data
 
@@ -59,7 +58,7 @@ def solve_schrodinger_equation_decomposition[
     initial_state: State[Basis[M, np.complex128]],
     times: TB,
     hamiltonian: Operator[np.complex128, Basis[StackedMetadata[M, Any], np.complex128]],
-) -> StateList[VariadicTupleBasis[np.complex128, TB, Basis[M, np.complex128], None]]:
+) -> StateList[VariadicTupleBasis[np.complex128, TB, EigenstateBasis[M], None]]:
     """Solve the schrodinger equation by directly finding eigenstates for the given initial state and hamiltonian."""
     diagonal = eigh_operator(hamiltonian)
     return _solve_schrodinger_equation_diagonal(initial_state, times, diagonal)

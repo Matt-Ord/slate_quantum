@@ -5,8 +5,10 @@ from typing import Any, Iterator, override
 import numpy as np
 from slate.array import SlateArray
 from slate.basis import Basis
-from slate.basis.stacked import as_tuple_basis
+from slate.basis.stacked import VariadicTupleBasis, as_tuple_basis
 from slate.metadata import BasisMetadata
+
+from slate_quantum.model._label import EigenvalueMetadata
 
 
 class State[B: Basis[Any, np.complex128]](SlateArray[np.complex128, B]):
@@ -86,3 +88,8 @@ class StateList[B: Basis[Any, np.complex128]](SlateArray[np.complex128, B]):
         return State(
             as_tuple.basis[1], as_tuple.raw_data.reshape(as_tuple.basis.shape)[index]
         )
+
+
+type EigenstateList[B: Basis[Any, np.complex128]] = StateList[
+    VariadicTupleBasis[np.complex128, EigenvalueMetadata, B, None]
+]
