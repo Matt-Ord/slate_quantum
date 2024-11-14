@@ -17,3 +17,7 @@ class MomentumMetadata(LabeledMetadata[float]):
 
 class SpacedMomentumMetadata(SpacedLabeledMetadata, MomentumMetadata):
     """Metadata with the addition of momentum."""
+
+
+class EigenvalueMetadata(LabeledMetadata[complex]):
+    """Metadata with the addition of eigenvalues."""
