@@ -1,12 +1,15 @@
 from __future__ import annotations  # noqa: A005
 
-from typing import Any, Iterator, cast, override
+from typing import TYPE_CHECKING, Any, Iterator, cast, override
 
 import numpy as np
 from slate.array import SlateArray
-from slate.basis import Basis
-from slate.basis.stacked import as_tuple_basis
+from slate.basis import Basis, FundamentalBasis
+from slate.basis.stacked import VariadicTupleBasis, as_tuple_basis, tuple_basis
 from slate.metadata import BasisMetadata, StackedMetadata
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 
 class Operator[DT: np.generic, B: Basis[StackedMetadata[BasisMetadata, Any], Any]](
@@ -61,4 +64,22 @@ class OperatorList[DT: np.generic, B: Basis[StackedMetadata[BasisMetadata, Any],
         as_tuple = self.with_basis(as_tuple_basis(self.basis))
         return Operator[DT, Basis[Any, np.complex128]](
             as_tuple.basis[1], as_tuple.raw_data.reshape(as_tuple.basis.shape)[index]
+        )
+
+    @staticmethod
+    def from_operators[
+        DT1: np.generic,
+        B1: Basis[StackedMetadata[BasisMetadata, Any], Any],
+    ](
+        _iter: Iterable[Operator[DT1, B1]],
+    ) -> OperatorList[
+        DT1, VariadicTupleBasis[np.generic, FundamentalBasis[BasisMetadata], B1, None]
+    ]:
+        operators = list(_iter)
+        assert all(x.basis == operators[0].basis for x in operators)
+
+        list_basis = FundamentalBasis.from_shape((len(operators),))
+        return OperatorList(
+            tuple_basis((list_basis, operators[0].basis)),
+            np.array([x.raw_data for x in operators]),
         )

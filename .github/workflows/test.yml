@@ -23,7 +23,7 @@ jobs:
           cache: "poetry"
 
       - name: Install dependencies
-        run: poetry install
+        run: poetry install --all-extras
 
       - name: Run lint
         run: poetry run ruff check
