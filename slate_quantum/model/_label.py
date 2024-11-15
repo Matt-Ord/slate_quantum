@@ -1,6 +1,11 @@
 from __future__ import annotations
 
-from slate.metadata import LabeledMetadata, SpacedLabeledMetadata
+import numpy as np
+from slate.metadata import (
+    ExplicitLabeledMetadata,
+    LabeledMetadata,
+    SpacedLabeledMetadata,
+)
 
 
 class TimeMetadata(LabeledMetadata[float]):
@@ -19,5 +24,5 @@ class SpacedMomentumMetadata(SpacedLabeledMetadata, MomentumMetadata):
     """Metadata with the addition of momentum."""
 
 
-class EigenvalueMetadata(LabeledMetadata[complex]):
+class EigenvalueMetadata(ExplicitLabeledMetadata[np.complex128]):
     """Metadata with the addition of eigenvalues."""

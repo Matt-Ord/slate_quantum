@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 import numpy as np
-from scipy.constants import hbar  # type: ignore lib
+from scipy.constants import hbar
 from slate.basis.stacked import (
     DiagonalBasis,
     VariadicTupleBasis,
@@ -16,8 +16,8 @@ from slate_quantum.model.operator._linalg import eigh_operator
 from slate_quantum.model.state._state import State, StateList
 
 try:
-    import qutip  # type: ignore lib
-    import qutip.ui  # type: ignore lib
+    import qutip
+    import qutip.ui
 except ImportError:
     qutip = None
 
