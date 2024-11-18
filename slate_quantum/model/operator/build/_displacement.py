@@ -11,7 +11,6 @@ from slate.basis.stacked import (
     fundamental_tuple_basis_from_metadata,
     tuple_basis,
 )
-from slate.metadata import SimpleMetadata
 from slate.metadata.stacked import fundamental_stacked_nx_points
 from slate.metadata.stacked.volume import (
     AxisDirections,
@@ -23,7 +22,12 @@ from slate.metadata.util import fundamental_size
 from slate_quantum.model.operator._operator import Operator, OperatorList
 
 if TYPE_CHECKING:
-    from slate.metadata import BasisMetadata, SpacedVolumeMetadata, StackedMetadata
+    from slate.metadata import (
+        BasisMetadata,
+        SimpleMetadata,
+        SpacedVolumeMetadata,
+        StackedMetadata,
+    )
     from slate.metadata.length import LengthMetadata
 
 

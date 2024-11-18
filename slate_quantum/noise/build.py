@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Callable
 
-import numpy as np
 from scipy.constants import Boltzmann  # type: ignore stubs
 
 from slate_quantum.model.operator.build._displacement import (
@@ -13,6 +12,7 @@ from slate_quantum.model.operator.linalg import get_commutator_operator_list
 from slate_quantum.noise.kernel import IsotropicNoiseKernel
 
 if TYPE_CHECKING:
+    import numpy as np
     from slate.metadata import BasisMetadata
     from slate.metadata.length import LengthMetadata, SpacedLengthMetadata
     from slate.metadata.stacked import SpacedVolumeMetadata, StackedMetadata
