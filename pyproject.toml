@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "slate quantum"
+name = "slate_quantum"
 version = "0.0.1"
 description = "A Framework for Automatic Basis Transformations"
 authors = ["Matthew Ord <mo433@cam.ac.uk>"]
