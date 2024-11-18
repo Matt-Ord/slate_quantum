@@ -15,7 +15,9 @@ type PotentialBasis[M: VolumeMetadata, DT: np.generic] = RecastBasis[
 ]
 
 
-class Potential[M: VolumeMetadata, DT: np.generic](Operator[DT, PotentialBasis[M, DT]]):
+class Potential[M: VolumeMetadata, DT: np.generic](
+    Operator[M, DT, PotentialBasis[M, DT]]
+):
     def __init__(
         self: Self,
         basis: Basis[M, Any],

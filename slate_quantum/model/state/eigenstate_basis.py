@@ -22,12 +22,13 @@ class EigenstateBasis[M: BasisMetadata](
     def states(
         self,
     ) -> StateList[
+        BasisMetadata,
         VariadicTupleBasis[
             np.complex128,
             Basis[BasisMetadata, np.generic],
             Basis[M, np.complex128],
             None,
-        ]
+        ],
     ]:
         """Get the eigenstates of the basis."""
         return StateList(self._data.basis, self._data.raw_data)

@@ -2,13 +2,13 @@ from __future__ import annotations
 
 import numpy as np
 from slate.metadata import (
+    DeltaMetadata,
     ExplicitLabeledMetadata,
-    LabeledMetadata,
     SpacedLabeledMetadata,
 )
 
 
-class TimeMetadata(LabeledMetadata[float]):
+class TimeMetadata(DeltaMetadata[float]):
     """Metadata with the addition of length."""
 
 
@@ -16,7 +16,7 @@ class SpacedTimeMetadata(SpacedLabeledMetadata, TimeMetadata):
     """Metadata with the addition of length."""
 
 
-class MomentumMetadata(LabeledMetadata[float]):
+class MomentumMetadata(DeltaMetadata[float]):
     """Metadata with the addition of momentum."""
 
 

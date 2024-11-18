@@ -11,6 +11,7 @@ from slate.basis.stacked import (
     fundamental_tuple_basis_from_metadata,
     tuple_basis,
 )
+from slate.metadata import SimpleMetadata
 from slate.metadata.stacked import fundamental_stacked_nx_points
 from slate.metadata.stacked.volume import (
     AxisDirections,
@@ -38,7 +39,7 @@ def _wrap_displacements(
 
 def get_displacements_x[M: LengthMetadata](
     metadata: M, origin: float
-) -> SlateArray[np.float64, FundamentalBasis[M]]:
+) -> SlateArray[M, np.float64, FundamentalBasis[M]]:
     """Get the displacements from origin.
 
     Parameters
@@ -62,7 +63,11 @@ def _get_displacements_x_along_axis(
     metadata: SpacedVolumeMetadata,
     origin: float,
     axis: int,
-) -> SlateArray[np.float64, TupleBasis[LengthMetadata, AxisDirections, np.generic]]:
+) -> SlateArray[
+    SpacedVolumeMetadata,
+    np.float64,
+    TupleBasis[LengthMetadata, AxisDirections, np.generic],
+]:
     distances = fundamental_stacked_x_points(metadata)[axis] - np.real(origin)
     delta_x = np.linalg.norm(fundamental_stacked_delta_x(metadata)[axis])
     max_distance = delta_x / 2
@@ -75,7 +80,11 @@ def _get_displacements_x_along_axis(
 def get_displacements_x_stacked(
     metadata: SpacedVolumeMetadata, origin: tuple[float, ...]
 ) -> tuple[
-    SlateArray[np.float64, TupleBasis[LengthMetadata, AxisDirections, np.generic]],
+    SlateArray[
+        SpacedVolumeMetadata,
+        np.float64,
+        TupleBasis[LengthMetadata, AxisDirections, np.generic],
+    ],
     ...,
 ]:
     """Get the displacements from origin."""
@@ -88,10 +97,11 @@ def get_displacements_x_stacked(
 def build_nx_displacement_operators_stacked[M: StackedMetadata[BasisMetadata, Any]](
     metadata: M,
 ) -> OperatorList[
+    StackedMetadata[BasisMetadata, None],
     np.int64,
     VariadicTupleBasis[
         np.generic,
-        FundamentalBasis[BasisMetadata],
+        FundamentalBasis[SimpleMetadata],
         VariadicTupleBasis[np.generic, FundamentalBasis[M], FundamentalBasis[M], None],
         None,
     ],
@@ -126,6 +136,7 @@ def build_nx_displacement_operators_stacked[M: StackedMetadata[BasisMetadata, An
 def build_nx_displacement_operator[M: BasisMetadata](
     metadata: M,
 ) -> Operator[
+    StackedMetadata[M, None],
     np.int64,
     VariadicTupleBasis[np.generic, FundamentalBasis[M], FundamentalBasis[M], None],
 ]:
@@ -154,6 +165,7 @@ def build_x_displacement_operator[M: LengthMetadata](
     metadata: M,
     origin: float = 0.0,
 ) -> Operator[
+    StackedMetadata[M, None],
     np.float64,
     VariadicTupleBasis[np.generic, FundamentalBasis[M], FundamentalBasis[M], None],
 ]:
@@ -183,6 +195,7 @@ def _get_displacements_matrix_x_along_axis[M: SpacedVolumeMetadata](
     *,
     axis: int,
 ) -> Operator[
+    StackedMetadata[M, None],
     np.float64,
     VariadicTupleBasis[np.generic, FundamentalBasis[M], FundamentalBasis[M], None],
 ]:
@@ -196,14 +209,17 @@ def _get_displacements_matrix_x_along_axis[M: SpacedVolumeMetadata](
     return Operator(tuple_basis((basis, basis.conjugate_basis())), data)
 
 
-def build_x_displacement_operators_stacked[M: SpacedVolumeMetadata](
-    metadata: M, origin: tuple[float, ...] | None
+def build_x_displacement_operators_stacked(
+    metadata: SpacedVolumeMetadata, origin: tuple[float, ...] | None
 ) -> OperatorList[
+    StackedMetadata[BasisMetadata, None],
     np.float64,
     VariadicTupleBasis[
         np.generic,
-        FundamentalBasis[BasisMetadata],
-        VariadicTupleBasis[np.generic, FundamentalBasis[M], FundamentalBasis[M], None],
+        FundamentalBasis[SimpleMetadata],
+        VariadicTupleBasis[
+            np.generic, FundamentalBasis[Any], FundamentalBasis[Any], None
+        ],
         None,
     ],
 ]:
@@ -221,6 +237,7 @@ def build_total_x_displacement_operator[M: SpacedVolumeMetadata](
     metadata: M,
     origin: tuple[float, ...] | None = None,
 ) -> Operator[
+    StackedMetadata[M, None],
     np.float64,
     VariadicTupleBasis[np.generic, FundamentalBasis[M], FundamentalBasis[M], None],
 ]:

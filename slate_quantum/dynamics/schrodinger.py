@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 import numpy as np
-from scipy.constants import hbar
+from scipy.constants import hbar  # type: ignore lib
 from slate.basis.stacked import (
     DiagonalBasis,
     VariadicTupleBasis,
@@ -12,12 +12,12 @@ from slate.basis.stacked import (
 )
 from slate.metadata import BasisMetadata
 
-from slate_quantum.model.operator._linalg import eigh_operator
+from slate_quantum.model.operator.linalg import eigh_operator
 from slate_quantum.model.state._state import State, StateList
 
 try:
-    import qutip
-    import qutip.ui
+    import qutip  # type: ignore lib
+    import qutip.ui  # type: ignore lib
 except ImportError:
     qutip = None
 
@@ -34,13 +34,16 @@ def _solve_schrodinger_equation_diagonal[
     B: Basis[BasisMetadata, np.complex128],
     TB: Basis[TimeMetadata, np.complex128],
 ](
-    initial_state: State[Basis[BasisMetadata, np.complex128]],
+    initial_state: State[BasisMetadata, Basis[BasisMetadata, np.complex128]],
     times: TB,
     hamiltonian: Operator[
+        StackedMetadata[BasisMetadata, Any],
         np.number[Any],
         DiagonalBasis[np.complex128, B, B, Any],
     ],
-) -> StateList[VariadicTupleBasis[np.complex128, TB, B, None]]:
+) -> StateList[
+    StackedMetadata[BasisMetadata, Any], VariadicTupleBasis[np.complex128, TB, B, None]
+]:
     coefficients = initial_state.with_basis(hamiltonian.basis.inner[0]).raw_data
     eigenvalues = hamiltonian.raw_data
 
@@ -55,10 +58,16 @@ def solve_schrodinger_equation_decomposition[
     M: BasisMetadata,
     TB: Basis[TimeMetadata, np.complex128],
 ](
-    initial_state: State[Basis[M, np.complex128]],
+    initial_state: State[M],
     times: TB,
-    hamiltonian: Operator[np.complex128, Basis[StackedMetadata[M, Any], np.complex128]],
-) -> StateList[VariadicTupleBasis[np.complex128, TB, EigenstateBasis[M], None]]:
+    hamiltonian: Operator[
+        StackedMetadata[M, Any],
+        np.complex128,
+    ],
+) -> StateList[
+    StackedMetadata[BasisMetadata, Any],
+    VariadicTupleBasis[np.complex128, TB, EigenstateBasis[M], None],
+]:
     """Solve the schrodinger equation by directly finding eigenstates for the given initial state and hamiltonian."""
     diagonal = eigh_operator(hamiltonian)
     return _solve_schrodinger_equation_diagonal(initial_state, times, diagonal)
@@ -68,10 +77,13 @@ def solve_schrodinger_equation[
     M: BasisMetadata,
     TB: Basis[TimeMetadata, np.complex128],
 ](
-    initial_state: State[Basis[M, np.complex128]],
+    initial_state: State[M],
     times: TB,
-    hamiltonian: Operator[np.complex128, Basis[StackedMetadata[M, Any], np.complex128]],
-) -> StateList[VariadicTupleBasis[np.complex128, TB, Basis[M, np.complex128], None]]:
+    hamiltonian: Operator[StackedMetadata[M, Any], np.complex128],
+) -> StateList[
+    StackedMetadata[BasisMetadata, Any],
+    VariadicTupleBasis[np.complex128, TB, Basis[M, np.complex128], None],
+]:
     """Solve the schrodinger equation iteratively for the given initial state and hamiltonian.
 
     Internally, this function makes use of the qutip package.
