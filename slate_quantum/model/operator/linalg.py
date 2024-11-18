@@ -117,7 +117,7 @@ def get_commutator_operator_list[M: StackedMetadata[BasisMetadata, Any]](
 
     This is equivalent to lhs rhs - rhs lhs.
     """
-    # TODO: fast diagonal support
+    # TODO: fast diagonal support  # noqa: FIX002
     # will not play well with this!
     converted = cast(
         OperatorList[M, np.complex128, Basis[M, np.complex128]],
