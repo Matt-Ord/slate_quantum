@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 import numpy as np
-from scipy.constants import hbar
+from scipy.constants import hbar  # type: ignore lib
 from slate.basis.stacked import DiagonalBasis, as_tuple_basis, diagonal_basis
 from slate.basis.transformed import fundamental_transformed_tuple_basis_from_metadata
 from slate.metadata.stacked.volume import (
@@ -11,7 +11,7 @@ from slate.metadata.stacked.volume import (
     fundamental_stacked_k_points,
 )
 
-from slate_quantum.model.operator._operator import Operator
+from slate_quantum.model.operator._operator import Operator, SplitOperator
 
 if TYPE_CHECKING:
     from slate.basis._basis import Basis
@@ -25,7 +25,7 @@ def build_kinetic_energy_operator(
     metadata: StackedMetadata[Any, Any],
     mass: float,
     bloch_fraction: np.ndarray[Any, np.dtype[np.float64]] | None = None,
-) -> Operator[Any, DiagonalBasis[np.complex128, Any, Any, None]]:
+) -> Operator[Any, Any, DiagonalBasis[np.complex128, Any, Any, None]]:
     """
     Given a mass and a basis calculate the kinetic part of the Hamiltonian.
 
@@ -62,7 +62,11 @@ def build_kinetic_hamiltonian(
     potential: Potential[VolumeMetadata, np.complex128],
     mass: float,
     bloch_fraction: np.ndarray[Any, np.dtype[np.float64]] | None = None,
-) -> Operator[np.complex128, Basis[StackedMetadata[VolumeMetadata, None], Any]]:
+) -> Operator[
+    StackedMetadata[VolumeMetadata, None],
+    np.complex128,
+    Basis[StackedMetadata[VolumeMetadata, None], Any],
+]:
     """
     Calculate the total hamiltonian in momentum basis for a given potential and mass.
 
@@ -81,4 +85,11 @@ def build_kinetic_hamiltonian(
     kinetic_hamiltonian = build_kinetic_energy_operator(
         basis.metadata, mass, bloch_fraction
     )
-    return potential_hamiltonian + kinetic_hamiltonian
+    n = basis.size
+    return SplitOperator(
+        basis,
+        potential_hamiltonian.raw_data,
+        np.ones((n,), dtype=np.complex128),
+        kinetic_hamiltonian.raw_data,
+        np.ones((n,), dtype=np.complex128),
+    )

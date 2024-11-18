@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from ._label import (
+    EigenvalueMetadata,
     MomentumMetadata,
     SpacedMomentumMetadata,
     SpacedTimeMetadata,
@@ -12,6 +13,7 @@ from .operator import Operator, OperatorList, Potential
 from .state import State, StateList
 
 __all__ = [
+    "EigenvalueMetadata",
     "MomentumMetadata",
     "Operator",
     "OperatorList",

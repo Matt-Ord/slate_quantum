@@ -10,6 +10,10 @@
 		},
 		"ghcr.io/devcontainers-contrib/features/poetry:2": {
 			"version": "latest"
+		},
+		"ghcr.io/devcontainers/features/rust:1": {
+			"version": "latest",
+			"profile": "minimal"
 		}
 	},
 	"customizations": {
@@ -42,9 +46,6 @@
 				"python.analysis.typeCheckingMode": "strict",
 				"python.analysis.include": [
 					"slate_quantum"
-				],
-				"python.analysis.extraPaths": [
-					".venv/lib/python3.13/site-packages"
 				],
 				"python.analysis.autoImportCompletions": true,
 				"cSpell.allowCompoundWords": true,
@@ -143,5 +144,5 @@
 			]
 		}
 	},
-	"onCreateCommand": "poetry install --all-extras"
+	"onCreateCommand": "rustup default nightly && poetry install --all-extras"
 }
