@@ -14,8 +14,7 @@ from slate.metadata.stacked.volume import (
 from slate_quantum.model.operator._operator import Operator, SplitOperator
 
 if TYPE_CHECKING:
-    from slate.basis._basis import Basis
-    from slate.metadata import VolumeMetadata
+    from slate.metadata import Metadata2D, VolumeMetadata
     from slate.metadata.stacked import StackedMetadata
 
     from slate_quantum.model.operator._potential import Potential
@@ -63,9 +62,8 @@ def build_kinetic_hamiltonian(
     mass: float,
     bloch_fraction: np.ndarray[Any, np.dtype[np.float64]] | None = None,
 ) -> Operator[
-    StackedMetadata[VolumeMetadata, None],
+    Metadata2D[VolumeMetadata, VolumeMetadata, None],
     np.complex128,
-    Basis[StackedMetadata[VolumeMetadata, None], Any],
 ]:
     """
     Calculate the total hamiltonian in momentum basis for a given potential and mass.
@@ -83,7 +81,7 @@ def build_kinetic_hamiltonian(
     basis = as_tuple_basis(potential.basis.inner)
     potential_hamiltonian = potential.with_basis(basis)
     kinetic_hamiltonian = build_kinetic_energy_operator(
-        basis.metadata, mass, bloch_fraction
+        basis.metadata(), mass, bloch_fraction
     )
     n = basis.size
     return SplitOperator(

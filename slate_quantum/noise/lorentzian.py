@@ -4,11 +4,10 @@ from typing import TYPE_CHECKING, Any, cast
 
 import numpy as np
 from scipy.constants import Boltzmann, hbar  # type: ignore stubs
-from slate.basis.stacked import DiagonalBasis, VariadicTupleBasis, as_tuple_basis
+from slate.basis.stacked import DiagonalBasis, TupleBasis2D, as_tuple_basis
 from slate.metadata import (
-    BasisMetadata,
+    Metadata2D,
     SpacedVolumeMetadata,
-    StackedMetadata,
     VolumeMetadata,
 )
 from slate.metadata.stacked.volume import fundamental_stacked_delta_x
@@ -107,9 +106,9 @@ def get_lorentzian_operators_explicit_taylor[M: VolumeMetadata, DT: np.generic](
     *,
     n_terms: int | None = None,
 ) -> OperatorList[
-    StackedMetadata[BasisMetadata, Any],
+    Metadata2D[EigenvalueMetadata, Metadata2D[M, M, None], None],
     np.complex128,
-    VariadicTupleBasis[
+    TupleBasis2D[
         np.complex128,
         FundamentalBasis[EigenvalueMetadata],
         DiagonalBasis[
@@ -143,7 +142,7 @@ def get_lorentzian_operators_explicit_taylor[M: VolumeMetadata, DT: np.generic](
     # expand gaussian and define array containing coefficients for each term in the polynomial
     # coefficients for the explicit Taylor expansion of the gaussian noise
     # Normalize lambda
-    delta_x = np.linalg.norm(fundamental_stacked_delta_x(basis.metadata), axis=1)
+    delta_x = np.linalg.norm(fundamental_stacked_delta_x(basis.metadata()), axis=1)
     normalized_lambda = 2 * np.pi * lambda_ / delta_x
     polynomial_coefficients = _get_explicit_taylor_coefficients_lorentzian(
         a, normalized_lambda.item(), n_terms=n_terms

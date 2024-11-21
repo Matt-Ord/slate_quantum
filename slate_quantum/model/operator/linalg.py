@@ -10,7 +10,7 @@ from slate.basis.stacked import (
     diagonal_basis,
 )
 from slate.linalg import eig, eigh, einsum
-from slate.metadata import BasisMetadata, StackedMetadata
+from slate.metadata import BasisMetadata, Metadata2D
 
 from slate_quantum.model.operator import Operator, OperatorList
 from slate_quantum.model.state.eigenstate_basis import EigenstateBasis
@@ -21,9 +21,9 @@ if TYPE_CHECKING:
 
 
 def eig_operator[M: BasisMetadata, E, DT: np.complexfloating[Any, Any]](
-    operator: Operator[StackedMetadata[M, E], DT],
+    operator: Operator[Metadata2D[M, M, E], DT],
 ) -> Operator[
-    StackedMetadata[M, E],
+    Metadata2D[M, M, E],
     np.complex128,
     DiagonalBasis[
         DT,
@@ -38,9 +38,9 @@ def eig_operator[M: BasisMetadata, E, DT: np.complexfloating[Any, Any]](
 
 
 def eigh_operator[M: BasisMetadata, E, DT: np.complexfloating[Any, Any]](
-    operator: Operator[StackedMetadata[M, E], DT],
+    operator: Operator[Metadata2D[M, M, E], DT],
 ) -> Operator[
-    StackedMetadata[M, E],
+    Metadata2D[M, M, E],
     np.complex128,
     DiagonalBasis[
         DT,
@@ -52,19 +52,19 @@ def eigh_operator[M: BasisMetadata, E, DT: np.complexfloating[Any, Any]](
     """Get a list of eigenstates for a given operator, assuming it is hermitian."""
     diagonal = eigh(operator)
     inner_basis = diagonal.basis.inner[0]
-    new_inner_basis = EigenstateBasis[M](
-        inner_basis._data,  # noqa: SLF001
+    new_inner_basis = EigenstateBasis(
+        inner_basis.states,
         direction=inner_basis.direction,
-        data_id=inner_basis._data_id,  # noqa: SLF001
+        data_id=inner_basis.data_id,
     )
     new_basis = diagonal_basis(
         (new_inner_basis, new_inner_basis.conjugate_basis()),
-        diagonal.basis.metadata.extra,
+        diagonal.basis.metadata().extra,
     )
     return Operator(new_basis, diagonal.raw_data)
 
 
-def matmul_list_operator[M: StackedMetadata[Any, Any]](
+def matmul_list_operator[M: Metadata2D[BasisMetadata, BasisMetadata, Any]](
     lhs: OperatorList[M, np.complex128],
     rhs: Operator[Any, np.complex128],
 ) -> OperatorList[M, np.complex128]:
@@ -86,7 +86,7 @@ def matmul_list_operator[M: StackedMetadata[Any, Any]](
     return OperatorList(cast(Basis[M, Any], data.basis), data.raw_data)
 
 
-def matmul_operator_list[M: StackedMetadata[BasisMetadata, Any]](
+def matmul_operator_list[M: Metadata2D[BasisMetadata, BasisMetadata, Any]](
     lhs: Operator[Any, np.complex128],
     rhs: OperatorList[M, np.complex128],
 ) -> OperatorList[M, np.complex128]:
@@ -108,7 +108,7 @@ def matmul_operator_list[M: StackedMetadata[BasisMetadata, Any]](
     return OperatorList(cast(Basis[M, Any], data.basis), data.raw_data)
 
 
-def get_commutator_operator_list[M: StackedMetadata[BasisMetadata, Any]](
+def get_commutator_operator_list[M: Metadata2D[BasisMetadata, BasisMetadata, Any]](
     lhs: Operator[Any, np.complex128],
     rhs: OperatorList[M, np.complex128],
 ) -> OperatorList[M, np.complex128]:
