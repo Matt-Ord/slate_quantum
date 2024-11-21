@@ -28,13 +28,6 @@
 					"editor.codeActionsOnSave": {
 						"source.fixAll": "always",
 						"source.organizeImports": "always"
-					},
-					"[analysis]": {
-						"diagnosticMode": "workspace",
-						"typeCheckingMode": "strict",
-						"include": [
-							"src"
-						]
 					}
 				},
 				"python.testing.pytestArgs": [
@@ -43,7 +36,6 @@
 				"python.testing.unittestEnabled": false,
 				"python.testing.pytestEnabled": true,
 				"python.analysis.diagnosticMode": "workspace",
-				"python.analysis.typeCheckingMode": "strict",
 				"python.analysis.include": [
 					"slate_quantum"
 				],
