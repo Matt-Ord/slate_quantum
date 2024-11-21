@@ -6,8 +6,10 @@ from .schrodinger import (
     solve_schrodinger_equation,
     solve_schrodinger_equation_decomposition,
 )
+from .stochastic_schrodinger import solve_stochastic_schrodinger_equation_banded
 
 __all__ = [
     "solve_schrodinger_equation",
     "solve_schrodinger_equation_decomposition",
+    "solve_stochastic_schrodinger_equation_banded",
 ]
