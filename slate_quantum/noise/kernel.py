@@ -271,7 +271,7 @@ def get_full_kernel_from_operators[M0: BasisMetadata, M1: BasisMetadata](
 
     data = np.einsum(  # type:ignore  unknown
         "a,aji,akl->ij kl",
-        converted.basis[0].metadata().values[converted_inner.basis.points],  # noqa: PD011
+        converted.basis[0].metadata().values[converted_inner.basis.points],
         np.conj(operators_data),
         operators_data,
     )
@@ -298,7 +298,7 @@ def get_diagonal_kernel_from_operators[
     operators_data = converted_inner.raw_data.reshape(converted.basis[0].size, -1)
     data = np.einsum(  # type:ignore  unknown
         "a,ai,aj->ij",
-        converted.basis[0].metadata().values[converted_inner.basis[0].points],  # noqa: PD011
+        converted.basis[0].metadata().values[converted_inner.basis[0].points],
         np.conj(operators_data),
         operators_data,
     )
@@ -374,7 +374,7 @@ def get_diagonal_noise_operators_from_axis[M: BasisMetadata, E](
     )
     data = cast(np.ndarray[Any, Any], np.einsum(einsum_string, *full_data))  # type: ignore unknown
     full_coefficients = tuple(
-        operators.basis[0].metadata().values[operators.basis[0].points]  # noqa: PD011
+        operators.basis[0].metadata().values[operators.basis[0].points]
         for operators in op_as_tuple
     )
     eigenvalues = _outer_product(*full_coefficients)

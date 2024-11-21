@@ -165,7 +165,7 @@ def truncate_noise_operator_list[M: Metadata2D[EigenvalueMetadata, BasisMetadata
     converted = operators.with_basis(as_tuple_basis(operators.basis))
     converted_list = converted.with_list_basis(as_index_basis(converted.basis[0]))
     eigenvalues = (
-        converted_list.basis.metadata()  # noqa: PD011
+        converted_list.basis.metadata()
         .children[0]
         .values[converted_list.basis[0].points]
     )
