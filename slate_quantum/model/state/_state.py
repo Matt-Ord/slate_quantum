@@ -81,14 +81,18 @@ class StateList[
             basis, self.basis.__convert_vector_into__(self.raw_data, basis)
         )
 
-    def __iter__(self, /) -> Iterator[State[M, Basis[Any, np.complex128]]]:
+    def __iter__[_M: BasisMetadata](
+        self: StateList[Metadata2D[BasisMetadata, _M, Any],], /
+    ) -> Iterator[State[_M, Basis[Any, np.complex128]]]:
         as_tuple = self.with_basis(as_tuple_basis(self.basis))
         return (
             State(as_tuple.basis[1], row)
             for row in as_tuple.raw_data.reshape(as_tuple.basis.shape)
         )
 
-    def __getitem__(self, /, index: int) -> State[M, Basis[Any, np.complex128]]:
+    def __getitem__[_M: BasisMetadata](
+        self: StateList[Metadata2D[BasisMetadata, _M, Any],], /, index: int
+    ) -> State[_M, Basis[Any, np.complex128]]:
         as_tuple = self.with_basis(as_tuple_basis(self.basis))
         return State(
             as_tuple.basis[1], as_tuple.raw_data.reshape(as_tuple.basis.shape)[index]

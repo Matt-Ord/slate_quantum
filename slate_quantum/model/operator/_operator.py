@@ -121,7 +121,7 @@ class SplitOperator[M: BasisMetadata, E](
             inner.metadata().extra,
             direction=direction,
         )
-        data = np.ones_like(basis.size, dtype=np.complex128)
+        data = np.empty((4, basis.inner[0].size), dtype=np.complex128)
         n = a.size
         data[0 * n : 1 * n] = a
         data[1 * n : 2 * n] = b
