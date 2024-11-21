@@ -32,23 +32,7 @@ def get_effective_lorentzian_parameter(
     *,
     lambda_factor: float = 2 * np.sqrt(2),
 ) -> tuple[float, float]:
-    """
-    Generate a set of lorentzian parameters A, Lambda for a friction coefficient eta.
-
-    Parameters
-    ----------
-    basis : TupleBasisLike[
-        _description_
-    eta : float
-    temperature : float
-    lambda_factor : float, optional
-        lambda_factor, by default 2*np.sqrt(2)
-
-    Returns
-    -------
-    tuple[float, float]
-        (A, lambda_)
-    """
+    """Generate a set of lorentzian parameters A, Lambda for a friction coefficient eta."""
     smallest_max_displacement = (
         np.min(np.linalg.norm(fundamental_stacked_delta_x(metadata), axis=1)) / 2
     )

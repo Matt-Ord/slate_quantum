@@ -41,25 +41,7 @@ def get_gaussian_isotropic_noise_kernel[M: SpacedVolumeMetadata](
     a: float,
     lambda_: float,
 ) -> IsotropicNoiseKernel[M, np.complex128]:
-    """
-    Get the noise kernel for a gaussian correllated surface.
-
-    Parameters
-    ----------
-    basis : TupleBasisLike[BasisWithLengthLike[Any, Any, Literal[1]]]
-        _description_
-    eta : float
-        _description_
-    temperature : float
-        _description_
-    lambda_factor : float, optional
-        _description_, by default 2*np.sqrt(2)
-
-    Returns
-    -------
-    SingleBasisDiagonalNoiseKernel[ TupleBasisLike[FundamentalPositionBasis] ]
-        _description_
-    """
+    """Get the noise kernel for a gaussian correllated surface."""
 
     def fn(
         displacements: np.ndarray[Any, np.dtype[np.float64]],
@@ -93,25 +75,7 @@ def get_gaussian_noise_kernel[M: SpacedVolumeMetadata](
     a: float,
     lambda_: float,
 ) -> DiagonalNoiseKernel[M, M, np.complex128]:
-    """
-    Get the noise kernel for a gaussian correllated surface.
-
-    Parameters
-    ----------
-    basis : TupleBasisLike[BasisWithLengthLike[Any, Any, Literal[1]]]
-        _description_
-    eta : float
-        _description_
-    temperature : float
-        _description_
-    lambda_factor : float, optional
-        _description_, by default 2*np.sqrt(2)
-
-    Returns
-    -------
-    SingleBasisDiagonalNoiseKernel[ TupleBasisLike[FundamentalPositionBasis] ]
-        _description_
-    """
+    """Get the noise kernel for a gaussian correllated surface."""
     return get_gaussian_isotropic_noise_kernel(metadata, a, lambda_).unwrap()
 
 
@@ -131,20 +95,6 @@ def get_effective_gaussian_parameters(
     to the caldeira leggett noise
 
     beta(x,x') = 2 * eta * Boltzmann * temperature / hbar**2
-
-    Parameters
-    ----------
-    basis : TupleBasisLike[
-        _description_
-    eta : float
-    temperature : float
-    lambda_factor : float, optional
-        lambda_factor, by default 2*np.sqrt(2)
-
-    Returns
-    -------
-    tuple[float, float]
-        (A, lambda_)
     """
     smallest_max_displacement = np.min(
         np.linalg.norm(fundamental_stacked_delta_x(metadata), axis=1)

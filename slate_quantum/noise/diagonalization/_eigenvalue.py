@@ -26,18 +26,6 @@ def get_periodic_noise_operators_eigenvalue[M0: BasisMetadata, M1: BasisMetadata
     Eigenvalue method.
 
     Note these are the operators `L`
-
-    Parameters
-    ----------
-    kernel : NoiseKernel[_B0, _B0, _B0, _B0]
-    fit_method: Literal["explicit", "poly fit", "eigenvalue"],
-                method used to generate noise operators.
-        _description_
-
-    Returns
-    -------
-    NoiseOperatorList[FundamentalBasis[BasisMetadata], _B0, _B0]
-        _description_
     """
     converted = kernel.with_basis(as_tuple_basis(kernel.basis))
     converted_second = converted.with_basis(
@@ -97,16 +85,6 @@ def get_periodic_noise_operators_diagonal_eigenvalue[
     Note we return a list of noise operators, rather than a single noise operator,
     as it is not currently possible to represent a sparse StackedBasis (unless it can
     be represented as a StackedBasis of individual sparse Basis)
-
-    Parameters
-    ----------
-    kernel : DiagonalNoiseKernel[_B0, _B0, _B0, _B0]
-        _description_
-
-    Returns
-    -------
-    DiagonalNoiseOperator[BasisLike, BasisLike]
-        _description_
     """
     converted = kernel.with_outer_basis(as_tuple_basis(kernel.basis.outer_recast))
 

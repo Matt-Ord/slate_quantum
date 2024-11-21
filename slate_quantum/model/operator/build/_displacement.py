@@ -110,18 +110,7 @@ def build_nx_displacement_operators_stacked[M: StackedMetadata[BasisMetadata, An
         None,
     ],
 ]:
-    """
-    Get a matrix of displacements in nx, taken in a periodic fashion.
-
-    Parameters
-    ----------
-    basis : StackedBasisLike
-
-    Returns
-    -------
-    np.ndarray[tuple[int, int], np.dtype[np.int_]]
-        _description_
-    """
+    """Get a matrix of displacements in nx, taken in a periodic fashion."""
     basis = tuple_basis((FundamentalBasis(metadata), FundamentalBasis(metadata)))
     return OperatorList.from_operators(
         Operator(
@@ -144,18 +133,7 @@ def build_nx_displacement_operator[M: BasisMetadata](
     np.int64,
     TupleBasis2D[np.generic, FundamentalBasis[M], FundamentalBasis[M], None],
 ]:
-    """
-    Get a matrix of displacements in nx, taken in a periodic fashion.
-
-    Parameters
-    ----------
-    basis : StackedBasisLike
-
-    Returns
-    -------
-    np.ndarray[tuple[int, int], np.dtype[np.int_]]
-        _description_
-    """
+    """Get a matrix of displacements in nx, taken in a periodic fashion."""
     n_x_points = np.asarray(fundamental_stacked_nx_points(metadata))
     n = fundamental_size(metadata)
     data = (n_x_points[:, np.newaxis] - n_x_points[np.newaxis, :] + n // 2) % n - (
@@ -243,19 +221,7 @@ def build_total_x_displacement_operator[M: SpacedVolumeMetadata](
     np.float64,
     TupleBasis2D[np.generic, FundamentalBasis[M], FundamentalBasis[M], None],
 ]:
-    """
-    Get a matrix of displacements in x, taken in a periodic fashion.
-
-    Parameters
-    ----------
-    basis : StackedBasisLike
-        _description_
-
-    Returns
-    -------
-    np.ndarray[tuple[int, int], np.dtype[np.float64]]
-        _description_
-    """
+    """Get a matrix of displacements in x, taken in a periodic fashion."""
     displacements = build_x_displacement_operators_stacked(metadata, origin)
     return Operator(
         displacements.basis[1],
