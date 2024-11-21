@@ -17,7 +17,7 @@ if TYPE_CHECKING:
     from slate.metadata import Metadata2D, VolumeMetadata
     from slate.metadata.stacked import StackedMetadata
 
-    from slate_quantum.model.operator._potential import Potential
+    from slate_quantum.model.operator.potential._potential import Potential
 
 
 def build_kinetic_energy_operator(

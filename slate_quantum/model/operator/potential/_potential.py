@@ -6,7 +6,7 @@ import numpy as np
 from slate.array import SlateArray
 from slate.basis import Basis
 from slate.basis.recast import RecastBasis
-from slate.basis.stacked import fundamental_tuple_basis_from_metadata, tuple_basis
+from slate.basis.stacked import diagonal_basis, fundamental_tuple_basis_from_metadata
 from slate.metadata.stacked import Metadata2D, VolumeMetadata
 
 from slate_quantum.model.operator._operator import Operator
@@ -29,7 +29,7 @@ class Potential[M: VolumeMetadata, DT: np.generic](
         )
         super().__init__(
             RecastBasis(
-                tuple_basis((fundamental, fundamental.conjugate_basis())),
+                diagonal_basis((fundamental, fundamental.conjugate_basis())),
                 fundamental,
                 basis,
             ),

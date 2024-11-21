@@ -1147,8 +1147,8 @@ plot = ["matplotlib (>=3.9.2,<4.0.0)"]
 [package.source]
 type = "git"
 url = "https://github.com/Matt-Ord/slate.git"
-reference = "beaf8bf"
-resolved_reference = "beaf8bf5b1186858c31e5daeb2030de4e1a6996f"
+reference = "242d12d"
+resolved_reference = "242d12dad5b207dc8247307f970889c03103206a"
 
 [[package]]
 name = "snowballstemmer"
@@ -1353,4 +1353,4 @@ sse-solver-py = ["sse_solver_py"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.13,<3.14"
-content-hash = "1431933d7ffd2bef95580aa63477cdaf039e588ce80d02f6a8d2e61d26dc7514"
+content-hash = "d4a39a6cee433d3b126d1448bb9e3009f6b7607bee3018fe5ecebe9a519a3a64"
