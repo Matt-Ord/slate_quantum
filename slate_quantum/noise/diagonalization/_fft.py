@@ -384,16 +384,6 @@ def get_periodic_noise_operators_isotropic_stacked_fft[
 
     The inddependent operators can therefore be found directly using a FFT
     of the noise beta(x).
-
-    Parameters
-    ----------
-    kernel : DiagonalNoiseKernel[_B0, _B0, _B0, _B0]
-        _description_
-
-    Returns
-    -------
-    DiagonalNoiseOperator[BasisLike, BasisLike]
-        _description_
     """
     converted_outer = as_tuple_basis(kernel.basis.outer_recast)
     converted = kernel.with_isotropic_basis(converted_outer)
