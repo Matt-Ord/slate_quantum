@@ -15,6 +15,7 @@ from slate.basis.wrapped import as_index_basis
 from slate.metadata import BasisMetadata, Metadata2D, StackedMetadata
 from slate.util import slice_ignoring_axes
 
+from slate_quantum._util import outer_product
 from slate_quantum.model._label import EigenvalueMetadata
 from slate_quantum.model.operator._operator import OperatorList
 from slate_quantum.model.operator._super_operator import (
@@ -192,13 +193,6 @@ type AxisKernel[M: BasisMetadata, DT: np.complex128] = tuple[
 ]
 
 
-def _outer_product(
-    *arrays: np.ndarray[Any, np.dtype[np.complex128]],
-) -> np.ndarray[Any, np.dtype[np.complex128]]:
-    grids = np.meshgrid(*arrays, indexing="ij")
-    return np.prod(grids, axis=0)
-
-
 def as_isotropic_kernel_from_axis[M: BasisMetadata, DT: np.complex128](
     kernels: AxisKernel[M, DT],
 ) -> IsotropicNoiseKernel[StackedMetadata[M, Any], np.complex128]:
@@ -207,7 +201,7 @@ def as_isotropic_kernel_from_axis[M: BasisMetadata, DT: np.complex128](
     full_data = tuple(kernel_i.raw_data.ravel() for kernel_i in kernels)
 
     return IsotropicNoiseKernel(
-        tuple_basis(full_basis, None), _outer_product(*full_data).ravel()
+        tuple_basis(full_basis, None), outer_product(*full_data).ravel()
     )
 
 
@@ -377,7 +371,7 @@ def get_diagonal_noise_operators_from_axis[M: BasisMetadata, E](
         operators.basis[0].metadata().values[operators.basis[0].points]
         for operators in op_as_tuple
     )
-    eigenvalues = _outer_product(*full_coefficients)
+    eigenvalues = outer_product(*full_coefficients)
     eigenvalue_basis = FundamentalBasis(EigenvalueMetadata(eigenvalues))
 
     return OperatorList(
