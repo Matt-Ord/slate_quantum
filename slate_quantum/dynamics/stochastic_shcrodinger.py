@@ -7,11 +7,11 @@ import numpy as np
 from scipy.constants import hbar  # type: ignore lib
 from slate.basis import TruncatedBasis
 from slate.basis.stacked import (
-    VariadicTupleBasis,
+    TupleBasis2D,
     as_tuple_basis,
     tuple_basis,
 )
-from slate.metadata import BasisMetadata
+from slate.metadata import BasisMetadata, Metadata2D
 from slate.util import timed
 
 from slate_quantum.model.state import State, StateList
@@ -23,7 +23,6 @@ except ImportError:
 
 if TYPE_CHECKING:
     from slate.basis import Basis
-    from slate.metadata.stacked import StackedMetadata
     from sse_solver_py import BandedData, SSEMethod
 
     from slate_quantum.model import EigenvalueMetadata, TimeMetadata
@@ -95,33 +94,34 @@ def solve_stochastic_schrodinger_equation_banded[
 ](
     initial_state: State[M],
     times: TB,
-    hamiltonian: Operator[StackedMetadata[M, Any], np.complex128],
+    hamiltonian: Operator[Metadata2D[M, M, Any], np.complex128],
     noise: OperatorList[
-        StackedMetadata[BasisMetadata, Any],
+        Metadata2D[EigenvalueMetadata, Metadata2D[M, M, Any], Any],
         np.complex128,
-        VariadicTupleBasis[
+        TupleBasis2D[
             np.complex128,
             Basis[EigenvalueMetadata, np.complex128],
-            Basis[StackedMetadata[M, Any], np.complex128],
+            Basis[Metadata2D[M, M, Any], np.complex128],
             Any,
         ],
     ],
     **kwargs: Unpack[SSEConfig],
 ) -> StateList[
-    BasisMetadata, VariadicTupleBasis[np.complex128, TB, Basis[M, np.complex128], None]
+    Metadata2D[TimeMetadata, M, Any],
+    TupleBasis2D[np.complex128, TB, Basis[M, np.complex128], None],
 ]:
     """Given an initial state, use the stochastic schrodinger equation to solve the dynamics of the system."""
     hamiltonian = hamiltonian.with_basis(as_tuple_basis(hamiltonian.basis))
     operators_data = [
         e * o.with_basis(hamiltonian.basis).raw_data.reshape(hamiltonian.basis.shape)
-        for o, e in zip(noise, noise.basis[0].metadata.values)
+        for o, e in zip(noise, noise.basis[0].metadata().values[noise.basis[0].points])  # noqa: PD011
     ]
     operators_norm = [np.linalg.norm(o) for o in operators_data]
 
     # We get the best numerical performace if we set the norm of the largest collapse operators
     # to be one. This prevents us from accumulating large errors when multiplying state * dt * operator * conj_operator
     max_norm = np.max(operators_norm)
-    dt = (times.metadata.delta * max_norm**2 / hbar).item()
+    dt = (times.metadata().delta * max_norm**2 / hbar).item()
     r_threshold = kwargs.get("r_threshold", 1e-8)
 
     banded_collapse = _get_banded_operators(

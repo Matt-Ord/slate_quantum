@@ -6,11 +6,11 @@ import numpy as np
 from scipy.constants import hbar  # type: ignore lib
 from slate.basis.stacked import (
     DiagonalBasis,
-    VariadicTupleBasis,
+    TupleBasis2D,
     as_tuple_basis,
     tuple_basis,
 )
-from slate.metadata import BasisMetadata
+from slate.metadata import BasisMetadata, Metadata2D
 
 from slate_quantum.model.operator.linalg import eigh_operator
 from slate_quantum.model.state._state import State, StateList
@@ -23,7 +23,6 @@ except ImportError:
 
 if TYPE_CHECKING:
     from slate.basis import Basis
-    from slate.metadata.stacked import StackedMetadata
 
     from slate_quantum.model import TimeMetadata
     from slate_quantum.model.operator._operator import Operator
@@ -34,20 +33,21 @@ def _solve_schrodinger_equation_diagonal[
     B: Basis[BasisMetadata, np.complex128],
     TB: Basis[TimeMetadata, np.complex128],
 ](
-    initial_state: State[BasisMetadata, Basis[BasisMetadata, np.complex128]],
+    initial_state: State[BasisMetadata],
     times: TB,
     hamiltonian: Operator[
-        StackedMetadata[BasisMetadata, Any],
+        Metadata2D[BasisMetadata, BasisMetadata, Any],
         np.number[Any],
         DiagonalBasis[np.complex128, B, B, Any],
     ],
 ) -> StateList[
-    StackedMetadata[BasisMetadata, Any], VariadicTupleBasis[np.complex128, TB, B, None]
+    Metadata2D[TimeMetadata, BasisMetadata, None],
+    TupleBasis2D[np.complex128, TB, B, None],
 ]:
     coefficients = initial_state.with_basis(hamiltonian.basis.inner[0]).raw_data
     eigenvalues = hamiltonian.raw_data
 
-    time_values = np.array(list(times.metadata.values))
+    time_values = np.array(list(times.metadata().values))[times.points]
     vectors = coefficients[np.newaxis, :] * np.exp(
         -1j * eigenvalues * time_values[:, np.newaxis] / hbar
     )
@@ -58,15 +58,15 @@ def solve_schrodinger_equation_decomposition[
     M: BasisMetadata,
     TB: Basis[TimeMetadata, np.complex128],
 ](
-    initial_state: State[M],
+    initial_state: State[BasisMetadata],
     times: TB,
     hamiltonian: Operator[
-        StackedMetadata[M, Any],
+        Metadata2D[M, M, Any],
         np.complex128,
     ],
 ) -> StateList[
-    StackedMetadata[BasisMetadata, Any],
-    VariadicTupleBasis[np.complex128, TB, EigenstateBasis[M], None],
+    Metadata2D[TimeMetadata, BasisMetadata, None],
+    TupleBasis2D[np.complex128, TB, EigenstateBasis[M], None],
 ]:
     """Solve the schrodinger equation by directly finding eigenstates for the given initial state and hamiltonian."""
     diagonal = eigh_operator(hamiltonian)
@@ -77,12 +77,12 @@ def solve_schrodinger_equation[
     M: BasisMetadata,
     TB: Basis[TimeMetadata, np.complex128],
 ](
-    initial_state: State[M],
+    initial_state: State[BasisMetadata],
     times: TB,
-    hamiltonian: Operator[StackedMetadata[M, Any], np.complex128],
+    hamiltonian: Operator[Metadata2D[M, M, Any], np.complex128],
 ) -> StateList[
-    StackedMetadata[BasisMetadata, Any],
-    VariadicTupleBasis[np.complex128, TB, Basis[M, np.complex128], None],
+    Metadata2D[TimeMetadata, BasisMetadata, None],
+    TupleBasis2D[np.complex128, TB, Basis[M, np.complex128], None],
 ]:
     """Solve the schrodinger equation iteratively for the given initial state and hamiltonian.
 
@@ -102,7 +102,7 @@ def solve_schrodinger_equation[
     initial_state_qobj = qutip.Qobj(
         initial_state.with_basis(hamiltonian_as_tuple.basis[0]).raw_data
     )
-    time_values = np.array(list(times.metadata.values))
+    time_values = np.array(list(times.metadata().values))[times.points]
     result = qutip.sesolve(  # type: ignore lib
         hamiltonian_qobj,
         initial_state_qobj,

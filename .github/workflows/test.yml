@@ -26,7 +26,7 @@ jobs:
         run: poetry install --all-extras
 
       - name: Run lint
-        run: poetry run ruff check
+        run: poetry run ruff check --output-format=github
 
       - name: Run type check
         run: poetry run pyright

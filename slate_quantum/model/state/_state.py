@@ -6,7 +6,7 @@ import numpy as np
 from slate.array import SlateArray
 from slate.basis import Basis
 from slate.basis.stacked import as_tuple_basis
-from slate.metadata import BasisMetadata
+from slate.metadata import BasisMetadata, Metadata2D
 
 from slate_quantum.model._label import EigenvalueMetadata
 
@@ -67,7 +67,7 @@ def calculate_inner_product[M: BasisMetadata](
 
 
 class StateList[
-    M: BasisMetadata,
+    M: Metadata2D[BasisMetadata, BasisMetadata, Any],
     B: Basis[Any, np.complex128] = Basis[M, np.complex128],
 ](SlateArray[M, np.complex128, B]):
     """represents a state vector in a basis."""
@@ -95,4 +95,6 @@ class StateList[
         )
 
 
-type EigenstateList[B: Basis[Any, np.complex128]] = StateList[EigenvalueMetadata]
+type EigenstateList[M: BasisMetadata] = StateList[
+    Metadata2D[EigenvalueMetadata, M, None]
+]
