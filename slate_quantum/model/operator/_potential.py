@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any, Self, cast
 
 import numpy as np
+from slate.array import SlateArray
 from slate.basis import Basis
 from slate.basis.recast import RecastBasis
 from slate.basis.stacked import fundamental_tuple_basis_from_metadata, tuple_basis
@@ -40,3 +41,7 @@ class Potential[M: VolumeMetadata, DT: np.generic](
         return Potential(
             basis, self.basis.outer_recast.__convert_vector_into__(self.raw_data, basis)
         )
+
+    def as_outer(self) -> SlateArray[M, DT]:
+        """Get the data of the Potential."""
+        return SlateArray(self.basis.outer_recast, self.raw_data)
