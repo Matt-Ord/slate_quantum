@@ -9,7 +9,9 @@ from slate.basis import (
 from slate.basis.stacked import (
     diagonal_basis,
 )
-from slate.linalg import eig, eigh, einsum
+from slate.linalg import eig as eig_array
+from slate.linalg import eigh as eigh_array
+from slate.linalg import einsum
 from slate.metadata import BasisMetadata, Metadata2D
 
 from slate_quantum.model.operator import Operator, OperatorList
@@ -20,7 +22,7 @@ if TYPE_CHECKING:
     from slate.explicit_basis import ExplicitBasis
 
 
-def eig_operator[M: BasisMetadata, E, DT: np.complexfloating[Any, Any]](
+def eig[M: BasisMetadata, E, DT: np.complexfloating[Any, Any]](
     operator: Operator[Metadata2D[M, M, E], DT],
 ) -> Operator[
     Metadata2D[M, M, E],
@@ -33,11 +35,11 @@ def eig_operator[M: BasisMetadata, E, DT: np.complexfloating[Any, Any]](
     ],
 ]:
     """Get a list of eigenstates for a given operator, assuming it is hermitian."""
-    diagonal = eig(operator)
+    diagonal = eig_array(operator)
     return Operator(diagonal.basis, diagonal.raw_data)
 
 
-def eigh_operator[M: BasisMetadata, E, DT: np.complexfloating[Any, Any]](
+def eigh[M: BasisMetadata, E, DT: np.complexfloating[Any, Any]](
     operator: Operator[Metadata2D[M, M, E], DT],
 ) -> Operator[
     Metadata2D[M, M, E],
@@ -50,7 +52,7 @@ def eigh_operator[M: BasisMetadata, E, DT: np.complexfloating[Any, Any]](
     ],
 ]:
     """Get a list of eigenstates for a given operator, assuming it is hermitian."""
-    diagonal = eigh(operator)
+    diagonal = eigh_array(operator)
     inner_basis = diagonal.basis.inner[0]
     new_inner_basis = EigenstateBasis(
         inner_basis.states,

@@ -42,6 +42,5 @@ class Potential[M: VolumeMetadata, DT: np.generic](
             basis, self.basis.outer_recast.__convert_vector_into__(self.raw_data, basis)
         )
 
-    def as_outer(self) -> SlateArray[M, DT]:
-        """Get the data of the Potential."""
+    def diagonal(self) -> SlateArray[M, DT]:
         return SlateArray(self.basis.outer_recast, self.raw_data)
