@@ -1,11 +1,10 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Callable, Iterable, cast
+from typing import TYPE_CHECKING, Any, Callable, cast
 
 import numpy as np
 from scipy.constants import Boltzmann  # type: ignore stubs
-from slate.basis import CoordinateBasis, as_tuple_basis
-from slate.basis.wrapped import as_index_basis
+from slate.basis import CoordinateBasis, as_index_basis, as_tuple_basis
 
 from slate_quantum.model._label import EigenvalueMetadata
 from slate_quantum.model.operator import (
@@ -30,9 +29,15 @@ from slate_quantum.noise.kernel import (
 )
 
 if TYPE_CHECKING:
-    from slate.metadata import BasisMetadata
+    from collections.abc import Iterable
+
+    from slate.metadata import (
+        BasisMetadata,
+        Metadata2D,
+        SpacedVolumeMetadata,
+        StackedMetadata,
+    )
     from slate.metadata.length import LengthMetadata, SpacedLengthMetadata
-    from slate.metadata.stacked import Metadata2D, SpacedVolumeMetadata, StackedMetadata
 
     from slate_quantum.model.operator import (
         Operator,

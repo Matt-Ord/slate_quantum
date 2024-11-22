@@ -1,9 +1,13 @@
 from __future__ import annotations
 
 import numpy as np
-from slate.basis import CroppedBasis, TruncatedBasis, Truncation
-from slate.basis.stacked import tuple_basis_with_modified_children
-from slate.basis.transformed import fundamental_transformed_tuple_basis_from_metadata
+from slate.basis import (
+    CroppedBasis,
+    TruncatedBasis,
+    Truncation,
+    fundamental_transformed_tuple_basis_from_metadata,
+    tuple_basis_with_modified_children,
+)
 from slate.metadata import (
     LabelSpacing,
     SpacedVolumeMetadata,
@@ -22,7 +26,7 @@ def _get_repeat_basis_metadata(
     return StackedMetadata(
         tuple(
             SpacedLengthMetadata(
-                (s * d.fundamental_shape[0],),
+                s * d.fundamental_shape[0],
                 spacing=LabelSpacing(delta=s * d.delta),
             )
             for (s, d) in zip(shape, metadata.children, strict=True)

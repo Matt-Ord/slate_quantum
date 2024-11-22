@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any
 
 import numpy as np
 from scipy.constants import hbar  # type: ignore lib
-from slate.basis.stacked import (
+from slate.basis import (
     DiagonalBasis,
     TupleBasis2D,
     as_tuple_basis,
@@ -12,7 +12,7 @@ from slate.basis.stacked import (
 )
 from slate.metadata import BasisMetadata, Metadata2D
 
-from slate_quantum.model.operator.linalg import eigh
+from slate_quantum.model.operator.linalg import into_diagonal_hermitian
 from slate_quantum.model.state._state import State, StateList
 
 try:
@@ -69,7 +69,7 @@ def solve_schrodinger_equation_decomposition[
     TupleBasis2D[np.complex128, TB, EigenstateBasis[M], None],
 ]:
     """Solve the schrodinger equation by directly finding eigenstates for the given initial state and hamiltonian."""
-    diagonal = eigh(hamiltonian)
+    diagonal = into_diagonal_hermitian(hamiltonian)
     return _solve_schrodinger_equation_diagonal(initial_state, times, diagonal)
 
 

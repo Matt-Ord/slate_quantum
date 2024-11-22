@@ -7,17 +7,18 @@ from slate.basis import (
     Basis,
     DiagonalBasis,
     FundamentalBasis,
+    TupleBasis,
     TupleBasis2D,
     as_tuple_basis,
-)
-from slate.basis.stacked import (
-    TupleBasis,
     diagonal_basis,
     fundamental_tuple_basis_from_shape,
     tuple_basis,
 )
-from slate.metadata import SimpleMetadata, StackedMetadata
-from slate.metadata.stacked.volume import fundamental_stacked_nk_points
+from slate.metadata import (
+    SimpleMetadata,
+    StackedMetadata,
+    fundamental_stacked_nk_points,
+)
 from slate.metadata.util import fundamental_nk_points
 from slate.util import pad_ft_points
 
@@ -75,13 +76,13 @@ def _get_operators_for_isotropic_noise[M: BasisMetadata](
     # with k_n = 2 * np.pi * n / N, n = 0...N
     # and x_m = m, m = 0...M
     k = 2 * np.pi / fundamental_n
-    nk_points = fundamental_nk_points(SimpleMetadata((basis.size,)))[np.newaxis, :]
+    nk_points = fundamental_nk_points(SimpleMetadata(basis.size))[np.newaxis, :]
     i_points = np.arange(0, n)[:, np.newaxis]
 
     operators = np.exp(1j * i_points * k * nk_points) / np.sqrt(basis.size)
     return OperatorList(
         tuple_basis(
-            (FundamentalBasis.from_shape((n,)), diagonal_basis((basis, basis)))
+            (FundamentalBasis.from_size(n), diagonal_basis((basis, basis)))
         ),
         operators,
     )
@@ -183,7 +184,7 @@ def get_periodic_operators_for_real_isotropic_noise[B: Basis[BasisMetadata, Any]
     n = (fundamental_n // 2) if n is None else n
 
     k = 2 * np.pi / fundamental_n
-    nk_points = fundamental_nk_points(SimpleMetadata((basis.size,)))[np.newaxis, :]
+    nk_points = fundamental_nk_points(SimpleMetadata(basis.size))[np.newaxis, :]
 
     sines = np.sin(np.arange(n - 1, 0, -1)[:, np.newaxis] * nk_points * k)
     coses = np.cos(np.arange(0, n)[:, np.newaxis] * nk_points * k)
@@ -197,7 +198,7 @@ def get_periodic_operators_for_real_isotropic_noise[B: Basis[BasisMetadata, Any]
     # ! data[end:] = np.sqrt(2) * np.imag(np.conj(data[end:]))
     return OperatorList(
         tuple_basis(
-            (FundamentalBasis.from_shape((n,)), diagonal_basis((basis, basis)))
+            (FundamentalBasis.from_size(n), diagonal_basis((basis, basis)))
         ),
         data,
     )

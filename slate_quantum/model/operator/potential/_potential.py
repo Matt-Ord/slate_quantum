@@ -4,10 +4,13 @@ from typing import Any, Self, cast
 
 import numpy as np
 from slate.array import SlateArray
-from slate.basis import Basis
-from slate.basis.recast import RecastBasis
-from slate.basis.stacked import diagonal_basis, fundamental_tuple_basis_from_metadata
-from slate.metadata.stacked import Metadata2D, VolumeMetadata
+from slate.basis import (
+    Basis,
+    RecastBasis,
+    diagonal_basis,
+    fundamental_tuple_basis_from_metadata,
+)
+from slate.metadata import Metadata2D, VolumeMetadata
 
 from slate_quantum.model.operator._operator import Operator
 

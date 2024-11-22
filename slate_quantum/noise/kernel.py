@@ -3,15 +3,18 @@ from __future__ import annotations
 from typing import Any, cast
 
 import numpy as np
-from slate.basis import Basis, DiagonalBasis, FundamentalBasis, RecastBasis
-from slate.basis.stacked import (
+from slate.basis import (
+    Basis,
+    DiagonalBasis,
+    FundamentalBasis,
+    RecastBasis,
     TupleBasis2D,
+    as_index_basis,
     as_tuple_basis,
     diagonal_basis,
     isotropic_basis,
     tuple_basis,
 )
-from slate.basis.wrapped import as_index_basis
 from slate.metadata import BasisMetadata, Metadata2D, StackedMetadata
 from slate.util import slice_ignoring_axes
 

@@ -1,14 +1,14 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Iterable
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 from scipy.constants import Boltzmann, hbar  # type:ignore bad stub file
 from scipy.special import factorial  # type:ignore bad stub file
 from slate.basis import FundamentalBasis
+from slate.metadata import Metadata2D, SpacedVolumeMetadata, StackedMetadata
 from slate.metadata.length import SpacedLengthMetadata
-from slate.metadata.stacked import Metadata2D, SpacedVolumeMetadata, StackedMetadata
-from slate.metadata.stacked.volume import fundamental_stacked_delta_x
+from slate.metadata.volume import fundamental_stacked_delta_x
 
 from slate_quantum.noise.build import (
     build_axis_kernel_from_function_stacked,
@@ -26,6 +26,8 @@ from slate_quantum.noise.diagonalization._taylor import (
 from slate_quantum.noise.kernel import get_diagonal_noise_operators_from_axis
 
 if TYPE_CHECKING:
+    from collections.abc import Iterable
+
     from slate.basis import Basis, DiagonalBasis, TupleBasis2D
     from slate.metadata import BasisMetadata
 
