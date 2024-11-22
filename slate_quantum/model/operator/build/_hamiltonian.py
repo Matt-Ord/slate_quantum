@@ -4,26 +4,29 @@ from typing import TYPE_CHECKING, Any
 
 import numpy as np
 from scipy.constants import hbar  # type: ignore lib
-from slate.basis.stacked import (
+from slate.basis import (
     DiagonalBasis,
+    SplitBasis,
     TupleBasis,
     as_tuple_basis,
     diagonal_basis,
-)
-from slate.basis.transformed import (
     fundamental_transformed_tuple_basis_from_metadata,
 )
-from slate.metadata.stacked.volume import (
+from slate.metadata.volume import (
     fundamental_stacked_dk,
     fundamental_stacked_k_points,
 )
 
-from slate_quantum.model.operator._operator import Operator, SplitOperator
+from slate_quantum.model.operator._operator import Operator
 
 if TYPE_CHECKING:
-    from slate.metadata import Metadata2D, SpacedVolumeMetadata, StackedMetadata
-    from slate.metadata.length import SpacedLengthMetadata
-    from slate.metadata.stacked.volume import AxisDirections
+    from slate.metadata import (
+        Metadata2D,
+        SpacedLengthMetadata,
+        SpacedVolumeMetadata,
+        StackedMetadata,
+    )
+    from slate.metadata.volume import AxisDirections
 
     from slate_quantum.model.operator.potential._potential import Potential
 
@@ -100,11 +103,10 @@ def build_kinetic_hamiltonian[M: SpacedVolumeMetadata](
     kinetic_hamiltonian = build_kinetic_energy_operator(
         basis.metadata().children[0], mass, bloch_fraction
     )
-    n = basis.shape[0]
-    return SplitOperator(
-        basis,
-        potential_hamiltonian.raw_data,
-        np.ones((n,), dtype=np.complex128),
-        kinetic_hamiltonian.raw_data,
-        np.ones((n,), dtype=np.complex128),
+
+    return Operator(
+        SplitBasis(potential_hamiltonian.basis, kinetic_hamiltonian.basis),
+        np.concatenate(
+            [potential_hamiltonian.raw_data, kinetic_hamiltonian.raw_data], axis=None
+        ),
     )

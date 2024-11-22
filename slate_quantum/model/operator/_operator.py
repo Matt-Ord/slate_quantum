@@ -1,22 +1,20 @@
 from __future__ import annotations  # noqa: A005
 
-from typing import TYPE_CHECKING, Any, Iterator, cast, overload, override
+from typing import TYPE_CHECKING, Any, cast, overload, override
 
 import numpy as np
 from slate.array import SlateArray
 from slate.basis import (
     Basis,
     FundamentalBasis,
-    SplitBasis,
-    split_basis,
+    TupleBasis2D,
+    as_tuple_basis,
+    tuple_basis,
 )
-from slate.basis.stacked import TupleBasis, TupleBasis2D, as_tuple_basis, tuple_basis
 from slate.metadata import BasisMetadata, Metadata2D, SimpleMetadata
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable
-
-    from slate.basis.transformed import TransformDirection
+    from collections.abc import Iterable, Iterator
 
 
 class Operator[
@@ -95,40 +93,6 @@ class Operator[
     ) -> Operator[M1, DT1]:
         out = SlateArray[Any, Any].__mul__(self, other)
         return Operator[Any, Any](out.basis, out.raw_data)
-
-
-class SplitOperator[M: BasisMetadata, E](
-    Operator[
-        Metadata2D[M, M, E],
-        np.complex128,
-        SplitBasis[Basis[M, np.complex128], Basis[M, np.complex128], E],
-    ]
-):
-    """Represents an operator in a split basis."""
-
-    def __init__(  # noqa: PLR0913
-        self,
-        inner: TupleBasis[M, E, np.complex128],
-        a: np.ndarray[Any, np.dtype[np.complex128]],
-        b: np.ndarray[Any, np.dtype[np.complex128]],
-        c: np.ndarray[Any, np.dtype[np.complex128]],
-        d: np.ndarray[Any, np.dtype[np.complex128]],
-        *,
-        direction: TransformDirection = "forward",
-    ) -> None:
-        basis = split_basis(
-            (inner.children[0], inner.children[1]),
-            inner.metadata().extra,
-            direction=direction,
-        )
-        data = np.empty((4, basis.inner[0].size), dtype=np.complex128)
-        n = a.size
-        data[0 * n : 1 * n] = a
-        data[1 * n : 2 * n] = b
-        data[2 * n : 3 * n] = c
-        data[3 * n : 4 * n] = d
-
-        super().__init__(basis, data)
 
 
 class OperatorList[
@@ -225,7 +189,7 @@ class OperatorList[
         operators = list(_iter)
         assert all(x.basis == operators[0].basis for x in operators)
 
-        list_basis = FundamentalBasis.from_shape((len(operators),))
+        list_basis = FundamentalBasis.from_size(len(operators))
         return OperatorList(
             tuple_basis((list_basis, operators[0].basis)),
             np.array([x.raw_data for x in operators]),

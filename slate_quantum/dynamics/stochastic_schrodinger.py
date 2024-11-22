@@ -5,8 +5,8 @@ from typing import TYPE_CHECKING, Any, TypedDict, Unpack
 
 import numpy as np
 from scipy.constants import hbar  # type: ignore lib
-from slate.basis import TruncatedBasis
-from slate.basis.stacked import (
+from slate.basis import (
+    TruncatedBasis,
     TupleBasis2D,
     as_tuple_basis,
     tuple_basis,

@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 import numpy as np
-from slate.metadata.stacked.volume import spaced_volume_metadata_from_stacked_delta_x
+from slate.metadata.volume import spaced_volume_metadata_from_stacked_delta_x
 from slate.plot import plot_data_1d_x, plot_data_2d_x
 
-from slate_quantum.model.operator.potential.build import (
+from slate_quantum.model.operator import (
     build_cos_potential,
     repeat_potential,
 )

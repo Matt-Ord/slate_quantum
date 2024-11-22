@@ -5,13 +5,11 @@ from typing import TYPE_CHECKING, Any, cast
 import numpy as np
 from slate.basis import (
     Basis,
-)
-from slate.basis.stacked import (
     diagonal_basis,
 )
-from slate.linalg import eig as eig_array
-from slate.linalg import eigh as eigh_array
 from slate.linalg import einsum
+from slate.linalg import into_diagonal as into_diagonal_array
+from slate.linalg import into_diagonal_hermitian as into_diagonal_hermitian_array
 from slate.metadata import BasisMetadata, Metadata2D
 
 from slate_quantum.model.operator import Operator, OperatorList
@@ -22,7 +20,7 @@ if TYPE_CHECKING:
     from slate.explicit_basis import ExplicitBasis
 
 
-def eig[M: BasisMetadata, E, DT: np.complexfloating[Any, Any]](
+def into_diagonal[M: BasisMetadata, E, DT: np.complexfloating[Any, Any]](
     operator: Operator[Metadata2D[M, M, E], DT],
 ) -> Operator[
     Metadata2D[M, M, E],
@@ -35,11 +33,11 @@ def eig[M: BasisMetadata, E, DT: np.complexfloating[Any, Any]](
     ],
 ]:
     """Get a list of eigenstates for a given operator, assuming it is hermitian."""
-    diagonal = eig_array(operator)
+    diagonal = into_diagonal_array(operator)
     return Operator(diagonal.basis, diagonal.raw_data)
 
 
-def eigh[M: BasisMetadata, E, DT: np.complexfloating[Any, Any]](
+def into_diagonal_hermitian[M: BasisMetadata, E, DT: np.complexfloating[Any, Any]](
     operator: Operator[Metadata2D[M, M, E], DT],
 ) -> Operator[
     Metadata2D[M, M, E],
@@ -52,8 +50,11 @@ def eigh[M: BasisMetadata, E, DT: np.complexfloating[Any, Any]](
     ],
 ]:
     """Get a list of eigenstates for a given operator, assuming it is hermitian."""
-    diagonal = eigh_array(operator)
+    diagonal = into_diagonal_hermitian_array(operator)
     inner_basis = diagonal.basis.inner[0]
+    # TODO: this doesn't play well with fast diagonal support  # noqa: FIX002
+    # Need to use einsum inside ExplicitBasis to prevent conversion of states
+    # to a dense array.
     new_inner_basis = EigenstateBasis(
         inner_basis.states,
         direction=inner_basis.direction,

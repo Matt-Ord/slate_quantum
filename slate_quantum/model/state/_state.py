@@ -1,14 +1,16 @@
 from __future__ import annotations
 
-from typing import Any, Iterator, override
+from typing import TYPE_CHECKING, Any, override
 
 import numpy as np
 from slate.array import SlateArray
-from slate.basis import Basis
-from slate.basis.stacked import as_tuple_basis
+from slate.basis import Basis, as_tuple_basis
 from slate.metadata import BasisMetadata, Metadata2D
 
 from slate_quantum.model._label import EigenvalueMetadata
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
 
 
 class State[M: BasisMetadata, B: Basis[Any, np.complex128] = Basis[M, np.complex128]](

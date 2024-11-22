@@ -4,20 +4,20 @@ from typing import TYPE_CHECKING, Any
 
 import numpy as np
 from slate.array import SlateArray
-from slate.basis import FundamentalBasis
-from slate.basis.stacked import (
+from slate.basis import (
+    FundamentalBasis,
     TupleBasis,
     TupleBasis2D,
     fundamental_tuple_basis_from_metadata,
     tuple_basis,
 )
-from slate.metadata.stacked import Metadata2D, fundamental_stacked_nx_points
-from slate.metadata.stacked.volume import (
+from slate.metadata import Metadata2D, fundamental_stacked_nx_points
+from slate.metadata.util import fundamental_size
+from slate.metadata.volume import (
     AxisDirections,
     fundamental_stacked_delta_x,
     fundamental_stacked_x_points,
 )
-from slate.metadata.util import fundamental_size
 
 from slate_quantum.model.operator._operator import Operator, OperatorList
 

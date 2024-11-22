@@ -9,8 +9,7 @@ from slate.metadata import BasisMetadata, Metadata2D
 from ._state import StateList
 
 if TYPE_CHECKING:
-    from slate.basis import Basis
-    from slate.basis.stacked import TupleBasis2D
+    from slate.basis import Basis, TupleBasis2D
 
 
 class EigenstateBasis[M: BasisMetadata](ExplicitUnitaryBasis[M, np.complex128]):

@@ -135,7 +135,7 @@ def _get_linear_operators_for_noise[M: BasisMetadata](
     return OperatorList(
         tuple_basis(
             (
-                FundamentalBasis.from_shape((n_terms,)),
+                FundamentalBasis.from_size(n_terms),
                 DiagonalBasis(nx_displacements.basis),
             ),
             None,
