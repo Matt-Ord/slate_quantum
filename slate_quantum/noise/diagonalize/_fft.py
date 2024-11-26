@@ -24,7 +24,7 @@ from slate.util import pad_ft_points
 
 from slate_quantum.model import EigenvalueMetadata
 from slate_quantum.model.operator import OperatorList
-from slate_quantum.noise.kernel import (
+from slate_quantum.noise._kernel import (
     as_axis_kernel_from_isotropic,
     get_diagonal_noise_operators_from_axis,
 )
@@ -32,7 +32,7 @@ from slate_quantum.noise.kernel import (
 if TYPE_CHECKING:
     from slate.metadata import BasisMetadata, Metadata2D
 
-    from slate_quantum.noise.kernel import IsotropicNoiseKernel
+    from slate_quantum.noise._kernel import IsotropicNoiseKernel
 
 
 def _assert_periodic_sample(
