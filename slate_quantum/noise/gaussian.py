@@ -29,7 +29,6 @@ if TYPE_CHECKING:
     from collections.abc import Iterable
 
     from slate.basis import Basis, DiagonalBasis, TupleBasis2D
-    from slate.metadata import BasisMetadata
 
     from slate_quantum.model._label import EigenvalueMetadata
     from slate_quantum.model.operator._operator import Operator, OperatorList
@@ -238,8 +237,10 @@ def get_effective_gaussian_noise_operators_periodic[M: SpacedVolumeMetadata](
 
 
 def get_temperature_corrected_gaussian_noise_operators[
-    M: Metadata2D[BasisMetadata, BasisMetadata, Any],
-    B: Basis[Metadata2D[BasisMetadata, BasisMetadata, Any], Any],
+    M: Metadata2D[SpacedVolumeMetadata, SpacedVolumeMetadata, Any],
+    B: Basis[Metadata2D[SpacedVolumeMetadata, SpacedVolumeMetadata, Any], Any] = Basis[
+        M, Any
+    ],
 ](
     hamiltonian: Operator[M, np.complex128, B],
     a: float,
@@ -248,7 +249,11 @@ def get_temperature_corrected_gaussian_noise_operators[
     *,
     truncation: Iterable[int] | None = None,
 ) -> OperatorList[
-    Metadata2D[EigenvalueMetadata, Metadata2D[M, M, None], None],
+    Metadata2D[
+        EigenvalueMetadata,
+        Metadata2D[SpacedVolumeMetadata, SpacedVolumeMetadata, None],
+        None,
+    ],
     np.complex128,
     TupleBasis2D[
         np.complex128,
@@ -282,8 +287,10 @@ def get_temperature_corrected_gaussian_noise_operators[
 
 
 def get_temperature_corrected_effective_gaussian_noise_operators[
-    M: Metadata2D[BasisMetadata, BasisMetadata, Any],
-    B: Basis[Metadata2D[BasisMetadata, BasisMetadata, Any], Any],
+    M: Metadata2D[SpacedVolumeMetadata, SpacedVolumeMetadata, Any],
+    B: Basis[Metadata2D[SpacedVolumeMetadata, SpacedVolumeMetadata, Any], Any] = Basis[
+        M, Any
+    ],
 ](
     hamiltonian: Operator[M, np.complex128, B],
     eta: float,
@@ -291,7 +298,11 @@ def get_temperature_corrected_effective_gaussian_noise_operators[
     *,
     truncation: Iterable[int] | None = None,
 ) -> OperatorList[
-    Metadata2D[EigenvalueMetadata, Metadata2D[M, M, None], None],
+    Metadata2D[
+        EigenvalueMetadata,
+        Metadata2D[SpacedVolumeMetadata, SpacedVolumeMetadata, None],
+        None,
+    ],
     np.complex128,
     TupleBasis2D[
         np.complex128,

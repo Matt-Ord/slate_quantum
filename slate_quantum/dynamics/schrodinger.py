@@ -30,18 +30,19 @@ if TYPE_CHECKING:
 
 
 def _solve_schrodinger_equation_diagonal[
-    B: Basis[BasisMetadata, np.complex128],
+    M: BasisMetadata,
     TB: Basis[TimeMetadata, np.complex128],
+    B: Basis[BasisMetadata, np.complex128] = Basis[M, np.complex128],
 ](
     initial_state: State[BasisMetadata],
     times: TB,
     hamiltonian: Operator[
-        Metadata2D[BasisMetadata, BasisMetadata, Any],
+        Metadata2D[M, M, Any],
         np.number[Any],
         DiagonalBasis[np.complex128, B, B, Any],
     ],
 ) -> StateList[
-    Metadata2D[TimeMetadata, BasisMetadata, None],
+    Metadata2D[TimeMetadata, M, None],
     TupleBasis2D[np.complex128, TB, B, None],
 ]:
     coefficients = initial_state.with_basis(hamiltonian.basis.inner[0]).raw_data
@@ -65,7 +66,7 @@ def solve_schrodinger_equation_decomposition[
         np.complex128,
     ],
 ) -> StateList[
-    Metadata2D[TimeMetadata, BasisMetadata, None],
+    Metadata2D[TimeMetadata, M, None],
     TupleBasis2D[np.complex128, TB, EigenstateBasis[M], None],
 ]:
     """Solve the schrodinger equation by directly finding eigenstates for the given initial state and hamiltonian."""

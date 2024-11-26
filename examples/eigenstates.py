@@ -12,9 +12,9 @@ from slate_quantum.model.operator import (
 )
 
 if __name__ == "__main__":
-    # Metadata for a 1D volume with 100 points and a width of 14
+    # Metadata for a 1D volume with 60 points in the x direction
     metadata = spaced_volume_metadata_from_stacked_delta_x(
-        (np.array([2 * np.pi]),), (5,)
+        (np.array([2 * np.pi]),), (60,)
     )
 
     potential = build_cos_potential(metadata, 0)
@@ -23,18 +23,27 @@ if __name__ == "__main__":
     diagonal_hamiltonian = into_diagonal_hermitian(hamiltonian)
     eigenstates = diagonal_hamiltonian.basis.inner[1].eigenvectors
 
+    # The eigenstates of a free particle are plane waves
     fig, ax = get_figure()
     for state in list(eigenstates)[:3]:
         plot_data_1d_x(state, ax=ax, measure="abs")
-    ax.set_ylim(-5, 5)
     fig.show()
 
     fig, ax = get_figure()
-    fig1, ax1 = get_figure()
     for state in list(eigenstates)[:3]:
-        plot_data_1d_k(state, ax=ax, measure="imag")
-        plot_data_1d_k(state, ax=ax1, measure="real")
+        plot_data_1d_k(state, ax=ax, measure="abs")
     fig.show()
-    fig1.show()
+
+    # Now we modify the potential to have a barrier
+    potential = build_cos_potential(metadata, 1)
+    hamiltonian = build_kinetic_hamiltonian(potential, hbar**2)
+    diagonal_hamiltonian = into_diagonal_hermitian(hamiltonian)
+    eigenstates = diagonal_hamiltonian.basis.inner[1].eigenvectors
+
+    # The eigenstates are now localized around the potential minima
+    fig, ax = get_figure()
+    for state in list(eigenstates)[:3]:
+        plot_data_1d_x(state, ax=ax, measure="abs")
+    fig.show()
 
     input()
