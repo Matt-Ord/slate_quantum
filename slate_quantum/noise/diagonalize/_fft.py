@@ -11,7 +11,7 @@ from slate.basis import (
     TupleBasis2D,
     as_tuple_basis,
     diagonal_basis,
-    fundamental_tuple_basis_from_shape,
+    fundamental_basis_from_shape,
     tuple_basis,
 )
 from slate.metadata import (
@@ -81,9 +81,7 @@ def _get_operators_for_isotropic_noise[M: BasisMetadata](
 
     operators = np.exp(1j * i_points * k * nk_points) / np.sqrt(basis.size)
     return OperatorList(
-        tuple_basis(
-            (FundamentalBasis.from_size(n), diagonal_basis((basis, basis)))
-        ),
+        tuple_basis((FundamentalBasis.from_size(n), diagonal_basis((basis, basis)))),
         operators,
     )
 
@@ -197,9 +195,7 @@ def get_periodic_operators_for_real_isotropic_noise[B: Basis[BasisMetadata, Any]
     # ! data[1:end] = np.sqrt(2) * np.real(data[1:end])
     # ! data[end:] = np.sqrt(2) * np.imag(np.conj(data[end:]))
     return OperatorList(
-        tuple_basis(
-            (FundamentalBasis.from_size(n), diagonal_basis((basis, basis)))
-        ),
+        tuple_basis((FundamentalBasis.from_size(n), diagonal_basis((basis, basis)))),
         data,
     )
 
@@ -299,7 +295,7 @@ def _get_operators_for_isotropic_stacked_noise[M: StackedMetadata[BasisMetadata,
     # with k_n0,n1 = 2 * np.pi * (n0,n1,...) / prod(Ni), ni = 0...Ni
     # and x_m0,m1 = (m0,m1,...), mi = 0...Mi
     k = tuple(2 * np.pi / n for n in fundamental_shape)
-    shape_basis = fundamental_tuple_basis_from_shape(fundamental_shape)
+    shape_basis = fundamental_basis_from_shape(fundamental_shape)
 
     nk_points = fundamental_stacked_nk_points(basis.metadata())
     i_points = fundamental_stacked_nk_points(
@@ -318,7 +314,7 @@ def _get_operators_for_isotropic_stacked_noise[M: StackedMetadata[BasisMetadata,
         tuple_basis(
             (
                 shape_basis,
-                diagonal_basis((converted_basis, converted_basis.conjugate_basis())),
+                diagonal_basis((converted_basis, converted_basis.dual_basis())),
             )
         ),
         operators,

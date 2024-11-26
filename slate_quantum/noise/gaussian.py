@@ -16,10 +16,10 @@ from slate_quantum.noise.build import (
     get_temperature_corrected_operators,
     truncate_noise_operator_list,
 )
-from slate_quantum.noise.diagonalization._fft import (
+from slate_quantum.noise.diagonalize._fft import (
     get_periodic_noise_operators_real_isotropic_stacked_fft,
 )
-from slate_quantum.noise.diagonalization._taylor import (
+from slate_quantum.noise.diagonalize._taylor import (
     get_linear_noise_operators_explicit_taylor_expansion,
     get_periodic_noise_operators_explicit_taylor_expansion,
 )
@@ -393,7 +393,7 @@ def get_linear_gaussian_noise_operators_explicit_taylor[M: SpacedLengthMetadata]
     TupleBasis2D[
         np.complex128,
         FundamentalBasis[EigenvalueMetadata],
-        DiagonalBasis[np.complex128, FundamentalBasis[M], FundamentalBasis[M], None],
+        DiagonalBasis[np.complex128, Basis[M, Any], Basis[M, Any], None],
         None,
     ],
 ]:

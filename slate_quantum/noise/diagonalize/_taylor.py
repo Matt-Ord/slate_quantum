@@ -18,10 +18,10 @@ from slate_quantum.model._label import EigenvalueMetadata
 from slate_quantum.model.operator import (
     OperatorList,
 )
-from slate_quantum.model.operator.build._displacement import (
+from slate_quantum.model.operator.build._position import (
     build_nx_displacement_operator,
 )
-from slate_quantum.noise.diagonalization._fft import (
+from slate_quantum.noise.diagonalize._fft import (
     get_periodic_operators_for_real_isotropic_noise,
 )
 from slate_quantum.noise.kernel import (
@@ -115,7 +115,7 @@ def _get_linear_operators_for_noise[M: BasisMetadata](
     TupleBasis2D[
         np.complex128,
         FundamentalBasis[SimpleMetadata],
-        DiagonalBasis[np.complex128, FundamentalBasis[M], FundamentalBasis[M], None],
+        DiagonalBasis[np.complex128, Basis[M, Any], Basis[M, Any], None],
         None,
     ],
 ]:
@@ -155,7 +155,7 @@ def get_linear_noise_operators_explicit_taylor_expansion[M: BasisMetadata](
     TupleBasis2D[
         np.complex128,
         FundamentalBasis[EigenvalueMetadata],
-        DiagonalBasis[np.complex128, FundamentalBasis[M], FundamentalBasis[M], None],
+        DiagonalBasis[np.complex128, Basis[M, Any], Basis[M, Any], None],
         None,
     ],
 ]:
@@ -212,7 +212,7 @@ def get_periodic_noise_operators_real_isotropic_taylor_expansion[M: BasisMetadat
     # use T_n(cos(x)) = cos(nx) to find the coefficients
     noise_polynomial = cast(
         np.polynomial.Polynomial,
-        np.polynomial.Chebyshev.fit(  # type: ignore unknown
+        np.polynomial.Chebyshev.fit(  # cSpell: ignore Chebyshev # type: ignore unknown
             x=points,
             y=kernel.raw_data,
             deg=n,

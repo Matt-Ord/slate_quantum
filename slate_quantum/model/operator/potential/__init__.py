@@ -8,7 +8,12 @@ the outer basis being the position basis.
 
 from __future__ import annotations
 
+from ._build import build_cos_potential, repeat_potential
 from ._potential import Potential, PotentialBasis
-from .build import build_cos_potential, repeat_potential
 
-__all__ = ["Potential", "PotentialBasis", "build_cos_potential", "repeat_potential"]
+__all__ = [
+    "Potential",
+    "PotentialBasis",
+    "build_cos_potential",
+    "repeat_potential",
+]

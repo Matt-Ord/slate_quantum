@@ -56,12 +56,12 @@ def into_diagonal_hermitian[M: BasisMetadata, E, DT: np.complexfloating[Any, Any
     # Need to use einsum inside ExplicitBasis to prevent conversion of states
     # to a dense array.
     new_inner_basis = EigenstateBasis(
-        inner_basis.states,
-        direction=inner_basis.direction,
+        inner_basis.transform,
+        direction="forward",
         data_id=inner_basis.data_id,
     )
     new_basis = diagonal_basis(
-        (new_inner_basis, new_inner_basis.conjugate_basis()),
+        (new_inner_basis, new_inner_basis.dual_basis()),
         diagonal.basis.metadata().extra,
     )
     return Operator(new_basis, diagonal.raw_data)

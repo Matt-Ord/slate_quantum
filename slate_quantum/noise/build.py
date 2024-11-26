@@ -11,12 +11,12 @@ from slate_quantum.model.operator import (
     OperatorList,
 )
 from slate_quantum.model.operator._super_operator import SuperOperatorMetadata
-from slate_quantum.model.operator.build._displacement import (
+from slate_quantum.model.operator.build._position import (
     build_total_x_displacement_operator,
     build_x_displacement_operator,
 )
 from slate_quantum.model.operator.linalg import get_commutator_operator_list
-from slate_quantum.noise.diagonalization._eigenvalue import (
+from slate_quantum.noise.diagonalize._eigenvalue import (
     get_periodic_noise_operators_diagonal_eigenvalue,
     get_periodic_noise_operators_eigenvalue,
 )

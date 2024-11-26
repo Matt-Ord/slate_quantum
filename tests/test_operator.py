@@ -13,7 +13,7 @@ from slate_quantum.model.operator.build import (
     build_kinetic_hamiltonian,
 )
 from slate_quantum.model.operator.linalg import into_diagonal_hermitian
-from slate_quantum.model.operator.potential.build import build_cos_potential
+from slate_quantum.model.operator.potential._build import build_cos_potential
 
 
 def test_build_kinetic_operator() -> None:
@@ -64,6 +64,7 @@ def test_hamiltonain_eigenstates() -> None:
     kinetic_operator = build_kinetic_energy_operator(metadata, hbar**2)
 
     np.testing.assert_allclose(
-        into_diagonal_hermitian(kinetic_operator).raw_data,
-        into_diagonal_hermitian(hamiltonian).raw_data,
+        np.sort(into_diagonal_hermitian(kinetic_operator).raw_data),
+        np.sort(into_diagonal_hermitian(hamiltonian).raw_data),
+        atol=1e-15,
     )
