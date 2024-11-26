@@ -36,7 +36,7 @@ if __name__ == "__main__":
     evolution = solve_schrodinger_equation_decomposition(
         initial_state, times, hamiltonian
     )
-    # The state changes in in time, but only by a phase difference
+    # The state changes in time, but only by a phase difference
     fig, ax, _anim0 = animate_data_over_list_1d_x(evolution, measure="real")
     ax.set_title("Real part of the state")
     fig.show()
