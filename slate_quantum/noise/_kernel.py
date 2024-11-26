@@ -386,3 +386,30 @@ def get_diagonal_noise_operators_from_axis[M: BasisMetadata, E](
         tuple_basis((eigenvalue_basis, diagonal_basis((full_basis_0, full_basis_1)))),
         data,
     )
+
+
+type NoiseOperatorList[
+    M: Metadata2D[BasisMetadata, BasisMetadata, None],
+    B: Basis[Metadata2D[BasisMetadata, BasisMetadata, None], np.complex128] = Basis[  # noqa: E251
+        Metadata2D[BasisMetadata, BasisMetadata, None], np.complex128
+    ],
+] = OperatorList[
+    Metadata2D[EigenvalueMetadata, M, None],
+    np.complex128,
+    TupleBasis2D[np.complex128, FundamentalBasis[EigenvalueMetadata], B, None],
+]
+
+type DiagonalNoiseOperatorList[
+    M: Metadata2D[BasisMetadata, BasisMetadata, None],
+    B: DiagonalBasis[
+        np.complex128,
+        Basis[BasisMetadata, np.complex128],
+        Basis[BasisMetadata, np.complex128],
+        None,
+    ] = DiagonalBasis[  # noqa: E251
+        np.complex128,
+        Basis[M, np.complex128],
+        Basis[M, np.complex128],
+        None,
+    ],
+] = NoiseOperatorList[M, B]

@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     from slate.metadata import BasisMetadata, Metadata2D
 
     from slate_quantum.model.operator._super_operator import SuperOperatorMetadata
-    from slate_quantum.noise.kernel import DiagonalNoiseKernel, NoiseKernel
+    from slate_quantum.noise._kernel import DiagonalNoiseKernel, NoiseKernel
 
 
 def get_periodic_noise_operators_eigenvalue[M0: BasisMetadata, M1: BasisMetadata](
