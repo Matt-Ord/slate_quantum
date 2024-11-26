@@ -36,7 +36,7 @@ def test_build_hamiltonain() -> None:
     )
     transformed_basis = fundamental_transformed_tuple_basis_from_metadata(metadata)
     transformed_operator = hamiltonian.with_basis(
-        tuple_basis((transformed_basis, transformed_basis))
+        tuple_basis((transformed_basis, transformed_basis.dual_basis()))
     )
 
     expected = [
