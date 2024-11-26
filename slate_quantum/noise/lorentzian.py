@@ -9,11 +9,12 @@ from slate.metadata import (
     Metadata2D,
     SpacedVolumeMetadata,
     VolumeMetadata,
+    shallow_shape_from_nested,
 )
 from slate.metadata.volume import fundamental_stacked_delta_x
 
 from slate_quantum.noise.build import build_isotropic_kernel_from_function_stacked
-from slate_quantum.noise.diagonalization._taylor import (
+from slate_quantum.noise.diagonalize._taylor import (
     get_periodic_noise_operators_explicit_taylor_expansion,
 )
 
@@ -111,7 +112,7 @@ def get_lorentzian_operators_explicit_taylor[M: VolumeMetadata, DT: np.generic](
 
     Parameters
     ----------
-    lambda_: float, the HWHM
+    lambda_: float, the width of the lorentzian noise kernel
     basis: TupleBasisWithLengthLike[FundamentalPositionBasis]
     n: int, by default 1
 
@@ -119,7 +120,7 @@ def get_lorentzian_operators_explicit_taylor[M: VolumeMetadata, DT: np.generic](
     and also their corresponding coefficients.
     """
     # currently only support 1D
-    assert basis.n_dim == 1
+    assert len(shallow_shape_from_nested(basis.fundamental_shape)) == 1
     basis_x = as_tuple_basis(basis)
     n_terms = (basis_x[0].size // 2) if n_terms is None else n_terms
 

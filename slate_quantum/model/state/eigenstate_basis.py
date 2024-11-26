@@ -17,7 +17,7 @@ class EigenstateBasis[M: BasisMetadata](ExplicitUnitaryBasis[M, np.complex128]):
 
     @property
     @override
-    def states(
+    def eigenvectors(
         self,
     ) -> StateList[
         Metadata2D[BasisMetadata, M, None],
@@ -29,13 +29,5 @@ class EigenstateBasis[M: BasisMetadata](ExplicitUnitaryBasis[M, np.complex128]):
         ],
     ]:
         """Get the eigenstates of the basis."""
-        states = super().states
+        states = super().eigenvectors
         return StateList(states.basis, states.raw_data)
-
-    @override
-    def conjugate_basis(self) -> EigenstateBasis[M]:
-        return EigenstateBasis(
-            self.states,
-            direction="forward" if self.direction == "backward" else "backward",
-            data_id=self._data_id,
-        )

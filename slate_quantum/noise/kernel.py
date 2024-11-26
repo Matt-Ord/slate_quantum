@@ -15,13 +15,18 @@ from slate.basis import (
     isotropic_basis,
     tuple_basis,
 )
-from slate.metadata import BasisMetadata, Metadata2D, StackedMetadata
+from slate.metadata import (
+    BasisMetadata,
+    Metadata2D,
+    StackedMetadata,
+    shallow_shape_from_nested,
+)
 from slate.util import slice_ignoring_axes
 
 from slate_quantum._util import outer_product
-from slate_quantum.model._label import EigenvalueMetadata
-from slate_quantum.model.operator._operator import OperatorList
-from slate_quantum.model.operator._super_operator import (
+from slate_quantum.model import EigenvalueMetadata
+from slate_quantum.model.operator import (
+    OperatorList,
     SuperOperator,
     SuperOperatorMetadata,
 )
@@ -153,7 +158,7 @@ class IsotropicNoiseKernel[
     ) -> None:
         outer_recast = basis
         inner_recast = basis
-        inner = isotropic_basis((basis, basis.conjugate_basis()))
+        inner = isotropic_basis((basis, basis.dual_basis()))
 
         recast = RecastBasis(inner, inner_recast, outer_recast)
         super().__init__(cast(Any, recast), cast(Any, data))
@@ -217,7 +222,7 @@ def as_axis_kernel_from_isotropic[
     """Convert an isotropic kernel to an axis kernel."""
     outer_as_tuple = as_tuple_basis(kernel.basis.outer_recast)
     converted = kernel.with_isotropic_basis(outer_as_tuple)
-    n_axis = converted.basis.n_dim
+    n_axis = len(shallow_shape_from_nested(converted.basis.fundamental_shape))
 
     data_stacked = converted.raw_data.reshape(outer_as_tuple.shape)
     slice_without_idx = tuple(0 for _ in range(n_axis - 1))
@@ -356,7 +361,7 @@ def get_diagonal_noise_operators_from_axis[M: BasisMetadata, E](
         tuple(operators.basis[1].inner[1] for operators in op_as_tuple_nested), extra
     )
 
-    # for example, in 2d this is ij,kl -> ikjl
+    # for example, in 2d this is ij,kl ->  # cSpell:ignore
     subscripts = tuple(
         (chr(ord("i") + i), chr(ord("i") + i + 1))
         for i in range(0, len(operators_list) * 2, 2)

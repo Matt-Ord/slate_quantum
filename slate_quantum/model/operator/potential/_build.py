@@ -26,7 +26,7 @@ def _get_repeat_basis_metadata(
     return StackedMetadata(
         tuple(
             SpacedLengthMetadata(
-                s * d.fundamental_shape[0],
+                s * d.fundamental_size,
                 spacing=LabelSpacing(delta=s * d.delta),
             )
             for (s, d) in zip(shape, metadata.children, strict=True)
@@ -70,8 +70,9 @@ def build_cos_potential(
         transformed_basis,
         lambda _i, y: CroppedBasis(3, y),
     )
-    data = outer_product(*(np.array([2, -1, -1]),) * cropped.n_dim)
+    n_dim = len(cropped.shape)
+    data = outer_product(*(np.array([2, -1, -1]),) * n_dim)
     return Potential(
         cropped,
-        0.25**cropped.n_dim * height * data * np.sqrt(transformed_basis.size),
+        0.25**n_dim * height * data * np.sqrt(transformed_basis.size),
     )

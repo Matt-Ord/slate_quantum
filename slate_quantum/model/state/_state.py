@@ -62,7 +62,7 @@ def calculate_inner_product[M: BasisMetadata](
     np.complex_
     """
     return np.tensordot(
-        state_1.with_basis(state_0.basis.conjugate_basis()).raw_data,
+        state_1.with_basis(state_0.basis.dual_basis()).raw_data,
         state_0.raw_data,
         axes=(0, 0),
     ).item(0)

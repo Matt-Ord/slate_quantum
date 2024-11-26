@@ -8,6 +8,7 @@ from slate.basis import (
     Basis,
     FundamentalBasis,
     TupleBasis2D,
+    are_basis_dual,
     as_tuple_basis,
     tuple_basis,
 )
@@ -15,6 +16,14 @@ from slate.metadata import BasisMetadata, Metadata2D, SimpleMetadata
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Iterator
+
+
+def _assert_operator_basis(basis: Basis[BasisMetadata, Any]) -> None:
+    is_dual = basis.is_dual
+    if isinstance(is_dual, bool):
+        msg = "Basis is not 2d"
+        raise TypeError(msg)
+    assert are_basis_dual(is_dual[0], is_dual[1])
 
 
 class Operator[
@@ -33,6 +42,7 @@ class Operator[
         data: np.ndarray[Any, np.dtype[DT]],
     ) -> None:
         super().__init__(cast(Any, basis), cast(Any, data))
+        _assert_operator_basis(self.basis)
 
     @override
     def with_basis[B1: Basis[Any, Any]](  # B1: B
@@ -60,7 +70,6 @@ class Operator[
         array = SlateArray[Any, Any].__add__(self, other)
         if isinstance(other, Operator):
             return Operator(array.basis, array.raw_data)
-
         return array
 
     @overload
@@ -95,6 +104,14 @@ class Operator[
         return Operator[Any, Any](out.basis, out.raw_data)
 
 
+def _assert_operator_list_basis(basis: Basis[BasisMetadata, Any]) -> None:
+    is_dual = basis.is_dual
+    if isinstance(is_dual, bool):
+        msg = "Basis is not 2d"
+        raise TypeError(msg)
+    _assert_operator_basis(as_tuple_basis(basis)[1])
+
+
 class OperatorList[
     M: Metadata2D[BasisMetadata, BasisMetadata, Any],
     DT: np.generic,
@@ -111,6 +128,7 @@ class OperatorList[
         data: np.ndarray[Any, np.dtype[DT]],
     ) -> None:
         super().__init__(cast(Any, basis), cast(Any, data))
+        _assert_operator_list_basis(self.basis)
 
     @override
     def with_basis[B1: Basis[Any, Any]](  # B1: B

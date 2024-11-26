@@ -32,7 +32,7 @@ def get_periodic_noise_operators_eigenvalue[M0: BasisMetadata, M1: BasisMetadata
         tuple_basis(
             (
                 as_tuple_basis(converted.basis[0]),
-                as_tuple_basis(converted.basis[0]).conjugate_basis(),
+                as_tuple_basis(converted.basis[0]).dual_basis(),
             )
         )
     )

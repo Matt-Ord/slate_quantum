@@ -73,7 +73,7 @@ def build_kinetic_energy_operator[M: SpacedLengthMetadata, E: AxisDirections](
     momentum_basis = fundamental_transformed_tuple_basis_from_metadata(metadata)
 
     return Operator(
-        diagonal_basis((momentum_basis, momentum_basis.conjugate_basis()), None), energy
+        diagonal_basis((momentum_basis, momentum_basis.dual_basis()), None), energy
     )
 
 
