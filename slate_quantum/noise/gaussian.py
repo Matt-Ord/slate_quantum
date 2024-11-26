@@ -10,12 +10,13 @@ from slate.metadata import Metadata2D, SpacedVolumeMetadata, StackedMetadata
 from slate.metadata.length import SpacedLengthMetadata
 from slate.metadata.volume import fundamental_stacked_delta_x
 
-from slate_quantum.noise.build import (
+from slate_quantum.noise._build import (
     build_axis_kernel_from_function_stacked,
     build_isotropic_kernel_from_function_stacked,
     get_temperature_corrected_operators,
     truncate_noise_operator_list,
 )
+from slate_quantum.noise._kernel import get_diagonal_noise_operators_from_axis
 from slate_quantum.noise.diagonalize._fft import (
     get_periodic_noise_operators_real_isotropic_stacked_fft,
 )
@@ -23,7 +24,6 @@ from slate_quantum.noise.diagonalize._taylor import (
     get_linear_noise_operators_explicit_taylor_expansion,
     get_periodic_noise_operators_explicit_taylor_expansion,
 )
-from slate_quantum.noise.kernel import get_diagonal_noise_operators_from_axis
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -32,9 +32,9 @@ if TYPE_CHECKING:
 
     from slate_quantum.model._label import EigenvalueMetadata
     from slate_quantum.model.operator._operator import Operator, OperatorList
-    from slate_quantum.noise.kernel import IsotropicNoiseKernel
+    from slate_quantum.noise._kernel import IsotropicNoiseKernel
 
-    from .kernel import AxisKernel, DiagonalNoiseKernel
+    from ._kernel import AxisKernel, DiagonalNoiseKernel
 
 
 def get_gaussian_isotropic_noise_kernel[M: SpacedVolumeMetadata](

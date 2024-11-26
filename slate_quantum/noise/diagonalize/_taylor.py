@@ -21,13 +21,13 @@ from slate_quantum.model.operator import (
 from slate_quantum.model.operator.build._position import (
     build_nx_displacement_operator,
 )
-from slate_quantum.noise.diagonalize._fft import (
-    get_periodic_operators_for_real_isotropic_noise,
-)
-from slate_quantum.noise.kernel import (
+from slate_quantum.noise._kernel import (
     IsotropicNoiseKernel,
     as_axis_kernel_from_isotropic,
     get_diagonal_noise_operators_from_axis,
+)
+from slate_quantum.noise.diagonalize._fft import (
+    get_periodic_operators_for_real_isotropic_noise,
 )
 
 

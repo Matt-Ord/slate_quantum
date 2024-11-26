@@ -16,16 +16,16 @@ from slate_quantum.model.operator.build._position import (
     build_x_displacement_operator,
 )
 from slate_quantum.model.operator.linalg import get_commutator_operator_list
-from slate_quantum.noise.diagonalize._eigenvalue import (
-    get_periodic_noise_operators_diagonal_eigenvalue,
-    get_periodic_noise_operators_eigenvalue,
-)
-from slate_quantum.noise.kernel import (
+from slate_quantum.noise._kernel import (
     DiagonalNoiseKernel,
     IsotropicNoiseKernel,
     NoiseKernel,
     get_diagonal_kernel_from_operators,
     get_full_kernel_from_operators,
+)
+from slate_quantum.noise.diagonalize._eigenvalue import (
+    get_periodic_noise_operators_diagonal_eigenvalue,
+    get_periodic_noise_operators_eigenvalue,
 )
 
 if TYPE_CHECKING:
@@ -43,7 +43,7 @@ if TYPE_CHECKING:
         Operator,
     )
 
-    from .kernel import AxisKernel
+    from ._kernel import AxisKernel
 
 
 def build_isotropic_kernel_from_function[M: LengthMetadata](

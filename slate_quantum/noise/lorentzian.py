@@ -13,7 +13,7 @@ from slate.metadata import (
 )
 from slate.metadata.volume import fundamental_stacked_delta_x
 
-from slate_quantum.noise.build import build_isotropic_kernel_from_function_stacked
+from slate_quantum.noise._build import build_isotropic_kernel_from_function_stacked
 from slate_quantum.noise.diagonalize._taylor import (
     get_periodic_noise_operators_explicit_taylor_expansion,
 )
@@ -23,7 +23,7 @@ if TYPE_CHECKING:
 
     from slate_quantum.model._label import EigenvalueMetadata
     from slate_quantum.model.operator._operator import OperatorList
-    from slate_quantum.noise.kernel import IsotropicNoiseKernel
+    from slate_quantum.noise._kernel import IsotropicNoiseKernel
 
 
 def get_effective_lorentzian_parameter(
