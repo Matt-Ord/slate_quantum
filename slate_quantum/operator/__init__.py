@@ -18,6 +18,7 @@ from slate_quantum.operator._operator import (
     Operator,
     OperatorList,
     OperatorMetadata,
+    operator_basis,
 )
 from slate_quantum.operator._super_operator import (
     SuperOperator,
@@ -50,6 +51,7 @@ __all__ = [
     "into_diagonal",
     "into_diagonal_hermitian",
     "momentum_operator_basis",
+    "operator_basis",
     "position_operator_basis",
     "recast_diagonal_basis",
     "repeat_potential",

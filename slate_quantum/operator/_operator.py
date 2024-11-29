@@ -30,6 +30,12 @@ def _assert_operator_basis(basis: Basis[BasisMetadata, Any]) -> None:
 type OperatorMetadata[M: BasisMetadata = BasisMetadata] = Metadata2D[M, M, None]  # noqa: E251
 
 
+def operator_basis[M: BasisMetadata, DT: np.generic](
+    basis: Basis[M, DT],
+) -> TupleBasis2D[DT, Basis[M, DT], Basis[M, DT], None]:
+    return tuple_basis((basis, basis.dual_basis()))
+
+
 class Operator[
     M: BasisMetadata,
     DT: np.generic,

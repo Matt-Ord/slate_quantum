@@ -4,6 +4,7 @@ import numpy as np
 from slate import StackedMetadata, basis
 from slate.metadata import AxisDirections, SpacedLengthMetadata
 
+from slate_quantum.operator._operator import operator_basis
 from slate_quantum.operator.build._position import (
     build_x_displacement_operators_stacked,
 )
@@ -18,7 +19,9 @@ def build_coherent_state[M: SpacedLengthMetadata, E: AxisDirections](
 ) -> State[M]:
     displacements = build_x_displacement_operators_stacked(metadata, origin=x_0)
 
-    displacements = displacements.with_operator_basis(basis.from_metadata(metadata))
+    displacements = displacements.with_operator_basis(
+        operator_basis(basis.from_metadata(metadata))
+    )
     raw_displacements = displacements.raw_data.reshape(displacements.basis.shape[0], -1)
 
     # stores distance from x0
