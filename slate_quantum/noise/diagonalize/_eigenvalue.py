@@ -5,8 +5,8 @@ from typing import TYPE_CHECKING
 import numpy as np
 from slate.basis import FundamentalBasis, as_tuple_basis, tuple_basis
 
-from slate_quantum.model._label import EigenvalueMetadata
-from slate_quantum.model.operator._operator import OperatorList
+from slate_quantum.metadata import EigenvalueMetadata
+from slate_quantum.operator._operator import OperatorList
 
 if TYPE_CHECKING:
     from slate.metadata import BasisMetadata

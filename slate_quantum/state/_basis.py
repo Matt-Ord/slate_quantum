@@ -6,7 +6,7 @@ import numpy as np
 from slate.explicit_basis import ExplicitUnitaryBasis
 from slate.metadata import BasisMetadata
 
-from slate_quantum.model.state._state import StateList
+from slate_quantum.state._state import StateList
 
 if TYPE_CHECKING:
     from slate.basis import Basis, TupleBasis2D

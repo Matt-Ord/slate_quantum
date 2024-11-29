@@ -14,7 +14,7 @@ from slate.basis import (
 from slate.metadata import BasisMetadata, Metadata2D
 from slate.util import timed
 
-from slate_quantum.model.state import State, StateList
+from slate_quantum.state import State, StateList
 
 try:
     import sse_solver_py
@@ -25,9 +25,9 @@ if TYPE_CHECKING:
     from slate.basis import Basis
     from sse_solver_py import BandedData, SSEMethod
 
-    from slate_quantum.model import EigenvalueMetadata, TimeMetadata
-    from slate_quantum.model.operator import OperatorList
-    from slate_quantum.model.operator._operator import Operator
+    from slate_quantum.metadata import EigenvalueMetadata, TimeMetadata
+    from slate_quantum.operator import OperatorList
+    from slate_quantum.operator._operator import Operator
 
 
 def _get_operator_diagonals(

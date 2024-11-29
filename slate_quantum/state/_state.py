@@ -7,7 +7,7 @@ from slate.array import SlateArray
 from slate.basis import Basis, as_tuple_basis
 from slate.metadata import BasisMetadata, Metadata2D
 
-from slate_quantum.model._label import EigenvalueMetadata
+from slate_quantum.metadata import EigenvalueMetadata
 
 if TYPE_CHECKING:
     from collections.abc import Iterator

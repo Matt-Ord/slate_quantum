@@ -5,7 +5,7 @@ from typing import Any
 from slate.basis import WrappedBasis
 from slate.metadata import BasisMetadata
 
-from slate_quantum.model.state.eigenstate_basis import EigenstateBasis
+from slate_quantum.state._basis import EigenstateBasis
 
 
 class BlochDiagonalBasis(WrappedBasis[Any, Any, Any]): ...  # noqa: D101

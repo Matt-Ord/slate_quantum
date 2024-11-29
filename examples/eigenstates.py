@@ -5,11 +5,7 @@ from scipy.constants import hbar  # type: ignore stubs
 from slate.metadata.volume import spaced_volume_metadata_from_stacked_delta_x
 from slate.plot import get_figure, plot_data_1d_k, plot_data_1d_x
 
-from slate_quantum.model.operator import (
-    build_cos_potential,
-    build_kinetic_hamiltonian,
-    into_diagonal_hermitian,
-)
+from slate_quantum import operator
 
 if __name__ == "__main__":
     # Metadata for a 1D volume with 60 points in the x direction
@@ -17,10 +13,10 @@ if __name__ == "__main__":
         (np.array([2 * np.pi]),), (60,)
     )
 
-    potential = build_cos_potential(metadata, 0)
-    hamiltonian = build_kinetic_hamiltonian(potential, hbar**2)
+    potential = operator.build_cos_potential(metadata, 0)
+    hamiltonian = operator.build_kinetic_hamiltonian(potential, hbar**2)
     # TODO: we want to make this more natural ...  # noqa: FIX002
-    diagonal_hamiltonian = into_diagonal_hermitian(hamiltonian)
+    diagonal_hamiltonian = operator.into_diagonal_hermitian(hamiltonian)
     eigenstates = diagonal_hamiltonian.basis.inner[1].eigenvectors
 
     # The eigenstates of a free particle are plane waves
@@ -35,9 +31,9 @@ if __name__ == "__main__":
     fig.show()
 
     # Now we modify the potential to have a barrier
-    potential = build_cos_potential(metadata, 1)
-    hamiltonian = build_kinetic_hamiltonian(potential, hbar**2)
-    diagonal_hamiltonian = into_diagonal_hermitian(hamiltonian)
+    potential = operator.build_cos_potential(metadata, 1)
+    hamiltonian = operator.build_kinetic_hamiltonian(potential, hbar**2)
+    diagonal_hamiltonian = operator.into_diagonal_hermitian(hamiltonian)
     eigenstates = diagonal_hamiltonian.basis.inner[1].eigenvectors
 
     # The eigenstates are now localized around the potential minima

@@ -25,9 +25,9 @@ if TYPE_CHECKING:
     from slate import StackedMetadata
     from slate.basis import Basis, FundamentalBasis
 
-    from slate_quantum.model._label import EigenvalueMetadata
-    from slate_quantum.model.operator._operator import OperatorList
+    from slate_quantum.metadata import EigenvalueMetadata
     from slate_quantum.noise._kernel import IsotropicNoiseKernel
+    from slate_quantum.operator._operator import OperatorList
 
 
 def get_effective_lorentzian_parameter(

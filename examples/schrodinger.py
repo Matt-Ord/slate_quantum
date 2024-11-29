@@ -3,17 +3,12 @@ from __future__ import annotations
 import numpy as np
 from scipy.constants import hbar  # type: ignore stubs
 from slate import FundamentalBasis
-from slate.metadata import LabelSpacing
-from slate.metadata.volume import spaced_volume_metadata_from_stacked_delta_x
+from slate.metadata import LabelSpacing, spaced_volume_metadata_from_stacked_delta_x
 from slate.plot import animate_data_over_list_1d_x
 
-from slate_quantum.dynamics.schrodinger import solve_schrodinger_equation_decomposition
-from slate_quantum.model import SpacedTimeMetadata
-from slate_quantum.model.operator import (
-    build_cos_potential,
-    build_kinetic_hamiltonian,
-    into_diagonal_hermitian,
-)
+from slate_quantum import operator
+from slate_quantum.dynamics import solve_schrodinger_equation_decomposition
+from slate_quantum.metadata import SpacedTimeMetadata
 
 if __name__ == "__main__":
     # Metadata for a 1D volume with 60 points in the x direction
@@ -21,10 +16,10 @@ if __name__ == "__main__":
         (np.array([2 * np.pi]),), (60,)
     )
 
-    potential = build_cos_potential(metadata, 1)
-    hamiltonian = build_kinetic_hamiltonian(potential, hbar**2)
+    potential = operator.build_cos_potential(metadata, 1)
+    hamiltonian = operator.build_kinetic_hamiltonian(potential, hbar**2)
     # TODO: we want to make this more natural ...  # noqa: FIX002
-    diagonal_hamiltonian = into_diagonal_hermitian(hamiltonian)
+    diagonal_hamiltonian = operator.into_diagonal_hermitian(hamiltonian)
     eigenstates = diagonal_hamiltonian.basis.inner[1].eigenvectors
 
     # Let's simulate the evolution of the system starting

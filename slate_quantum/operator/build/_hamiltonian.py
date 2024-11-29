@@ -15,8 +15,8 @@ from slate.metadata.volume import (
     fundamental_stacked_k_points,
 )
 
-from slate_quantum.model.operator._diagonal import MomentumOperator
-from slate_quantum.model.operator._operator import Operator
+from slate_quantum.operator._diagonal import MomentumOperator
+from slate_quantum.operator._operator import Operator
 
 if TYPE_CHECKING:
     from slate.metadata import (
@@ -25,7 +25,7 @@ if TYPE_CHECKING:
     )
     from slate.metadata.volume import AxisDirections
 
-    from slate_quantum.model.operator._diagonal import Potential
+    from slate_quantum.operator._diagonal import Potential
 
 
 def build_kinetic_energy_operator[M: SpacedLengthMetadata, E: AxisDirections](

@@ -12,8 +12,8 @@ from slate.linalg import into_diagonal as into_diagonal_array
 from slate.linalg import into_diagonal_hermitian as into_diagonal_hermitian_array
 from slate.metadata import BasisMetadata
 
-from slate_quantum.model.operator import Operator, OperatorList
-from slate_quantum.model.state.eigenstate_basis import EigenstateBasis
+from slate_quantum.operator import Operator, OperatorList
+from slate_quantum.state._basis import EigenstateBasis
 
 if TYPE_CHECKING:
     from slate.basis import DiagonalBasis

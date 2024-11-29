@@ -14,13 +14,7 @@ from slate.basis import (
 from slate.metadata import BasisMetadata, Metadata2D, SimpleMetadata, StackedMetadata
 from slate.util import pad_ft_points
 
-from slate_quantum.model._label import EigenvalueMetadata
-from slate_quantum.model.operator import (
-    OperatorList,
-)
-from slate_quantum.model.operator.build._position import (
-    build_nx_displacement_operator,
-)
+from slate_quantum.metadata import EigenvalueMetadata
 from slate_quantum.noise._kernel import (
     IsotropicNoiseKernel,
     as_axis_kernel_from_isotropic,
@@ -28,6 +22,12 @@ from slate_quantum.noise._kernel import (
 )
 from slate_quantum.noise.diagonalize._fft import (
     get_periodic_operators_for_real_isotropic_noise,
+)
+from slate_quantum.operator import (
+    OperatorList,
+)
+from slate_quantum.operator.build._position import (
+    build_nx_displacement_operator,
 )
 
 

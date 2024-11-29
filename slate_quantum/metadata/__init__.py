@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from slate_quantum.model._label import (
+from slate_quantum.metadata._label import (
     EigenvalueMetadata,
     MomentumMetadata,
     SpacedMomentumMetadata,
@@ -10,19 +10,12 @@ from slate_quantum.model._label import (
     TimeMetadata,
     eigenvalue_basis,
 )
-from slate_quantum.model.operator import Operator, OperatorList, Potential
-from slate_quantum.model.state import State, StateList
 
 __all__ = [
     "EigenvalueMetadata",
     "MomentumMetadata",
-    "Operator",
-    "OperatorList",
-    "Potential",
     "SpacedMomentumMetadata",
     "SpacedTimeMetadata",
-    "State",
-    "StateList",
     "TimeMetadata",
     "eigenvalue_basis",
 ]

@@ -17,7 +17,7 @@ from slate.metadata import (
 from slate.metadata.length import SpacedLengthMetadata
 
 from slate_quantum._util import outer_product
-from slate_quantum.model.operator._diagonal import Potential
+from slate_quantum.operator._diagonal import Potential
 
 
 def _get_repeat_basis_metadata(

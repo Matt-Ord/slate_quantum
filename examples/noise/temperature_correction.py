@@ -6,14 +6,14 @@ from slate import array
 from slate.metadata import spaced_volume_metadata_from_stacked_delta_x
 from slate.plot import plot_data_2d_k, plot_data_2d_x
 
-from slate_quantum.model.operator import (
-    build_kinetic_energy_operator,
-)
 from slate_quantum.noise import (
     build_isotropic_kernel_from_function_stacked,
     gaussian_correllation_fn,
     get_periodic_noise_operators_real_isotropic_stacked_fft,
     get_temperature_corrected_operators,
+)
+from slate_quantum.operator import (
+    build_kinetic_energy_operator,
 )
 
 # sphinx.ext.autosummary TODO: this

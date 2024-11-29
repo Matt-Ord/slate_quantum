@@ -24,15 +24,15 @@ from slate.metadata import (
 from slate.util import slice_ignoring_axes
 
 from slate_quantum._util import outer_product
-from slate_quantum.model import EigenvalueMetadata
-from slate_quantum.model.operator import (
+from slate_quantum.metadata import EigenvalueMetadata
+from slate_quantum.operator import (
     OperatorList,
     OperatorMetadata,
     RecastDiagonalOperatorBasis,
     SuperOperator,
     SuperOperatorMetadata,
 )
-from slate_quantum.model.operator._diagonal import recast_diagonal_basis
+from slate_quantum.operator._diagonal import recast_diagonal_basis
 
 
 class NoiseKernel[
@@ -367,7 +367,7 @@ def get_diagonal_noise_operators_from_axis[M: BasisMetadata, E](
 
 
 type NoiseOperatorList[
-    M: Metadata2D[BasisMetadata, BasisMetadata, None],
+    M: BasisMetadata,
     B: Basis[Metadata2D[BasisMetadata, BasisMetadata, None], np.complex128] = Basis[  # noqa: E251
         Metadata2D[BasisMetadata, BasisMetadata, None], np.complex128
     ],
@@ -379,7 +379,7 @@ type NoiseOperatorList[
 ]
 
 type DiagonalNoiseOperatorList[
-    M: Metadata2D[BasisMetadata, BasisMetadata, None],
+    M: BasisMetadata,
     B: DiagonalBasis[
         np.complex128,
         Basis[BasisMetadata, np.complex128],
