@@ -4,9 +4,9 @@ from typing import TYPE_CHECKING, override
 
 import numpy as np
 from slate.explicit_basis import ExplicitUnitaryBasis
-from slate.metadata import BasisMetadata, Metadata2D
+from slate.metadata import BasisMetadata
 
-from ._state import StateList
+from slate_quantum.model.state._state import StateList
 
 if TYPE_CHECKING:
     from slate.basis import Basis, TupleBasis2D
@@ -20,7 +20,8 @@ class EigenstateBasis[M: BasisMetadata](ExplicitUnitaryBasis[M, np.complex128]):
     def eigenvectors(
         self,
     ) -> StateList[
-        Metadata2D[BasisMetadata, M, None],
+        BasisMetadata,
+        M,
         TupleBasis2D[
             np.complex128,
             Basis[BasisMetadata, np.generic],

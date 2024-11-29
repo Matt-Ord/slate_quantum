@@ -1,14 +1,15 @@
 from __future__ import annotations
 
 import numpy as np
+from slate import basis
 from slate.basis import (
     CroppedBasis,
     TruncatedBasis,
     Truncation,
     fundamental_transformed_tuple_basis_from_metadata,
-    tuple_basis_with_modified_children,
 )
 from slate.metadata import (
+    AxisDirections,
     LabelSpacing,
     SpacedVolumeMetadata,
     StackedMetadata,
@@ -16,8 +17,7 @@ from slate.metadata import (
 from slate.metadata.length import SpacedLengthMetadata
 
 from slate_quantum._util import outer_product
-
-from ._potential import Potential
+from slate_quantum.model.operator._diagonal import Potential
 
 
 def _get_repeat_basis_metadata(
@@ -36,8 +36,9 @@ def _get_repeat_basis_metadata(
 
 
 def repeat_potential(
-    potential: Potential[SpacedVolumeMetadata, np.complex128], shape: tuple[int, ...]
-) -> Potential[SpacedVolumeMetadata, np.complex128]:
+    potential: Potential[SpacedLengthMetadata, AxisDirections, np.complex128],
+    shape: tuple[int, ...],
+) -> Potential[SpacedLengthMetadata, AxisDirections, np.complex128]:
     """Create a new potential by repeating the original potential in each direction."""
     transformed_basis = fundamental_transformed_tuple_basis_from_metadata(
         potential.basis.outer_recast.metadata()
@@ -46,7 +47,7 @@ def repeat_potential(
     converted_basis = fundamental_transformed_tuple_basis_from_metadata(
         _get_repeat_basis_metadata(potential.basis.outer_recast.metadata(), shape)
     )
-    repeat_basis = tuple_basis_with_modified_children(
+    repeat_basis = basis.with_modified_children(
         converted_basis,
         lambda i, y: TruncatedBasis(
             Truncation(transformed_basis[i].size, shape[i], 0),
@@ -62,11 +63,11 @@ def repeat_potential(
 def build_cos_potential(
     metadata: SpacedVolumeMetadata,
     height: float,
-) -> Potential[SpacedVolumeMetadata, np.complex128]:
+) -> Potential[SpacedLengthMetadata, AxisDirections, np.complex128]:
     """Build a cosine potential."""
     transformed_basis = fundamental_transformed_tuple_basis_from_metadata(metadata)
     # We need only the three lowest fourier components to represent this potential
-    cropped = tuple_basis_with_modified_children(
+    cropped = basis.with_modified_children(
         transformed_basis,
         lambda _i, y: CroppedBasis(3, y),
     )

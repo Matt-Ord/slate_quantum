@@ -6,19 +6,23 @@ import numpy as np
 from scipy.constants import Boltzmann, hbar  # type: ignore stubs
 from slate.basis import DiagonalBasis, TupleBasis2D, as_tuple_basis
 from slate.metadata import (
-    Metadata2D,
-    SpacedVolumeMetadata,
+    AxisDirections,
+    SpacedLengthMetadata,
     VolumeMetadata,
     shallow_shape_from_nested,
 )
 from slate.metadata.volume import fundamental_stacked_delta_x
 
-from slate_quantum.noise._build import build_isotropic_kernel_from_function_stacked
+from slate_quantum.noise._build import (
+    build_isotropic_kernel_from_function_stacked,
+    lorentzian_correllation_fn,
+)
 from slate_quantum.noise.diagonalize._taylor import (
     get_periodic_noise_operators_explicit_taylor_expansion,
 )
 
 if TYPE_CHECKING:
+    from slate import StackedMetadata
     from slate.basis import Basis, FundamentalBasis
 
     from slate_quantum.model._label import EigenvalueMetadata
@@ -44,11 +48,11 @@ def get_effective_lorentzian_parameter(
     return (a, lambda_)
 
 
-def get_lorentzian_isotropic_noise_kernel[M: SpacedVolumeMetadata](
-    metadata: M,
+def get_lorentzian_isotropic_noise_kernel[M: SpacedLengthMetadata, E: AxisDirections](
+    metadata: StackedMetadata[M, E],
     a: float,
     lambda_: float,
-) -> IsotropicNoiseKernel[M, np.complex128]:
+) -> IsotropicNoiseKernel[StackedMetadata[M, E], np.complex128]:
     """Get an isotropic noise kernel for a lorentzian correllation.
 
     beta(x,x') = a**2 * lambda_**2 / ((x-x')**2 + lambda_**2)
@@ -65,13 +69,9 @@ def get_lorentzian_isotropic_noise_kernel[M: SpacedVolumeMetadata](
     TupleBasisLike[*tuple[FundamentalPositionBasis, ...]],
     ]
     """
-
-    def fn(
-        displacements: np.ndarray[Any, np.dtype[np.float64]],
-    ) -> np.ndarray[Any, np.dtype[np.complex128]]:
-        return a**2 * lambda_**2 / (displacements**2 + lambda_**2).astype(np.complex128)
-
-    return build_isotropic_kernel_from_function_stacked(metadata, fn)
+    return build_isotropic_kernel_from_function_stacked(
+        metadata, lorentzian_correllation_fn(a, lambda_)
+    )
 
 
 def _get_explicit_taylor_coefficients_lorentzian(
@@ -91,7 +91,8 @@ def get_lorentzian_operators_explicit_taylor[M: VolumeMetadata, DT: np.generic](
     *,
     n_terms: int | None = None,
 ) -> OperatorList[
-    Metadata2D[EigenvalueMetadata, Metadata2D[M, M, None], None],
+    EigenvalueMetadata,
+    M,
     np.complex128,
     TupleBasis2D[
         np.complex128,
@@ -134,7 +135,7 @@ def get_lorentzian_operators_explicit_taylor[M: VolumeMetadata, DT: np.generic](
     )
 
     return cast(
-        Any,
+        "Any",
         get_periodic_noise_operators_explicit_taylor_expansion(
             basis_x, polynomial_coefficients, n_terms=n_terms
         ),

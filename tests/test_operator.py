@@ -12,8 +12,8 @@ from slate_quantum.model.operator.build import (
     build_kinetic_energy_operator,
     build_kinetic_hamiltonian,
 )
+from slate_quantum.model.operator.build._potential import build_cos_potential
 from slate_quantum.model.operator.linalg import into_diagonal_hermitian
-from slate_quantum.model.operator.potential._build import build_cos_potential
 
 
 def test_build_kinetic_operator() -> None:

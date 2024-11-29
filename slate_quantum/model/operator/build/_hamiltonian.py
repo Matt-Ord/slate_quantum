@@ -7,9 +7,7 @@ from scipy.constants import hbar  # type: ignore lib
 from slate.basis import (
     DiagonalBasis,
     SplitBasis,
-    TupleBasis,
     as_tuple_basis,
-    diagonal_basis,
     fundamental_transformed_tuple_basis_from_metadata,
 )
 from slate.metadata.volume import (
@@ -17,34 +15,24 @@ from slate.metadata.volume import (
     fundamental_stacked_k_points,
 )
 
+from slate_quantum.model.operator._diagonal import MomentumOperator
 from slate_quantum.model.operator._operator import Operator
 
 if TYPE_CHECKING:
     from slate.metadata import (
-        Metadata2D,
         SpacedLengthMetadata,
-        SpacedVolumeMetadata,
         StackedMetadata,
     )
     from slate.metadata.volume import AxisDirections
 
-    from slate_quantum.model.operator.potential._potential import Potential
+    from slate_quantum.model.operator._diagonal import Potential
 
 
 def build_kinetic_energy_operator[M: SpacedLengthMetadata, E: AxisDirections](
     metadata: StackedMetadata[M, E],
     mass: float,
     bloch_fraction: np.ndarray[Any, np.dtype[np.float64]] | None = None,
-) -> Operator[
-    Metadata2D[StackedMetadata[M, E], StackedMetadata[M, E], Any],
-    Any,
-    DiagonalBasis[
-        np.complex128,
-        TupleBasis[M, E, np.complex128],
-        TupleBasis[M, E, np.complex128],
-        None,
-    ],
-]:
+) -> MomentumOperator[M, E]:
     """
     Given a mass and a basis calculate the kinetic part of the Hamiltonian.
 
@@ -72,19 +60,14 @@ def build_kinetic_energy_operator[M: SpacedLengthMetadata, E: AxisDirections](
     )
     momentum_basis = fundamental_transformed_tuple_basis_from_metadata(metadata)
 
-    return Operator(
-        diagonal_basis((momentum_basis, momentum_basis.dual_basis()), None), energy
-    )
+    return MomentumOperator(momentum_basis, energy)
 
 
-def build_kinetic_hamiltonian[M: SpacedVolumeMetadata](
-    potential: Potential[M, np.complex128],
+def build_kinetic_hamiltonian[M: SpacedLengthMetadata, E: AxisDirections](
+    potential: Potential[M, E, np.complex128],
     mass: float,
     bloch_fraction: np.ndarray[Any, np.dtype[np.float64]] | None = None,
-) -> Operator[
-    Metadata2D[M, M, None],
-    np.complex128,
-]:
+) -> Operator[StackedMetadata[M, E], np.complex128]:
     """
     Calculate the total hamiltonian in momentum basis for a given potential and mass.
 

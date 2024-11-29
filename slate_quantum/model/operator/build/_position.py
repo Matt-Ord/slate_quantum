@@ -3,17 +3,14 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, cast
 
 import numpy as np
-from slate import Basis
-from slate.array import SlateArray
+from slate import Basis, SlateArray, basis
 from slate.basis import (
     FundamentalBasis,
     TupleBasis,
     TupleBasis2D,
-    fundamental_basis_from_metadata,
     tuple_basis,
 )
 from slate.metadata import (
-    Metadata2D,
     SpacedLengthMetadata,
     fundamental_stacked_nx_points,
     shallow_shape_from_nested,
@@ -25,8 +22,8 @@ from slate.metadata.volume import (
     fundamental_stacked_x_points,
 )
 
+from slate_quantum.model.operator._diagonal import Potential
 from slate_quantum.model.operator._operator import Operator, OperatorList
-from slate_quantum.model.operator.potential._potential import Potential
 
 if TYPE_CHECKING:
     from slate.metadata import (
@@ -84,8 +81,7 @@ def _get_displacements_x_along_axis(
     max_distance = delta_x / 2
     data = _wrap_displacements(distances, max_distance)
 
-    basis = fundamental_basis_from_metadata(metadata)
-    return SlateArray(basis, data)
+    return SlateArray(basis.from_metadata(metadata), data)
 
 
 def get_displacements_x_stacked(
@@ -108,7 +104,8 @@ def get_displacements_x_stacked(
 def build_nx_displacement_operators_stacked[M: StackedMetadata[BasisMetadata, Any]](
     metadata: M,
 ) -> OperatorList[
-    Metadata2D[SimpleMetadata, Metadata2D[M, M, None], None],
+    SimpleMetadata,
+    M,
     np.int64,
     TupleBasis2D[
         np.generic,
@@ -118,11 +115,11 @@ def build_nx_displacement_operators_stacked[M: StackedMetadata[BasisMetadata, An
     ],
 ]:
     """Get a matrix of displacements in nx, taken in a periodic fashion."""
-    ax = cast(Basis[M, Any], fundamental_basis_from_metadata(metadata))
-    basis = tuple_basis((ax, ax.dual_basis()))
+    ax = cast("Basis[M, Any]", basis.from_metadata(metadata))
+    operator_basis = tuple_basis((ax, ax.dual_basis()))
     return OperatorList.from_operators(
         Operator(
-            basis,
+            operator_basis,
             (n_x_points[:, np.newaxis] - n_x_points[np.newaxis, :] + n // 2) % n
             - (n // 2),
         )
@@ -137,7 +134,7 @@ def build_nx_displacement_operators_stacked[M: StackedMetadata[BasisMetadata, An
 def build_nx_displacement_operator[M: BasisMetadata](
     metadata: M,
 ) -> Operator[
-    Metadata2D[M, M, None],
+    M,
     np.int64,
     TupleBasis2D[np.generic, Basis[M, Any], Basis[M, Any], None],
 ]:
@@ -147,15 +144,15 @@ def build_nx_displacement_operator[M: BasisMetadata](
     data = (n_x_points[:, np.newaxis] - n_x_points[np.newaxis, :] + n // 2) % n - (
         n // 2
     )
-    basis = cast(Basis[M, Any], fundamental_basis_from_metadata(metadata))
-    return Operator(tuple_basis((basis, basis.dual_basis())), data)
+    ax = basis.from_metadata(metadata)
+    return Operator(tuple_basis((ax, ax.dual_basis())), data)
 
 
 def build_x_displacement_operator[M: LengthMetadata](
     metadata: M,
     origin: float = 0.0,
 ) -> Operator[
-    Metadata2D[M, M, None],
+    M,
     np.float64,
     TupleBasis2D[np.generic, FundamentalBasis[M], FundamentalBasis[M], None],
 ]:
@@ -179,15 +176,20 @@ def build_x_displacement_operator[M: LengthMetadata](
     return Operator(tuple_basis((basis, basis.dual_basis())), data)
 
 
-def _get_displacements_matrix_x_along_axis[M: SpacedVolumeMetadata](
-    metadata: M,
+def _get_displacements_matrix_x_along_axis[M: SpacedLengthMetadata, E: AxisDirections](
+    metadata: StackedMetadata[M, E],
     origin: float = 0,
     *,
     axis: int,
 ) -> Operator[
-    Metadata2D[M, M, None],
+    StackedMetadata[M, E],
     np.float64,
-    TupleBasis2D[np.generic, Basis[M, Any], Basis[M, Any], None],
+    TupleBasis2D[
+        np.generic,
+        Basis[StackedMetadata[M, E], Any],
+        Basis[StackedMetadata[M, E], Any],
+        None,
+    ],
 ]:
     x_points = fundamental_stacked_x_points(metadata)[axis]
     distances = x_points[:, np.newaxis] - x_points[np.newaxis, :] - origin
@@ -195,19 +197,25 @@ def _get_displacements_matrix_x_along_axis[M: SpacedVolumeMetadata](
     max_distance = delta_x / 2
     data = _wrap_displacements(distances, max_distance)
 
-    basis = cast(Basis[M, Any], fundamental_basis_from_metadata(metadata))
-    return Operator(tuple_basis((basis, basis.dual_basis())), data)
+    ax = basis.from_metadata(metadata)
+    return Operator(tuple_basis((ax, ax.dual_basis())), data)
 
 
-def build_x_displacement_operators_stacked[M: SpacedVolumeMetadata](
-    metadata: M, origin: tuple[float, ...] | None
+def build_x_displacement_operators_stacked[M: SpacedLengthMetadata, E: AxisDirections](
+    metadata: StackedMetadata[M, E], origin: tuple[float, ...] | None
 ) -> OperatorList[
-    Metadata2D[SimpleMetadata, Metadata2D[Any, Any, None], None],
+    SimpleMetadata,
+    StackedMetadata[M, E],
     np.float64,
     TupleBasis2D[
         np.generic,
         FundamentalBasis[SimpleMetadata],
-        TupleBasis2D[np.generic, Basis[M, Any], Basis[M, Any], None],
+        TupleBasis2D[
+            np.generic,
+            Basis[StackedMetadata[M, E], Any],
+            Basis[StackedMetadata[M, E], Any],
+            None,
+        ],
         None,
     ],
 ]:
@@ -221,13 +229,18 @@ def build_x_displacement_operators_stacked[M: SpacedVolumeMetadata](
     )
 
 
-def build_total_x_displacement_operator[M: SpacedVolumeMetadata](
-    metadata: M,
+def build_total_x_displacement_operator[M: SpacedLengthMetadata, E: AxisDirections](
+    metadata: StackedMetadata[M, E],
     origin: tuple[float, ...] | None = None,
 ) -> Operator[
-    Metadata2D[M, M, None],
+    StackedMetadata[M, E],
     np.float64,
-    TupleBasis2D[np.generic, Basis[M, Any], Basis[M, Any], None],
+    TupleBasis2D[
+        np.generic,
+        Basis[StackedMetadata[M, E], Any],
+        Basis[StackedMetadata[M, E], Any],
+        None,
+    ],
 ]:
     """Get a matrix of displacements in x, taken in a periodic fashion."""
     displacements = build_x_displacement_operators_stacked(metadata, origin)
@@ -241,8 +254,7 @@ def build_total_x_displacement_operator[M: SpacedVolumeMetadata](
 
 def build_x_operator[M: SpacedLengthMetadata, E: AxisDirections](
     metadata: StackedMetadata[M, E], *, idx: int
-) -> Potential[StackedMetadata[M, E], np.complex128]:
+) -> Potential[M, E, np.complex128]:
     """Get the x operator."""
-    basis = fundamental_basis_from_metadata(metadata)
     points = fundamental_stacked_x_points(metadata)[idx].astype(np.complex128)
-    return Potential(basis, points)
+    return Potential(basis.from_metadata(metadata), points)
