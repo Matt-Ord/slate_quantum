@@ -22,8 +22,8 @@ from slate.metadata.volume import (
     fundamental_stacked_x_points,
 )
 
-from slate_quantum.model.operator._diagonal import Potential
-from slate_quantum.model.operator._operator import Operator, OperatorList
+from slate_quantum.operator._diagonal import Potential
+from slate_quantum.operator._operator import Operator, OperatorList
 
 if TYPE_CHECKING:
     from slate.metadata import (

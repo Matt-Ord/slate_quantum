@@ -9,7 +9,7 @@ from slate.basis import (
 )
 from slate.metadata import BasisMetadata, Metadata2D
 
-from slate_quantum.model.operator._operator import Operator, OperatorMetadata
+from slate_quantum.operator._operator import Operator, OperatorMetadata
 
 type SuperOperatorMetadata[M: BasisMetadata = BasisMetadata] = OperatorMetadata[  # noqa: E251
     OperatorMetadata[M],

@@ -12,8 +12,8 @@ from slate.basis import (
 )
 from slate.metadata import BasisMetadata
 
-from slate_quantum.model.operator.linalg import into_diagonal_hermitian
-from slate_quantum.model.state._state import State, StateList
+from slate_quantum.operator.linalg import into_diagonal_hermitian
+from slate_quantum.state._state import State, StateList
 
 try:
     import qutip  # type: ignore lib
@@ -24,9 +24,9 @@ except ImportError:
 if TYPE_CHECKING:
     from slate.basis import Basis
 
-    from slate_quantum.model import TimeMetadata
-    from slate_quantum.model.operator._operator import Operator
-    from slate_quantum.model.state.eigenstate_basis import EigenstateBasis
+    from slate_quantum.metadata import TimeMetadata
+    from slate_quantum.operator._operator import Operator
+    from slate_quantum.state._basis import EigenstateBasis
 
 
 def _solve_schrodinger_equation_diagonal[

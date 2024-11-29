@@ -7,13 +7,7 @@ from scipy.constants import Boltzmann  # type: ignore stubs
 from slate.basis import CoordinateBasis, as_index_basis, as_tuple_basis
 from slate.metadata import AxisDirections
 
-from slate_quantum.model._label import EigenvalueMetadata
-from slate_quantum.model.operator._super_operator import SuperOperatorMetadata
-from slate_quantum.model.operator.build._position import (
-    build_total_x_displacement_operator,
-    build_x_displacement_operator,
-)
-from slate_quantum.model.operator.linalg import get_commutator_operator_list
+from slate_quantum.metadata import EigenvalueMetadata
 from slate_quantum.noise._kernel import (
     DiagonalNoiseKernel,
     IsotropicNoiseKernel,
@@ -23,6 +17,12 @@ from slate_quantum.noise.diagonalize._eigenvalue import (
     get_periodic_noise_operators_diagonal_eigenvalue,
     get_periodic_noise_operators_eigenvalue,
 )
+from slate_quantum.operator._super_operator import SuperOperatorMetadata
+from slate_quantum.operator.build._position import (
+    build_total_x_displacement_operator,
+    build_x_displacement_operator,
+)
+from slate_quantum.operator.linalg import get_commutator_operator_list
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -33,7 +33,7 @@ if TYPE_CHECKING:
     )
     from slate.metadata.length import LengthMetadata, SpacedLengthMetadata
 
-    from slate_quantum.model.operator import (
+    from slate_quantum.operator import (
         Operator,
         OperatorList,
     )

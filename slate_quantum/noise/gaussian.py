@@ -35,9 +35,9 @@ if TYPE_CHECKING:
 
     from slate.basis import Basis, DiagonalBasis, TupleBasis2D
 
-    from slate_quantum.model._label import EigenvalueMetadata
-    from slate_quantum.model.operator._operator import Operator, OperatorList
+    from slate_quantum.metadata import EigenvalueMetadata
     from slate_quantum.noise._kernel import IsotropicNoiseKernel
+    from slate_quantum.operator._operator import Operator, OperatorList
 
     from ._kernel import AxisKernel, DiagonalNoiseKernel
 

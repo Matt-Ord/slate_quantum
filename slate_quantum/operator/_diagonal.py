@@ -13,7 +13,7 @@ from slate.basis import (
 )
 from slate.metadata import AxisDirections, Metadata2D
 
-from slate_quantum.model.operator._operator import Operator
+from slate_quantum.operator._operator import Operator
 
 type RecastDiagonalOperatorBasis[
     M: BasisMetadata,

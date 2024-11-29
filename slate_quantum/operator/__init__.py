@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from slate_quantum.model.operator._diagonal import (
+from slate_quantum.operator._diagonal import (
     MomentumOperator,
     MomentumOperatorBasis,
     PositionOperator,
@@ -14,22 +14,22 @@ from slate_quantum.model.operator._diagonal import (
     position_operator_basis,
     recast_diagonal_basis,
 )
-from slate_quantum.model.operator._operator import (
+from slate_quantum.operator._operator import (
     Operator,
     OperatorList,
     OperatorMetadata,
 )
-from slate_quantum.model.operator._super_operator import (
+from slate_quantum.operator._super_operator import (
     SuperOperator,
     SuperOperatorMetadata,
 )
-from slate_quantum.model.operator.build import (
+from slate_quantum.operator.build import (
     build_cos_potential,
     build_kinetic_energy_operator,
     build_kinetic_hamiltonian,
     repeat_potential,
 )
-from slate_quantum.model.operator.linalg import into_diagonal, into_diagonal_hermitian
+from slate_quantum.operator.linalg import into_diagonal, into_diagonal_hermitian
 
 __all__ = [
     "MomentumOperator",

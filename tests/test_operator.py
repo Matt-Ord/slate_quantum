@@ -8,12 +8,12 @@ from slate.basis import (
 )
 from slate.metadata.volume import spaced_volume_metadata_from_stacked_delta_x
 
-from slate_quantum.model.operator.build import (
+from slate_quantum.operator.build import (
     build_kinetic_energy_operator,
     build_kinetic_hamiltonian,
 )
-from slate_quantum.model.operator.build._potential import build_cos_potential
-from slate_quantum.model.operator.linalg import into_diagonal_hermitian
+from slate_quantum.operator.build._potential import build_cos_potential
+from slate_quantum.operator.linalg import into_diagonal_hermitian
 
 
 def test_build_kinetic_operator() -> None:
