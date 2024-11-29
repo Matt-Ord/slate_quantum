@@ -10,7 +10,7 @@ from slate.basis import (
     as_tuple_basis,
     tuple_basis,
 )
-from slate.metadata import BasisMetadata, Metadata2D
+from slate.metadata import BasisMetadata
 
 from slate_quantum.model.operator.linalg import into_diagonal_hermitian
 from slate_quantum.model.state._state import State, StateList
@@ -37,12 +37,13 @@ def _solve_schrodinger_equation_diagonal[
     initial_state: State[BasisMetadata],
     times: TB,
     hamiltonian: Operator[
-        Metadata2D[M, M, Any],
+        M,
         np.number[Any],
         DiagonalBasis[np.complex128, B, B, Any],
     ],
 ) -> StateList[
-    Metadata2D[TimeMetadata, M, None],
+    TimeMetadata,
+    M,
     TupleBasis2D[np.complex128, TB, B, None],
 ]:
     coefficients = initial_state.with_basis(hamiltonian.basis.inner[0]).raw_data
@@ -61,12 +62,10 @@ def solve_schrodinger_equation_decomposition[
 ](
     initial_state: State[BasisMetadata],
     times: TB,
-    hamiltonian: Operator[
-        Metadata2D[M, M, Any],
-        np.complex128,
-    ],
+    hamiltonian: Operator[M, np.complex128],
 ) -> StateList[
-    Metadata2D[TimeMetadata, M, None],
+    TimeMetadata,
+    M,
     TupleBasis2D[np.complex128, TB, EigenstateBasis[M], None],
 ]:
     """Solve the schrodinger equation by directly finding eigenstates for the given initial state and hamiltonian."""
@@ -80,9 +79,10 @@ def solve_schrodinger_equation[
 ](
     initial_state: State[BasisMetadata],
     times: TB,
-    hamiltonian: Operator[Metadata2D[M, M, Any], np.complex128],
+    hamiltonian: Operator[M, np.complex128],
 ) -> StateList[
-    Metadata2D[TimeMetadata, BasisMetadata, None],
+    TimeMetadata,
+    M,
     TupleBasis2D[np.complex128, TB, Basis[M, np.complex128], None],
 ]:
     """Solve the schrodinger equation iteratively for the given initial state and hamiltonian.

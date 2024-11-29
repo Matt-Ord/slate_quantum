@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, cast
 
 import numpy as np
+from slate import basis as _basis
 from slate.basis import (
     Basis,
     DiagonalBasis,
@@ -11,7 +12,6 @@ from slate.basis import (
     TupleBasis2D,
     as_tuple_basis,
     diagonal_basis,
-    fundamental_basis_from_shape,
     tuple_basis,
 )
 from slate.metadata import (
@@ -23,14 +23,15 @@ from slate.metadata.util import fundamental_nk_points
 from slate.util import pad_ft_points
 
 from slate_quantum.model import EigenvalueMetadata
-from slate_quantum.model.operator import OperatorList
+from slate_quantum.model.operator import OperatorList, RecastDiagonalOperatorBasis
+from slate_quantum.model.operator._diagonal import recast_diagonal_basis
 from slate_quantum.noise._kernel import (
     as_axis_kernel_from_isotropic,
     get_diagonal_noise_operators_from_axis,
 )
 
 if TYPE_CHECKING:
-    from slate.metadata import BasisMetadata, Metadata2D
+    from slate.metadata import BasisMetadata
 
     from slate_quantum.noise._kernel import IsotropicNoiseKernel
 
@@ -57,14 +58,13 @@ def _get_operators_for_isotropic_noise[M: BasisMetadata](
     fundamental_n: int | None = None,
     assert_periodic: bool = True,
 ) -> OperatorList[
-    Metadata2D[SimpleMetadata, Metadata2D[M, M, None], None],
+    SimpleMetadata,
+    M,
     np.complex128,
     TupleBasis2D[
         np.complex128,
         FundamentalBasis[SimpleMetadata],
-        DiagonalBasis[
-            np.complex128, Basis[M, np.complex128], Basis[M, np.complex128], None
-        ],
+        RecastDiagonalOperatorBasis[M, np.complex128],
         None,
     ],
 ]:
@@ -81,7 +81,9 @@ def _get_operators_for_isotropic_noise[M: BasisMetadata](
 
     operators = np.exp(1j * i_points * k * nk_points) / np.sqrt(basis.size)
     return OperatorList(
-        tuple_basis((FundamentalBasis.from_size(n), diagonal_basis((basis, basis)))),
+        tuple_basis(
+            (FundamentalBasis.from_size(n), recast_diagonal_basis(basis, basis))
+        ),
         operators,
     )
 
@@ -104,17 +106,13 @@ def get_periodic_noise_operators_isotropic_fft[M: BasisMetadata](
     fundamental_n: int | None = None,
     assert_periodic: bool = True,
 ) -> OperatorList[
-    Metadata2D[EigenvalueMetadata, Metadata2D[M, M, None], None],
+    EigenvalueMetadata,
+    M,
     np.complex128,
     TupleBasis2D[
         np.complex128,
         FundamentalBasis[EigenvalueMetadata],
-        DiagonalBasis[
-            np.complex128,
-            Basis[M, np.complex128],
-            Basis[M, np.complex128],
-            None,
-        ],
+        RecastDiagonalOperatorBasis[M, np.complex128],
         None,
     ],
 ]:
@@ -136,7 +134,7 @@ def get_periodic_noise_operators_isotropic_fft[M: BasisMetadata](
     fundamental_n = kernel.basis.size if fundamental_n is None else fundamental_n
 
     operators = _get_operators_for_isotropic_noise(
-        kernel.basis.inner_recast,
+        kernel.basis.outer_recast.outer_recast,
         fundamental_n=fundamental_n,
         assert_periodic=assert_periodic,
     )
@@ -149,24 +147,20 @@ def get_periodic_noise_operators_isotropic_fft[M: BasisMetadata](
     )
 
 
-def get_periodic_operators_for_real_isotropic_noise[B: Basis[BasisMetadata, Any]](
-    basis: B,
+def get_periodic_operators_for_real_isotropic_noise[M: BasisMetadata](
+    basis: Basis[M, Any],
     *,
     n: int | None = None,
     fundamental_n: int | None = None,
     assert_periodic: bool = True,
 ) -> OperatorList[
-    Metadata2D[SimpleMetadata, Metadata2D[BasisMetadata, BasisMetadata, None], None],
+    SimpleMetadata,
+    M,
     np.complex128,
     TupleBasis2D[
         np.complex128,
         FundamentalBasis[SimpleMetadata],
-        DiagonalBasis[
-            np.complex128,
-            B,
-            B,
-            None,
-        ],
+        DiagonalBasis[np.complex128, Basis[M, Any], Basis[M, Any], None],
         None,
     ],
 ]:
@@ -206,7 +200,8 @@ def get_periodic_noise_operators_real_isotropic_fft[M: BasisMetadata](
     n: int | None = None,
     assert_periodic: bool = True,
 ) -> OperatorList[
-    Metadata2D[EigenvalueMetadata, Metadata2D[M, M, None], None],
+    EigenvalueMetadata,
+    M,
     np.complex128,
     TupleBasis2D[
         np.complex128,
@@ -263,14 +258,15 @@ def get_periodic_noise_operators_real_isotropic_fft[M: BasisMetadata](
     )
 
 
-def _get_operators_for_isotropic_stacked_noise[M: StackedMetadata[BasisMetadata, None]](
+def _get_operators_for_isotropic_stacked_noise[M: StackedMetadata[BasisMetadata, Any]](
     basis: Basis[M, Any],
     *,
     shape: tuple[int, ...] | None = None,
     fundamental_shape: tuple[int, ...] | None = None,
     assert_periodic: bool = True,
 ) -> OperatorList[
-    Metadata2D[SimpleMetadata, Metadata2D[M, M, None], None],
+    SimpleMetadata,
+    M,
     np.complex128,
     TupleBasis2D[
         np.complex128,
@@ -295,7 +291,7 @@ def _get_operators_for_isotropic_stacked_noise[M: StackedMetadata[BasisMetadata,
     # with k_n0,n1 = 2 * np.pi * (n0,n1,...) / prod(Ni), ni = 0...Ni
     # and x_m0,m1 = (m0,m1,...), mi = 0...Mi
     k = tuple(2 * np.pi / n for n in fundamental_shape)
-    shape_basis = fundamental_basis_from_shape(fundamental_shape)
+    shape_basis = _basis.from_shape(fundamental_shape)
 
     nk_points = fundamental_stacked_nk_points(basis.metadata())
     i_points = fundamental_stacked_nk_points(
@@ -309,7 +305,7 @@ def _get_operators_for_isotropic_stacked_noise[M: StackedMetadata[BasisMetadata,
             for i in zip(*i_points)
         ]
     )
-    converted_basis = cast(Basis[M, Any], converted_basis)
+    converted_basis = cast("Basis[M, Any]", converted_basis)
     return OperatorList(
         tuple_basis(
             (
@@ -321,14 +317,12 @@ def _get_operators_for_isotropic_stacked_noise[M: StackedMetadata[BasisMetadata,
     )
 
 
-def _get_noise_eigenvalues_isotropic_stacked_fft[
-    M: StackedMetadata[BasisMetadata, Any]
-](
-    kernel: IsotropicNoiseKernel[M, np.complex128],
+def _get_noise_eigenvalues_isotropic_stacked_fft[M: BasisMetadata, E](
+    kernel: IsotropicNoiseKernel[StackedMetadata[M, E], np.complex128],
     *,
     fundamental_shape: tuple[int, ...] | None = None,
 ) -> EigenvalueMetadata:
-    converted_outer = as_tuple_basis(kernel.basis.outer_recast)
+    converted_outer = as_tuple_basis(kernel.basis.outer_recast.outer_recast)
     converted = kernel.with_isotropic_basis(converted_outer)
     fundamental_shape = (
         converted_outer.shape if fundamental_shape is None else fundamental_shape
@@ -347,23 +341,22 @@ def _get_noise_eigenvalues_isotropic_stacked_fft[
     return EigenvalueMetadata(coefficients)
 
 
-def get_periodic_noise_operators_isotropic_stacked_fft[
-    M: StackedMetadata[BasisMetadata, Any]
-](
-    kernel: IsotropicNoiseKernel[M, np.complex128],
+def get_periodic_noise_operators_isotropic_stacked_fft[M: BasisMetadata, E](
+    kernel: IsotropicNoiseKernel[StackedMetadata[M, E], np.complex128],
     *,
     fundamental_shape: tuple[int, ...] | None = None,
     assert_periodic: bool = True,
 ) -> OperatorList[
-    Metadata2D[EigenvalueMetadata, Metadata2D[M, M, None], None],
+    EigenvalueMetadata,
+    StackedMetadata[M, E],
     np.complex128,
     TupleBasis2D[
         np.complex128,
         FundamentalBasis[EigenvalueMetadata],
         DiagonalBasis[
             np.complex128,
-            Basis[M, Any],
-            Basis[M, Any],
+            Basis[StackedMetadata[M, E], Any],
+            Basis[StackedMetadata[M, E], Any],
             None,
         ],
         None,
@@ -382,14 +375,14 @@ def get_periodic_noise_operators_isotropic_stacked_fft[
     The inddependent operators can therefore be found directly using a FFT
     of the noise beta(x).
     """
-    converted_outer = as_tuple_basis(kernel.basis.outer_recast)
+    converted_outer = as_tuple_basis(kernel.basis.outer_recast.outer_recast)
     converted = kernel.with_isotropic_basis(converted_outer)
     fundamental_shape = (
         converted_outer.shape if fundamental_shape is None else fundamental_shape
     )
 
     operators = _get_operators_for_isotropic_stacked_noise(
-        converted.basis.outer_recast,
+        converted_outer,
         fundamental_shape=fundamental_shape,
         assert_periodic=assert_periodic,
     )
@@ -402,20 +395,19 @@ def get_periodic_noise_operators_isotropic_stacked_fft[
     )
 
 
-def get_periodic_noise_operators_real_isotropic_stacked_fft[
-    M: StackedMetadata[BasisMetadata, Any]
-](
-    kernel: IsotropicNoiseKernel[M, np.complex128],
+def get_periodic_noise_operators_real_isotropic_stacked_fft[M: BasisMetadata, E](
+    kernel: IsotropicNoiseKernel[StackedMetadata[M, E], np.complex128],
     *,
     fundamental_shape: tuple[int | None, ...] | None = None,
     assert_periodic: bool = True,
 ) -> OperatorList[
-    Metadata2D[EigenvalueMetadata, Metadata2D[M, M, None], None],
+    EigenvalueMetadata,
+    StackedMetadata[M, E],
     np.complex128,
     TupleBasis2D[
         Any,
         FundamentalBasis[EigenvalueMetadata],
-        Basis[Metadata2D[M, M, None], Any],
+        RecastDiagonalOperatorBasis[StackedMetadata[M, E], Any],
         Any,
     ],
 ]:
@@ -445,5 +437,5 @@ def get_periodic_noise_operators_real_isotropic_stacked_fft[
     )
 
     return get_diagonal_noise_operators_from_axis(  # type: ignore cast here is safe
-        operators, kernel.basis.outer_recast.metadata().extra
+        operators, kernel.basis.outer_recast.outer_recast.metadata().extra
     )

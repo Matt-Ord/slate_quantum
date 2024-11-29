@@ -69,38 +69,35 @@ def calculate_inner_product[M: BasisMetadata](
 
 
 class StateList[
-    M: Metadata2D[BasisMetadata, BasisMetadata, Any],
-    B: Basis[Any, np.complex128] = Basis[M, np.complex128],
-](SlateArray[M, np.complex128, B]):
+    M0: BasisMetadata,
+    M1: BasisMetadata,
+    B: Basis[Metadata2D[BasisMetadata, BasisMetadata, None], np.complex128] = Basis[
+        Metadata2D[M0, M1, None], np.complex128
+    ],
+](SlateArray[Metadata2D[M0, M1, None], np.complex128, B]):
     """represents a state vector in a basis."""
 
     @override
     def with_basis[B1: Basis[Any, Any]](  # B1: B
         self, basis: B1
-    ) -> StateList[M, B1]:
+    ) -> StateList[M0, M1, B1]:
         """Get the Operator with the basis set to basis."""
         return StateList(
             basis, self.basis.__convert_vector_into__(self.raw_data, basis)
         )
 
-    def __iter__[_M: BasisMetadata](
-        self: StateList[Metadata2D[BasisMetadata, _M, Any],], /
-    ) -> Iterator[State[_M, Basis[Any, np.complex128]]]:
+    def __iter__(self, /) -> Iterator[State[M1, Basis[Any, np.complex128]]]:
         as_tuple = self.with_basis(as_tuple_basis(self.basis))
         return (
             State(as_tuple.basis[1], row)
             for row in as_tuple.raw_data.reshape(as_tuple.basis.shape)
         )
 
-    def __getitem__[_M: BasisMetadata](
-        self: StateList[Metadata2D[BasisMetadata, _M, Any],], /, index: int
-    ) -> State[_M, Basis[Any, np.complex128]]:
+    def __getitem__(self, /, index: int) -> State[M1, Basis[Any, np.complex128]]:
         as_tuple = self.with_basis(as_tuple_basis(self.basis))
         return State(
             as_tuple.basis[1], as_tuple.raw_data.reshape(as_tuple.basis.shape)[index]
         )
 
 
-type EigenstateList[M: BasisMetadata] = StateList[
-    Metadata2D[EigenvalueMetadata, M, None]
-]
+type EigenstateList[M: BasisMetadata] = StateList[EigenvalueMetadata, M]

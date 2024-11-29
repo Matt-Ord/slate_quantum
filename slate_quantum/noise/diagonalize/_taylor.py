@@ -72,19 +72,19 @@ def _get_periodic_coefficients_for_taylor_series(
 
 def get_periodic_noise_operators_explicit_taylor_expansion[
     M: BasisMetadata,
-    B: Basis[BasisMetadata, Any] = Basis[M, Any],
 ](
-    basis: B,
+    basis: Basis[M, Any],
     polynomial_coefficients: np.ndarray[tuple[int], np.dtype[np.float64]],
     *,
     n_terms: int | None = None,
 ) -> OperatorList[
-    Metadata2D[EigenvalueMetadata, Metadata2D[M, M, None], None],
+    EigenvalueMetadata,
+    M,
     np.complex128,
     TupleBasis2D[
         np.complex128,
         FundamentalBasis[EigenvalueMetadata],
-        DiagonalBasis[np.complex128, B, B, None],
+        DiagonalBasis[np.complex128, Basis[M, Any], Basis[M, Any], None],
         None,
     ],
 ]:
@@ -110,7 +110,8 @@ def get_periodic_noise_operators_explicit_taylor_expansion[
 def _get_linear_operators_for_noise[M: BasisMetadata](
     metadata: M, *, n_terms: int | None = None
 ) -> OperatorList[
-    Metadata2D[BasisMetadata, Metadata2D[M, M, None], None],
+    BasisMetadata,
+    M,
     np.complex128,
     TupleBasis2D[
         np.complex128,
@@ -150,7 +151,8 @@ def get_linear_noise_operators_explicit_taylor_expansion[M: BasisMetadata](
     *,
     n_terms: int | None = None,
 ) -> OperatorList[
-    Metadata2D[EigenvalueMetadata, Metadata2D[M, M, None], None],
+    EigenvalueMetadata,
+    M,
     np.complex128,
     TupleBasis2D[
         np.complex128,
@@ -177,9 +179,8 @@ def get_periodic_noise_operators_real_isotropic_taylor_expansion[M: BasisMetadat
     *,
     n: int | None = None,
 ) -> OperatorList[
-    Metadata2D[
-        EigenvalueMetadata, Metadata2D[BasisMetadata, BasisMetadata, None], None
-    ],
+    EigenvalueMetadata,
+    M,
     np.complex128,
     TupleBasis2D[
         np.complex128,
@@ -211,7 +212,7 @@ def get_periodic_noise_operators_real_isotropic_taylor_expansion[M: BasisMetadat
 
     # use T_n(cos(x)) = cos(nx) to find the coefficients
     noise_polynomial = cast(
-        np.polynomial.Polynomial,
+        "np.polynomial.Polynomial",
         np.polynomial.Chebyshev.fit(  # cSpell: ignore Chebyshev # type: ignore unknown
             x=points,
             y=kernel.raw_data,
@@ -227,11 +228,10 @@ def get_periodic_noise_operators_real_isotropic_taylor_expansion[M: BasisMetadat
     operator_coefficients *= n_states
     eigenvalues = EigenvalueMetadata(operator_coefficients)
     operators = get_periodic_operators_for_real_isotropic_noise(
-        kernel.basis.inner_recast, n=n + 1
+        kernel.basis.outer_recast.outer_recast, n=n + 1
     )
-
     return OperatorList(
-        tuple_basis((FundamentalBasis(eigenvalues), operators.basis.children[1])),
+        tuple_basis((FundamentalBasis(eigenvalues), operators.basis[1])),
         operators.raw_data,
     )
 
@@ -246,22 +246,15 @@ def get_periodic_noise_operators_real_isotropic_stacked_taylor_expansion[
     *,
     shape: tuple[int | None, ...] | None = None,
 ) -> OperatorList[
-    Metadata2D[
-        EigenvalueMetadata,
-        Metadata2D[
-            StackedMetadata[BasisMetadata, Any],
-            StackedMetadata[BasisMetadata, Any],
-            None,
-        ],
-        None,
-    ],
+    EigenvalueMetadata,
+    StackedMetadata[M, Any],
     np.complex128,
     Basis[
         Metadata2D[
             EigenvalueMetadata,
             Metadata2D[
-                StackedMetadata[BasisMetadata, Any],
-                StackedMetadata[BasisMetadata, Any],
+                StackedMetadata[M, Any],
+                StackedMetadata[M, Any],
                 None,
             ],
             Any,

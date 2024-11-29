@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+from typing import Any
+
 import numpy as np
+from slate import FundamentalBasis
 from slate.metadata import (
     DeltaMetadata,
     ExplicitLabeledMetadata,
@@ -26,3 +29,10 @@ class SpacedMomentumMetadata(SpacedLabeledMetadata, MomentumMetadata):
 
 class EigenvalueMetadata(ExplicitLabeledMetadata[np.complex128]):
     """Metadata with the addition of eigenvalues."""
+
+
+def eigenvalue_basis(
+    values: np.ndarray[Any, np.dtype[np.complex128]],
+) -> FundamentalBasis[EigenvalueMetadata]:
+    """Return the eigenvalue basis."""
+    return FundamentalBasis(EigenvalueMetadata(values))

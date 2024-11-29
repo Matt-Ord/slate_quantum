@@ -9,17 +9,14 @@ from slate_quantum.model._label import EigenvalueMetadata
 from slate_quantum.model.operator._operator import OperatorList
 
 if TYPE_CHECKING:
-    from slate.metadata import BasisMetadata, Metadata2D
+    from slate.metadata import BasisMetadata
 
-    from slate_quantum.model.operator._super_operator import SuperOperatorMetadata
     from slate_quantum.noise._kernel import DiagonalNoiseKernel, NoiseKernel
 
 
-def get_periodic_noise_operators_eigenvalue[M0: BasisMetadata, M1: BasisMetadata](
-    kernel: NoiseKernel[SuperOperatorMetadata[M0, M1, M0, M1], np.complex128],
-) -> OperatorList[
-    Metadata2D[EigenvalueMetadata, Metadata2D[M0, M1, None], None], np.complex128
-]:
+def get_periodic_noise_operators_eigenvalue[M: BasisMetadata](
+    kernel: NoiseKernel[M, np.complex128],
+) -> OperatorList[EigenvalueMetadata, M, np.complex128]:
     r"""
     Given a noise kernel, find the noise operator which diagonalizes the kernel.
 
@@ -67,14 +64,9 @@ def get_periodic_noise_operators_eigenvalue[M0: BasisMetadata, M1: BasisMetadata
     return OperatorList(basis, data)
 
 
-def get_periodic_noise_operators_diagonal_eigenvalue[
-    M0: BasisMetadata,
-    M1: BasisMetadata,
-](
-    kernel: DiagonalNoiseKernel[M0, M1, np.complex128],
-) -> OperatorList[
-    Metadata2D[EigenvalueMetadata, Metadata2D[M0, M1, None], None], np.complex128
-]:
+def get_periodic_noise_operators_diagonal_eigenvalue[M: BasisMetadata](
+    kernel: DiagonalNoiseKernel[M, np.complex128],
+) -> OperatorList[EigenvalueMetadata, M, np.complex128]:
     r"""
     For a diagonal kernel it is possible to find N independent noise sources, each of which is diagonal.
 

@@ -94,9 +94,10 @@ def solve_stochastic_schrodinger_equation_banded[
 ](
     initial_state: State[M],
     times: TB,
-    hamiltonian: Operator[Metadata2D[M, M, Any], np.complex128],
+    hamiltonian: Operator[M, np.complex128],
     noise: OperatorList[
-        Metadata2D[EigenvalueMetadata, Metadata2D[M, M, Any], Any],
+        EigenvalueMetadata,
+        M,
         np.complex128,
         TupleBasis2D[
             np.complex128,
@@ -107,13 +108,17 @@ def solve_stochastic_schrodinger_equation_banded[
     ],
     **kwargs: Unpack[SSEConfig],
 ) -> StateList[
-    Metadata2D[TimeMetadata, M, Any],
+    TimeMetadata,
+    M,
     TupleBasis2D[np.complex128, TB, Basis[M, np.complex128], None],
 ]:
     """Given an initial state, use the stochastic schrodinger equation to solve the dynamics of the system."""
-    hamiltonian = hamiltonian.with_basis(as_tuple_basis(hamiltonian.basis))
+    hamiltonian_tuple = hamiltonian.with_basis(as_tuple_basis(hamiltonian.basis))
     operators_data = [
-        e * o.with_basis(hamiltonian.basis).raw_data.reshape(hamiltonian.basis.shape)
+        e
+        * o.with_basis(hamiltonian.basis).raw_data.reshape(
+            hamiltonian_tuple.basis.shape
+        )
         for o, e in zip(noise, noise.basis[0].metadata().values[noise.basis[0].points])
     ]
     operators_norm = [np.linalg.norm(o) for o in operators_data]
@@ -132,11 +137,11 @@ def solve_stochastic_schrodinger_equation_banded[
     banded_h = _get_banded_operator(
         [
             list(x / max_norm**2)
-            for x in hamiltonian.raw_data.reshape(hamiltonian.basis.shape)
+            for x in hamiltonian.raw_data.reshape(hamiltonian_tuple.basis.shape)
         ],
         r_threshold / dt,
     )
-    initial_state_converted = initial_state.with_basis(hamiltonian.basis[0])
+    initial_state_converted = initial_state.with_basis(hamiltonian_tuple.basis[0])
     ts = datetime.datetime.now(tz=datetime.UTC)
 
     if sse_solver_py is None:
@@ -160,4 +165,4 @@ def solve_stochastic_schrodinger_equation_banded[
     te = datetime.datetime.now(tz=datetime.UTC)
     print(f"solve rust banded took: {(te - ts).total_seconds()} sec")  # noqa: T201
 
-    return StateList(tuple_basis((times, hamiltonian.basis[0])), np.array(data))
+    return StateList(tuple_basis((times, hamiltonian_tuple.basis[0])), np.array(data))

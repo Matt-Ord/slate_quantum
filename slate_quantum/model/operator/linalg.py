@@ -10,7 +10,7 @@ from slate.basis import (
 from slate.linalg import einsum
 from slate.linalg import into_diagonal as into_diagonal_array
 from slate.linalg import into_diagonal_hermitian as into_diagonal_hermitian_array
-from slate.metadata import BasisMetadata, Metadata2D
+from slate.metadata import BasisMetadata
 
 from slate_quantum.model.operator import Operator, OperatorList
 from slate_quantum.model.state.eigenstate_basis import EigenstateBasis
@@ -20,16 +20,16 @@ if TYPE_CHECKING:
     from slate.explicit_basis import ExplicitBasis
 
 
-def into_diagonal[M: BasisMetadata, E, DT: np.complexfloating[Any, Any]](
-    operator: Operator[Metadata2D[M, M, E], DT],
+def into_diagonal[M: BasisMetadata, DT: np.complexfloating[Any, Any]](
+    operator: Operator[M, DT],
 ) -> Operator[
-    Metadata2D[M, M, E],
+    M,
     np.complex128,
     DiagonalBasis[
         DT,
         ExplicitBasis[M, DT],
         ExplicitBasis[M, DT],
-        E,
+        None,
     ],
 ]:
     """Get a list of eigenstates for a given operator, assuming it is hermitian."""
@@ -37,16 +37,16 @@ def into_diagonal[M: BasisMetadata, E, DT: np.complexfloating[Any, Any]](
     return Operator(diagonal.basis, diagonal.raw_data)
 
 
-def into_diagonal_hermitian[M: BasisMetadata, E, DT: np.complexfloating[Any, Any]](
-    operator: Operator[Metadata2D[M, M, E], DT],
+def into_diagonal_hermitian[M: BasisMetadata, DT: np.complexfloating[Any, Any]](
+    operator: Operator[M, DT],
 ) -> Operator[
-    Metadata2D[M, M, E],
+    M,
     np.complex128,
     DiagonalBasis[
         DT,
         EigenstateBasis[M],
         EigenstateBasis[M],
-        E,
+        None,
     ],
 ]:
     """Get a list of eigenstates for a given operator, assuming it is hermitian."""
@@ -67,10 +67,10 @@ def into_diagonal_hermitian[M: BasisMetadata, E, DT: np.complexfloating[Any, Any
     return Operator(new_basis, diagonal.raw_data)
 
 
-def matmul_list_operator[M: Metadata2D[BasisMetadata, BasisMetadata, Any]](
-    lhs: OperatorList[M, np.complex128],
-    rhs: Operator[Any, np.complex128],
-) -> OperatorList[M, np.complex128]:
+def matmul_list_operator[M0: BasisMetadata, M1: BasisMetadata](
+    lhs: OperatorList[M0, M1, np.complex128],
+    rhs: Operator[M1, np.complex128],
+) -> OperatorList[M0, M1, np.complex128]:
     """
     Multiply each operator in rhs by lhs.
 
@@ -85,14 +85,14 @@ def matmul_list_operator[M: Metadata2D[BasisMetadata, BasisMetadata, Any]](
     -------
     OperatorList[_B3, _B0, _B2]
     """
-    data = einsum("m(ik),kj->m(ij)", lhs, rhs)
-    return OperatorList(cast(Basis[M, Any], data.basis), data.raw_data)
+    data = einsum("(m (i k')),(k j) -> (m (i j))", lhs, rhs)
+    return OperatorList(cast("Basis[Any, Any]", data.basis), data.raw_data)
 
 
-def matmul_operator_list[M: Metadata2D[BasisMetadata, BasisMetadata, Any]](
-    lhs: Operator[Any, np.complex128],
-    rhs: OperatorList[M, np.complex128],
-) -> OperatorList[M, np.complex128]:
+def matmul_operator_list[M0: BasisMetadata, M1: BasisMetadata](
+    lhs: Operator[M1, np.complex128],
+    rhs: OperatorList[M0, M1, np.complex128],
+) -> OperatorList[M0, M1, np.complex128]:
     """
     Multiply each operator in rhs by lhs.
 
@@ -107,14 +107,14 @@ def matmul_operator_list[M: Metadata2D[BasisMetadata, BasisMetadata, Any]](
     -------
     OperatorList[_B3, _B0, _B2]
     """
-    data = einsum("ik,m(kj)->m(ij)", lhs, rhs)
-    return OperatorList(cast(Basis[M, Any], data.basis), data.raw_data)
+    data = einsum("(i k'),(m (k j)) -> (m (i j))", lhs, rhs)
+    return OperatorList(cast("Basis[Any, Any]", data.basis), data.raw_data)
 
 
-def get_commutator_operator_list[M: Metadata2D[BasisMetadata, BasisMetadata, Any]](
-    lhs: Operator[Any, np.complex128],
-    rhs: OperatorList[M, np.complex128],
-) -> OperatorList[M, np.complex128]:
+def get_commutator_operator_list[M0: BasisMetadata, M1: BasisMetadata](
+    lhs: Operator[M1, np.complex128],
+    rhs: OperatorList[M0, M1, np.complex128],
+) -> OperatorList[M0, M1, np.complex128]:
     """
     Given two operators lhs, rhs, calculate the commutator.
 
@@ -122,10 +122,6 @@ def get_commutator_operator_list[M: Metadata2D[BasisMetadata, BasisMetadata, Any
     """
     # TODO: fast diagonal support  # noqa: FIX002
     # will not play well with this!
-    converted = cast(
-        OperatorList[M, np.complex128, Basis[M, np.complex128]],
-        rhs.with_operator_basis(lhs.basis),
-    )
-    lhs_rhs = matmul_operator_list(lhs, converted)
-    rhs_lhs = matmul_list_operator(converted, lhs)
+    lhs_rhs = matmul_operator_list(lhs, rhs)
+    rhs_lhs = matmul_list_operator(rhs, lhs)
     return lhs_rhs - rhs_lhs
