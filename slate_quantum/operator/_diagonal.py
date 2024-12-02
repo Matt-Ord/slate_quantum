@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Self, cast
+from typing import Any, cast
 
 import numpy as np
 from slate import Basis, BasisMetadata, StackedMetadata, TupleBasis
@@ -67,11 +67,11 @@ class DiagonalOperator[
         super().__init__(basis, raw_data)
 
     @property
-    def inner_recast_basis(self: Self) -> BInner:
+    def inner_recast_basis(self) -> BInner:
         return cast("BInner", self.basis.inner_recast)
 
     @property
-    def outer_recast_basis(self: Self) -> BOuter:
+    def outer_recast_basis(self) -> BOuter:
         return self.basis.outer_recast
 
     def with_outer_basis[
@@ -90,6 +90,9 @@ class DiagonalOperator[
         )
 
 
+# TODO: DiagonalOperatorList # noqa: FIX002
+
+
 class PositionOperator[M: BasisMetadata, E: AxisDirections, DT: np.generic](
     DiagonalOperator[
         StackedMetadata[M, E],
@@ -99,7 +102,7 @@ class PositionOperator[M: BasisMetadata, E: AxisDirections, DT: np.generic](
     ]
 ):
     def __init__(
-        self: Self,
+        self,
         basis: Basis[StackedMetadata[M, E], Any],
         raw_data: np.ndarray[Any, np.dtype[DT]],
     ) -> None:
@@ -110,7 +113,7 @@ class PositionOperator[M: BasisMetadata, E: AxisDirections, DT: np.generic](
         )
 
 
-type PositionOperatorBasis[M: BasisMetadata, E: AxisDirections, DT: np.generic] = (
+type PositionOperatorBasis[M: BasisMetadata, E, DT: np.generic] = (
     RecastDiagonalOperatorBasis[
         StackedMetadata[M, E],
         DT,
@@ -120,7 +123,7 @@ type PositionOperatorBasis[M: BasisMetadata, E: AxisDirections, DT: np.generic] 
 )
 
 
-def position_operator_basis[M: BasisMetadata, E: AxisDirections, DT: np.generic](
+def position_operator_basis[M: BasisMetadata, E, DT: np.generic](
     basis: Basis[StackedMetadata[M, E], DT],
 ) -> PositionOperatorBasis[M, E, DT]:
     return recast_diagonal_basis(_basis.from_metadata(basis.metadata()), basis)
@@ -140,7 +143,7 @@ class MomentumOperator[M: BasisMetadata, E: AxisDirections](
     ]
 ):
     def __init__(
-        self: Self,
+        self,
         basis: Basis[StackedMetadata[M, E], Any],
         raw_data: np.ndarray[Any, np.dtype[np.complex128]],
     ) -> None:

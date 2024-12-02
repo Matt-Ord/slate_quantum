@@ -60,7 +60,7 @@ def repeat_potential(
     )
 
 
-def build_cos_potential(
+def cos_potential(
     metadata: SpacedVolumeMetadata,
     height: float,
 ) -> Potential[SpacedLengthMetadata, AxisDirections, np.complex128]:

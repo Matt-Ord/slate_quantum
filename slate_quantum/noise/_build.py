@@ -7,6 +7,7 @@ from scipy.constants import Boltzmann  # type: ignore stubs
 from slate.basis import CoordinateBasis, as_index_basis, as_tuple_basis
 from slate.metadata import AxisDirections
 
+from slate_quantum import operator
 from slate_quantum.metadata import EigenvalueMetadata
 from slate_quantum.noise._kernel import (
     DiagonalNoiseKernel,
@@ -17,11 +18,7 @@ from slate_quantum.noise.diagonalize._eigenvalue import (
     get_periodic_noise_operators_diagonal_eigenvalue,
     get_periodic_noise_operators_eigenvalue,
 )
-from slate_quantum.operator._super_operator import SuperOperatorMetadata
-from slate_quantum.operator.build._position import (
-    build_total_x_displacement_operator,
-    build_x_displacement_operator,
-)
+from slate_quantum.operator import SuperOperatorMetadata
 from slate_quantum.operator.linalg import get_commutator_operator_list
 
 if TYPE_CHECKING:
@@ -66,7 +63,7 @@ def build_isotropic_kernel_from_function[M: LengthMetadata](
         TupleBasisWithLengthLike[*tuple[FundamentalPositionBasis, ...]],
     ]
     """
-    displacements = build_x_displacement_operator(metadata)
+    displacements = operator.build.x_displacement_operator(metadata)
     correlation = fn(displacements.raw_data.reshape(displacements.basis.shape)[0])
 
     return IsotropicNoiseKernel(displacements.basis[0], correlation)
@@ -100,7 +97,7 @@ def build_isotropic_kernel_from_function_stacked[
         TupleBasisWithLengthLike[*tuple[FundamentalPositionBasis, ...]],
     ]
     """
-    displacements = build_total_x_displacement_operator(metadata)
+    displacements = operator.build.total_x_displacement_operator(metadata)
     correlation = fn(displacements.raw_data.reshape(displacements.basis.shape)[0])
 
     return IsotropicNoiseKernel(displacements.basis[0], correlation)

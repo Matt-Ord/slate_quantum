@@ -11,7 +11,7 @@ from slate_quantum.noise import (
     IsotropicNoiseKernel,
     build_isotropic_kernel_from_function_stacked,
     gaussian_correllation_fn,
-    get_periodic_noise_operators_real_isotropic_stacked_fft,
+    get_periodic_noise_operators_isotropic_stacked_fft,
     truncate_noise_operator_list,
 )
 
@@ -39,8 +39,7 @@ if __name__ == "__main__":
     # SuperOperator, the eigenvectors are in fact themselves operators.
     # For an isotropic kernel, the eigenvectors are all diagonal
     # operators, as below.
-    # TODO: we need a better approach in the case axis kernels fail for us...  # noqa: FIX002
-    operators = get_periodic_noise_operators_real_isotropic_stacked_fft(kernel)
+    operators = get_periodic_noise_operators_isotropic_stacked_fft(kernel)
     # Since the operators are diagonal, we can plot them along the diagonal
     # these correspond to the three lowest frequency fourier components
     # $e^{ikx}$.

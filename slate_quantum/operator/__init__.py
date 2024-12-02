@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from slate_quantum.operator import build
 from slate_quantum.operator._diagonal import (
     MomentumOperator,
     MomentumOperatorBasis,
@@ -25,9 +26,12 @@ from slate_quantum.operator._super_operator import (
     SuperOperatorMetadata,
 )
 from slate_quantum.operator.build import (
-    build_cos_potential,
-    build_kinetic_energy_operator,
-    build_kinetic_hamiltonian,
+    kinetic_energy_operator as build_kinetic_energy_operator,
+)
+from slate_quantum.operator.build import (
+    kinetic_hamiltonian as build_kinetic_hamiltonian,
+)
+from slate_quantum.operator.build import (
     repeat_potential,
 )
 from slate_quantum.operator.linalg import into_diagonal, into_diagonal_hermitian
@@ -45,7 +49,7 @@ __all__ = [
     "RecastDiagonalOperatorBasis",
     "SuperOperator",
     "SuperOperatorMetadata",
-    "build_cos_potential",
+    "build",
     "build_kinetic_energy_operator",
     "build_kinetic_hamiltonian",
     "into_diagonal",
