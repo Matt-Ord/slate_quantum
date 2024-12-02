@@ -115,10 +115,10 @@ def solve_stochastic_schrodinger_equation_banded[
     """Given an initial state, use the stochastic schrodinger equation to solve the dynamics of the system."""
     hamiltonian_tuple = hamiltonian.with_basis(as_tuple_basis(hamiltonian.basis))
     operators_data = [
-        e
-        * o.with_basis(hamiltonian.basis).raw_data.reshape(
+        o.with_basis(hamiltonian_tuple.basis).raw_data.reshape(
             hamiltonian_tuple.basis.shape
         )
+        * (e * np.sqrt(hbar) / np.sqrt(2))
         for o, e in zip(noise, noise.basis[0].metadata().values[noise.basis[0].points])
     ]
     operators_norm = [np.linalg.norm(o) for o in operators_data]

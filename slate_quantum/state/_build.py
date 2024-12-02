@@ -15,7 +15,7 @@ def build_coherent_state[M: SpacedLengthMetadata, E: AxisDirections](
     x_0: tuple[float, ...],
     k_0: tuple[float, ...],
     sigma_0: tuple[float, ...],
-) -> State[M]:
+) -> State[StackedMetadata[M, E]]:
     displacements = get_displacements_x_stacked(metadata, origin=x_0)
     raw_displacements = np.array([d.as_array() for d in displacements])
 
