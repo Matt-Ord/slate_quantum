@@ -75,28 +75,28 @@ def test_build_axis_scattering_operator() -> None:
 
     scatter_operator = operator.build.axis_scattering_operator(metadata, n_k=0)
     np.testing.assert_allclose(
-        array.as_outer_basis(scatter_operator).as_array(),
+        array.as_outer_array(scatter_operator).as_array(),
         np.ones(5) / np.sqrt(metadata.fundamental_size),
         atol=1e-15,
     )
 
     scatter_operator = operator.build.axis_scattering_operator(metadata, n_k=1)
     np.testing.assert_allclose(
-        array.as_outer_basis(scatter_operator).as_array(),
+        array.as_outer_array(scatter_operator).as_array(),
         np.exp(1j * 2 * np.pi * np.arange(5) / 5) / np.sqrt(metadata.fundamental_size),
         atol=1e-15,
     )
 
     scatter_operator = operator.build.axis_scattering_operator(metadata, n_k=-1)
     np.testing.assert_allclose(
-        array.as_outer_basis(scatter_operator).as_array(),
+        array.as_outer_array(scatter_operator).as_array(),
         np.exp(-1j * 2 * np.pi * np.arange(5) / 5) / np.sqrt(metadata.fundamental_size),
         atol=1e-15,
     )
 
     scatter_operator = operator.build.axis_scattering_operator(metadata, n_k=4)
     np.testing.assert_allclose(
-        array.as_outer_basis(scatter_operator).as_array(),
+        array.as_outer_array(scatter_operator).as_array(),
         np.exp(-1j * 2 * np.pi * np.arange(5) / 5) / np.sqrt(metadata.fundamental_size),
         atol=1e-15,
     )
@@ -110,28 +110,28 @@ def test_build_scattering_operator() -> None:
 
     scatter_operator = operator.build.scattering_operator(metadata, n_k=(0,))
     np.testing.assert_allclose(
-        array.as_outer_basis(scatter_operator).as_array(),
+        array.as_outer_array(scatter_operator).as_array(),
         np.ones(5) / np.sqrt(size),
         atol=1e-15,
     )
 
     scatter_operator = operator.build.scattering_operator(metadata, n_k=(1,))
     np.testing.assert_allclose(
-        array.as_outer_basis(scatter_operator).as_array(),
+        array.as_outer_array(scatter_operator).as_array(),
         np.exp(1j * 2 * np.pi * np.arange(5) / 5) / np.sqrt(size),
         atol=1e-15,
     )
 
     scatter_operator = operator.build.scattering_operator(metadata, n_k=(-1,))
     np.testing.assert_allclose(
-        array.as_outer_basis(scatter_operator).as_array(),
+        array.as_outer_array(scatter_operator).as_array(),
         np.exp(-1j * 2 * np.pi * np.arange(5) / 5) / np.sqrt(size),
         atol=1e-15,
     )
 
     scatter_operator = operator.build.scattering_operator(metadata, n_k=(4,))
     np.testing.assert_allclose(
-        array.as_outer_basis(scatter_operator).as_array(),
+        array.as_outer_array(scatter_operator).as_array(),
         np.exp(-1j * 2 * np.pi * np.arange(5) / 5) / np.sqrt(size),
         atol=1e-15,
     )

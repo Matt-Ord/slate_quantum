@@ -5,7 +5,7 @@ from typing import Any
 import numpy as np
 from slate import StackedMetadata, basis, tuple_basis
 from slate.basis import CoordinateBasis, FundamentalBasis, TupleBasis2D
-from slate.metadata import AxisDirections, SpacedLengthMetadata
+from slate.metadata import AxisDirections, SpacedLengthMetadata, size_from_nested_shape
 from slate.metadata.length import fundamental_dk
 from slate.metadata.volume import fundamental_stacked_dk
 
@@ -31,7 +31,8 @@ def build_periodic_caldeira_leggett_axis_operators[M: SpacedLengthMetadata](
     ],
 ]:
     k = fundamental_dk(metadata)
-    eigenvalue = friction / 4 * k**2
+    n = metadata.fundamental_size
+    eigenvalue = n * friction / 4 * k**2
     operators = build.all_axis_scattering_operators(metadata)
     operators = operators.with_basis(operators.basis.inner)
 
@@ -65,7 +66,8 @@ def build_periodic_caldeira_leggett_operators[
 ]:
     assert len(metadata.fundamental_shape) == 1
     k = fundamental_stacked_dk(metadata)[0][0]
-    eigenvalue = friction / 4 * k**2
+    n = np.sqrt(size_from_nested_shape(metadata.fundamental_shape))
+    eigenvalue = n * friction / 4 * k**2
     operators = build.all_scattering_operators(metadata)
     operators = operators.with_basis(operators.basis.inner)
 

@@ -10,7 +10,7 @@ packages = [{ include = "slate_quantum" }]
 python = ">=3.13,<3.14"
 numpy = "^2.0.0"
 matplotlib = { version = "^3.9.2", optional = true }
-slate = { git = "https://github.com/Matt-Ord/slate.git", rev = "70d9304" }
+slate = { git = "https://github.com/Matt-Ord/slate.git", rev = "f096a51" }
 sse_solver_py = { git = "https://github.com/Matt-Ord/sse_solver.git", rev = "4af64bb", subdirectory = "sse_solver_py", optional = true }
 scipy = "^1.14.1"
 qutip = { version = "^5.0.0", optional = true }
