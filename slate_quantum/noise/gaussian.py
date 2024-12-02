@@ -23,7 +23,7 @@ from slate_quantum.noise._build import (
 )
 from slate_quantum.noise._kernel import get_diagonal_noise_operators_from_axis
 from slate_quantum.noise.diagonalize._fft import (
-    get_periodic_noise_operators_real_isotropic_stacked_fft,
+    get_periodic_noise_operators_isotropic_stacked_fft,
 )
 from slate_quantum.noise.diagonalize._taylor import (
     get_linear_noise_operators_explicit_taylor_expansion,
@@ -207,7 +207,7 @@ def get_gaussian_noise_operators_periodic[
     """
     kernel = get_gaussian_isotropic_noise_kernel(metadata, a, lambda_)
 
-    operators = get_periodic_noise_operators_real_isotropic_stacked_fft(kernel)
+    operators = get_periodic_noise_operators_isotropic_stacked_fft(kernel)
     truncation = range(operators.basis[0].size) if truncation is None else truncation
     return truncate_noise_operator_list(operators, truncation=truncation)
 

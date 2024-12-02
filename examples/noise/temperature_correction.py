@@ -9,7 +9,7 @@ from slate.plot import plot_data_2d_k, plot_data_2d_x
 from slate_quantum.noise import (
     build_isotropic_kernel_from_function_stacked,
     gaussian_correllation_fn,
-    get_periodic_noise_operators_real_isotropic_stacked_fft,
+    get_periodic_noise_operators_isotropic_stacked_fft,
     get_temperature_corrected_operators,
 )
 from slate_quantum.operator import (
@@ -31,7 +31,7 @@ if __name__ == "__main__":
     lambda_ = np.pi / 2
     correlation = gaussian_correllation_fn(1, lambda_)
     kernel = build_isotropic_kernel_from_function_stacked(metadata, correlation)
-    operators = get_periodic_noise_operators_real_isotropic_stacked_fft(kernel)
+    operators = get_periodic_noise_operators_isotropic_stacked_fft(kernel)
 
     # For an ohmic environment, the correllation is given by
     # TODO: actual formula here! # noqa: FIX002

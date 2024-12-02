@@ -5,9 +5,14 @@ from typing import TYPE_CHECKING, Any, cast
 import numpy as np
 from slate import Basis, SlateArray, basis
 from slate.basis import (
+    DiagonalBasis,
     FundamentalBasis,
+    TransformedBasis,
+    TruncatedBasis,
+    Truncation,
     TupleBasis,
     TupleBasis2D,
+    diagonal_basis,
     tuple_basis,
 )
 from slate.metadata import (
@@ -22,7 +27,13 @@ from slate.metadata.volume import (
     fundamental_stacked_x_points,
 )
 
-from slate_quantum.operator._diagonal import Potential
+from slate_quantum.operator._diagonal import (
+    DiagonalOperator,
+    PositionOperator,
+    Potential,
+    RecastDiagonalOperatorBasis,
+    recast_diagonal_basis,
+)
 from slate_quantum.operator._operator import Operator, OperatorList
 
 if TYPE_CHECKING:
@@ -101,7 +112,7 @@ def get_displacements_x_stacked(
     )
 
 
-def build_nx_displacement_operators_stacked[M: StackedMetadata[BasisMetadata, Any]](
+def nx_displacement_operators_stacked[M: StackedMetadata[BasisMetadata, Any]](
     metadata: M,
 ) -> OperatorList[
     SimpleMetadata,
@@ -131,7 +142,7 @@ def build_nx_displacement_operators_stacked[M: StackedMetadata[BasisMetadata, An
     )
 
 
-def build_nx_displacement_operator[M: BasisMetadata](
+def nx_displacement_operator[M: BasisMetadata](
     metadata: M,
 ) -> Operator[
     M,
@@ -148,7 +159,7 @@ def build_nx_displacement_operator[M: BasisMetadata](
     return Operator(tuple_basis((ax, ax.dual_basis())), data)
 
 
-def build_x_displacement_operator[M: LengthMetadata](
+def x_displacement_operator[M: LengthMetadata](
     metadata: M,
     origin: float = 0.0,
 ) -> Operator[
@@ -201,7 +212,7 @@ def _get_displacements_matrix_x_along_axis[M: SpacedLengthMetadata, E: AxisDirec
     return Operator(tuple_basis((ax, ax.dual_basis())), data)
 
 
-def build_x_displacement_operators_stacked[M: SpacedLengthMetadata, E: AxisDirections](
+def x_displacement_operators_stacked[M: SpacedLengthMetadata, E: AxisDirections](
     metadata: StackedMetadata[M, E], origin: tuple[float, ...] | None
 ) -> OperatorList[
     SimpleMetadata,
@@ -229,7 +240,7 @@ def build_x_displacement_operators_stacked[M: SpacedLengthMetadata, E: AxisDirec
     )
 
 
-def build_total_x_displacement_operator[M: SpacedLengthMetadata, E: AxisDirections](
+def total_x_displacement_operator[M: SpacedLengthMetadata, E: AxisDirections](
     metadata: StackedMetadata[M, E],
     origin: tuple[float, ...] | None = None,
 ) -> Operator[
@@ -243,7 +254,7 @@ def build_total_x_displacement_operator[M: SpacedLengthMetadata, E: AxisDirectio
     ],
 ]:
     """Get a matrix of displacements in x, taken in a periodic fashion."""
-    displacements = build_x_displacement_operators_stacked(metadata, origin)
+    displacements = x_displacement_operators_stacked(metadata, origin)
     return Operator(
         displacements.basis[1],
         np.linalg.norm(
@@ -252,9 +263,149 @@ def build_total_x_displacement_operator[M: SpacedLengthMetadata, E: AxisDirectio
     )
 
 
-def build_x_operator[M: SpacedLengthMetadata, E: AxisDirections](
+def x_operator[M: SpacedLengthMetadata, E: AxisDirections](
     metadata: StackedMetadata[M, E], *, idx: int
-) -> Potential[M, E, np.complex128]:
+) -> PositionOperator[M, E, np.complex128]:
     """Get the x operator."""
     points = fundamental_stacked_x_points(metadata)[idx].astype(np.complex128)
     return Potential(basis.from_metadata(metadata), points)
+
+
+def axis_periodic_operator[M: BasisMetadata](
+    inner_basis: Basis[M, Any], *, n_k: int
+) -> DiagonalOperator[M, np.complex128]:
+    """Get the generalized e^(ik.x) operator in some general basis.
+
+    k is chosen such that k = 2 * np.pi n_k / N
+    """
+    truncation = Truncation(1, 1, n_k)
+    outer_basis = TruncatedBasis(truncation, TransformedBasis(inner_basis))
+    return DiagonalOperator(inner_basis, outer_basis, np.array([1]))
+
+
+def axis_scattering_operator[M: BasisMetadata](
+    metadata: M, *, n_k: int
+) -> DiagonalOperator[M, np.complex128]:
+    """Get the e^(ik.x) operator.
+
+    k is chosen such that k = 2 * np.pi n_k / N
+    """
+    inner_basis = basis.from_metadata(metadata)
+    return axis_periodic_operator(inner_basis, n_k=n_k)
+
+
+def all_axis_periodic_operators[M: BasisMetadata](
+    inner_basis: Basis[M, Any],
+) -> OperatorList[
+    SimpleMetadata,
+    M,
+    np.complex128,
+    DiagonalBasis[
+        Any,
+        FundamentalBasis[SimpleMetadata],
+        RecastDiagonalOperatorBasis[M, Any],
+        None,
+    ],
+]:
+    """Get all generalized e^(ik.x) operator."""
+    outer_basis = TransformedBasis(inner_basis)
+    operator_basis = recast_diagonal_basis(inner_basis, outer_basis)
+
+    list_basis = diagonal_basis(
+        (FundamentalBasis.from_size(outer_basis.size), operator_basis)
+    )
+    return OperatorList(list_basis, np.ones(outer_basis.size, dtype=np.complex128))
+
+
+def all_axis_scattering_operators[M: BasisMetadata](
+    metadata: M,
+) -> OperatorList[
+    SimpleMetadata,
+    M,
+    np.complex128,
+    DiagonalBasis[
+        Any,
+        FundamentalBasis[SimpleMetadata],
+        RecastDiagonalOperatorBasis[M, Any],
+        None,
+    ],
+]:
+    """Get the e^(ik.x) operator."""
+    inner_basis = basis.from_metadata(metadata)
+    return all_axis_periodic_operators(inner_basis)
+
+
+def periodic_operator[M: BasisMetadata, E](
+    inner_basis: TupleBasis[M, E, Any], *, n_k: tuple[int, ...]
+) -> DiagonalOperator[StackedMetadata[M, E], np.complex128]:
+    """Get the generalized e^(ik.x) operator in some general basis.
+
+    k is chosen such that k = 2 * np.pi n_k / N
+    """
+    outer_basis = basis.with_modified_children(
+        inner_basis,
+        lambda i, inner: TruncatedBasis(
+            Truncation(1, 1, n_k[i]), TransformedBasis(inner)
+        ),
+    )
+    return DiagonalOperator(inner_basis, outer_basis, np.array([1]))
+
+
+def scattering_operator[M: SpacedLengthMetadata, E: AxisDirections](
+    metadata: StackedMetadata[M, E], *, n_k: tuple[int, ...]
+) -> PositionOperator[M, E, np.complex128]:
+    """Get the e^(ik.x) operator.
+
+    k is chosen such that k = 2 * np.pi n_k / N
+    """
+    outer_basis = basis.with_modified_children(
+        basis.from_metadata(metadata),
+        lambda i, inner: TruncatedBasis(
+            Truncation(1, 1, n_k[i]), TransformedBasis(inner)
+        ),
+    )
+    return PositionOperator(outer_basis, np.array([1]))
+
+
+def all_periodic_operators[M: BasisMetadata, E](
+    inner_basis: TupleBasis[M, E, Any],
+) -> OperatorList[
+    SimpleMetadata,
+    StackedMetadata[M, E],
+    np.complex128,
+    DiagonalBasis[
+        Any,
+        FundamentalBasis[SimpleMetadata],
+        RecastDiagonalOperatorBasis[StackedMetadata[M, E], Any],
+        None,
+    ],
+]:
+    """Get all generalized e^(ik.x) operator."""
+    outer_basis = basis.with_modified_children(
+        inner_basis,
+        lambda _i, inner: TransformedBasis(inner),
+    )
+    operator_basis = recast_diagonal_basis(inner_basis, outer_basis)
+
+    list_basis = diagonal_basis(
+        (FundamentalBasis.from_size(outer_basis.size), operator_basis)
+    )
+    return OperatorList(list_basis, np.ones(outer_basis.size, dtype=np.complex128))
+
+
+def all_scattering_operators[M: BasisMetadata, E](
+    metadata: StackedMetadata[M, E],
+) -> OperatorList[
+    SimpleMetadata,
+    StackedMetadata[M, E],
+    np.complex128,
+    DiagonalBasis[
+        Any,
+        FundamentalBasis[SimpleMetadata],
+        RecastDiagonalOperatorBasis[StackedMetadata[M, E], Any],
+        None,
+    ],
+]:
+    """Get the e^(ik.x) operator."""
+    inner_basis = basis.from_metadata(metadata)
+    return all_periodic_operators(inner_basis)

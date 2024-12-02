@@ -8,26 +8,26 @@ from slate.basis import (
     Basis,
     DiagonalBasis,
     FundamentalBasis,
+    TruncatedBasis,
+    Truncation,
     TupleBasis2D,
+    as_tuple_basis,
+    from_metadata,
     tuple_basis,
+    with_modified_child,
 )
 from slate.metadata import BasisMetadata, Metadata2D, SimpleMetadata, StackedMetadata
 from slate.util import pad_ft_points
 
+from slate_quantum import operator
 from slate_quantum.metadata import EigenvalueMetadata
 from slate_quantum.noise._kernel import (
     IsotropicNoiseKernel,
     as_axis_kernel_from_isotropic,
     get_diagonal_noise_operators_from_axis,
 )
-from slate_quantum.noise.diagonalize._fft import (
-    get_periodic_operators_for_real_isotropic_noise,
-)
 from slate_quantum.operator import (
     OperatorList,
-)
-from slate_quantum.operator.build._position import (
-    build_nx_displacement_operator,
 )
 
 
@@ -77,21 +77,20 @@ def get_periodic_noise_operators_explicit_taylor_expansion[
     polynomial_coefficients: np.ndarray[tuple[int], np.dtype[np.float64]],
     *,
     n_terms: int | None = None,
-) -> OperatorList[
-    EigenvalueMetadata,
-    M,
-    np.complex128,
-    TupleBasis2D[
-        np.complex128,
-        FundamentalBasis[EigenvalueMetadata],
-        DiagonalBasis[np.complex128, Basis[M, Any], Basis[M, Any], None],
-        None,
-    ],
-]:
+) -> OperatorList[EigenvalueMetadata, M, np.complex128]:
     """Note polynomial_coefficients should be properly normalized."""
     n_terms = (basis.size // 2) if n_terms is None else n_terms
 
-    operators = get_periodic_operators_for_real_isotropic_noise(basis, n=n_terms)
+    operators = operator.build.all_axis_periodic_operators(basis)
+    list_basis = with_modified_child(
+        as_tuple_basis(operators.basis),
+        lambda b: TruncatedBasis(
+            Truncation(n_terms, 0, 0),
+            from_metadata(cast("SimpleMetadata", b.metadata())),
+        ),
+        0,
+    )
+    operators = operators.with_basis(list_basis)
 
     # coefficients for the Taylor expansion of the trig terms
     coefficients = _get_periodic_coefficients_for_taylor_series(
@@ -123,7 +122,7 @@ def _get_linear_operators_for_noise[M: BasisMetadata](
     size = np.prod(metadata.fundamental_shape).item()
     n_terms = size if n_terms is None else n_terms
 
-    nx_displacements = build_nx_displacement_operator(metadata)
+    nx_displacements = operator.build.nx_displacement_operator(metadata)
 
     displacements = (
         2
@@ -227,9 +226,9 @@ def get_periodic_noise_operators_real_isotropic_taylor_expansion[M: BasisMetadat
     ).astype(np.complex128)
     operator_coefficients *= n_states
     eigenvalues = EigenvalueMetadata(operator_coefficients)
-    operators = get_periodic_operators_for_real_isotropic_noise(
-        kernel.basis.outer_recast.outer_recast, n=n + 1
-    )
+    operators = None
+    msg = "Need to implement for e^ikx operators."
+    raise NotImplementedError(msg)
     return OperatorList(
         tuple_basis((FundamentalBasis(eigenvalues), operators.basis[1])),
         operators.raw_data,

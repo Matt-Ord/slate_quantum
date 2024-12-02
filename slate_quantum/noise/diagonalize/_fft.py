@@ -1,91 +1,26 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
-from slate import basis as _basis
+from slate import Basis, TupleBasis
 from slate.basis import (
-    Basis,
-    DiagonalBasis,
     FundamentalBasis,
-    TupleBasis,
     TupleBasis2D,
     as_tuple_basis,
-    diagonal_basis,
     tuple_basis,
 )
-from slate.metadata import (
-    SimpleMetadata,
-    StackedMetadata,
-    fundamental_stacked_nk_points,
-)
-from slate.metadata.util import fundamental_nk_points
 from slate.util import pad_ft_points
 
+from slate_quantum import operator
 from slate_quantum.metadata import EigenvalueMetadata
-from slate_quantum.noise._kernel import (
-    as_axis_kernel_from_isotropic,
-    get_diagonal_noise_operators_from_axis,
-)
 from slate_quantum.operator import OperatorList, RecastDiagonalOperatorBasis
-from slate_quantum.operator._diagonal import recast_diagonal_basis
 
 if TYPE_CHECKING:
-    from slate.metadata import BasisMetadata
+    from slate import SimpleMetadata
+    from slate.metadata import BasisMetadata, StackedMetadata
 
     from slate_quantum.noise._kernel import IsotropicNoiseKernel
-
-
-def _assert_periodic_sample(
-    basis_shape: tuple[int, ...], shape: tuple[int, ...]
-) -> None:
-    ratio = tuple(n % s for n, s in zip(basis_shape, shape, strict=True))
-    # Is 2 * np.pi * N / s equal to A * 2 * np.pi for some integer A
-    message = (
-        "Operators requested for a sample which does not evenly divide the basis shape\n"
-        "This would result in noise operators which are not periodic"
-    )
-    try:
-        np.testing.assert_array_almost_equal(ratio, 0, err_msg=message)
-    except AssertionError:
-        raise AssertionError(message) from None
-
-
-def _get_operators_for_isotropic_noise[M: BasisMetadata](
-    basis: Basis[M, Any],
-    *,
-    n: int | None = None,
-    fundamental_n: int | None = None,
-    assert_periodic: bool = True,
-) -> OperatorList[
-    SimpleMetadata,
-    M,
-    np.complex128,
-    TupleBasis2D[
-        np.complex128,
-        FundamentalBasis[SimpleMetadata],
-        RecastDiagonalOperatorBasis[M, np.complex128],
-        None,
-    ],
-]:
-    fundamental_n = basis.size if fundamental_n is None else fundamental_n
-    if assert_periodic:
-        _assert_periodic_sample((basis.size,), (fundamental_n,))
-    n = fundamental_n if n is None else n
-    # Operators e^(ik_n x_m) / sqrt(M)
-    # with k_n = 2 * np.pi * n / N, n = 0...N
-    # and x_m = m, m = 0...M
-    k = 2 * np.pi / fundamental_n
-    nk_points = fundamental_nk_points(SimpleMetadata(basis.size))[np.newaxis, :]
-    i_points = np.arange(0, n)[:, np.newaxis]
-
-    operators = np.exp(1j * i_points * k * nk_points) / np.sqrt(basis.size)
-    return OperatorList(
-        tuple_basis(
-            (FundamentalBasis.from_size(n), recast_diagonal_basis(basis, basis))
-        ),
-        operators,
-    )
 
 
 def _get_noise_eigenvalues_isotropic_fft[M: BasisMetadata](
@@ -102,20 +37,7 @@ def _get_noise_eigenvalues_isotropic_fft[M: BasisMetadata](
 
 def get_periodic_noise_operators_isotropic_fft[M: BasisMetadata](
     kernel: IsotropicNoiseKernel[M, np.complex128],
-    *,
-    fundamental_n: int | None = None,
-    assert_periodic: bool = True,
-) -> OperatorList[
-    EigenvalueMetadata,
-    M,
-    np.complex128,
-    TupleBasis2D[
-        np.complex128,
-        FundamentalBasis[EigenvalueMetadata],
-        RecastDiagonalOperatorBasis[M, np.complex128],
-        None,
-    ],
-]:
+) -> OperatorList[EigenvalueMetadata, M, np.complex128]:
     r"""
     For an isotropic noise kernel, the noise operators are independent in k space.
 
@@ -131,189 +53,14 @@ def get_periodic_noise_operators_isotropic_fft[M: BasisMetadata](
 
 
     """
-    fundamental_n = kernel.basis.size if fundamental_n is None else fundamental_n
-
-    operators = _get_operators_for_isotropic_noise(
+    operators = operator.build.all_axis_periodic_operators(
         kernel.basis.outer_recast.outer_recast,
-        fundamental_n=fundamental_n,
-        assert_periodic=assert_periodic,
     )
-    eigenvalues = _get_noise_eigenvalues_isotropic_fft(
-        kernel, fundamental_n=fundamental_n
-    )
+    operators = operators.with_basis(as_tuple_basis(operators.basis))
+    eigenvalues = _get_noise_eigenvalues_isotropic_fft(kernel)
     return OperatorList(
         tuple_basis((FundamentalBasis(eigenvalues), operators.basis.children[1])),
         operators.raw_data,
-    )
-
-
-def get_periodic_operators_for_real_isotropic_noise[M: BasisMetadata](
-    basis: Basis[M, Any],
-    *,
-    n: int | None = None,
-    fundamental_n: int | None = None,
-    assert_periodic: bool = True,
-) -> OperatorList[
-    SimpleMetadata,
-    M,
-    np.complex128,
-    TupleBasis2D[
-        np.complex128,
-        FundamentalBasis[SimpleMetadata],
-        DiagonalBasis[np.complex128, Basis[M, Any], Basis[M, Any], None],
-        None,
-    ],
-]:
-    """Get operators used for real isotropic noise.
-
-    returns the 2n - 1 smallest operators (n frequencies)
-
-
-    """
-    fundamental_n = basis.size if fundamental_n is None else fundamental_n
-    if assert_periodic:
-        _assert_periodic_sample((basis.size,), (fundamental_n,))
-    n = (fundamental_n // 2) if n is None else n
-
-    k = 2 * np.pi / fundamental_n
-    nk_points = fundamental_nk_points(SimpleMetadata(basis.size))[np.newaxis, :]
-
-    sines = np.sin(np.arange(n - 1, 0, -1)[:, np.newaxis] * nk_points * k)
-    coses = np.cos(np.arange(0, n)[:, np.newaxis] * nk_points * k)
-    data = np.concatenate([coses, sines]).astype(np.complex128) / np.sqrt(basis.size)
-
-    # Equivalent to
-    # ! data = standard_operators["data"].reshape(kernel["basis"].n, -1)
-    # ! end = fundamental_n // 2 + 1
-    # Build (e^(ikx) +- e^(-ikx)) operators
-    # ! data[1:end] = np.sqrt(2) * np.real(data[1:end])
-    # ! data[end:] = np.sqrt(2) * np.imag(np.conj(data[end:]))
-    return OperatorList(
-        tuple_basis((FundamentalBasis.from_size(n), diagonal_basis((basis, basis)))),
-        data,
-    )
-
-
-def get_periodic_noise_operators_real_isotropic_fft[M: BasisMetadata](
-    kernel: IsotropicNoiseKernel[M, np.complex128],
-    *,
-    n: int | None = None,
-    assert_periodic: bool = True,
-) -> OperatorList[
-    EigenvalueMetadata,
-    M,
-    np.complex128,
-    TupleBasis2D[
-        np.complex128,
-        FundamentalBasis[EigenvalueMetadata],
-        DiagonalBasis[
-            np.complex128,
-            Basis[StackedMetadata[M, None], np.complex128],
-            Basis[StackedMetadata[M, None], np.complex128],
-            None,
-        ],
-        None,
-    ],
-]:
-    r"""
-    For an isotropic noise kernel, the noise operators are independent in k space.
-
-    beta(x - x') = 1 / N \sum_k |f(k)|^2 e^(ikx) for some f(k)
-    |f(k)|^2 = \sum_x beta(x) e^(-ik.x)
-
-    The independent noise operators are then given by
-
-    L(k) = 1 / N \sum_x e^(ikx) S(x)
-
-    The inddependent operators can therefore be found directly using a FFT
-    of the noise beta(x).
-
-    For a real kernel, the coefficients of  e^(+-ikx) are the same
-    we can therefore equivalently use cos(x) and sin(x) as the basis
-    for the kernel.
-
-
-    """
-    np.testing.assert_allclose(np.imag(kernel.raw_data), 0)
-
-    fundamental_n = kernel.basis.size if n is None else 2 * n + 1
-
-    operators = get_periodic_operators_for_real_isotropic_noise(
-        kernel.basis, fundamental_n=fundamental_n, assert_periodic=assert_periodic
-    )
-
-    eigenvalues = _get_noise_eigenvalues_isotropic_fft(
-        kernel, fundamental_n=fundamental_n
-    )
-
-    np.testing.assert_allclose(
-        eigenvalues.values[1::],
-        eigenvalues.values[1::][::-1],
-        rtol=1e-8,
-    )
-
-    return OperatorList(
-        tuple_basis((FundamentalBasis(eigenvalues), operators.basis.children[1])),
-        operators.raw_data,
-    )
-
-
-def _get_operators_for_isotropic_stacked_noise[M: StackedMetadata[BasisMetadata, Any]](
-    basis: Basis[M, Any],
-    *,
-    shape: tuple[int, ...] | None = None,
-    fundamental_shape: tuple[int, ...] | None = None,
-    assert_periodic: bool = True,
-) -> OperatorList[
-    SimpleMetadata,
-    M,
-    np.complex128,
-    TupleBasis2D[
-        np.complex128,
-        TupleBasis[BasisMetadata, None, np.generic],
-        DiagonalBasis[
-            np.complex128,
-            Basis[M, np.generic],
-            Basis[M, np.generic],
-            None,
-        ],
-        None,
-    ],
-]:
-    converted_basis = as_tuple_basis(basis)
-    fundamental_shape = (
-        converted_basis.shape if fundamental_shape is None else fundamental_shape
-    )
-    if assert_periodic:
-        _assert_periodic_sample(converted_basis.shape, fundamental_shape)
-    shape = fundamental_shape if shape is None else shape
-    # Operators e^(ik_n0,n1,.. x_m0,m1,..) / sqrt(prod(Mi))
-    # with k_n0,n1 = 2 * np.pi * (n0,n1,...) / prod(Ni), ni = 0...Ni
-    # and x_m0,m1 = (m0,m1,...), mi = 0...Mi
-    k = tuple(2 * np.pi / n for n in fundamental_shape)
-    shape_basis = _basis.from_shape(fundamental_shape)
-
-    nk_points = fundamental_stacked_nk_points(basis.metadata())
-    i_points = fundamental_stacked_nk_points(
-        StackedMetadata.from_shape(converted_basis.shape, extra=None)
-    )
-
-    operators = np.array(
-        [
-            np.exp(1j * np.einsum("i,i,ij->j", k, i, nk_points))  # type: ignore einsum
-            / np.sqrt(converted_basis.size)
-            for i in zip(*i_points)
-        ]
-    )
-    converted_basis = cast("Basis[M, Any]", converted_basis)
-    return OperatorList(
-        tuple_basis(
-            (
-                shape_basis,
-                diagonal_basis((converted_basis, converted_basis.dual_basis())),
-            )
-        ),
-        operators,
     )
 
 
@@ -341,24 +88,74 @@ def _get_noise_eigenvalues_isotropic_stacked_fft[M: BasisMetadata, E](
     return EigenvalueMetadata(coefficients)
 
 
+def build_periodic_noise_operators[
+    B: Basis[EigenvalueMetadata, np.complex128],
+    M1: BasisMetadata,
+    E,
+](
+    list_basis: B,
+    inner_basis: TupleBasis[M1, E, Any],
+) -> OperatorList[
+    EigenvalueMetadata,
+    StackedMetadata[M1, E],
+    np.complex128,
+    TupleBasis2D[
+        Any, B, RecastDiagonalOperatorBasis[StackedMetadata[M1, E], Any], None
+    ],
+]:
+    r"""
+    For an isotropic noise kernel, the noise operators are independent in k space.
+
+    .. math::
+        \beta(x - x') = \frac{1}{N} \sum_k |f(k)|^2 e^{ikx} for some f(k)
+        |f(k)|^2 = \sum_x \beta(x) e^{-ik.x}
+
+    The independent noise operators are then given by
+
+    .. math::
+        \hat{f}(k) = \sqrt{N} f(k)
+
+    Parameters
+    ----------
+    kernel : IsotropicNoiseKernel[M, np.complex128]
+
+    Returns
+    -------
+    OperatorList[
+        EigenvalueMetadata,
+        M,
+        np.complex128,
+        TupleBasis2D[
+            Any,
+            FundamentalBasis[SimpleMetadata],
+            RecastDiagonalOperatorBasis[M, Any],
+            None,
+        ],
+    ]
+    """
+    operators = operator.build.all_periodic_operators(inner_basis)
+    operators = operators.with_basis(operators.basis.inner)
+
+    return OperatorList(
+        tuple_basis(
+            (FundamentalBasis(list_basis.metadata()), operators.basis.children[1])
+        ),
+        operators.raw_data,
+    ).with_list_basis(list_basis)
+
+
 def get_periodic_noise_operators_isotropic_stacked_fft[M: BasisMetadata, E](
     kernel: IsotropicNoiseKernel[StackedMetadata[M, E], np.complex128],
     *,
     fundamental_shape: tuple[int, ...] | None = None,
-    assert_periodic: bool = True,
 ) -> OperatorList[
     EigenvalueMetadata,
     StackedMetadata[M, E],
     np.complex128,
     TupleBasis2D[
-        np.complex128,
-        FundamentalBasis[EigenvalueMetadata],
-        DiagonalBasis[
-            np.complex128,
-            Basis[StackedMetadata[M, E], Any],
-            Basis[StackedMetadata[M, E], Any],
-            None,
-        ],
+        Any,
+        FundamentalBasis[SimpleMetadata],
+        RecastDiagonalOperatorBasis[StackedMetadata[M, E], Any],
         None,
     ],
 ]:
@@ -372,70 +169,16 @@ def get_periodic_noise_operators_isotropic_stacked_fft[M: BasisMetadata, E](
 
     L(k) = 1 / N \sum_x e^(ikx) S(x)
 
-    The inddependent operators can therefore be found directly using a FFT
+    The independent operators can therefore be found directly using a FFT
     of the noise beta(x).
     """
-    converted_outer = as_tuple_basis(kernel.basis.outer_recast.outer_recast)
+    converted_outer = as_tuple_basis(kernel.basis.outer_recast.inner_recast)
     converted = kernel.with_isotropic_basis(converted_outer)
-    fundamental_shape = (
-        converted_outer.shape if fundamental_shape is None else fundamental_shape
-    )
+    fundamental_shape = converted_outer.shape
 
-    operators = _get_operators_for_isotropic_stacked_noise(
-        converted_outer,
-        fundamental_shape=fundamental_shape,
-        assert_periodic=assert_periodic,
-    )
     eigenvalues = _get_noise_eigenvalues_isotropic_stacked_fft(
         converted, fundamental_shape=fundamental_shape
     )
-    return OperatorList(
-        tuple_basis((FundamentalBasis(eigenvalues), operators.basis.children[1])),
-        operators.raw_data,
-    )
-
-
-def get_periodic_noise_operators_real_isotropic_stacked_fft[M: BasisMetadata, E](
-    kernel: IsotropicNoiseKernel[StackedMetadata[M, E], np.complex128],
-    *,
-    fundamental_shape: tuple[int | None, ...] | None = None,
-    assert_periodic: bool = True,
-) -> OperatorList[
-    EigenvalueMetadata,
-    StackedMetadata[M, E],
-    np.complex128,
-    TupleBasis2D[
-        Any,
-        FundamentalBasis[EigenvalueMetadata],
-        RecastDiagonalOperatorBasis[StackedMetadata[M, E], Any],
-        Any,
-    ],
-]:
-    """Calculate the noise operators for a general isotropic noise kernel.
-
-    Polynomial fitting to get Taylor expansion.
-
-    Parameters
-    ----------
-    kernel: IsotropicNoiseKernel[TupleBasisWithLengthLike[Any, Any]]
-    n: int, by default 1
-
-    Returns
-    -------
-    The noise operators formed using the 2n+1 lowest fourier terms, and the corresponding coefficients.
-
-    """
-    axis_kernels = as_axis_kernel_from_isotropic(kernel)
-
-    operators = tuple(
-        get_periodic_noise_operators_isotropic_fft(
-            kernel,
-            fundamental_n=None if (fundamental_shape is None) else fundamental_shape[i],
-            assert_periodic=assert_periodic,
-        )
-        for (i, kernel) in enumerate(axis_kernels)
-    )
-
-    return get_diagonal_noise_operators_from_axis(  # type: ignore cast here is safe
-        operators, kernel.basis.outer_recast.outer_recast.metadata().extra
+    return build_periodic_noise_operators(
+        FundamentalBasis(eigenvalues), converted_outer
     )

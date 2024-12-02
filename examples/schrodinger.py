@@ -16,8 +16,8 @@ if __name__ == "__main__":
         (np.array([2 * np.pi]),), (60,)
     )
 
-    potential = operator.build_cos_potential(metadata, 1)
-    hamiltonian = operator.build_kinetic_hamiltonian(potential, hbar**2)
+    potential = operator.build.cos_potential(metadata, 1)
+    hamiltonian = operator.build.kinetic_hamiltonian(potential, hbar**2)
     # TODO: we want to make this more natural ...  # noqa: FIX002
     diagonal_hamiltonian = operator.into_diagonal_hermitian(hamiltonian)
     eigenstates = diagonal_hamiltonian.basis.inner[1].eigenvectors

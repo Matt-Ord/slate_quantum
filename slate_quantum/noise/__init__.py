@@ -12,6 +12,10 @@ from slate_quantum.noise._build import (
     truncate_noise_kernel,
     truncate_noise_operator_list,
 )
+from slate_quantum.noise._caldeira_leggett import (
+    build_periodic_caldeira_leggett_axis_operators,
+    build_periodic_caldeira_leggett_operators,
+)
 from slate_quantum.noise._kernel import (
     AxisKernel,
     DiagonalNoiseKernel,
@@ -30,11 +34,8 @@ from slate_quantum.noise.diagonalize import (
     get_periodic_noise_operators_explicit_taylor_expansion,
     get_periodic_noise_operators_isotropic_fft,
     get_periodic_noise_operators_isotropic_stacked_fft,
-    get_periodic_noise_operators_real_isotropic_fft,
-    get_periodic_noise_operators_real_isotropic_stacked_fft,
     get_periodic_noise_operators_real_isotropic_stacked_taylor_expansion,
     get_periodic_noise_operators_real_isotropic_taylor_expansion,
-    get_periodic_operators_for_real_isotropic_noise,
 )
 
 __all__ = [
@@ -49,6 +50,8 @@ __all__ = [
     "build_axis_kernel_from_function_stacked",
     "build_isotropic_kernel_from_function",
     "build_isotropic_kernel_from_function_stacked",
+    "build_periodic_caldeira_leggett_axis_operators",
+    "build_periodic_caldeira_leggett_operators",
     "gaussian_correllation_fn",
     "get_diagonal_noise_operators_from_axis",
     "get_linear_noise_operators_explicit_taylor_expansion",
@@ -57,11 +60,8 @@ __all__ = [
     "get_periodic_noise_operators_explicit_taylor_expansion",
     "get_periodic_noise_operators_isotropic_fft",
     "get_periodic_noise_operators_isotropic_stacked_fft",
-    "get_periodic_noise_operators_real_isotropic_fft",
-    "get_periodic_noise_operators_real_isotropic_stacked_fft",
     "get_periodic_noise_operators_real_isotropic_stacked_taylor_expansion",
     "get_periodic_noise_operators_real_isotropic_taylor_expansion",
-    "get_periodic_operators_for_real_isotropic_noise",
     "get_temperature_corrected_operators",
     "truncate_diagonal_noise_kernel",
     "truncate_noise_kernel",

@@ -28,7 +28,7 @@ if TYPE_CHECKING:
     from slate_quantum.operator._diagonal import Potential
 
 
-def build_kinetic_energy_operator[M: SpacedLengthMetadata, E: AxisDirections](
+def kinetic_energy_operator[M: SpacedLengthMetadata, E: AxisDirections](
     metadata: StackedMetadata[M, E],
     mass: float,
     bloch_fraction: np.ndarray[Any, np.dtype[np.float64]] | None = None,
@@ -63,7 +63,7 @@ def build_kinetic_energy_operator[M: SpacedLengthMetadata, E: AxisDirections](
     return MomentumOperator(momentum_basis, energy)
 
 
-def build_kinetic_hamiltonian[M: SpacedLengthMetadata, E: AxisDirections](
+def kinetic_hamiltonian[M: SpacedLengthMetadata, E: AxisDirections](
     potential: Potential[M, E, np.complex128],
     mass: float,
     bloch_fraction: np.ndarray[Any, np.dtype[np.float64]] | None = None,
@@ -83,7 +83,7 @@ def build_kinetic_hamiltonian[M: SpacedLengthMetadata, E: AxisDirections](
     """
     basis = as_tuple_basis(potential.basis.inner)
     potential_hamiltonian = potential.with_basis(DiagonalBasis(basis))
-    kinetic_hamiltonian = build_kinetic_energy_operator(
+    kinetic_hamiltonian = kinetic_energy_operator(
         basis.metadata().children[0], mass, bloch_fraction
     )
 

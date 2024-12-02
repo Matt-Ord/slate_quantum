@@ -13,7 +13,7 @@ from slate.basis import (
     tuple_basis,
 )
 from slate.linalg import into_diagonal
-from slate.metadata import BasisMetadata, Metadata2D, SimpleMetadata
+from slate.metadata import BasisMetadata, Metadata2D, NestedLength, SimpleMetadata
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Iterator
@@ -134,7 +134,7 @@ def _assert_operator_list_basis(basis: Basis[BasisMetadata, Any]) -> None:
 OperatorListMetadata = Metadata2D[BasisMetadata, OperatorMetadata, Any]
 
 
-class OperatorList[
+class OperatorList[  # noqa: PLR0904
     M0: BasisMetadata,
     M1: BasisMetadata,
     DT: np.generic,
@@ -154,6 +154,11 @@ class OperatorList[
     ) -> None:
         super().__init__(cast("Any", basis), cast("Any", data))
         _assert_operator_list_basis(self.basis)
+
+    @property
+    @override
+    def fundamental_shape(self) -> tuple[NestedLength, NestedLength]:
+        return cast("tuple[NestedLength, NestedLength]", super().fundamental_shape)
 
     @override
     def with_basis[B1: Basis[Any, Any]](  # B1: B
