@@ -9,6 +9,9 @@ from slate_quantum.state._state import (
     StateList,
     calculate_inner_product,
     calculate_normalization,
+    get_all_occupations,
+    get_average_occupations,
+    get_occupations,
 )
 
 __all__ = [
@@ -18,4 +21,7 @@ __all__ = [
     "build_coherent_state",
     "calculate_inner_product",
     "calculate_normalization",
+    "get_all_occupations",
+    "get_average_occupations",
+    "get_occupations",
 ]
