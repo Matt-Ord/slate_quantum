@@ -278,8 +278,8 @@ def axis_periodic_operator[M: BasisMetadata](
 
     k is chosen such that k = 2 * np.pi n_k / N
     """
-    truncation = Truncation(1, 1, n_k)
-    outer_basis = TruncatedBasis(truncation, TransformedBasis(inner_basis))
+    transformed = TransformedBasis(inner_basis, direction="backward")
+    outer_basis = TruncatedBasis(Truncation(1, 1, n_k), transformed)
     return DiagonalOperator(inner_basis, outer_basis, np.array([1]))
 
 
@@ -345,7 +345,7 @@ def periodic_operator[M: BasisMetadata, E](
     outer_basis = basis.with_modified_children(
         inner_basis,
         lambda i, inner: TruncatedBasis(
-            Truncation(1, 1, n_k[i]), TransformedBasis(inner)
+            Truncation(1, 1, n_k[i]), TransformedBasis(inner, direction="backward")
         ),
     )
     return DiagonalOperator(inner_basis, outer_basis, np.array([1]))
@@ -361,7 +361,7 @@ def scattering_operator[M: SpacedLengthMetadata, E: AxisDirections](
     outer_basis = basis.with_modified_children(
         basis.from_metadata(metadata),
         lambda i, inner: TruncatedBasis(
-            Truncation(1, 1, n_k[i]), TransformedBasis(inner)
+            Truncation(1, 1, n_k[i]), TransformedBasis(inner, direction="backward")
         ),
     )
     return PositionOperator(outer_basis, np.array([1]))
@@ -383,7 +383,7 @@ def all_periodic_operators[M: BasisMetadata, E](
     """Get all generalized e^(ik.x) operator."""
     outer_basis = basis.with_modified_children(
         inner_basis,
-        lambda _i, inner: TransformedBasis(inner),
+        lambda _i, inner: TransformedBasis(inner, direction="backward"),
     )
     operator_basis = recast_diagonal_basis(inner_basis, outer_basis)
 

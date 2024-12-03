@@ -126,7 +126,7 @@ def solve_stochastic_schrodinger_equation_banded[
     # We get the best numerical performace if we set the norm of the largest collapse operators
     # to be one. This prevents us from accumulating large errors when multiplying state * dt * operator * conj_operator
     max_norm = np.max(operators_norm).item() if len(operators_norm) > 0 else 1.0
-    dt = times.metadata().delta * max_norm**2 / hbar
+    dt = times.metadata().delta * max_norm**2 / (hbar * times.fundamental_size)
     r_threshold = kwargs.get("r_threshold", 1e-8)
 
     banded_collapse = _get_banded_operators(

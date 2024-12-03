@@ -36,9 +36,9 @@ def recast_diagonal_basis[
     return cast(
         "RecastDiagonalOperatorBasis[M, DT, BInner, BOuter]",
         RecastBasis(
-            diagonal_basis((inner_basis.dual_basis(), inner_basis)),
-            inner_basis,
-            outer_basis,
+            diagonal_basis((inner_basis, inner_basis.dual_basis())),
+            inner_basis.dual_basis(),
+            outer_basis.dual_basis(),
         ),
     )
 
