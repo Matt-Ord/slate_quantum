@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, cast, overload, override
 
 import numpy as np
-from slate.array import SlateArray
+from slate.array import Array
 from slate.basis import (
     Basis,
     FundamentalBasis,
@@ -42,7 +42,7 @@ class Operator[
     B: Basis[Metadata2D[BasisMetadata, BasisMetadata, Any], Any] = Basis[
         Metadata2D[M, M, None], DT
     ],
-](SlateArray[Metadata2D[M, M, None], DT, B]):
+](Array[Metadata2D[M, M, None], DT, B]):
     """Represents an operator in a quantum system."""
 
     def __init__[
@@ -71,15 +71,15 @@ class Operator[
     ) -> Operator[M1, DT1]: ...
     @overload
     def __add__[M1: BasisMetadata, DT1: np.number[Any]](
-        self: SlateArray[M1, DT1],
-        other: SlateArray[M1, DT1],
-    ) -> SlateArray[M1, DT1]: ...
+        self: Array[M1, DT1],
+        other: Array[M1, DT1],
+    ) -> Array[M1, DT1]: ...
     @override
     def __add__[M1: BasisMetadata, DT1: np.number[Any]](
-        self: SlateArray[M1, DT1],
-        other: SlateArray[M1, DT1],
-    ) -> SlateArray[M1, DT1]:
-        array = cast("SlateArray[Any, DT1]", super()).__add__(other)
+        self: Array[M1, DT1],
+        other: Array[M1, DT1],
+    ) -> Array[M1, DT1]:
+        array = cast("Array[Any, DT1]", super()).__add__(other)
         if isinstance(other, Operator):
             return cast("Any", Operator(array.basis, array.raw_data))
         return array
@@ -92,16 +92,16 @@ class Operator[
 
     @overload
     def __sub__[M1: BasisMetadata, DT1: np.number[Any]](
-        self: SlateArray[M1, DT1],
-        other: SlateArray[M1, DT1],
-    ) -> SlateArray[M1, DT1]: ...
+        self: Array[M1, DT1],
+        other: Array[M1, DT1],
+    ) -> Array[M1, DT1]: ...
 
     @override
     def __sub__[M1: BasisMetadata, DT1: np.number[Any]](
-        self: SlateArray[M1, DT1],
-        other: SlateArray[M1, DT1],
-    ) -> SlateArray[M1, DT1]:
-        array = cast("SlateArray[Any, DT1]", super()).__sub__(other)
+        self: Array[M1, DT1],
+        other: Array[M1, DT1],
+    ) -> Array[M1, DT1]:
+        array = cast("Array[Any, DT1]", super()).__sub__(other)
         if isinstance(other, Operator):
             return cast("Any", Operator(array.basis, array.raw_data))
 
@@ -109,18 +109,18 @@ class Operator[
 
     @override
     def __mul__[M1: BasisMetadata, DT1: np.number[Any]](
-        self: SlateArray[M1, DT1],
+        self: Array[M1, DT1],
         other: float,
     ) -> Operator[M1, DT1]:
-        out = cast("SlateArray[Any, DT1]", super()).__mul__(other)
+        out = cast("Array[Any, DT1]", super()).__mul__(other)
         return Operator[Any, Any](out.basis, out.raw_data)
 
-    def as_diagonal(self) -> SlateArray[M, np.complex128]:
+    def as_diagonal(self) -> Array[M, np.complex128]:
         diagonal = into_diagonal(
             Operator(self.basis, self.raw_data.astype(np.complex128))
         )
         inner = cast("Basis[M, DT]", diagonal.basis.inner[1])
-        return SlateArray(inner, diagonal.raw_data)
+        return Array(inner, diagonal.raw_data)
 
 
 def _assert_operator_list_basis(basis: Basis[BasisMetadata, Any]) -> None:
@@ -141,7 +141,7 @@ class OperatorList[  # noqa: PLR0904
     B: Basis[OperatorListMetadata, Any] = Basis[
         Metadata2D[M0, Metadata2D[M1, M1, None], None], DT
     ],
-](SlateArray[Metadata2D[M0, Metadata2D[M1, M1, None], None], DT, B]):
+](Array[Metadata2D[M0, Metadata2D[M1, M1, None], None], DT, B]):
     """Represents an operator in a quantum system."""
 
     def __init__[
@@ -280,15 +280,15 @@ class OperatorList[  # noqa: PLR0904
     ) -> OperatorList[_M0, _M1, DT1]: ...
     @overload
     def __add__[_M0: BasisMetadata, DT1: np.number[Any]](
-        self: SlateArray[_M0, DT1],
-        other: SlateArray[_M0, DT1],
-    ) -> SlateArray[_M0, DT1]: ...
+        self: Array[_M0, DT1],
+        other: Array[_M0, DT1],
+    ) -> Array[_M0, DT1]: ...
     @override
     def __add__[_M0: BasisMetadata, DT1: np.number[Any]](
-        self: SlateArray[_M0, DT1],
-        other: SlateArray[_M0, DT1],
-    ) -> SlateArray[_M0, DT1]:
-        array = cast("SlateArray[Any, DT1]", super()).__add__(other)
+        self: Array[_M0, DT1],
+        other: Array[_M0, DT1],
+    ) -> Array[_M0, DT1]:
+        array = cast("Array[Any, DT1]", super()).__add__(other)
         if isinstance(other, OperatorList):
             return cast("Any", OperatorList(array.basis, array.raw_data))
 
@@ -306,16 +306,16 @@ class OperatorList[  # noqa: PLR0904
 
     @overload
     def __sub__[_M0: BasisMetadata, DT1: np.number[Any]](
-        self: SlateArray[_M0, DT1],
-        other: SlateArray[_M0, DT1],
-    ) -> SlateArray[_M0, DT1]: ...
+        self: Array[_M0, DT1],
+        other: Array[_M0, DT1],
+    ) -> Array[_M0, DT1]: ...
 
     @override
     def __sub__[_M0: BasisMetadata, DT1: np.number[Any]](
-        self: SlateArray[_M0, DT1],
-        other: SlateArray[_M0, DT1],
-    ) -> SlateArray[_M0, DT1]:
-        array = cast("SlateArray[Any, DT1]", super()).__sub__(other)
+        self: Array[_M0, DT1],
+        other: Array[_M0, DT1],
+    ) -> Array[_M0, DT1]:
+        array = cast("Array[Any, DT1]", super()).__sub__(other)
         if isinstance(other, OperatorList):
             return cast("Any", OperatorList(array.basis, array.raw_data))
 
@@ -330,5 +330,5 @@ class OperatorList[  # noqa: PLR0904
         self: OperatorList[_M0, _M1, DT1],
         other: float,
     ) -> OperatorList[_M0, _M1, DT1]:
-        out = cast("SlateArray[Any, DT1]", super()).__mul__(other)
+        out = cast("Array[Any, DT1]", super()).__mul__(other)
         return OperatorList[Any, Any, Any](out.basis, out.raw_data)

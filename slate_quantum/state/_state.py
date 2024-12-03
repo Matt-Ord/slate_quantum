@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, overload, override
 
 import numpy as np
-from slate import FundamentalBasis, SlateArray, array, tuple_basis
+from slate import Array, FundamentalBasis, array, tuple_basis
 from slate import basis as _basis
 from slate.basis import (
     Basis,
@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 
 
 class State[M: BasisMetadata, B: Basis[Any, np.complex128] = Basis[M, np.complex128]](
-    SlateArray[M, np.complex128, B]
+    Array[M, np.complex128, B]
 ):
     """represents a state vector in a basis."""
 
@@ -75,10 +75,8 @@ def calculate_inner_product[M: BasisMetadata](
 
 def get_occupations[B: Basis[BasisMetadata, Any]](
     state: State[Any, B],
-) -> SlateArray[
-    BasisStateMetadata[B], np.float64, FundamentalBasis[BasisStateMetadata[B]]
-]:
-    return SlateArray(
+) -> Array[BasisStateMetadata[B], np.float64, FundamentalBasis[BasisStateMetadata[B]]]:
+    return Array(
         FundamentalBasis(BasisStateMetadata(state.basis)),
         np.abs(state.raw_data * state.with_basis(state.basis.dual_basis()).raw_data),
     )
@@ -90,7 +88,7 @@ class StateList[
     B: Basis[Metadata2D[BasisMetadata, BasisMetadata, None], np.complex128] = Basis[
         Metadata2D[M0, M1, None], np.complex128
     ],
-](SlateArray[Metadata2D[M0, M1, None], np.complex128, B]):
+](Array[Metadata2D[M0, M1, None], np.complex128, B]):
     """represents a state vector in a basis."""
 
     @override
@@ -157,7 +155,7 @@ class StateList[
 @overload
 def get_all_occupations[M0: BasisMetadata, B: Basis[BasisMetadata, Any]](
     states: StateList[M0, Any, TupleBasis2D[np.complex128, Any, B, None]],
-) -> SlateArray[
+) -> Array[
     Metadata2D[M0, BasisStateMetadata[B], None],
     np.float64,
     TupleBasis2D[
@@ -172,7 +170,7 @@ def get_all_occupations[M0: BasisMetadata, B: Basis[BasisMetadata, Any]](
 @overload
 def get_all_occupations[M0: BasisMetadata, M1: BasisMetadata](
     states: StateList[M0, M1],
-) -> SlateArray[
+) -> Array[
     Metadata2D[M0, BasisStateMetadata[Basis[M1, Any]], None],
     np.float64,
     TupleBasis2D[
@@ -186,7 +184,7 @@ def get_all_occupations[M0: BasisMetadata, M1: BasisMetadata](
 
 def get_all_occupations[M0: BasisMetadata, B: Basis[Any, Any]](
     states: StateList[M0, Any],
-) -> SlateArray[
+) -> Array[
     Metadata2D[M0, BasisStateMetadata[Basis[Any, Any]], None],
     np.float64,
     TupleBasis2D[
@@ -200,7 +198,7 @@ def get_all_occupations[M0: BasisMetadata, B: Basis[Any, Any]](
     states = states.with_list_basis(_basis.as_index_basis(states_basis[0]))
     dual_states = states.with_state_basis(states.basis[1].dual_basis())
 
-    return SlateArray(
+    return Array(
         tuple_basis(
             (states.basis[0], FundamentalBasis(BasisStateMetadata(states.basis[1])))
         ),
@@ -211,7 +209,7 @@ def get_all_occupations[M0: BasisMetadata, B: Basis[Any, Any]](
 @overload
 def get_average_occupations[B: Basis[BasisMetadata, Any]](
     states: StateList[Any, Any, TupleBasis2D[np.complex128, Any, B, None]],
-) -> SlateArray[
+) -> Array[
     BasisStateMetadata[B],
     np.float64,
     FundamentalBasis[BasisStateMetadata[B]],
@@ -221,7 +219,7 @@ def get_average_occupations[B: Basis[BasisMetadata, Any]](
 @overload
 def get_average_occupations[M1: BasisMetadata](
     states: StateList[Any, M1],
-) -> SlateArray[
+) -> Array[
     BasisStateMetadata[Basis[M1, Any]],
     np.float64,
     FundamentalBasis[BasisStateMetadata[Basis[M1, Any]]],
@@ -230,7 +228,7 @@ def get_average_occupations[M1: BasisMetadata](
 
 def get_average_occupations(
     states: StateList[Any, Any, Any],
-) -> SlateArray[
+) -> Array[
     BasisStateMetadata[Basis[Any, Any]],
     np.float64,
     FundamentalBasis[BasisStateMetadata[Basis[Any, Any]]],
@@ -239,7 +237,7 @@ def get_average_occupations(
     # Dont include empty entries in average
     list_basis = _basis.as_state_list(_basis.as_index_basis(occupations.basis[0]))
     average_basis = tuple_basis((list_basis, occupations.basis[1]))
-    occupations = occupations.with_basis(average_basis)
+    occupations = array.cast_basis(occupations, average_basis)
     return array.flatten(array.average(occupations, axis=0))
 
 
