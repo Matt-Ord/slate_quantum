@@ -73,7 +73,7 @@ def calculate_inner_product[M: BasisMetadata](
     ).item(0)
 
 
-def get_state_occupations[B: Basis[BasisMetadata, Any]](
+def get_occupations[B: Basis[BasisMetadata, Any]](
     state: State[Any, B],
 ) -> SlateArray[
     BasisStateMetadata[B], np.float64, FundamentalBasis[BasisStateMetadata[B]]
@@ -117,7 +117,7 @@ class StateList[
 
 
 @overload
-def get_all_state_occupations[M0: BasisMetadata, B: Basis[BasisMetadata, Any]](
+def get_all_occupations[M0: BasisMetadata, B: Basis[BasisMetadata, Any]](
     states: StateList[M0, Any, TupleBasis2D[np.complex128, Any, B, None]],
 ) -> SlateArray[
     Metadata2D[M0, BasisStateMetadata[B], None],
@@ -132,7 +132,7 @@ def get_all_state_occupations[M0: BasisMetadata, B: Basis[BasisMetadata, Any]](
 
 
 @overload
-def get_all_state_occupations[M0: BasisMetadata, M1: BasisMetadata](
+def get_all_occupations[M0: BasisMetadata, M1: BasisMetadata](
     states: StateList[M0, M1],
 ) -> SlateArray[
     Metadata2D[M0, BasisStateMetadata[Basis[M1, Any]], None],
@@ -146,7 +146,7 @@ def get_all_state_occupations[M0: BasisMetadata, M1: BasisMetadata](
 ]: ...
 
 
-def get_all_state_occupations[M0: BasisMetadata, B: Basis[Any, Any]](
+def get_all_occupations[M0: BasisMetadata, B: Basis[Any, Any]](
     states: StateList[M0, Any],
 ) -> SlateArray[
     Metadata2D[M0, BasisStateMetadata[Basis[Any, Any]], None],
@@ -174,7 +174,7 @@ def get_all_state_occupations[M0: BasisMetadata, B: Basis[Any, Any]](
 
 
 @overload
-def get_average_state_occupations[B: Basis[BasisMetadata, Any]](
+def get_average_occupations[B: Basis[BasisMetadata, Any]](
     states: StateList[Any, Any, TupleBasis2D[np.complex128, Any, B, None]],
 ) -> SlateArray[
     BasisStateMetadata[B],
@@ -184,7 +184,7 @@ def get_average_state_occupations[B: Basis[BasisMetadata, Any]](
 
 
 @overload
-def get_average_state_occupations[M1: BasisMetadata](
+def get_average_occupations[M1: BasisMetadata](
     states: StateList[Any, M1],
 ) -> SlateArray[
     BasisStateMetadata[Basis[M1, Any]],
@@ -193,14 +193,14 @@ def get_average_state_occupations[M1: BasisMetadata](
 ]: ...
 
 
-def get_average_state_occupations(
+def get_average_occupations(
     states: StateList[Any, Any, Any],
 ) -> SlateArray[
     BasisStateMetadata[Basis[Any, Any]],
     np.float64,
     FundamentalBasis[BasisStateMetadata[Basis[Any, Any]]],
 ]:
-    occupations = get_all_state_occupations(states)
+    occupations = get_all_occupations(states)
     # Dont include empty entries in average
     list_basis = basis.as_state_list(basis.as_index_basis(occupations.basis[0]))
     average_basis = tuple_basis((list_basis, occupations.basis[1]))
