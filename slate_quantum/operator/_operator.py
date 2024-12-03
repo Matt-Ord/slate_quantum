@@ -207,6 +207,14 @@ class OperatorList[  # noqa: PLR0904
             final_basis, self.basis.__convert_vector_into__(self.raw_data, final_basis)
         )
 
+    @overload
+    def __iter__[_M1: BasisMetadata, _B1: Basis[Any, Any]](
+        self: OperatorList[Any, _M1, Any, TupleBasis2D[Any, Any, _B1, None]], /
+    ) -> Iterator[Operator[M1, DT, _B1]]: ...
+
+    @overload
+    def __iter__(self, /) -> Iterator[Operator[M1, DT]]: ...
+
     def __iter__(self, /) -> Iterator[Operator[M1, DT]]:
         as_tuple = self.with_basis(as_tuple_basis(self.basis))
         return (
