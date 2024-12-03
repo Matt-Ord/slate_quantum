@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any, cast, overload, override
 
 import numpy as np
-from slate.array import SlateArray
+from slate.array import Array
 from slate.basis import (
     Basis,
 )
@@ -56,9 +56,9 @@ class SuperOperator[
     ) -> Operator[M1, DT1]: ...
     @overload
     def __add__[M1: BasisMetadata, DT1: np.number[Any]](
-        self: SlateArray[M1, DT1],
-        other: SlateArray[M1, DT1],
-    ) -> SlateArray[M1, DT1]: ...
+        self: Array[M1, DT1],
+        other: Array[M1, DT1],
+    ) -> Array[M1, DT1]: ...
     @override
     def __add__[M1: BasisMetadata, DT1: np.number[Any]](  # type: ignore overload
         self: Any,
@@ -82,9 +82,9 @@ class SuperOperator[
     ) -> Operator[M1, DT1]: ...
     @overload
     def __sub__[M1: BasisMetadata, DT1: np.number[Any]](
-        self: SlateArray[M1, DT1],
-        other: SlateArray[M1, DT1],
-    ) -> SlateArray[M1, DT1]: ...
+        self: Array[M1, DT1],
+        other: Array[M1, DT1],
+    ) -> Array[M1, DT1]: ...
 
     @override
     def __sub__[M1: BasisMetadata, DT1: np.number[Any]](  # type: ignore overload
@@ -102,5 +102,5 @@ class SuperOperator[
         self: SuperOperator[M1, DT1],
         other: float,
     ) -> SuperOperator[M1, DT1]:
-        out = SlateArray[Any, Any].__mul__(self, other)
+        out = Array[Any, Any].__mul__(self, other)
         return SuperOperator[Any, Any](out.basis, out.raw_data)

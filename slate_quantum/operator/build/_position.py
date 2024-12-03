@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, cast
 
 import numpy as np
-from slate import Basis, SlateArray, basis
+from slate import Array, Basis, basis
 from slate.basis import (
     DiagonalBasis,
     FundamentalBasis,
@@ -58,7 +58,7 @@ def _wrap_displacements(
 
 def get_displacements_x[M: LengthMetadata](
     metadata: M, origin: float
-) -> SlateArray[M, np.float64, FundamentalBasis[M]]:
+) -> Array[M, np.float64, FundamentalBasis[M]]:
     """Get the displacements from origin.
 
     Parameters
@@ -75,14 +75,14 @@ def get_displacements_x[M: LengthMetadata](
     data = _wrap_displacements(distances, max_distance)
 
     basis = FundamentalBasis(metadata)
-    return SlateArray(basis, data)
+    return Array(basis, data)
 
 
 def _get_displacements_x_along_axis(
     metadata: SpacedVolumeMetadata,
     origin: float,
     axis: int,
-) -> SlateArray[
+) -> Array[
     SpacedVolumeMetadata,
     np.float64,
     TupleBasis[LengthMetadata, AxisDirections, np.generic],
@@ -92,13 +92,13 @@ def _get_displacements_x_along_axis(
     max_distance = delta_x / 2
     data = _wrap_displacements(distances, max_distance)
 
-    return SlateArray(basis.from_metadata(metadata), data)
+    return Array(basis.from_metadata(metadata), data)
 
 
 def get_displacements_x_stacked(
     metadata: SpacedVolumeMetadata, origin: tuple[float, ...]
 ) -> tuple[
-    SlateArray[
+    Array[
         SpacedVolumeMetadata,
         np.float64,
         TupleBasis[LengthMetadata, AxisDirections, np.generic],
