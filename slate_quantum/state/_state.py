@@ -3,8 +3,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, overload, override
 
 import numpy as np
-from slate import FundamentalBasis, array, basis, tuple_basis
-from slate.array import SlateArray, average
+from slate import FundamentalBasis, SlateArray, array, tuple_basis
+from slate import basis as _basis
 from slate.basis import (
     Basis,
     BasisStateMetadata,
@@ -103,16 +103,54 @@ class StateList[
         )
 
     def __iter__(self, /) -> Iterator[State[M1, Basis[Any, np.complex128]]]:
-        as_tuple = self.with_basis(basis.as_tuple_basis(self.basis))
+        as_tuple = self.with_basis(_basis.as_tuple_basis(self.basis))
         return (
             State(as_tuple.basis[1], row)
             for row in as_tuple.raw_data.reshape(as_tuple.basis.shape)
         )
 
     def __getitem__(self, /, index: int) -> State[M1, Basis[Any, np.complex128]]:
-        as_tuple = self.with_basis(basis.as_tuple_basis(self.basis))
+        as_tuple = self.with_basis(_basis.as_tuple_basis(self.basis))
         return State(
             as_tuple.basis[1], as_tuple.raw_data.reshape(as_tuple.basis.shape)[index]
+        )
+
+    @overload
+    def with_state_basis[B0: Basis[Any, Any], B1: Basis[Any, Any]](  # B1: B
+        self: StateList[Any, Any, TupleBasis2D[Any, B0, Any, None]], basis: B1
+    ) -> StateList[M0, M1, TupleBasis2D[Any, B0, B1, None]]: ...
+
+    @overload
+    def with_state_basis[B1: Basis[Any, Any]](  # B1: B
+        self, basis: B1
+    ) -> StateList[M0, M1, TupleBasis2D[Any, Any, B1, None]]: ...
+
+    def with_state_basis(  # B1: B
+        self, basis: Basis[BasisMetadata, Any]
+    ) -> StateList[M0, M1, Any]:
+        """Get the Operator with the state basis set to basis."""
+        final_basis = tuple_basis((_basis.as_tuple_basis(self.basis)[0], basis))
+        return StateList(
+            final_basis, self.basis.__convert_vector_into__(self.raw_data, final_basis)
+        )
+
+    @overload
+    def with_list_basis[B0: Basis[Any, Any], B1: Basis[Any, Any]](  # B1: B
+        self: StateList[Any, Any, TupleBasis2D[Any, Any, B1, None]], basis: B0
+    ) -> StateList[M0, M1, TupleBasis2D[Any, B0, B1, None]]: ...
+
+    @overload
+    def with_list_basis[B0: Basis[Any, Any]](  # B1: B
+        self, basis: B0
+    ) -> StateList[M0, M1, TupleBasis2D[Any, B0, Any, None]]: ...
+
+    def with_list_basis(  # B1: B
+        self, basis: Basis[Any, Any]
+    ) -> StateList[M0, M1, Any]:
+        """Get the Operator with the operator basis set to basis."""
+        final_basis = tuple_basis((basis, _basis.as_tuple_basis(self.basis)[1]))
+        return StateList(
+            final_basis, self.basis.__convert_vector_into__(self.raw_data, final_basis)
         )
 
 
@@ -158,12 +196,9 @@ def get_all_occupations[M0: BasisMetadata, B: Basis[Any, Any]](
         None,
     ],
 ]:
-    states_basis = basis.as_tuple_basis(states.basis)
-    states_basis = tuple_basis((basis.as_index_basis(states_basis[0]), states_basis[1]))
-    states = states.with_basis(states_basis)
-    dual_states = states.with_basis(
-        tuple_basis((states.basis[0], states.basis[1].dual_basis()))
-    )
+    states_basis = _basis.as_tuple_basis(states.basis)
+    states = states.with_list_basis(_basis.as_index_basis(states_basis[0]))
+    dual_states = states.with_state_basis(states.basis[1].dual_basis())
 
     return SlateArray(
         tuple_basis(
@@ -202,10 +237,10 @@ def get_average_occupations(
 ]:
     occupations = get_all_occupations(states)
     # Dont include empty entries in average
-    list_basis = basis.as_state_list(basis.as_index_basis(occupations.basis[0]))
+    list_basis = _basis.as_state_list(_basis.as_index_basis(occupations.basis[0]))
     average_basis = tuple_basis((list_basis, occupations.basis[1]))
     occupations = occupations.with_basis(average_basis)
-    return array.flatten(average(occupations, axis=0))
+    return array.flatten(array.average(occupations, axis=0))
 
 
 type EigenstateList[M: BasisMetadata] = StateList[EigenvalueMetadata, M]
