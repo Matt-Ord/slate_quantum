@@ -44,19 +44,19 @@ if __name__ == "__main__":
     )
 
     idx = -2
-    fig, ax, _ = plot_data_2d_x(array.as_flatten_basis(operators[idx]))
+    fig, ax, _ = plot_data_2d_x(array.flatten(operators[idx]))
     ax.set_label("Original noise operator")
     fig.show()
 
-    fig, ax, _ = plot_data_2d_k(array.as_flatten_basis(operators[idx]))
+    fig, ax, _ = plot_data_2d_k(array.flatten(operators[idx]))
     ax.set_label("Original noise operator")
     fig.show()
 
-    fig, ax, _ = plot_data_2d_x(array.as_flatten_basis(corrected_operators[idx]))
+    fig, ax, _ = plot_data_2d_x(array.flatten(corrected_operators[idx]))
     ax.set_label("Temperature corrected noise operator")
     fig.show()
 
-    fig, ax, _ = plot_data_2d_k(array.as_flatten_basis(corrected_operators[idx]))
+    fig, ax, _ = plot_data_2d_k(array.flatten(corrected_operators[idx]))
     ax.set_label("Temperature corrected noise operator")
     fig.show()
     input()

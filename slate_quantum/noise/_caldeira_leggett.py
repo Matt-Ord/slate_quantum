@@ -32,7 +32,7 @@ def build_periodic_caldeira_leggett_axis_operators[M: SpacedLengthMetadata](
 ]:
     k = fundamental_dk(metadata)
     n = metadata.fundamental_size
-    eigenvalue = n * friction / 4 * k**2
+    eigenvalue = n * friction / (4 * k**2)
     operators = build.all_axis_scattering_operators(metadata)
     operators = operators.with_basis(operators.basis.inner)
 
@@ -66,8 +66,8 @@ def build_periodic_caldeira_leggett_operators[
 ]:
     assert len(metadata.fundamental_shape) == 1
     k = fundamental_stacked_dk(metadata)[0][0]
-    n = np.sqrt(size_from_nested_shape(metadata.fundamental_shape))
-    eigenvalue = n * friction / 4 * k**2
+    n = size_from_nested_shape(metadata.fundamental_shape)
+    eigenvalue = n * friction / (4 * k**2)
     operators = build.all_scattering_operators(metadata)
     operators = operators.with_basis(operators.basis.inner)
 
