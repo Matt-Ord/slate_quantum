@@ -15,6 +15,15 @@ from slate_quantum.operator._diagonal import (
     position_operator_basis,
     recast_diagonal_basis,
 )
+from slate_quantum.operator._linalg import (
+    commute,
+    get_commutator_operator_list,
+    into_diagonal,
+    into_diagonal_hermitian,
+    matmul,
+    matmul_list_operator,
+    matmul_operator_list,
+)
 from slate_quantum.operator._operator import (
     Operator,
     OperatorList,
@@ -34,7 +43,6 @@ from slate_quantum.operator.build import (
 from slate_quantum.operator.build import (
     repeat_potential,
 )
-from slate_quantum.operator.linalg import into_diagonal, into_diagonal_hermitian
 
 __all__ = [
     "MomentumOperator",
@@ -52,8 +60,13 @@ __all__ = [
     "build",
     "build_kinetic_energy_operator",
     "build_kinetic_hamiltonian",
+    "commute",
+    "get_commutator_operator_list",
     "into_diagonal",
     "into_diagonal_hermitian",
+    "matmul",
+    "matmul_list_operator",
+    "matmul_operator_list",
     "momentum_operator_basis",
     "operator_basis",
     "position_operator_basis",

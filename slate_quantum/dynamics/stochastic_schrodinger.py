@@ -118,7 +118,7 @@ def solve_stochastic_schrodinger_equation_banded[
         o.with_basis(hamiltonian_tuple.basis).raw_data.reshape(
             hamiltonian_tuple.basis.shape
         )
-        * (np.sqrt(e * hbar) / np.sqrt(2))
+        * (np.sqrt(e) / np.sqrt(2))
         for o, e in zip(noise, noise.basis[0].metadata().values[noise.basis[0].points])
     ]
     operators_norm = [np.linalg.norm(o) for o in operators_data]

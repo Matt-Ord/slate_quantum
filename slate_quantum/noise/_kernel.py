@@ -369,7 +369,7 @@ def get_diagonal_noise_operators_from_axis[M: BasisMetadata, E](
 type NoiseOperatorList[
     M: BasisMetadata,
     B: Basis[Metadata2D[BasisMetadata, BasisMetadata, None], np.complex128] = Basis[  # noqa: E251
-        Metadata2D[BasisMetadata, BasisMetadata, None], np.complex128
+        Metadata2D[M, M, None], np.complex128
     ],
 ] = OperatorList[
     EigenvalueMetadata,

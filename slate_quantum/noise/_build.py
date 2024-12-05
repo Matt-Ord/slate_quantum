@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Callable
 
 import numpy as np
-from scipy.constants import Boltzmann  # type: ignore stubs
+from scipy.constants import Boltzmann, hbar  # type: ignore stubs
 from slate.basis import CoordinateBasis, as_index_basis, as_tuple_basis
 from slate.metadata import AxisDirections
 
@@ -18,8 +18,7 @@ from slate_quantum.noise.diagonalize._eigenvalue import (
     get_periodic_noise_operators_diagonal_eigenvalue,
     get_periodic_noise_operators_eigenvalue,
 )
-from slate_quantum.operator import SuperOperatorMetadata
-from slate_quantum.operator.linalg import get_commutator_operator_list
+from slate_quantum.operator import SuperOperatorMetadata, get_commutator_operator_list
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -183,10 +182,12 @@ def get_temperature_corrected_operators[M0: BasisMetadata, M1: BasisMetadata](
     hamiltonian: Operator[M1, np.complex128],
     operators: OperatorList[M0, M1, np.complex128],
     temperature: float,
+    eta: float,
 ) -> OperatorList[M0, M1, np.complex128]:
     """Get the temperature corrected operators."""
     commutator = get_commutator_operator_list(hamiltonian, operators)
-    correction = commutator * (-1 / (4 * Boltzmann * temperature))
+    correction = commutator * (-1 * np.sqrt(eta / (8 * Boltzmann * temperature)))
+    operators *= np.sqrt(2 * eta * Boltzmann * temperature / hbar**2)
     return correction + operators
 
 

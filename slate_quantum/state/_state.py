@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, overload, override
 
 import numpy as np
-from slate import Array, FundamentalBasis, array, tuple_basis
+from slate import Array, FundamentalBasis, array, linalg, tuple_basis
 from slate import basis as _basis
 from slate.basis import (
     Basis,
@@ -31,25 +31,6 @@ class State[M: BasisMetadata, B: Basis[Any, np.complex128] = Basis[M, np.complex
         return State(basis, self.basis.__convert_vector_into__(self.raw_data, basis))
 
 
-def calculate_normalization(
-    state: State[BasisMetadata],
-) -> np.float64:
-    """
-    calculate the normalization of a state.
-
-    This should always be 1
-
-    Parameters
-    ----------
-    state: StateVector[Any] | StateDualVector[Any]
-
-    Returns
-    -------
-    float
-    """
-    return np.sum(np.abs(state.raw_data) ** 2).astype(np.float64)
-
-
 def calculate_inner_product[M: BasisMetadata](
     state_0: State[M],
     state_1: State[M],
@@ -66,19 +47,38 @@ def calculate_inner_product[M: BasisMetadata](
     -------
     np.complex_
     """
-    return np.tensordot(
-        state_1.with_basis(state_0.basis.dual_basis()).raw_data,
-        state_0.raw_data,
-        axes=(0, 0),
-    ).item(0)
+    product = linalg.einsum("i', i ->", state_0, state_1)
+    return product.as_array().item(0)
+
+
+def calculate_normalization(
+    state: State[BasisMetadata],
+) -> np.float64:
+    """
+    calculate the normalization of a state.
+
+    This should always be 1
+
+    Parameters
+    ----------
+    state: StateVector[Any] | StateDualVector[Any]
+
+    Returns
+    -------
+    float
+    """
+    product = calculate_inner_product(state, state)
+    return np.abs(product)
 
 
 def get_occupations[B: Basis[BasisMetadata, Any]](
     state: State[Any, B],
 ) -> Array[BasisStateMetadata[B], np.float64, FundamentalBasis[BasisStateMetadata[B]]]:
-    return Array(
-        FundamentalBasis(BasisStateMetadata(state.basis)),
-        np.abs(state.raw_data * state.with_basis(state.basis.dual_basis()).raw_data),
+    state_cast = array.cast_basis(
+        state, FundamentalBasis(BasisStateMetadata(state.basis))
+    )
+    return linalg.abs(linalg.einsum("i', i -> i", state_cast, state_cast)).with_basis(
+        state_cast.basis
     )
 
 
@@ -194,16 +194,16 @@ def get_all_occupations[M0: BasisMetadata, B: Basis[Any, Any]](
         None,
     ],
 ]:
-    states_basis = _basis.as_tuple_basis(states.basis)
-    states = states.with_list_basis(_basis.as_index_basis(states_basis[0]))
-    dual_states = states.with_state_basis(states.basis[1].dual_basis())
-
-    return Array(
-        tuple_basis(
-            (states.basis[0], FundamentalBasis(BasisStateMetadata(states.basis[1])))
+    states_as_tuple = array.as_tuple_basis(states)
+    cast_states = array.cast_basis(
+        states_as_tuple,
+        _basis.with_modified_child(
+            states_as_tuple.basis,
+            lambda x: FundamentalBasis(BasisStateMetadata(x)),
+            1,
         ),
-        np.abs(states.raw_data * dual_states.raw_data),
     )
+    return linalg.abs(linalg.einsum("(m i'),(m i) -> (m i)", cast_states, cast_states))  # type: ignore TODO: better type annotations
 
 
 @overload
@@ -237,6 +237,7 @@ def get_average_occupations(
     # Dont include empty entries in average
     list_basis = _basis.as_state_list(_basis.as_index_basis(occupations.basis[0]))
     average_basis = tuple_basis((list_basis, occupations.basis[1]))
+    # TODO: this is wrong - must convert first  # noqa: FIX002
     occupations = array.cast_basis(occupations, average_basis)
     return array.flatten(array.average(occupations, axis=0))
 
