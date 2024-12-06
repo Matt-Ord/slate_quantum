@@ -44,9 +44,7 @@ def inner_product[M: BasisMetadata](
     state_0: State[M],
     state_1: State[M],
 ) -> complex:
-    """
-    Calculate the inner product of two states.
-    """
+    """Calculate the inner product of two states."""
     product = linalg.einsum("i', i -> i", state_0, state_1)
     return np.sum(product.as_array()).item(0)
 
