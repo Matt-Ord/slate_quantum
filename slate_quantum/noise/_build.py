@@ -133,7 +133,7 @@ def build_axis_kernel_from_function_stacked[M: SpacedLengthMetadata](
 
 
 def gaussian_correllation_fn(
-    a: float, lambda_: float
+    a: float, sigma: float
 ) -> Callable[
     [np.ndarray[Any, np.dtype[np.float64]]], np.ndarray[Any, np.dtype[np.complex128]]
 ]:
@@ -149,7 +149,7 @@ def gaussian_correllation_fn(
     def fn(
         displacements: np.ndarray[Any, np.dtype[np.float64]],
     ) -> np.ndarray[Any, np.dtype[np.complex128]]:
-        return a**2 * np.exp(-(displacements**2) / (2 * lambda_**2)).astype(
+        return a**2 * np.exp(-(displacements**2) / (2 * sigma**2)).astype(
             np.complex128,
         )
 
@@ -174,6 +174,28 @@ def lorentzian_correllation_fn(
         displacements: np.ndarray[Any, np.dtype[np.float64]],
     ) -> np.ndarray[Any, np.dtype[np.complex128]]:
         return a**2 * lambda_**2 / (displacements**2 + lambda_**2).astype(np.complex128)
+
+    return fn
+
+
+def caldeira_leggett_correllation_fn(
+    a: float, lambda_: float
+) -> Callable[
+    [np.ndarray[Any, np.dtype[np.float64]]], np.ndarray[Any, np.dtype[np.complex128]]
+]:
+    r"""Get a correllation function for a lorentzian noise kernel.
+
+    A lorentzian noise kernel is isotropic, and separable into individual
+    axis kernels. The kernel is given by
+
+    .. math::
+        \beta(x, x') = a^2 - \frac{\lambda^2}{4} (x-x')^2
+    """
+
+    def fn(
+        displacements: np.ndarray[Any, np.dtype[np.float64]],
+    ) -> np.ndarray[Any, np.dtype[np.complex128]]:
+        return (a**2 - (lambda_**2 / 4) * displacements**2).astype(np.complex128)
 
     return fn
 

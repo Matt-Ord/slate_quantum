@@ -22,15 +22,15 @@ if __name__ == "__main__":
     metadata = spaced_volume_metadata_from_stacked_delta_x(
         (np.array([2 * np.pi]),), (60,)
     )
-    lambda_ = np.pi / 2
-    correlation = gaussian_correllation_fn(1, lambda_)
+
+    correlation = gaussian_correllation_fn(1, sigma=np.pi / 2)
     kernel = build_isotropic_kernel_from_function_stacked(metadata, correlation)
 
     # We can plot the kernel to see how the correllation decays with distance.
-    # The correlation falls by $e^-1$ at a distance of $\lambda = \pi / 2$.
+    # The correlation falls by $e^-1$ at a distance of \pi / 2$.
     full_data = array.as_outer_array(array.as_outer_array(kernel))
     fig, ax, _ = plot_data_1d_x(full_data)
-    ax.set_title(r"Isotropic Gaussian Kernel with $\lambda = \pi / 2$")
+    ax.set_title(r"Isotropic Gaussian Kernel with $\sigma = \pi / 2$")
     fig.show()
 
     # To represent the noise we need some choice of noise operators.

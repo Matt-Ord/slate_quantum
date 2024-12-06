@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, overload, override
+from typing import TYPE_CHECKING, Any, cast, overload, override
 
 import numpy as np
 from slate import Array, FundamentalBasis, array, linalg, tuple_basis
@@ -23,6 +23,15 @@ class State[M: BasisMetadata, B: Basis[Any, np.complex128] = Basis[M, np.complex
 ):
     """represents a state vector in a basis."""
 
+    def __init__[
+        B1: Basis[BasisMetadata, Any],
+    ](
+        self: State[Any, B1],
+        basis: B1,
+        data: np.ndarray[Any, np.dtype[np.complex128]],
+    ) -> None:
+        super().__init__(cast("Any", basis), cast("Any", data))
+
     @override
     def with_basis[B1: Basis[Any, Any]](  # B1: B
         self, basis: B1
@@ -31,27 +40,18 @@ class State[M: BasisMetadata, B: Basis[Any, np.complex128] = Basis[M, np.complex
         return State(basis, self.basis.__convert_vector_into__(self.raw_data, basis))
 
 
-def calculate_inner_product[M: BasisMetadata](
+def inner_product[M: BasisMetadata](
     state_0: State[M],
     state_1: State[M],
 ) -> complex:
     """
     Calculate the inner product of two states.
-
-    Parameters
-    ----------
-    state_0 : StateVector[_B0Inv]
-    state_1 : StateDualVector[_B0Inv]
-
-    Returns
-    -------
-    np.complex_
     """
-    product = linalg.einsum("i', i ->", state_0, state_1)
-    return product.as_array().item(0)
+    product = linalg.einsum("i', i -> i", state_0, state_1)
+    return np.sum(product.as_array()).item(0)
 
 
-def calculate_normalization(
+def normalization(
     state: State[BasisMetadata],
 ) -> np.float64:
     """
@@ -67,7 +67,7 @@ def calculate_normalization(
     -------
     float
     """
-    product = calculate_inner_product(state, state)
+    product = inner_product(state, state)
     return np.abs(product)
 
 
