@@ -12,7 +12,7 @@ from slate.linalg import into_diagonal as into_diagonal_array
 from slate.linalg import into_diagonal_hermitian as into_diagonal_hermitian_array
 from slate.metadata import BasisMetadata
 
-from slate_quantum.operator import Operator, OperatorList
+from slate_quantum.operator._operator import Operator, OperatorList
 from slate_quantum.state._basis import EigenstateBasis
 
 if TYPE_CHECKING:
@@ -65,6 +65,44 @@ def into_diagonal_hermitian[M: BasisMetadata, DT: np.complexfloating[Any, Any]](
         diagonal.basis.metadata().extra,
     )
     return Operator(new_basis, diagonal.raw_data)
+
+
+def matmul[M0: BasisMetadata](
+    lhs: Operator[M0, np.complex128],
+    rhs: Operator[M0, np.complex128],
+) -> Operator[M0, np.complex128]:
+    """
+    Multiply each operator in rhs by lhs.
+
+    Aij Bjk = Mik
+
+    Parameters
+    ----------
+    lhs : OperatorList[_B3, _B0, _B1]
+    rhs : Operator[_B1, _B2]
+
+    Returns
+    -------
+    OperatorList[_B3, _B0, _B2]
+    """
+    data = einsum("(i k'),(k j) -> (i j)", lhs, rhs)
+    return Operator(cast("Basis[Any, Any]", data.basis), data.raw_data)
+
+
+def commute[M0: BasisMetadata](
+    lhs: Operator[M0, np.complex128],
+    rhs: Operator[M0, np.complex128],
+) -> Operator[M0, np.complex128]:
+    """
+    Given two operators lhs, rhs, calculate the commutator.
+
+    This is equivalent to lhs rhs - rhs lhs.
+    """
+    # TODO: we want to save on transforming the basis twice, but fast diagonal support  # noqa: FIX002
+    # will not play well with this!
+    lhs_rhs = matmul(lhs, rhs)
+    rhs_lhs = matmul(rhs, lhs)
+    return lhs_rhs - rhs_lhs
 
 
 def matmul_list_operator[M0: BasisMetadata, M1: BasisMetadata](
@@ -120,7 +158,7 @@ def get_commutator_operator_list[M0: BasisMetadata, M1: BasisMetadata](
 
     This is equivalent to lhs rhs - rhs lhs.
     """
-    # TODO: fast diagonal support  # noqa: FIX002
+    # TODO: we want to save on transforming the basis twice, but fast diagonal support  # noqa: FIX002
     # will not play well with this!
     lhs_rhs = matmul_operator_list(lhs, rhs)
     rhs_lhs = matmul_list_operator(rhs, lhs)

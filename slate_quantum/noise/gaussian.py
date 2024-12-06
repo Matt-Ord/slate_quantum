@@ -18,7 +18,6 @@ from slate_quantum.noise._build import (
     build_axis_kernel_from_function_stacked,
     build_isotropic_kernel_from_function_stacked,
     gaussian_correllation_fn,
-    get_temperature_corrected_operators,
     truncate_noise_operator_list,
 )
 from slate_quantum.noise._kernel import get_diagonal_noise_operators_from_axis
@@ -37,7 +36,7 @@ if TYPE_CHECKING:
 
     from slate_quantum.metadata import EigenvalueMetadata
     from slate_quantum.noise._kernel import IsotropicNoiseKernel
-    from slate_quantum.operator._operator import Operator, OperatorList
+    from slate_quantum.operator._operator import OperatorList
 
     from ._kernel import AxisKernel, DiagonalNoiseKernel
 
@@ -246,84 +245,6 @@ def get_effective_gaussian_noise_operators_periodic[
     a, lambda_ = get_effective_gaussian_parameters(metadata, eta, temperature)
     return get_gaussian_noise_operators_periodic(
         metadata, a, lambda_, truncation=truncation
-    )
-
-
-def get_temperature_corrected_gaussian_noise_operators[
-    M: SpacedLengthMetadata,
-    E: AxisDirections,
-](
-    hamiltonian: Operator[StackedMetadata[M, E], np.complex128],
-    a: float,
-    lambda_: float,
-    temperature: float,
-    *,
-    truncation: Iterable[int] | None = None,
-) -> OperatorList[
-    EigenvalueMetadata,
-    StackedMetadata[M, E],
-    np.complex128,
-]:
-    """Get the noise operators for a gausssian kernel in the given basis.
-
-    Parameters
-    ----------
-    hamiltonian : SingleBasisOperator[_BL0]
-    mass : float
-    temperature : float
-    gamma : float
-
-    Returns
-    -------
-    SingleBasisNoiseOperatorList[
-        FundamentalBasis[BasisMetadata],
-        FundamentalPositionBasis,
-    ]
-
-    """
-    operators = get_gaussian_noise_operators_periodic(
-        hamiltonian.basis.metadata()[0], a, lambda_, truncation=truncation
-    )
-    corrected = get_temperature_corrected_operators(hamiltonian, operators, temperature)
-    return corrected.with_operator_basis(hamiltonian.basis)
-
-
-def get_temperature_corrected_effective_gaussian_noise_operators[
-    M: SpacedVolumeMetadata,
-](
-    hamiltonian: Operator[M, np.complex128],
-    eta: float,
-    temperature: float,
-    *,
-    truncation: Iterable[int] | None = None,
-) -> OperatorList[
-    EigenvalueMetadata,
-    SpacedVolumeMetadata,
-    np.complex128,
-]:
-    """Get the noise operators for a gausssian kernel in the given basis.
-
-    Parameters
-    ----------
-    hamiltonian : SingleBasisOperator[_BL0]
-    mass : float
-    temperature : float
-    gamma : float
-
-    Returns
-    -------
-    SingleBasisNoiseOperatorList[
-        FundamentalBasis[BasisMetadata],
-        FundamentalPositionBasis,
-    ]
-
-    """
-    a, lambda_ = get_effective_gaussian_parameters(
-        hamiltonian.basis.metadata()[0], eta, temperature
-    )
-
-    return get_temperature_corrected_gaussian_noise_operators(
-        hamiltonian, a, lambda_, temperature, truncation=truncation
     )
 
 

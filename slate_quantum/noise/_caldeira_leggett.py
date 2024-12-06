@@ -18,7 +18,7 @@ from slate_quantum.operator import (
 
 
 def build_periodic_caldeira_leggett_axis_operators[M: SpacedLengthMetadata](
-    metadata: M, friction: float
+    metadata: M,
 ) -> OperatorList[
     EigenvalueMetadata,
     M,
@@ -32,7 +32,7 @@ def build_periodic_caldeira_leggett_axis_operators[M: SpacedLengthMetadata](
 ]:
     k = fundamental_dk(metadata)
     n = metadata.fundamental_size
-    eigenvalue = n * friction / (4 * k**2)
+    eigenvalue = n / (4 * k**2)
     operators = build.all_axis_scattering_operators(metadata)
     operators = operators.with_basis(operators.basis.inner)
 
@@ -52,7 +52,7 @@ def build_periodic_caldeira_leggett_operators[
     M: SpacedLengthMetadata,
     E: AxisDirections,
 ](
-    metadata: StackedMetadata[M, E], friction: float
+    metadata: StackedMetadata[M, E],
 ) -> OperatorList[
     EigenvalueMetadata,
     StackedMetadata[M, E],
@@ -67,7 +67,7 @@ def build_periodic_caldeira_leggett_operators[
     assert len(metadata.fundamental_shape) == 1
     k = fundamental_stacked_dk(metadata)[0][0]
     n = size_from_nested_shape(metadata.fundamental_shape)
-    eigenvalue = n * friction / (4 * k**2)
+    eigenvalue = n / (4 * k**2)
     operators = build.all_scattering_operators(metadata)
     operators = operators.with_basis(operators.basis.inner)
 

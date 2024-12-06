@@ -34,13 +34,12 @@ if __name__ == "__main__":
     operators = get_periodic_noise_operators_isotropic_stacked_fft(kernel)
 
     # For an ohmic environment, the correllation is given by
-    # TODO: actual formula here! # noqa: FIX002
+    # O -> \sqrt{2 \eta K T / \hbar^2} O - \sqrt{\eta / 8 K T} [H, O]
     # To see the effect of the temperature correction, we can
     # plot the operators before and after the correction.
-    #
     hamiltonian = build_kinetic_energy_operator(metadata, hbar**2)
     corrected_operators = get_temperature_corrected_operators(
-        hamiltonian, operators, temperature=0.1 / Boltzmann
+        hamiltonian, operators, temperature=20 * hbar / Boltzmann, eta=1
     )
 
     idx = -2
@@ -56,7 +55,7 @@ if __name__ == "__main__":
     ax.set_label("Temperature corrected noise operator")
     fig.show()
 
-    fig, ax, _ = plot_data_2d_k(array.flatten(corrected_operators[idx]))
+    fig, ax, _ = plot_data_2d_k(array.flatten(corrected_operators[idx]), measure="abs")
     ax.set_label("Temperature corrected noise operator")
     fig.show()
     input()

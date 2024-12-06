@@ -11,7 +11,7 @@ from slate.metadata import size_from_nested_shape
 from slate.metadata.volume import spaced_volume_metadata_from_stacked_delta_x
 
 from slate_quantum import operator
-from slate_quantum.operator.linalg import into_diagonal_hermitian
+from slate_quantum.operator._linalg import into_diagonal_hermitian
 
 
 def test_build_kinetic_operator() -> None:

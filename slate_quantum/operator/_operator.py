@@ -134,7 +134,7 @@ def _assert_operator_list_basis(basis: Basis[BasisMetadata, Any]) -> None:
 OperatorListMetadata = Metadata2D[BasisMetadata, OperatorMetadata, Any]
 
 
-class OperatorList[  # noqa: PLR0904
+class OperatorList[
     M0: BasisMetadata,
     M1: BasisMetadata,
     DT: np.generic,
@@ -253,14 +253,14 @@ class OperatorList[  # noqa: PLR0904
             Metadata2D[_M1, _M1, None], DT1
         ],
     ](
-        _iter: Iterable[Operator[_M1, DT1, _B1]],
+        iter_: Iterable[Operator[_M1, DT1, _B1]],
     ) -> OperatorList[
         SimpleMetadata,
         _M1,
         DT1,
         TupleBasis2D[Any, FundamentalBasis[SimpleMetadata], _B1, None],
     ]:
-        operators = list(_iter)
+        operators = list(iter_)
         assert all(x.basis == operators[0].basis for x in operators)
 
         list_basis = FundamentalBasis.from_size(len(operators))

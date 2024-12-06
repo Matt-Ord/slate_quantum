@@ -12,8 +12,8 @@ from slate.basis import (
 )
 from slate.metadata import BasisMetadata
 
-from slate_quantum.operator.linalg import into_diagonal_hermitian
-from slate_quantum.state._state import State, StateList
+from slate_quantum.operator import into_diagonal_hermitian
+from slate_quantum.state import State, StateList
 
 try:
     import qutip  # type: ignore lib
