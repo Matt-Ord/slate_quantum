@@ -253,7 +253,7 @@ def _get_explicit_taylor_coefficients_gaussian(
     lambda_: float,
     *,
     n_terms: int = 1,
-) -> np.ndarray[Any, np.dtype[np.float64]]:
+) -> np.ndarray[Any, np.dtype[np.floating]]:
     i = np.arange(0, n_terms)
     return (a**2 / factorial(i)) * ((-1 / (2 * lambda_**2)) ** i)
 

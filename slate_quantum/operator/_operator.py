@@ -215,13 +215,14 @@ class OperatorList[
     @overload
     def __iter__(self, /) -> Iterator[Operator[M1, DT]]: ...
 
-    def __iter__(self, /) -> Iterator[Operator[M1, DT]]:
-        as_tuple = self.with_basis(as_tuple_basis(self.basis))
+    @override
+    def __iter__(self, /) -> Iterator[Operator[M1, DT]]:  # type: ignore bad overload
         return (
             Operator[M1, DT](
-                cast("Basis[Metadata2D[M1, M1, None], DT]", as_tuple.basis[1]), row
+                cast("Basis[Metadata2D[M1, M1, None], DT]", row.basis),
+                cast("Any", row.raw_data),
             )
-            for row in as_tuple.raw_data.reshape(as_tuple.basis.shape)
+            for row in super().__iter__()
         )
 
     @overload

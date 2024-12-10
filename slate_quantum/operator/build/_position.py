@@ -47,9 +47,9 @@ if TYPE_CHECKING:
 
 
 def _wrap_displacements(
-    displacements: np.ndarray[Any, np.dtype[np.float64]],
-    max_displacement: float | np.float64,
-) -> np.ndarray[Any, np.dtype[np.float64]]:
+    displacements: np.ndarray[Any, np.dtype[np.floating]],
+    max_displacement: float | np.floating,
+) -> np.ndarray[Any, np.dtype[np.floating]]:
     return (
         np.remainder((displacements + max_displacement), 2 * max_displacement)
         - max_displacement
@@ -58,7 +58,7 @@ def _wrap_displacements(
 
 def get_displacements_x[M: LengthMetadata](
     metadata: M, origin: float
-) -> Array[M, np.float64, FundamentalBasis[M]]:
+) -> Array[M, np.floating, FundamentalBasis[M]]:
     """Get the displacements from origin.
 
     Parameters
@@ -84,7 +84,7 @@ def _get_displacements_x_along_axis(
     axis: int,
 ) -> Array[
     SpacedVolumeMetadata,
-    np.float64,
+    np.floating,
     TupleBasis[LengthMetadata, AxisDirections, np.generic],
 ]:
     distances = fundamental_stacked_x_points(metadata)[axis] - np.real(origin)
@@ -100,7 +100,7 @@ def get_displacements_x_stacked(
 ) -> tuple[
     Array[
         SpacedVolumeMetadata,
-        np.float64,
+        np.floating,
         TupleBasis[LengthMetadata, AxisDirections, np.generic],
     ],
     ...,
@@ -164,7 +164,7 @@ def x_displacement_operator[M: LengthMetadata](
     origin: float = 0.0,
 ) -> Operator[
     M,
-    np.float64,
+    np.floating,
     TupleBasis2D[np.generic, FundamentalBasis[M], FundamentalBasis[M], None],
 ]:
     """Get the displacements from origin.
@@ -194,7 +194,7 @@ def _get_displacements_matrix_x_along_axis[M: SpacedLengthMetadata, E: AxisDirec
     axis: int,
 ) -> Operator[
     StackedMetadata[M, E],
-    np.float64,
+    np.floating,
     TupleBasis2D[
         np.generic,
         Basis[StackedMetadata[M, E], Any],
@@ -217,7 +217,7 @@ def x_displacement_operators_stacked[M: SpacedLengthMetadata, E: AxisDirections]
 ) -> OperatorList[
     SimpleMetadata,
     StackedMetadata[M, E],
-    np.float64,
+    np.floating,
     TupleBasis2D[
         np.generic,
         FundamentalBasis[SimpleMetadata],

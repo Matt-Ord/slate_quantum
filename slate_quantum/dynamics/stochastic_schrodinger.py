@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import datetime
-from typing import TYPE_CHECKING, Any, TypedDict, Unpack
+from typing import TYPE_CHECKING, Any, TypedDict, Unpack, cast
 
 import numpy as np
 from scipy.constants import hbar  # type: ignore lib
@@ -32,7 +32,7 @@ if TYPE_CHECKING:
 
 def _get_operator_diagonals(
     operator: list[list[complex]],
-) -> np.ndarray[tuple[int, int], np.dtype[np.complex128]]:
+) -> np.ndarray[tuple[int, ...], np.dtype[np.complex128]]:
     operator_array = np.array(operator)
     return np.array(
         [
@@ -58,9 +58,9 @@ def _get_banded_operator(operator: list[list[complex]], threshold: float) -> Ban
     zero_real = np.abs(np.real(diagonals_filtered)) < threshold
     diagonals_filtered[zero_real] = 1j * np.imag(diagonals_filtered[zero_real])
 
-    diagonals_filtered = diagonals_filtered.tolist()
+    diagonals_filtered = cast("list[list[complex]]", diagonals_filtered.tolist())
 
-    offsets = np.arange(len(operator))[above_threshold].tolist()
+    offsets = cast("list[int]", np.arange(len(operator))[above_threshold].tolist())
 
     if sse_solver_py is None:
         msg = "sse_solver_py is not installed, please install it using `pip install slate_quantum[sse_solver_py]`"

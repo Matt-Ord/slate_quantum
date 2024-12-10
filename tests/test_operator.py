@@ -45,7 +45,9 @@ def test_build_hamiltonain() -> None:
         [0.0, 0.0, 0.0, 0.0, 0.5],
     ]
     np.testing.assert_allclose(
-        transformed_operator.raw_data, np.ravel(expected), atol=1e-15
+        transformed_operator.raw_data,
+        np.ravel(expected).astype(np.complex128),
+        atol=1e-15,
     )
 
     kinetic_operator = operator.build.kinetic_energy_operator(metadata, hbar**2)

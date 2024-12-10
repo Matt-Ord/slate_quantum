@@ -50,9 +50,10 @@ def _solve_schrodinger_equation_diagonal[
     eigenvalues = hamiltonian.raw_data
 
     time_values = np.array(list(times.metadata().values))[times.points]
-    vectors = coefficients[np.newaxis, :] * np.exp(
-        -1j * eigenvalues * time_values[:, np.newaxis] / hbar
-    )
+    vectors = (
+        coefficients[np.newaxis, :]
+        * np.exp(-1j * eigenvalues * time_values[:, np.newaxis] / hbar)
+    ).astype(np.complex128)
     return StateList(tuple_basis((times, hamiltonian.basis.inner[0])), vectors)
 
 

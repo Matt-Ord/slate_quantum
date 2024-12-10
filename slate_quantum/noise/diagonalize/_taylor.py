@@ -32,10 +32,10 @@ from slate_quantum.operator import (
 
 
 def _get_cos_coefficients_for_taylor_series(
-    polynomial_coefficients: np.ndarray[Any, np.dtype[np.float64]],
+    polynomial_coefficients: np.ndarray[Any, np.dtype[np.floating]],
     *,
     n_terms: int | None = None,
-) -> np.ndarray[tuple[int, int], np.dtype[np.float64]]:
+) -> np.ndarray[tuple[int], np.dtype[np.floating]]:
     n_terms = polynomial_coefficients.size if n_terms is None else n_terms
 
     atol = 1e-8 * np.max(polynomial_coefficients).item()
@@ -53,16 +53,16 @@ def _get_cos_coefficients_for_taylor_series(
     cos_series_coefficients = np.linalg.solve(
         coefficients_matrix, polynomial_coefficients
     )
-    out = np.zeros(n_terms, np.float64)
+    out = np.zeros(n_terms, np.floating)
     out[:n_nonzero_terms] = cos_series_coefficients.T
     return out
 
 
 def _get_periodic_coefficients_for_taylor_series(
-    polynomial_coefficients: np.ndarray[Any, np.dtype[np.float64]],
+    polynomial_coefficients: np.ndarray[Any, np.dtype[np.floating]],
     *,
     n_terms: int | None = None,
-) -> np.ndarray[tuple[int, int], np.dtype[np.float64]]:
+) -> np.ndarray[tuple[int, ...], np.dtype[np.floating]]:
     cos_series_coefficients = _get_cos_coefficients_for_taylor_series(
         polynomial_coefficients, n_terms=n_terms
     )
@@ -74,7 +74,7 @@ def get_periodic_noise_operators_explicit_taylor_expansion[
     M: BasisMetadata,
 ](
     basis: Basis[M, Any],
-    polynomial_coefficients: np.ndarray[tuple[int], np.dtype[np.float64]],
+    polynomial_coefficients: np.ndarray[tuple[int], np.dtype[np.floating]],
     *,
     n_terms: int | None = None,
 ) -> OperatorList[EigenvalueMetadata, M, np.complex128]:
@@ -146,7 +146,7 @@ def _get_linear_operators_for_noise[M: BasisMetadata](
 
 def get_linear_noise_operators_explicit_taylor_expansion[M: BasisMetadata](
     metadata: M,
-    polynomial_coefficients: np.ndarray[tuple[int], np.dtype[np.float64]],
+    polynomial_coefficients: np.ndarray[tuple[int], np.dtype[np.floating]],
     *,
     n_terms: int | None = None,
 ) -> OperatorList[

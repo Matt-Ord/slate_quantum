@@ -149,7 +149,7 @@ def gaussian_correllation_fn(
     def fn(
         displacements: np.ndarray[Any, np.dtype[np.float64]],
     ) -> np.ndarray[Any, np.dtype[np.complex128]]:
-        return a**2 * np.exp(-(displacements**2) / (2 * sigma**2)).astype(
+        return (a**2 * np.exp(-(displacements**2) / (2 * sigma**2))).astype(
             np.complex128,
         )
 
@@ -173,7 +173,9 @@ def lorentzian_correllation_fn(
     def fn(
         displacements: np.ndarray[Any, np.dtype[np.float64]],
     ) -> np.ndarray[Any, np.dtype[np.complex128]]:
-        return a**2 * lambda_**2 / (displacements**2 + lambda_**2).astype(np.complex128)
+        return (a**2 * lambda_**2 / (displacements**2 + lambda_**2)).astype(
+            np.complex128
+        )
 
     return fn
 
@@ -208,8 +210,9 @@ def get_temperature_corrected_operators[M0: BasisMetadata, M1: BasisMetadata](
 ) -> OperatorList[M0, M1, np.complex128]:
     """Get the temperature corrected operators."""
     commutator = get_commutator_operator_list(hamiltonian, operators)
-    correction = commutator * (-1 * np.sqrt(eta / (8 * Boltzmann * temperature)))
-    operators *= np.sqrt(2 * eta * Boltzmann * temperature / hbar**2)
+    thermal_energy = Boltzmann * temperature
+    correction = commutator * (-1 * np.sqrt(eta / (8 * thermal_energy * hbar**2)))
+    operators *= np.sqrt(2 * eta * thermal_energy / hbar**2)
     return correction + operators
 
 
