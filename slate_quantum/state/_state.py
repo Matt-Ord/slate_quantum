@@ -98,12 +98,9 @@ class StateList[
             basis, self.basis.__convert_vector_into__(self.raw_data, basis)
         )
 
-    def __iter__(self, /) -> Iterator[State[M1, Basis[Any, np.complex128]]]:
-        as_tuple = self.with_basis(_basis.as_tuple_basis(self.basis))
-        return (
-            State(as_tuple.basis[1], row)
-            for row in as_tuple.raw_data.reshape(as_tuple.basis.shape)
-        )
+    @override
+    def __iter__(self, /) -> Iterator[State[M1, Basis[Any, np.complex128]]]:  # type: ignore bad overload
+        return (State(a.basis, a.raw_data) for a in super().__iter__())
 
     def __getitem__(self, /, index: int) -> State[M1, Basis[Any, np.complex128]]:
         as_tuple = self.with_basis(_basis.as_tuple_basis(self.basis))

@@ -154,19 +154,19 @@ class MomentumOperator[M: BasisMetadata, E: AxisDirections](
         )
 
 
-type MomentumOperatorBasis[M: BasisMetadata, E: AxisDirections, DT: np.generic] = (
+type MomentumOperatorBasis[M: BasisMetadata, E: AxisDirections] = (
     RecastDiagonalOperatorBasis[
         StackedMetadata[M, E],
-        DT,
-        TupleBasis[M, E, DT, StackedMetadata[M, E]],
-        Basis[StackedMetadata[M, E], Any],
+        np.complex128,
+        TupleBasis[M, E, np.complex128, StackedMetadata[M, E]],
+        Basis[StackedMetadata[M, E], np.complex128],
     ]
 )
 
 
-def momentum_operator_basis[M: BasisMetadata, E: AxisDirections, DT: np.generic](
-    basis: Basis[StackedMetadata[M, E], DT],
-) -> MomentumOperatorBasis[M, E, DT]:
+def momentum_operator_basis[M: BasisMetadata, E: AxisDirections](
+    basis: Basis[StackedMetadata[M, E], np.complex128],
+) -> MomentumOperatorBasis[M, E]:
     return recast_diagonal_basis(
         fundamental_transformed_tuple_basis_from_metadata(basis.metadata()), basis
     )
