@@ -134,7 +134,7 @@ def _assert_operator_list_basis(basis: Basis[BasisMetadata, Any]) -> None:
 OperatorListMetadata = Metadata2D[BasisMetadata, OperatorMetadata, Any]
 
 
-class OperatorList[  # noqa: PLR0904
+class OperatorList[
     M0: BasisMetadata,
     M1: BasisMetadata,
     DT: np.generic,
@@ -215,13 +215,14 @@ class OperatorList[  # noqa: PLR0904
     @overload
     def __iter__(self, /) -> Iterator[Operator[M1, DT]]: ...
 
-    def __iter__(self, /) -> Iterator[Operator[M1, DT]]:
-        as_tuple = self.with_basis(as_tuple_basis(self.basis))
+    @override
+    def __iter__(self, /) -> Iterator[Operator[M1, DT]]:  # type: ignore bad overload
         return (
             Operator[M1, DT](
-                cast("Basis[Metadata2D[M1, M1, None], DT]", as_tuple.basis[1]), row
+                cast("Basis[Metadata2D[M1, M1, None], DT]", row.basis),
+                cast("Any", row.raw_data),
             )
-            for row in as_tuple.raw_data.reshape(as_tuple.basis.shape)
+            for row in super().__iter__()
         )
 
     @overload
@@ -253,14 +254,14 @@ class OperatorList[  # noqa: PLR0904
             Metadata2D[_M1, _M1, None], DT1
         ],
     ](
-        _iter: Iterable[Operator[_M1, DT1, _B1]],
+        iter_: Iterable[Operator[_M1, DT1, _B1]],
     ) -> OperatorList[
         SimpleMetadata,
         _M1,
         DT1,
         TupleBasis2D[Any, FundamentalBasis[SimpleMetadata], _B1, None],
     ]:
-        operators = list(_iter)
+        operators = list(iter_)
         assert all(x.basis == operators[0].basis for x in operators)
 
         list_basis = FundamentalBasis.from_size(len(operators))

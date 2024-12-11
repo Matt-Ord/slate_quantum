@@ -12,8 +12,8 @@ from slate.basis import (
 )
 from slate.metadata import BasisMetadata
 
-from slate_quantum.operator.linalg import into_diagonal_hermitian
-from slate_quantum.state._state import State, StateList
+from slate_quantum.operator import into_diagonal_hermitian
+from slate_quantum.state import State, StateList
 
 try:
     import qutip  # type: ignore lib
@@ -50,9 +50,10 @@ def _solve_schrodinger_equation_diagonal[
     eigenvalues = hamiltonian.raw_data
 
     time_values = np.array(list(times.metadata().values))[times.points]
-    vectors = coefficients[np.newaxis, :] * np.exp(
-        -1j * eigenvalues * time_values[:, np.newaxis] / hbar
-    )
+    vectors = (
+        coefficients[np.newaxis, :]
+        * np.exp(-1j * eigenvalues * time_values[:, np.newaxis] / hbar)
+    ).astype(np.complex128)
     return StateList(tuple_basis((times, hamiltonian.basis.inner[0])), vectors)
 
 

@@ -18,8 +18,7 @@ from slate_quantum.noise.diagonalize._eigenvalue import (
     get_periodic_noise_operators_diagonal_eigenvalue,
     get_periodic_noise_operators_eigenvalue,
 )
-from slate_quantum.operator import SuperOperatorMetadata
-from slate_quantum.operator.linalg import get_commutator_operator_list
+from slate_quantum.operator import SuperOperatorMetadata, get_commutator_operator_list
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -134,7 +133,7 @@ def build_axis_kernel_from_function_stacked[M: SpacedLengthMetadata](
 
 
 def gaussian_correllation_fn(
-    a: float, lambda_: float
+    a: float, sigma: float
 ) -> Callable[
     [np.ndarray[Any, np.dtype[np.float64]]], np.ndarray[Any, np.dtype[np.complex128]]
 ]:
@@ -150,7 +149,7 @@ def gaussian_correllation_fn(
     def fn(
         displacements: np.ndarray[Any, np.dtype[np.float64]],
     ) -> np.ndarray[Any, np.dtype[np.complex128]]:
-        return a**2 * np.exp(-(displacements**2) / (2 * lambda_**2)).astype(
+        return (a**2 * np.exp(-(displacements**2) / (2 * sigma**2))).astype(
             np.complex128,
         )
 
@@ -174,7 +173,31 @@ def lorentzian_correllation_fn(
     def fn(
         displacements: np.ndarray[Any, np.dtype[np.float64]],
     ) -> np.ndarray[Any, np.dtype[np.complex128]]:
-        return a**2 * lambda_**2 / (displacements**2 + lambda_**2).astype(np.complex128)
+        return (a**2 * lambda_**2 / (displacements**2 + lambda_**2)).astype(
+            np.complex128
+        )
+
+    return fn
+
+
+def caldeira_leggett_correllation_fn(
+    a: float, lambda_: float
+) -> Callable[
+    [np.ndarray[Any, np.dtype[np.float64]]], np.ndarray[Any, np.dtype[np.complex128]]
+]:
+    r"""Get a correllation function for a lorentzian noise kernel.
+
+    A lorentzian noise kernel is isotropic, and separable into individual
+    axis kernels. The kernel is given by
+
+    .. math::
+        \beta(x, x') = a^2 - \frac{\lambda^2}{4} (x-x')^2
+    """
+
+    def fn(
+        displacements: np.ndarray[Any, np.dtype[np.float64]],
+    ) -> np.ndarray[Any, np.dtype[np.complex128]]:
+        return (a**2 - (lambda_**2 / 4) * displacements**2).astype(np.complex128)
 
     return fn
 
@@ -183,10 +206,13 @@ def get_temperature_corrected_operators[M0: BasisMetadata, M1: BasisMetadata](
     hamiltonian: Operator[M1, np.complex128],
     operators: OperatorList[M0, M1, np.complex128],
     temperature: float,
+    eta: float,
 ) -> OperatorList[M0, M1, np.complex128]:
     """Get the temperature corrected operators."""
     commutator = get_commutator_operator_list(hamiltonian, operators)
-    correction = commutator * (-1 / (4 * Boltzmann * temperature))
+    thermal_energy = Boltzmann * temperature
+    correction = commutator * (-1 * np.sqrt(eta / (8 * thermal_energy)))
+    operators *= np.sqrt(2 * eta * thermal_energy)
     return correction + operators
 
 

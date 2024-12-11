@@ -79,7 +79,7 @@ def _get_explicit_taylor_coefficients_lorentzian(
     lambda_: float,
     *,
     n_terms: int = 1,
-) -> np.ndarray[Any, np.dtype[np.float64]]:
+) -> np.ndarray[Any, np.dtype[np.floating]]:
     i = np.arange(0, n_terms + 1)
     return a**2 * ((-1 / (lambda_**2)) ** i)
 

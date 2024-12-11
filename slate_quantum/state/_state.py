@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, overload, override
+from typing import TYPE_CHECKING, Any, cast, overload, override
 
 import numpy as np
-from slate import Array, FundamentalBasis, array, tuple_basis
+from slate import Array, FundamentalBasis, array, linalg, tuple_basis
 from slate import basis as _basis
 from slate.basis import (
     Basis,
@@ -23,6 +23,15 @@ class State[M: BasisMetadata, B: Basis[Any, np.complex128] = Basis[M, np.complex
 ):
     """represents a state vector in a basis."""
 
+    def __init__[
+        B1: Basis[BasisMetadata, Any],
+    ](
+        self: State[Any, B1],
+        basis: B1,
+        data: np.ndarray[Any, np.dtype[np.complex128]],
+    ) -> None:
+        super().__init__(cast("Any", basis), cast("Any", data))
+
     @override
     def with_basis[B1: Basis[Any, Any]](  # B1: B
         self, basis: B1
@@ -31,7 +40,16 @@ class State[M: BasisMetadata, B: Basis[Any, np.complex128] = Basis[M, np.complex
         return State(basis, self.basis.__convert_vector_into__(self.raw_data, basis))
 
 
-def calculate_normalization(
+def inner_product[M: BasisMetadata](
+    state_0: State[M],
+    state_1: State[M],
+) -> complex:
+    """Calculate the inner product of two states."""
+    product = linalg.einsum("i', i -> i", state_0, state_1)
+    return np.sum(product.as_array()).item(0)
+
+
+def normalization(
     state: State[BasisMetadata],
 ) -> np.float64:
     """
@@ -47,38 +65,18 @@ def calculate_normalization(
     -------
     float
     """
-    return np.sum(np.abs(state.raw_data) ** 2).astype(np.float64)
-
-
-def calculate_inner_product[M: BasisMetadata](
-    state_0: State[M],
-    state_1: State[M],
-) -> complex:
-    """
-    Calculate the inner product of two states.
-
-    Parameters
-    ----------
-    state_0 : StateVector[_B0Inv]
-    state_1 : StateDualVector[_B0Inv]
-
-    Returns
-    -------
-    np.complex_
-    """
-    return np.tensordot(
-        state_1.with_basis(state_0.basis.dual_basis()).raw_data,
-        state_0.raw_data,
-        axes=(0, 0),
-    ).item(0)
+    product = inner_product(state, state)
+    return np.abs(product)
 
 
 def get_occupations[B: Basis[BasisMetadata, Any]](
     state: State[Any, B],
 ) -> Array[BasisStateMetadata[B], np.float64, FundamentalBasis[BasisStateMetadata[B]]]:
-    return Array(
-        FundamentalBasis(BasisStateMetadata(state.basis)),
-        np.abs(state.raw_data * state.with_basis(state.basis.dual_basis()).raw_data),
+    state_cast = array.cast_basis(
+        state, FundamentalBasis(BasisStateMetadata(state.basis))
+    )
+    return linalg.abs(linalg.einsum("i', i -> i", state_cast, state_cast)).with_basis(
+        state_cast.basis
     )
 
 
@@ -100,12 +98,9 @@ class StateList[
             basis, self.basis.__convert_vector_into__(self.raw_data, basis)
         )
 
-    def __iter__(self, /) -> Iterator[State[M1, Basis[Any, np.complex128]]]:
-        as_tuple = self.with_basis(_basis.as_tuple_basis(self.basis))
-        return (
-            State(as_tuple.basis[1], row)
-            for row in as_tuple.raw_data.reshape(as_tuple.basis.shape)
-        )
+    @override
+    def __iter__(self, /) -> Iterator[State[M1, Basis[Any, np.complex128]]]:  # type: ignore bad overload
+        return (State(a.basis, a.raw_data) for a in super().__iter__())
 
     def __getitem__(self, /, index: int) -> State[M1, Basis[Any, np.complex128]]:
         as_tuple = self.with_basis(_basis.as_tuple_basis(self.basis))
@@ -194,16 +189,16 @@ def get_all_occupations[M0: BasisMetadata, B: Basis[Any, Any]](
         None,
     ],
 ]:
-    states_basis = _basis.as_tuple_basis(states.basis)
-    states = states.with_list_basis(_basis.as_index_basis(states_basis[0]))
-    dual_states = states.with_state_basis(states.basis[1].dual_basis())
-
-    return Array(
-        tuple_basis(
-            (states.basis[0], FundamentalBasis(BasisStateMetadata(states.basis[1])))
+    states_as_tuple = array.as_tuple_basis(states)
+    cast_states = array.cast_basis(
+        states_as_tuple,
+        _basis.with_modified_child(
+            states_as_tuple.basis,
+            lambda x: FundamentalBasis(BasisStateMetadata(x)),
+            1,
         ),
-        np.abs(states.raw_data * dual_states.raw_data),
     )
+    return linalg.abs(linalg.einsum("(m i'),(m i) -> (m i)", cast_states, cast_states))  # type: ignore TODO: better type annotations
 
 
 @overload
@@ -237,6 +232,7 @@ def get_average_occupations(
     # Dont include empty entries in average
     list_basis = _basis.as_state_list(_basis.as_index_basis(occupations.basis[0]))
     average_basis = tuple_basis((list_basis, occupations.basis[1]))
+    # TODO: this is wrong - must convert first  # noqa: FIX002
     occupations = array.cast_basis(occupations, average_basis)
     return array.flatten(array.average(occupations, axis=0))
 

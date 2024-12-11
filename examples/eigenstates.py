@@ -15,8 +15,8 @@ if __name__ == "__main__":
 
     potential = operator.build.cos_potential(metadata, 0)
     hamiltonian = operator.build.kinetic_hamiltonian(potential, hbar**2)
-    # TODO: we want to make this more natural ...  # noqa: FIX002
     diagonal_hamiltonian = operator.into_diagonal_hermitian(hamiltonian)
+    # TODO: we want to make this more natural ...  # noqa: FIX002
     eigenstates = diagonal_hamiltonian.basis.inner[1].eigenvectors
 
     # The eigenstates of a free particle are plane waves

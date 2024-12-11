@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 import numpy as np
 from scipy.constants import hbar  # type: ignore lib
@@ -55,8 +55,9 @@ def kinetic_energy_operator[M: SpacedLengthMetadata, E: AxisDirections](
         fundamental_stacked_dk(metadata), bloch_fraction, axes=(0, 0)
     )
     k_points = fundamental_stacked_k_points(metadata) + bloch_phase[:, np.newaxis]
-    energy = np.sum(
-        np.square(hbar * k_points) / (2 * mass), axis=0, dtype=np.complex128
+    energy = cast(
+        "Any",
+        np.sum(np.square(hbar * k_points) / (2 * mass), axis=0, dtype=np.complex128),
     )
     momentum_basis = fundamental_transformed_tuple_basis_from_metadata(metadata)
 
