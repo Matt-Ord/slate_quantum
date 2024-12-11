@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import numpy as np
 from scipy.constants import hbar  # type: ignore stubs
-from slate import array
+from slate import array, basis
 from slate.basis import (
     fundamental_transformed_tuple_basis_from_metadata,
     tuple_basis,
@@ -155,3 +155,82 @@ def test_build_all_scattering_operators() -> None:
             scatter_operator.as_array(),
             atol=1e-15,
         )
+
+
+def test_x_operator() -> None:
+    metadata = spaced_volume_metadata_from_stacked_delta_x(
+        (np.array([2 * np.pi]),), (5,)
+    )
+    position_operator = operator.build.x_operator(metadata, idx=0)
+
+    np.testing.assert_array_equal(
+        position_operator.as_array(),
+        np.diag(np.linspace(0, 2 * np.pi, 5, endpoint=False)),
+    )
+
+
+def test_k_operator() -> None:
+    metadata = spaced_volume_metadata_from_stacked_delta_x(
+        (np.array([2 * np.pi]),), (5,)
+    )
+    momentum_operator = operator.build.k_operator(metadata, idx=0)
+
+    basis_k = basis.fundamental_transformed_tuple_basis_from_metadata(metadata)
+    np.testing.assert_array_equal(
+        momentum_operator.with_basis(
+            tuple_basis((basis_k, basis_k.dual_basis()))
+        ).raw_data.reshape(5, 5),
+        np.diag([0, 1, 2, -2, -1]),
+    )
+    np.testing.assert_array_equal(
+        momentum_operator.as_array(),
+        np.fft.fft(
+            np.fft.ifft(np.diag([0, 1, 2, -2, -1]), norm="ortho", axis=0),
+            norm="ortho",
+            axis=1,
+        ),
+    )
+
+
+def test_x_k_commutator() -> None:
+    metadata = spaced_volume_metadata_from_stacked_delta_x(
+        (np.array([2 * np.pi]),), (5,)
+    )
+    position_operator = operator.build.x_operator(metadata, idx=0)
+    momentum_operator = operator.build.k_operator(metadata, idx=0)
+
+    matmul_0 = operator.matmul(position_operator, momentum_operator)
+    np.testing.assert_array_equal(
+        matmul_0.as_array(),
+        position_operator.as_array() @ momentum_operator.as_array(),
+    )
+
+    matmul_1 = operator.matmul(momentum_operator, position_operator)
+    np.testing.assert_array_equal(
+        matmul_1.as_array(),
+        momentum_operator.as_array() @ position_operator.as_array(),
+    )
+
+    commutator_manual = matmul_0 - matmul_1
+    np.testing.assert_array_equal(
+        commutator_manual.as_array(),
+        position_operator.as_array() @ momentum_operator.as_array()
+        - momentum_operator.as_array() @ position_operator.as_array(),
+    )
+
+    commutator = operator.commute(position_operator, momentum_operator)
+    np.testing.assert_array_equal(commutator.as_array(), commutator_manual.as_array())
+
+
+def test_trivial_commutator() -> None:
+    metadata = spaced_volume_metadata_from_stacked_delta_x(
+        (np.array([2 * np.pi]),), (5,)
+    )
+    position_operator = operator.build.x_operator(metadata, idx=0)
+    momentum_operator = operator.build.k_operator(metadata, idx=0)
+
+    commutator = operator.commute(position_operator, position_operator)
+    np.testing.assert_array_equal(commutator.as_array(), np.zeros((5, 5)))
+
+    commutator = operator.commute(momentum_operator, momentum_operator)
+    np.testing.assert_array_equal(commutator.as_array(), np.zeros((5, 5)))

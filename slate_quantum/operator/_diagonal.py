@@ -126,7 +126,9 @@ type PositionOperatorBasis[M: BasisMetadata, E, DT: np.generic] = (
 def position_operator_basis[M: BasisMetadata, E, DT: np.generic](
     basis: Basis[StackedMetadata[M, E], DT],
 ) -> PositionOperatorBasis[M, E, DT]:
-    return recast_diagonal_basis(_basis.from_metadata(basis.metadata()), basis)
+    return recast_diagonal_basis(
+        _basis.from_metadata(basis.metadata(), is_dual=basis.is_dual), basis
+    )
 
 
 class Potential[M: BasisMetadata, E: AxisDirections, DT: np.generic](
@@ -148,7 +150,9 @@ class MomentumOperator[M: BasisMetadata, E: AxisDirections](
         raw_data: np.ndarray[Any, np.dtype[np.complex128]],
     ) -> None:
         super().__init__(
-            fundamental_transformed_tuple_basis_from_metadata(basis.metadata()),
+            fundamental_transformed_tuple_basis_from_metadata(
+                basis.metadata(), is_dual=basis.is_dual
+            ),
             basis,
             raw_data,
         )
@@ -168,5 +172,8 @@ def momentum_operator_basis[M: BasisMetadata, E: AxisDirections](
     basis: Basis[StackedMetadata[M, E], np.complex128],
 ) -> MomentumOperatorBasis[M, E]:
     return recast_diagonal_basis(
-        fundamental_transformed_tuple_basis_from_metadata(basis.metadata()), basis
+        fundamental_transformed_tuple_basis_from_metadata(
+            basis.metadata(), is_dual=basis.is_dual
+        ),
+        basis,
     )

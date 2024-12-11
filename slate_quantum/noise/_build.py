@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Callable
 
 import numpy as np
-from scipy.constants import Boltzmann, hbar  # type: ignore stubs
+from scipy.constants import Boltzmann  # type: ignore stubs
 from slate.basis import CoordinateBasis, as_index_basis, as_tuple_basis
 from slate.metadata import AxisDirections
 
@@ -211,8 +211,8 @@ def get_temperature_corrected_operators[M0: BasisMetadata, M1: BasisMetadata](
     """Get the temperature corrected operators."""
     commutator = get_commutator_operator_list(hamiltonian, operators)
     thermal_energy = Boltzmann * temperature
-    correction = commutator * (-1 * np.sqrt(eta / (8 * thermal_energy * hbar**2)))
-    operators *= np.sqrt(2 * eta * thermal_energy / hbar**2)
+    correction = commutator * (-1 * np.sqrt(eta / (8 * thermal_energy)))
+    operators *= np.sqrt(2 * eta * thermal_energy)
     return correction + operators
 
 
