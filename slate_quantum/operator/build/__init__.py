@@ -8,6 +8,7 @@ from slate_quantum.operator.build._hamiltonian import (
 )
 from slate_quantum.operator.build._momentum import (
     filter_scatter_operator,
+    filter_scatter_operators,
     k_operator,
     p_operator,
 )
@@ -42,6 +43,7 @@ __all__ = [
     "axis_scattering_operator",
     "cos_potential",
     "filter_scatter_operator",
+    "filter_scatter_operators",
     "get_displacements_x",
     "get_displacements_x_stacked",
     "k_operator",

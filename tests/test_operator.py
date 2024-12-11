@@ -12,7 +12,7 @@ from slate.metadata.volume import spaced_volume_metadata_from_stacked_delta_x
 
 from slate_quantum import operator
 from slate_quantum.operator._linalg import into_diagonal_hermitian
-from slate_quantum.operator._operator import Operator
+from slate_quantum.operator._operator import Operator, OperatorList
 
 
 def test_build_kinetic_operator() -> None:
@@ -259,3 +259,19 @@ def test_filter_scatter_operator() -> None:
             ]
         ).ravel(),
     )
+
+    test_operators = OperatorList.from_operators([test_operator, test_operator])
+    filtered = operator.build.filter_scatter_operators(test_operators)
+    for op in filtered:
+        np.testing.assert_array_equal(
+            op.raw_data,
+            np.array(
+                [
+                    [1, 1, 1, 1, 1],
+                    [1, 1, 1, 0, 1],
+                    [1, 1, 1, 0, 0],
+                    [1, 0, 0, 1, 1],
+                    [1, 1, 0, 1, 1],
+                ]
+            ).ravel(),
+        )
