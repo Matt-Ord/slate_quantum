@@ -12,6 +12,7 @@ from slate.metadata.volume import spaced_volume_metadata_from_stacked_delta_x
 
 from slate_quantum import operator
 from slate_quantum.operator._linalg import into_diagonal_hermitian
+from slate_quantum.operator._operator import Operator
 
 
 def test_build_kinetic_operator() -> None:
@@ -234,3 +235,27 @@ def test_trivial_commutator() -> None:
 
     commutator = operator.commute(momentum_operator, momentum_operator)
     np.testing.assert_array_equal(commutator.as_array(), np.zeros((5, 5)))
+
+
+def test_filter_scatter_operator() -> None:
+    metadata = spaced_volume_metadata_from_stacked_delta_x(
+        (np.array([2 * np.pi, 0]),), (5,)
+    )
+    basis_k = basis.fundamental_transformed_tuple_basis_from_metadata(metadata)
+    test_operator = Operator(
+        tuple_basis((basis_k, basis_k.dual_basis())),
+        np.ones(25, dtype=np.complex128),
+    )
+    filtered = operator.build.filter_scatter_operator(test_operator)
+    np.testing.assert_array_equal(
+        filtered.raw_data,
+        np.array(
+            [
+                [1, 1, 1, 1, 1],
+                [1, 1, 1, 0, 1],
+                [1, 1, 1, 0, 0],
+                [1, 0, 0, 1, 1],
+                [1, 1, 0, 1, 1],
+            ]
+        ).ravel(),
+    )
