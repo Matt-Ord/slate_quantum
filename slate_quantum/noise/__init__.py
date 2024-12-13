@@ -16,6 +16,7 @@ from slate_quantum.noise._build import (
 from slate_quantum.noise._caldeira_leggett import (
     build_periodic_caldeira_leggett_axis_operators,
     build_periodic_caldeira_leggett_operators,
+    build_periodic_caldeira_leggett_real_operators,
 )
 from slate_quantum.noise._kernel import (
     AxisKernel,
@@ -53,6 +54,7 @@ __all__ = [
     "build_isotropic_kernel_from_function_stacked",
     "build_periodic_caldeira_leggett_axis_operators",
     "build_periodic_caldeira_leggett_operators",
+    "build_periodic_caldeira_leggett_real_operators",
     "caldeira_leggett_correllation_fn",
     "gaussian_correllation_fn",
     "get_diagonal_noise_operators_from_axis",
