@@ -10,7 +10,8 @@ from slate.basis import (
 from slate.metadata import size_from_nested_shape
 from slate.metadata.volume import spaced_volume_metadata_from_stacked_delta_x
 
-from slate_quantum import operator
+from slate_quantum import noise, operator
+from slate_quantum.operator import build
 from slate_quantum.operator._linalg import into_diagonal_hermitian
 from slate_quantum.operator._operator import Operator, OperatorList
 
@@ -293,3 +294,49 @@ def test_build_cos_operator() -> None:
         metadata, lambda x: 1 + np.sin(x[0])
     )
     np.testing.assert_allclose(actual.as_array(), expected.as_array())
+
+
+def test_build_cl_operators() -> None:
+    metadata = spaced_volume_metadata_from_stacked_delta_x(
+        (np.array([2 * np.pi]),), (16,)
+    )
+
+    delta_x = metadata[0].spacing.delta
+    expected = OperatorList.from_operators(
+        [
+            build.potential_from_function(
+                metadata,
+                lambda x: np.cos(2 * np.pi * x[0] / delta_x)
+                / np.sqrt(metadata[0].fundamental_size),
+            ),
+            build.potential_from_function(
+                metadata,
+                lambda x: np.sin(2 * np.pi * x[0] / delta_x)
+                / np.sqrt(metadata[0].fundamental_size),
+            ),
+        ]
+    )
+    operators = noise.build_periodic_caldeira_leggett_real_operators(metadata)
+    np.testing.assert_allclose(operators.as_array(), expected.as_array())
+
+    expected = OperatorList.from_operators(
+        [
+            build.potential_from_function(
+                metadata,
+                lambda x: np.exp(-1j * 2 * np.pi * x[0] / delta_x)
+                / np.sqrt(metadata[0].fundamental_size),
+            ),
+            build.potential_from_function(
+                metadata,
+                lambda x: np.exp(1j * 2 * np.pi * x[0] / delta_x)
+                / np.sqrt(metadata[0].fundamental_size),
+            ),
+        ]
+    )
+    operators_complex = noise.build_periodic_caldeira_leggett_operators(metadata)
+    np.testing.assert_allclose(operators_complex.as_array(), expected.as_array())
+
+    np.testing.assert_allclose(
+        operators_complex.basis[0].metadata().values,
+        operators.basis[0].metadata().values,
+    )

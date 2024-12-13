@@ -107,21 +107,17 @@ def build_periodic_caldeira_leggett_real_operators[
     operators = OperatorList.from_operators(
         [
             build.potential_from_function(
-                metadata, lambda x: np.cos(2 * np.pi * x[0] / delta_x)
+                metadata, lambda x: np.cos(2 * np.pi * x[0] / delta_x) / np.sqrt(n)
             ),
             build.potential_from_function(
-                metadata, lambda x: np.sin(2 * np.pi * x[0] / delta_x)
+                metadata, lambda x: np.sin(2 * np.pi * x[0] / delta_x) / np.sqrt(n)
             ),
         ]
     )
 
-    list_basis = CoordinateBasis(
-        [-1, 1], basis.from_metadata(operators.basis.metadata()[0])
-    )
-    converted = operators.with_list_basis(list_basis)
     return OperatorList(
         tuple_basis(
-            (eigenvalue_basis(np.array([eigenvalue, eigenvalue])), converted.basis[1])
+            (eigenvalue_basis(np.array([eigenvalue, eigenvalue])), operators.basis[1])
         ),
-        converted.raw_data,
+        operators.raw_data,
     )
