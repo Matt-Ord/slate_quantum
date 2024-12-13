@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, cast, overload, override
 
 import numpy as np
+from slate import basis
 from slate.array import Array
 from slate.basis import (
     Basis,
@@ -240,10 +241,19 @@ class OperatorList[
     def __getitem__(self, /, index: int) -> Operator[M1, DT]: ...
 
     def __getitem__(self, /, index: int) -> Operator[Any, Any, Any]:
-        as_tuple = self.with_basis(as_tuple_basis(self.basis))
-        return Operator[M1, DT](
-            cast("Basis[Metadata2D[M1, M1, None], DT]", as_tuple.basis[1]),
-            as_tuple.raw_data.reshape(as_tuple.basis.shape)[index],
+        as_tuple = self.with_list_basis(
+            basis.as_index_basis(basis.as_tuple_basis(self.basis)[0])
+        )
+
+        index_sparse = np.argwhere(as_tuple.basis[0].points == index)
+        if index_sparse.size == 0:
+            return Operator(
+                as_tuple.basis[1],
+                np.zeros(as_tuple.basis.shape[1], dtype=np.complex128),
+            )
+        return Operator(
+            as_tuple.basis[1],
+            as_tuple.raw_data.reshape(as_tuple.basis.shape)[index_sparse],
         )
 
     @staticmethod

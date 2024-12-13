@@ -113,6 +113,11 @@ def solve_stochastic_schrodinger_equation_banded[
     TupleBasis2D[np.complex128, TB, Basis[M, np.complex128], None],
 ]:
     """Given an initial state, use the stochastic schrodinger equation to solve the dynamics of the system."""
+    # We get the best numerical performace if we set the norm of the largest collapse operators
+    # to be one. This prevents us from accumulating large errors when multiplying state * dt * operator * conj_operator
+    dt = times.metadata().delta / times.fundamental_size
+    r_threshold = kwargs.get("r_threshold", 1e-8)
+
     hamiltonian_tuple = hamiltonian.with_basis(as_tuple_basis(hamiltonian.basis))
     operators_data = [
         o.with_basis(hamiltonian_tuple.basis).raw_data.reshape(
@@ -121,25 +126,18 @@ def solve_stochastic_schrodinger_equation_banded[
         * (np.sqrt(e) / np.sqrt(2))
         for o, e in zip(noise, noise.basis[0].metadata().values[noise.basis[0].points])
     ]
-    operators_norm = [np.linalg.norm(o) for o in operators_data]
-
-    # We get the best numerical performace if we set the norm of the largest collapse operators
-    # to be one. This prevents us from accumulating large errors when multiplying state * dt * operator * conj_operator
-    max_norm = np.max(operators_norm).item() if len(operators_norm) > 0 else 1.0
-    dt = times.metadata().delta * max_norm**2 / (hbar * times.fundamental_size)
-    r_threshold = kwargs.get("r_threshold", 1e-8)
 
     banded_collapse = _get_banded_operators(
-        [[list(x / max_norm) for x in o] for o in operators_data],
-        r_threshold / dt,
+        [[list(x * np.sqrt(dt / hbar)) for x in o] for o in operators_data],
+        r_threshold,
     )
 
     banded_h = _get_banded_operator(
         [
-            list(x / max_norm**2)
+            list(x * (dt / hbar))
             for x in hamiltonian_tuple.raw_data.reshape(hamiltonian_tuple.basis.shape)
         ],
-        r_threshold / dt,
+        r_threshold,
     )
     initial_state_converted = initial_state.with_basis(hamiltonian_tuple.basis[0])
     ts = datetime.datetime.now(tz=datetime.UTC)
@@ -155,7 +153,7 @@ def solve_stochastic_schrodinger_equation_banded[
         sse_solver_py.SimulationConfig(
             n=times.size,
             step=times.truncation.step,
-            dt=dt,
+            dt=1,
             n_trajectories=kwargs.get("n_trajectories", 1),
             n_realizations=kwargs.get("n_realizations", 1),
             method=kwargs.get("method", "Euler"),
@@ -164,5 +162,4 @@ def solve_stochastic_schrodinger_equation_banded[
 
     te = datetime.datetime.now(tz=datetime.UTC)
     print(f"solve rust banded took: {(te - ts).total_seconds()} sec")  # noqa: T201
-
     return StateList(tuple_basis((times, hamiltonian_tuple.basis[0])), np.array(data))

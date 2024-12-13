@@ -89,6 +89,15 @@ class StateList[
 ](Array[Metadata2D[M0, M1, None], np.complex128, B]):
     """represents a state vector in a basis."""
 
+    def __init__[
+        B1: Basis[Metadata2D[BasisMetadata, BasisMetadata, None], np.complex128],
+    ](
+        self: StateList[Any, Any, B1],
+        basis: B1,
+        data: np.ndarray[Any, np.dtype[np.complex128]],
+    ) -> None:
+        super().__init__(cast("Any", basis), cast("Any", data))
+
     @override
     def with_basis[B1: Basis[Any, Any]](  # B1: B
         self, basis: B1
@@ -103,9 +112,19 @@ class StateList[
         return (State(a.basis, a.raw_data) for a in super().__iter__())
 
     def __getitem__(self, /, index: int) -> State[M1, Basis[Any, np.complex128]]:
-        as_tuple = self.with_basis(_basis.as_tuple_basis(self.basis))
+        as_tuple = self.with_list_basis(
+            _basis.as_index_basis(_basis.as_tuple_basis(self.basis)[0])
+        )
+
+        index_sparse = np.argwhere(as_tuple.basis[0].points == index)
+        if index_sparse.size == 0:
+            return State(
+                as_tuple.basis[1],
+                np.zeros(as_tuple.basis.shape[1], dtype=np.complex128),
+            )
         return State(
-            as_tuple.basis[1], as_tuple.raw_data.reshape(as_tuple.basis.shape)[index]
+            as_tuple.basis[1],
+            as_tuple.raw_data.reshape(as_tuple.basis.shape)[index_sparse],
         )
 
     @overload
@@ -235,6 +254,14 @@ def get_average_occupations(
     # TODO: this is wrong - must convert first  # noqa: FIX002
     occupations = array.cast_basis(occupations, average_basis)
     return array.flatten(array.average(occupations, axis=0))
+
+
+def all_inner_product[M: BasisMetadata, M1: BasisMetadata](
+    state_0: StateList[M, M1],
+    state_1: StateList[M, M1],
+) -> Array[M, np.complex128]:
+    """Calculate the inner product of two states."""
+    return linalg.einsum("j i',j i ->j", state_0, state_1)
 
 
 type EigenstateList[M: BasisMetadata] = StateList[EigenvalueMetadata, M]
