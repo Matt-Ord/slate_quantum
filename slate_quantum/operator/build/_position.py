@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, Any, cast
 
 import numpy as np
 from slate import Array, Basis, basis
+from slate import metadata as _metadata
 from slate.basis import (
     DiagonalBasis,
     FundamentalBasis,
@@ -16,16 +17,10 @@ from slate.basis import (
     tuple_basis,
 )
 from slate.metadata import (
+    AxisDirections,
     SpacedLengthMetadata,
-    fundamental_stacked_nx_points,
-    shallow_shape_from_nested,
 )
 from slate.metadata.util import fundamental_size
-from slate.metadata.volume import (
-    AxisDirections,
-    fundamental_stacked_delta_x,
-    fundamental_stacked_x_points,
-)
 
 from slate_quantum.operator._diagonal import (
     DiagonalOperator,
@@ -87,8 +82,12 @@ def _get_displacements_x_along_axis(
     np.floating,
     TupleBasis[LengthMetadata, AxisDirections, np.generic],
 ]:
-    distances = fundamental_stacked_x_points(metadata)[axis] - np.real(origin)
-    delta_x = np.linalg.norm(fundamental_stacked_delta_x(metadata)[axis])
+    distances = _metadata.volume.fundamental_stacked_x_points(metadata)[axis] - np.real(
+        origin
+    )
+    delta_x = np.linalg.norm(
+        _metadata.volume.fundamental_stacked_delta_x(metadata)[axis]
+    )
     max_distance = delta_x / 2
     data = _wrap_displacements(distances, max_distance)
 
@@ -135,8 +134,8 @@ def nx_displacement_operators_stacked[M: StackedMetadata[BasisMetadata, Any]](
             - (n // 2),
         )
         for (n_x_points, n) in zip(
-            fundamental_stacked_nx_points(metadata),
-            shallow_shape_from_nested(metadata.fundamental_shape),
+            _metadata.fundamental_stacked_nx_points(metadata),
+            _metadata.shallow_shape_from_nested(metadata.fundamental_shape),
             strict=True,
         )
     )
@@ -150,7 +149,7 @@ def nx_displacement_operator[M: BasisMetadata](
     TupleBasis2D[np.generic, Basis[M, Any], Basis[M, Any], None],
 ]:
     """Get a matrix of displacements in nx, taken in a periodic fashion."""
-    n_x_points = np.asarray(fundamental_stacked_nx_points(metadata))
+    n_x_points = np.asarray(_metadata.fundamental_stacked_nx_points(metadata))
     n = fundamental_size(metadata)
     data = (n_x_points[:, np.newaxis] - n_x_points[np.newaxis, :] + n // 2) % n - (
         n // 2
@@ -202,9 +201,11 @@ def _get_displacements_matrix_x_along_axis[M: SpacedLengthMetadata, E: AxisDirec
         None,
     ],
 ]:
-    x_points = fundamental_stacked_x_points(metadata)[axis]
+    x_points = _metadata.volume.fundamental_stacked_x_points(metadata)[axis]
     distances = x_points[:, np.newaxis] - x_points[np.newaxis, :] - origin
-    delta_x = np.linalg.norm(fundamental_stacked_delta_x(metadata)[axis])
+    delta_x = np.linalg.norm(
+        _metadata.volume.fundamental_stacked_delta_x(metadata)[axis]
+    )
     max_distance = delta_x / 2
     data = _wrap_displacements(distances, max_distance)
 
@@ -267,7 +268,9 @@ def x_operator[M: SpacedLengthMetadata, E: AxisDirections](
     metadata: StackedMetadata[M, E], *, idx: int
 ) -> PositionOperator[M, E, np.complex128]:
     """Get the x operator."""
-    points = fundamental_stacked_x_points(metadata)[idx].astype(np.complex128)
+    points = _metadata.volume.fundamental_stacked_x_points(metadata)[idx].astype(
+        np.complex128
+    )
     return Potential(basis.from_metadata(metadata), points)
 
 

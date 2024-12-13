@@ -275,3 +275,21 @@ def test_filter_scatter_operator() -> None:
                 ]
             ).ravel(),
         )
+
+
+def test_build_cos_operator() -> None:
+    metadata = spaced_volume_metadata_from_stacked_delta_x(
+        (np.array([2 * np.pi, 0]),), (16,)
+    )
+
+    actual = operator.build.cos_potential(metadata, 2)
+    expected = operator.build.potential_from_function(
+        metadata, lambda x: 1 + np.cos(x[0])
+    )
+    np.testing.assert_allclose(actual.as_array(), expected.as_array())
+
+    actual = operator.build.sin_potential(metadata, 2)
+    expected = operator.build.potential_from_function(
+        metadata, lambda x: 1 + np.sin(x[0])
+    )
+    np.testing.assert_allclose(actual.as_array(), expected.as_array())

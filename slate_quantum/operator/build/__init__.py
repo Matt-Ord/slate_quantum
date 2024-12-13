@@ -31,7 +31,9 @@ from slate_quantum.operator.build._position import (
 )
 from slate_quantum.operator.build._potential import (
     cos_potential,
+    potential_from_function,
     repeat_potential,
+    sin_potential,
 )
 
 __all__ = [
@@ -52,8 +54,10 @@ __all__ = [
     "nx_displacement_operator",
     "nx_displacement_operators_stacked",
     "p_operator",
+    "potential_from_function",
     "repeat_potential",
     "scattering_operator",
+    "sin_potential",
     "total_x_displacement_operator",
     "x_displacement_operator",
     "x_displacement_operators_stacked",

@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+from typing import Any, Callable
+
 import numpy as np
 from slate import basis
+from slate import metadata as _metadata
 from slate.basis import (
     CroppedBasis,
     TruncatedBasis,
@@ -11,10 +14,10 @@ from slate.basis import (
 from slate.metadata import (
     AxisDirections,
     LabelSpacing,
+    SpacedLengthMetadata,
     SpacedVolumeMetadata,
     StackedMetadata,
 )
-from slate.metadata.length import SpacedLengthMetadata
 
 from slate_quantum._util import outer_product
 from slate_quantum.operator._diagonal import Potential
@@ -72,8 +75,39 @@ def cos_potential(
         lambda _i, y: CroppedBasis(3, y),
     )
     n_dim = len(cropped.shape)
-    data = outer_product(*(np.array([2, -1, -1]),) * n_dim)
+    data = outer_product(*(np.array([2, 1, 1]),) * n_dim)
     return Potential(
         cropped,
         0.25**n_dim * height * data * np.sqrt(transformed_basis.size),
     )
+
+
+def sin_potential(
+    metadata: SpacedVolumeMetadata,
+    height: float,
+) -> Potential[SpacedLengthMetadata, AxisDirections, np.complex128]:
+    """Build a cosine potential."""
+    transformed_basis = fundamental_transformed_tuple_basis_from_metadata(metadata)
+    # We need only the three lowest fourier components to represent this potential
+    cropped = basis.with_modified_children(
+        transformed_basis,
+        lambda _i, y: CroppedBasis(3, y),
+    )
+    n_dim = len(cropped.shape)
+    data = outer_product(*(np.array([2, 1j, -1j]),) * n_dim)
+    return Potential(
+        cropped,
+        0.25**n_dim * height * data * np.sqrt(transformed_basis.size),
+    )
+
+
+def potential_from_function[M: SpacedLengthMetadata, E: AxisDirections, DT: np.generic](
+    metadata: StackedMetadata[M, E],
+    fn: Callable[
+        [tuple[np.ndarray[Any, np.dtype[np.float64]], ...]],
+        np.ndarray[Any, np.dtype[DT]],
+    ],
+) -> Potential[M, E, DT]:
+    """Get the potential operator."""
+    positions = _metadata.volume.fundamental_stacked_x_points(metadata)
+    return Potential(basis.from_metadata(metadata), fn(positions))
