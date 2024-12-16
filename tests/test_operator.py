@@ -340,3 +340,26 @@ def test_build_cl_operators() -> None:
         operators_complex.basis[0].metadata().values,
         operators.basis[0].metadata().values,
     )
+
+
+def test_dagger() -> None:
+    metadata = spaced_volume_metadata_from_stacked_delta_x(
+        (np.array([2 * np.pi]),), (5,)
+    )
+
+    position_operator = operator.build.x_operator(metadata, idx=0)
+    np.testing.assert_allclose(
+        operator.dagger(position_operator).as_array(),
+        position_operator.as_array().T.conj(),
+    )
+    operator.dagger(position_operator)
+
+    scatter_operator = operator.build.scattering_operator(metadata, n_k=(1,))
+    np.testing.assert_allclose(
+        operator.dagger(scatter_operator).as_array(),
+        scatter_operator.as_array().T.conj(),
+    )
+    assert (
+        operator.dagger(scatter_operator).basis.is_dual
+        == scatter_operator.basis.is_dual
+    )
