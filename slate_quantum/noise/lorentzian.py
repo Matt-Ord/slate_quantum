@@ -15,7 +15,7 @@ from slate.metadata.volume import fundamental_stacked_delta_x
 
 from slate_quantum.noise._build import (
     build_isotropic_kernel_from_function_stacked,
-    lorentzian_correllation_fn,
+    lorentzian_correlation_fn,
 )
 from slate_quantum.noise.diagonalize._taylor import (
     get_periodic_noise_operators_explicit_taylor_expansion,
@@ -53,7 +53,7 @@ def get_lorentzian_isotropic_noise_kernel[M: SpacedLengthMetadata, E: AxisDirect
     a: float,
     lambda_: float,
 ) -> IsotropicNoiseKernel[StackedMetadata[M, E], np.complex128]:
-    """Get an isotropic noise kernel for a lorentzian correllation.
+    """Get an isotropic noise kernel for a lorentzian correlation.
 
     beta(x,x') = a**2 * lambda_**2 / ((x-x')**2 + lambda_**2)
 
@@ -70,7 +70,7 @@ def get_lorentzian_isotropic_noise_kernel[M: SpacedLengthMetadata, E: AxisDirect
     ]
     """
     return build_isotropic_kernel_from_function_stacked(
-        metadata, lorentzian_correllation_fn(a, lambda_)
+        metadata, lorentzian_correlation_fn(a, lambda_)
     )
 
 

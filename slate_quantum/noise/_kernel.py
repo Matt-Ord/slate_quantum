@@ -178,7 +178,7 @@ class IsotropicNoiseKernel[
     r"""
     Represents a noise kernel which is isotropic and diagonal.
 
-    In this case, the correllation between any pair of states depends only on
+    In this case, the correlation between any pair of states depends only on
     the difference between the two states. We therefore store the kernel
     relating to only a single state.
 
