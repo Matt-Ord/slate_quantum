@@ -3,9 +3,9 @@ from __future__ import annotations
 from statistics import correlation
 
 import numpy as np
-from slate import array
+from slate import array, plot
 from slate.metadata import spaced_volume_metadata_from_stacked_delta_x
-from slate.plot import get_figure, plot_data_1d_x
+from slate.plot import get_figure
 
 from slate_quantum.noise import (
     IsotropicNoiseKernel,
@@ -29,7 +29,7 @@ if __name__ == "__main__":
     # We can plot the kernel to see how the correlation decays with distance.
     # The correlation falls by $e^-1$ at a distance of \pi / 2$.
     full_data = array.as_outer_array(array.as_outer_array(kernel))
-    fig, ax, _ = plot_data_1d_x(full_data)
+    fig, ax, _ = plot.basis_against_array_1d_x(full_data)
     ax.set_title(r"Isotropic Gaussian Kernel with $\sigma = \pi / 2$")
     fig.show()
 
@@ -45,7 +45,9 @@ if __name__ == "__main__":
     # $e^{ikx}$.
     fig, ax = get_figure()
     for i in range(3):
-        plot_data_1d_x(array.as_outer_array(operators[i]), ax=ax, measure="real")
+        plot.basis_against_array_1d_x(
+            array.as_outer_array(operators[i]), ax=ax, measure="real"
+        )
     fig.show()
     ax.set_title("The real part of the first three noise operators")
 
@@ -60,10 +62,10 @@ if __name__ == "__main__":
     # This is because the noise operators we have taken are the
     # lowest frequency components of the kernel.
     fig, ax = get_figure()
-    _, _, line = plot_data_1d_x(full_data, ax=ax)
+    _, _, line = plot.basis_against_array_1d_x(full_data, ax=ax)
     line.set_label("Original kernel")
     line.set_linestyle("--")
-    _, _, line = plot_data_1d_x(restored_data, ax=ax)
+    _, _, line = plot.basis_against_array_1d_x(restored_data, ax=ax)
     line.set_label("Restored kernel")
     ax.set_title("Restored noise kernel, from the first 3 operators")
     ax.legend()

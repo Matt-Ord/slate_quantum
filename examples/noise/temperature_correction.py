@@ -2,9 +2,8 @@ from __future__ import annotations
 
 import numpy as np
 from scipy.constants import Boltzmann, hbar  # type: ignore unknown
-from slate import array
+from slate import array, plot
 from slate.metadata import spaced_volume_metadata_from_stacked_delta_x
-from slate.plot import plot_data_2d_k, plot_data_2d_x
 
 from slate_quantum.noise import (
     build_isotropic_kernel_from_function_stacked,
@@ -43,19 +42,21 @@ if __name__ == "__main__":
     )
 
     idx = -2
-    fig, ax, _ = plot_data_2d_x(array.flatten(operators[idx]))
+    fig, ax, _ = plot.basis_against_array_2d_x(array.flatten(operators[idx]))
     ax.set_label("Original noise operator")
     fig.show()
 
-    fig, ax, _ = plot_data_2d_k(array.flatten(operators[idx]))
+    fig, ax, _ = plot.basis_against_array_2d_k(array.flatten(operators[idx]))
     ax.set_label("Original noise operator")
     fig.show()
 
-    fig, ax, _ = plot_data_2d_x(array.flatten(corrected_operators[idx]))
+    fig, ax, _ = plot.basis_against_array_2d_x(array.flatten(corrected_operators[idx]))
     ax.set_label("Temperature corrected noise operator")
     fig.show()
 
-    fig, ax, _ = plot_data_2d_k(array.flatten(corrected_operators[idx]), measure="abs")
+    fig, ax, _ = plot.basis_against_array_2d_k(
+        array.flatten(corrected_operators[idx]), measure="abs"
+    )
     ax.set_label("Temperature corrected noise operator")
     fig.show()
     input()
