@@ -223,29 +223,50 @@ def get_all_occupations[M0: BasisMetadata, B: Basis[Any, Any]](
 @overload
 def get_average_occupations[B: Basis[BasisMetadata, Any]](
     states: StateList[Any, Any, TupleBasis2D[np.complex128, Any, B, None]],
-) -> Array[
-    BasisStateMetadata[B],
-    np.float64,
-    FundamentalBasis[BasisStateMetadata[B]],
+) -> tuple[
+    Array[
+        BasisStateMetadata[B],
+        np.float64,
+        FundamentalBasis[BasisStateMetadata[B]],
+    ],
+    Array[
+        BasisStateMetadata[B],
+        np.float64,
+        FundamentalBasis[BasisStateMetadata[B]],
+    ],
 ]: ...
 
 
 @overload
 def get_average_occupations[M1: BasisMetadata](
     states: StateList[Any, M1],
-) -> Array[
-    BasisStateMetadata[Basis[M1, Any]],
-    np.float64,
-    FundamentalBasis[BasisStateMetadata[Basis[M1, Any]]],
+) -> tuple[
+    Array[
+        BasisStateMetadata[Basis[M1, Any]],
+        np.float64,
+        FundamentalBasis[BasisStateMetadata[Basis[M1, Any]]],
+    ],
+    Array[
+        BasisStateMetadata[Basis[M1, Any]],
+        np.float64,
+        FundamentalBasis[BasisStateMetadata[Basis[M1, Any]]],
+    ],
 ]: ...
 
 
 def get_average_occupations(
     states: StateList[Any, Any, Any],
-) -> Array[
-    BasisStateMetadata[Basis[Any, Any]],
-    np.float64,
-    FundamentalBasis[BasisStateMetadata[Basis[Any, Any]]],
+) -> tuple[
+    Array[
+        BasisStateMetadata[Basis[Any, Any]],
+        np.float64,
+        FundamentalBasis[BasisStateMetadata[Basis[Any, Any]]],
+    ],
+    Array[
+        BasisStateMetadata[Basis[Any, Any]],
+        np.float64,
+        FundamentalBasis[BasisStateMetadata[Basis[Any, Any]]],
+    ],
 ]:
     occupations = get_all_occupations(states)
     # Dont include empty entries in average
@@ -253,7 +274,11 @@ def get_average_occupations(
     average_basis = tuple_basis((list_basis, occupations.basis[1]))
     # TODO: this is wrong - must convert first  # noqa: FIX002
     occupations = array.cast_basis(occupations, average_basis)
-    return array.flatten(array.average(occupations, axis=0))
+
+    average = array.flatten(array.average(occupations, axis=0))
+    std = array.flatten(array.standard_deviation(occupations, axis=0))
+
+    return average, std
 
 
 def all_inner_product[M: BasisMetadata, M1: BasisMetadata](
