@@ -110,7 +110,7 @@ def solve_stochastic_schrodinger_equation_banded[
 ) -> StateList[
     TimeMetadata,
     M,
-    TupleBasis2D[np.complex128, TB, Basis[M, np.complex128], None],
+    TupleBasis2D[np.complexfloating, TB, Basis[M, np.complexfloating], None],
 ]:
     """Given an initial state, use the stochastic schrodinger equation to solve the dynamics of the system."""
     # We get the best numerical performace if we set the norm of the largest collapse operators

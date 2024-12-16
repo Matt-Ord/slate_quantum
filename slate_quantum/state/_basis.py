@@ -9,7 +9,7 @@ from slate.metadata import BasisMetadata
 from slate_quantum.state._state import StateList
 
 
-class EigenstateBasis[M: BasisMetadata](ExplicitUnitaryBasis[M, np.complex128]):
+class EigenstateBasis[M: BasisMetadata](ExplicitUnitaryBasis[M, np.complexfloating]):
     """A basis with data stored as eigenstates."""
 
     @property
