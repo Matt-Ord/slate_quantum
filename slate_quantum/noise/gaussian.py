@@ -17,7 +17,7 @@ from slate.metadata.volume import fundamental_stacked_delta_x
 from slate_quantum.noise._build import (
     build_axis_kernel_from_function_stacked,
     build_isotropic_kernel_from_function_stacked,
-    gaussian_correllation_fn,
+    gaussian_correlation_fn,
     truncate_noise_operator_list,
 )
 from slate_quantum.noise._kernel import get_diagonal_noise_operators_from_axis
@@ -51,7 +51,7 @@ def get_gaussian_isotropic_noise_kernel[
 ) -> IsotropicNoiseKernel[StackedMetadata[M, E], np.complex128]:
     """Get the noise kernel for a gaussian correllated surface."""
     return build_isotropic_kernel_from_function_stacked(
-        metadata, gaussian_correllation_fn(a, lambda_)
+        metadata, gaussian_correlation_fn(a, lambda_)
     )
 
 
@@ -62,7 +62,7 @@ def get_gaussian_axis_noise_kernel[M: SpacedLengthMetadata](
 ) -> AxisKernel[M, np.complex128]:
     """Get the noise kernel for a gaussian correllated surface."""
     return build_axis_kernel_from_function_stacked(
-        metadata, gaussian_correllation_fn(a, lambda_)
+        metadata, gaussian_correlation_fn(a, lambda_)
     )
 
 
@@ -118,8 +118,8 @@ def get_effective_gaussian_noise_kernel[
     """
     Get the noise kernel for a gaussian correllated surface, given the Caldeira leggett parameters.
 
-    This chooses the largest possible wavelength, such that the smallest correllation between
-    any two points is a**2 * np.exp(- lambda_factor ** 2 / 2), where a**2 is the max correllation
+    This chooses the largest possible wavelength, such that the smallest correlation between
+    any two points is a**2 * np.exp(- lambda_factor ** 2 / 2), where a**2 is the max correlation
 
     Parameters
     ----------
@@ -152,8 +152,8 @@ def get_effective_gaussian_isotropic_noise_kernel[
     """
     Get the noise kernel for a gaussian correllated surface, given the Caldeira leggett parameters.
 
-    This chooses the largest possible wavelength, such that the smallest correllation between
-    any two points is a**2 * np.exp(- lambda_factor ** 2 / 2), where a**2 is the max correllation
+    This chooses the largest possible wavelength, such that the smallest correlation between
+    any two points is a**2 * np.exp(- lambda_factor ** 2 / 2), where a**2 is the max correlation
 
     Parameters
     ----------

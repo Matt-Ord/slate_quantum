@@ -45,7 +45,7 @@ def build_isotropic_kernel_from_function[M: LengthMetadata](
     ],
 ) -> IsotropicNoiseKernel[M, np.complex128]:
     """
-    Get an Isotropic Kernel with a correllation beta(x-x').
+    Get an Isotropic Kernel with a correlation beta(x-x').
 
     Parameters
     ----------
@@ -54,7 +54,7 @@ def build_isotropic_kernel_from_function[M: LengthMetadata](
         [np.ndarray[Any, np.dtype[np.float64]]],
         np.ndarray[Any, np.dtype[np.complex128]],
     ]
-        beta(x-x'), the correllation as a function of displacement
+        beta(x-x'), the correlation as a function of displacement
 
     Returns
     -------
@@ -79,7 +79,7 @@ def build_isotropic_kernel_from_function_stacked[
     ],
 ) -> IsotropicNoiseKernel[StackedMetadata[M, E], np.complex128]:
     """
-    Get an Isotropic Kernel with a correllation beta(x-x').
+    Get an Isotropic Kernel with a correlation beta(x-x').
 
     Parameters
     ----------
@@ -88,7 +88,7 @@ def build_isotropic_kernel_from_function_stacked[
         [np.ndarray[Any, np.dtype[np.float64]]],
         np.ndarray[Any, np.dtype[np.complex128]],
     ]
-        beta(x-x'), the correllation as a function of displacement
+        beta(x-x'), the correlation as a function of displacement
 
     Returns
     -------
@@ -110,7 +110,7 @@ def build_axis_kernel_from_function_stacked[M: SpacedLengthMetadata](
     ],
 ) -> AxisKernel[M, np.complex128]:
     """
-    Get an Isotropic Kernel with a correllation beta(x-x').
+    Get an Isotropic Kernel with a correlation beta(x-x').
 
     Parameters
     ----------
@@ -119,7 +119,7 @@ def build_axis_kernel_from_function_stacked[M: SpacedLengthMetadata](
         [np.ndarray[Any, np.dtype[np.float64]]],
         np.ndarray[Any, np.dtype[np.complex128]],
     ]
-        beta(x-x'), the correllation as a function of displacement
+        beta(x-x'), the correlation as a function of displacement
 
     Returns
     -------
@@ -132,12 +132,12 @@ def build_axis_kernel_from_function_stacked[M: SpacedLengthMetadata](
     )
 
 
-def gaussian_correllation_fn(
+def gaussian_correlation_fn(
     a: float, sigma: float
 ) -> Callable[
     [np.ndarray[Any, np.dtype[np.float64]]], np.ndarray[Any, np.dtype[np.complex128]]
 ]:
-    r"""Get a correllation function for a gaussian noise kernel.
+    r"""Get a correlation function for a gaussian noise kernel.
 
     A gaussian noise kernel is isotropic, and separable into individual
     axis kernels. The kernel is given by
@@ -156,12 +156,12 @@ def gaussian_correllation_fn(
     return fn
 
 
-def lorentzian_correllation_fn(
+def lorentzian_correlation_fn(
     a: float, lambda_: float
 ) -> Callable[
     [np.ndarray[Any, np.dtype[np.float64]]], np.ndarray[Any, np.dtype[np.complex128]]
 ]:
-    r"""Get a correllation function for a lorentzian noise kernel.
+    r"""Get a correlation function for a lorentzian noise kernel.
 
     A lorentzian noise kernel is isotropic, and separable into individual
     axis kernels. The kernel is given by
@@ -180,12 +180,12 @@ def lorentzian_correllation_fn(
     return fn
 
 
-def caldeira_leggett_correllation_fn(
+def caldeira_leggett_correlation_fn(
     a: float, lambda_: float
 ) -> Callable[
     [np.ndarray[Any, np.dtype[np.float64]]], np.ndarray[Any, np.dtype[np.complex128]]
 ]:
-    r"""Get a correllation function for a lorentzian noise kernel.
+    r"""Get a correlation function for a lorentzian noise kernel.
 
     A lorentzian noise kernel is isotropic, and separable into individual
     axis kernels. The kernel is given by
