@@ -110,10 +110,11 @@ class Operator[
 
     @override
     def __mul__[M1: BasisMetadata, DT1: np.number[Any]](
-        self: Array[M1, DT1],
-        other: float,
+        self: Operator[M1, DT1],
+        other: complex,
     ) -> Operator[M1, DT1]:
-        out = cast("Array[Any, DT1]", super()).__mul__(other)
+        # TODO: always support complex numbers  # noqa: FIX002
+        out = cast("Array[Any, DT1]", super()).__mul__(cast("float", other))
         return Operator[Any, Any](out.basis, out.raw_data)
 
     def as_diagonal(self) -> Array[M, np.complex128]:

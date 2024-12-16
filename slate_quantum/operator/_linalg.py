@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, cast
 
 import numpy as np
+from slate import array
 from slate.basis import (
     Basis,
     diagonal_basis,
@@ -103,6 +104,15 @@ def commute[M0: BasisMetadata](
     lhs_rhs = matmul(lhs, rhs)
     rhs_lhs = matmul(rhs, lhs)
     return lhs_rhs - rhs_lhs
+
+
+def dagger[M0: BasisMetadata](
+    operator: Operator[M0, np.complex128],
+) -> Operator[M0, np.complex128]:
+    """Get the hermitian conjugate of an operator."""
+    res = array.dagger(operator)
+    # TODO: what should array.dagger's basis be?  # noqa: FIX002
+    return Operator(res.basis.dual_basis(), res.raw_data)
 
 
 def matmul_list_operator[M0: BasisMetadata, M1: BasisMetadata](

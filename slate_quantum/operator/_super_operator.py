@@ -1,15 +1,17 @@
 from __future__ import annotations
 
-from typing import Any, cast, overload, override
+from typing import TYPE_CHECKING, Any, cast, overload, override
 
 import numpy as np
-from slate.array import Array
 from slate.basis import (
     Basis,
 )
 from slate.metadata import BasisMetadata, Metadata2D
 
 from slate_quantum.operator._operator import Operator, OperatorMetadata
+
+if TYPE_CHECKING:
+    from slate.array import Array
 
 type SuperOperatorMetadata[M: BasisMetadata = BasisMetadata] = OperatorMetadata[  # noqa: E251
     OperatorMetadata[M],
@@ -100,7 +102,7 @@ class SuperOperator[
     @override
     def __mul__[M1: BasisMetadata, DT1: np.number[Any]](
         self: SuperOperator[M1, DT1],
-        other: float,
+        other: complex,
     ) -> SuperOperator[M1, DT1]:
-        out = Array[Any, Any].__mul__(self, other)
+        out = Operator[Any, Any].__mul__(self, other)
         return SuperOperator[Any, Any](out.basis, out.raw_data)
