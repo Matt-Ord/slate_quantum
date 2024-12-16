@@ -1,9 +1,8 @@
 from __future__ import annotations
 
 import numpy as np
-from slate import array
+from slate import array, plot
 from slate.metadata.volume import spaced_volume_metadata_from_stacked_delta_x
-from slate.plot import plot_data_1d_x, plot_data_2d_x
 
 from slate_quantum import operator
 
@@ -15,12 +14,12 @@ if __name__ == "__main__":
     # A single cos potential in 1D, height 10 with 100 points
     # Here .diagonal() is used to get the potential as an array
     # of points along the diagonal
-    fig, ax, line = plot_data_1d_x(array.as_outer_array(potential))
+    fig, ax, line = plot.basis_against_array_1d_x(array.as_outer_array(potential))
     fig.show()
 
     potential = operator.repeat_potential(potential, (3,))
     # A repeated cos potential, with 3 repeats
-    fig, ax, line = plot_data_1d_x(array.as_outer_array(potential))
+    fig, ax, line = plot.basis_against_array_1d_x(array.as_outer_array(potential))
     fig.show()
 
     # Metadata for a 2D volume with 100 points and a width of 14, 10
@@ -29,14 +28,14 @@ if __name__ == "__main__":
     )
     potential = operator.build.cos_potential(metadata, 10)
     # A single cos potential in 2D, height 10
-    fig, ax, line = plot_data_1d_x(array.as_outer_array(potential))
+    fig, ax, line = plot.basis_against_array_1d_x(array.as_outer_array(potential))
     fig.show()
-    fig, ax, line = plot_data_2d_x(array.as_outer_array(potential))
+    fig, ax, line = plot.basis_against_array_2d_x(array.as_outer_array(potential))
     fig.show()
 
     potential = operator.repeat_potential(potential, (3, 4))
     # A repeated cos potential, with (3, 4) repeats
-    fig, ax, line = plot_data_2d_x(array.as_outer_array(potential))
+    fig, ax, line = plot.basis_against_array_2d_x(array.as_outer_array(potential))
     fig.show()
 
     input()
