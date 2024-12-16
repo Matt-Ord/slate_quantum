@@ -21,7 +21,7 @@ if TYPE_CHECKING:
     from slate.explicit_basis import ExplicitBasis
 
 
-def into_diagonal[M: BasisMetadata, DT: np.complexfloating[Any, Any]](
+def into_diagonal[M: BasisMetadata, DT: np.complexfloating](
     operator: Operator[M, DT],
 ) -> Operator[
     M,
@@ -38,7 +38,7 @@ def into_diagonal[M: BasisMetadata, DT: np.complexfloating[Any, Any]](
     return Operator(diagonal.basis, diagonal.raw_data)
 
 
-def into_diagonal_hermitian[M: BasisMetadata, DT: np.complexfloating[Any, Any]](
+def into_diagonal_hermitian[M: BasisMetadata, DT: np.complexfloating](
     operator: Operator[M, DT],
 ) -> Operator[
     M,

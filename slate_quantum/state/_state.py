@@ -28,7 +28,7 @@ class State[M: BasisMetadata, B: Basis[Any, np.complex128] = Basis[M, np.complex
     ](
         self: State[Any, B1],
         basis: B1,
-        data: np.ndarray[Any, np.dtype[np.complex128]],
+        data: np.ndarray[Any, np.dtype[np.complexfloating]],
     ) -> None:
         super().__init__(cast("Any", basis), cast("Any", data))
 
@@ -83,18 +83,18 @@ def get_occupations[B: Basis[BasisMetadata, Any]](
 class StateList[
     M0: BasisMetadata,
     M1: BasisMetadata,
-    B: Basis[Metadata2D[BasisMetadata, BasisMetadata, None], np.complex128] = Basis[
-        Metadata2D[M0, M1, None], np.complex128
-    ],
-](Array[Metadata2D[M0, M1, None], np.complex128, B]):
+    B: Basis[
+        Metadata2D[BasisMetadata, BasisMetadata, None], np.complexfloating
+    ] = Basis[Metadata2D[M0, M1, None], np.complexfloating],
+](Array[Metadata2D[M0, M1, None], np.complexfloating, B]):
     """represents a state vector in a basis."""
 
     def __init__[
-        B1: Basis[Metadata2D[BasisMetadata, BasisMetadata, None], np.complex128],
+        B1: Basis[Metadata2D[BasisMetadata, BasisMetadata, None], np.complexfloating],
     ](
         self: StateList[Any, Any, B1],
         basis: B1,
-        data: np.ndarray[Any, np.dtype[np.complex128]],
+        data: np.ndarray[Any, np.dtype[np.complexfloating]],
     ) -> None:
         super().__init__(cast("Any", basis), cast("Any", data))
 
@@ -108,7 +108,7 @@ class StateList[
         )
 
     @override
-    def __iter__(self, /) -> Iterator[State[M1, Basis[Any, np.complex128]]]:  # type: ignore bad overload
+    def __iter__(self, /) -> Iterator[State[M1, Basis[Any, np.complexfloating]]]:  # type: ignore bad overload
         return (State(a.basis, a.raw_data) for a in super().__iter__())
 
     def __getitem__(self, /, index: int) -> State[M1, Basis[Any, np.complex128]]:
@@ -166,9 +166,27 @@ class StateList[
         )
 
 
+def normalize_states[M0: BasisMetadata, M1: BasisMetadata](
+    states: StateList[M0, M1],
+) -> StateList[
+    M0,
+    M1,
+    TupleBasis2D[np.complexfloating, Basis[M0, Any], Basis[M1, Any], None],
+]:
+    norms = all_inner_product(states, states)
+    norms = array.as_index_basis(norms)
+    states = states.with_list_basis(norms.basis)
+    states = states.with_state_basis(_basis.as_mul_basis(states.basis[1]))
+    return StateList(
+        states.basis,
+        states.raw_data.reshape(states.basis.shape)
+        / np.sqrt(norms.raw_data)[:, np.newaxis],
+    )
+
+
 @overload
 def get_all_occupations[M0: BasisMetadata, B: Basis[BasisMetadata, Any]](
-    states: StateList[M0, Any, TupleBasis2D[np.complex128, Any, B, None]],
+    states: StateList[M0, Any, TupleBasis2D[np.complexfloating, Any, B, None]],
 ) -> Array[
     Metadata2D[M0, BasisStateMetadata[B], None],
     np.float64,
@@ -222,7 +240,7 @@ def get_all_occupations[M0: BasisMetadata, B: Basis[Any, Any]](
 
 @overload
 def get_average_occupations[B: Basis[BasisMetadata, Any]](
-    states: StateList[Any, Any, TupleBasis2D[np.complex128, Any, B, None]],
+    states: StateList[Any, Any, TupleBasis2D[np.complexfloating, Any, B, None]],
 ) -> tuple[
     Array[
         BasisStateMetadata[B],
@@ -285,7 +303,7 @@ def get_average_occupations(
 def all_inner_product[M: BasisMetadata, M1: BasisMetadata](
     state_0: StateList[M, M1],
     state_1: StateList[M, M1],
-) -> Array[M, np.complex128]:
+) -> Array[M, np.complexfloating]:
     """Calculate the inner product of two states."""
     return linalg.einsum("j i',j i ->j", state_0, state_1)
 
