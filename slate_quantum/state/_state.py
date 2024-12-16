@@ -277,6 +277,7 @@ def get_average_occupations(
 
     average = array.flatten(array.average(occupations, axis=0))
     std = array.flatten(array.standard_deviation(occupations, axis=0))
+    std *= np.sqrt(1 / occupations.basis.shape[0])
 
     return average, std
 
