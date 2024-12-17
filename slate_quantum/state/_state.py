@@ -305,7 +305,7 @@ def all_inner_product[M: BasisMetadata, M1: BasisMetadata](
     state_1: StateList[M, M1],
 ) -> Array[M, np.complexfloating]:
     """Calculate the inner product of two states."""
-    return linalg.einsum("j i',j i ->j", state_0, state_1)
+    return linalg.einsum("(j i'),(j i) ->j", state_0, state_1)
 
 
 type EigenstateList[M: BasisMetadata] = StateList[EigenvalueMetadata, M]
