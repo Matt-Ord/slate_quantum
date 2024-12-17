@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, cast, overload, override
 
 import numpy as np
-from slate import basis
+from slate import basis, linalg
 from slate.array import Array
 from slate.basis import (
     Basis,
@@ -18,6 +18,8 @@ from slate.metadata import BasisMetadata, Metadata2D, NestedLength, SimpleMetada
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Iterator
+
+    from slate_quantum.state import State
 
 
 def _assert_operator_basis(basis: Basis[BasisMetadata, Any]) -> None:
@@ -131,6 +133,14 @@ def _assert_operator_list_basis(basis: Basis[BasisMetadata, Any]) -> None:
         msg = "Basis is not 2d"
         raise TypeError(msg)
     _assert_operator_basis(as_tuple_basis(basis)[1])
+
+
+def calculate_expectation[M: BasisMetadata](
+    operator: Operator[M, np.complexfloating],
+    state: State[M],
+) -> complex:
+    """Calculate the expectation value of an operator."""
+    return linalg.einsum("i' ,(i j'),j -> ", state, operator, state).as_array().item()
 
 
 OperatorListMetadata = Metadata2D[BasisMetadata, OperatorMetadata, Any]
