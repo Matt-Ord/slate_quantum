@@ -870,13 +870,13 @@ testing = ["pytest", "pytest-benchmark"]
 
 [[package]]
 name = "pydata-sphinx-theme"
-version = "0.16.0"
+version = "0.16.1"
 description = "Bootstrap-based Sphinx theme from the PyData community"
 optional = false
 python-versions = ">=3.9"
 files = [
-    {file = "pydata_sphinx_theme-0.16.0-py3-none-any.whl", hash = "sha256:18c810ee4e67e05281e371e156c1fb5bb0fa1f2747240461b225272f7d8d57d8"},
-    {file = "pydata_sphinx_theme-0.16.0.tar.gz", hash = "sha256:721dd26e05fa8b992d66ef545536e6cbe0110afb9865820a08894af1ad6f7707"},
+    {file = "pydata_sphinx_theme-0.16.1-py3-none-any.whl", hash = "sha256:225331e8ac4b32682c18fcac5a57a6f717c4e632cea5dd0e247b55155faeccde"},
+    {file = "pydata_sphinx_theme-0.16.1.tar.gz", hash = "sha256:a08b7f0b7f70387219dc659bff0893a7554d5eb39b59d3b8ef37b8401b7642d7"},
 ]
 
 [package.dependencies]
@@ -1141,8 +1141,8 @@ plot = ["matplotlib (>=3.9.2,<4.0.0)"]
 [package.source]
 type = "git"
 url = "https://github.com/Matt-Ord/slate.git"
-reference = "0a63ab3"
-resolved_reference = "0a63ab36515c30703dcfbd2d8360b1ae7630a89b"
+reference = "0e4cb2d"
+resolved_reference = "0e4cb2d59c347e5b074c02e9d25c18006ac0b949"
 
 [[package]]
 name = "snowballstemmer"
@@ -1306,8 +1306,8 @@ develop = false
 [package.source]
 type = "git"
 url = "https://github.com/Matt-Ord/sse_solver.git"
-reference = "7251fd9"
-resolved_reference = "7251fd9973a75422b9222251f9c0984a9a958e30"
+reference = "90e16db"
+resolved_reference = "90e16dbfb288d1baecc5e79140b46330b879c678"
 subdirectory = "sse_solver_py"
 
 [[package]]
@@ -1347,4 +1347,4 @@ sse-solver-py = ["sse_solver_py"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.13,<3.14"
-content-hash = "74232d4507b721463bcc6518f6984ca76fd772fcd5f1bb3992cd3fe4ff2d5411"
+content-hash = "7b909bedd4819471d33d94351b9820f37df4de43883dc096cf550225c9cbbe74"
