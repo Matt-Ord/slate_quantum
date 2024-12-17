@@ -1306,8 +1306,8 @@ develop = false
 [package.source]
 type = "git"
 url = "https://github.com/Matt-Ord/sse_solver.git"
-reference = "1206e87"
-resolved_reference = "1206e87129d45a91b0ee96f60f3da875b2f17b92"
+reference = "d97c068"
+resolved_reference = "d97c0682425351a9a92870962f1d656f5d6744b8"
 subdirectory = "sse_solver_py"
 
 [[package]]
@@ -1347,4 +1347,4 @@ sse-solver-py = ["sse_solver_py"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.13,<3.14"
-content-hash = "6bae4745bd3a8c1f0d69e7e53faa085d8dc4ddd80f59473674d12ea6306c1ed9"
+content-hash = "9af5c07977ece82d241bd84fe48c54c20748639eba4346046b67389b14489ef0"
