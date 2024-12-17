@@ -154,7 +154,7 @@ def solve_stochastic_schrodinger_equation_banded[
             n=times.size,
             step=times.truncation.step,
             dt=1,
-            delta=(5e-4, None),
+            delta=(None, 2.5e-4, None),
             n_trajectories=kwargs.get("n_trajectories", 1),
             n_realizations=kwargs.get("n_realizations", 1),
             method=kwargs.get("method", "Euler"),
