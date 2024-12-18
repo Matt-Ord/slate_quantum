@@ -5,8 +5,8 @@ from typing import TYPE_CHECKING, Any, TypedDict, Unpack, cast
 
 import numpy as np
 from scipy.constants import hbar  # type: ignore lib
+from slate import basis
 from slate.basis import (
-    TruncatedBasis,
     TupleBasis2D,
     as_tuple_basis,
     tuple_basis,
@@ -85,24 +85,25 @@ class SSEConfig(TypedDict, total=False):
     n_realizations: int
     method: SSEMethod
     r_threshold: float
+    target_delta: float
 
 
 @timed
 def solve_stochastic_schrodinger_equation_banded[
     M: BasisMetadata,
-    TB: TruncatedBasis[TimeMetadata, np.complex128],
+    MT: TimeMetadata,
 ](
     initial_state: State[M],
-    times: TB,
-    hamiltonian: Operator[M, np.complex128],
+    times: Basis[MT, np.complexfloating],
+    hamiltonian: Operator[M, np.complexfloating],
     noise: OperatorList[
         EigenvalueMetadata,
         M,
-        np.complex128,
+        np.complexfloating,
         TupleBasis2D[
-            np.complex128,
-            Basis[EigenvalueMetadata, np.complex128],
-            Basis[Metadata2D[M, M, Any], np.complex128],
+            np.complexfloating,
+            Basis[EigenvalueMetadata, np.complexfloating],
+            Basis[Metadata2D[M, M, Any], np.complexfloating],
             Any,
         ],
     ],
@@ -110,15 +111,27 @@ def solve_stochastic_schrodinger_equation_banded[
 ) -> StateList[
     TimeMetadata,
     M,
-    TupleBasis2D[np.complexfloating, TB, Basis[M, np.complexfloating], None],
+    TupleBasis2D[
+        np.complexfloating,
+        Basis[MT, np.complexfloating],
+        Basis[M, np.complexfloating],
+        None,
+    ],
 ]:
     """Given an initial state, use the stochastic schrodinger equation to solve the dynamics of the system."""
     # We get the best numerical performace if we set the norm of the largest collapse operators
     # to be one. This prevents us from accumulating large errors when multiplying state * dt * operator * conj_operator
-    dt = times.metadata().delta / times.fundamental_size
     r_threshold = kwargs.get("r_threshold", 1e-8)
+    target_delta = kwargs.get("target_delta", 1e-3)
+
+    times = basis.as_index_basis(times)
+    simulation_time_points = times.metadata().values[times.points]
 
     hamiltonian_tuple = hamiltonian.with_basis(as_tuple_basis(hamiltonian.basis))
+    hamiltonian_norm = np.linalg.norm(
+        hamiltonian_tuple.raw_data.reshape(hamiltonian_tuple.basis.shape)
+    ).item()
+    dt = hbar * (target_delta / hamiltonian_norm)
     operators_data = [
         o.with_basis(hamiltonian_tuple.basis).raw_data.reshape(
             hamiltonian_tuple.basis.shape
@@ -151,10 +164,9 @@ def solve_stochastic_schrodinger_equation_banded[
         banded_h,
         banded_collapse,
         sse_solver_py.SimulationConfig(
-            n=times.size,
-            step=times.truncation.step,
-            dt=1,
-            delta=(None, 2.5e-4, None),
+            times=cast("list[float]", simulation_time_points.tolist()),
+            dt=dt,
+            delta=(None, target_delta, None),
             n_trajectories=kwargs.get("n_trajectories", 1),
             n_realizations=kwargs.get("n_realizations", 1),
             method=kwargs.get("method", "Euler"),

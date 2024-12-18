@@ -16,10 +16,11 @@ from slate.basis import (
 from slate.linalg import into_diagonal
 from slate.metadata import BasisMetadata, Metadata2D, NestedLength, SimpleMetadata
 
+from slate_quantum.state import State
+from slate_quantum.state._state import StateList
+
 if TYPE_CHECKING:
     from collections.abc import Iterable, Iterator
-
-    from slate_quantum.state import State
 
 
 def _assert_operator_basis(basis: Basis[BasisMetadata, Any]) -> None:
@@ -135,12 +136,38 @@ def _assert_operator_list_basis(basis: Basis[BasisMetadata, Any]) -> None:
     _assert_operator_basis(as_tuple_basis(basis)[1])
 
 
-def calculate_expectation[M: BasisMetadata](
+def expectation[M: BasisMetadata](
     operator: Operator[M, np.complexfloating],
     state: State[M],
 ) -> complex:
     """Calculate the expectation value of an operator."""
     return linalg.einsum("i' ,(i j'),j -> ", state, operator, state).as_array().item()
+
+
+def expectation_of_each[M0: BasisMetadata, M: BasisMetadata](
+    operator: Operator[M, np.complexfloating],
+    states: StateList[M0, M],
+) -> Array[M0, np.complexfloating]:
+    """Calculate the expectation value of an operator."""
+    return linalg.einsum("(a i'),(i j'),(a j)-> a", states, operator, states)
+
+
+def apply[M: BasisMetadata](
+    operator: Operator[M, np.complexfloating],
+    state: State[M],
+) -> State[M]:
+    """Apply an operator to a state."""
+    out = linalg.einsum("(i j'),j -> i", operator, state)
+    return State(out.basis, out.raw_data)
+
+
+def apply_to_each[M0: BasisMetadata, M: BasisMetadata](
+    operator: Operator[M, np.complexfloating],
+    states: StateList[M0, M],
+) -> StateList[M0, M]:
+    """Apply an operator to a state."""
+    out = linalg.einsum("(i j'),(k j) -> (k i)", operator, states)
+    return StateList(out.basis, out.raw_data)
 
 
 OperatorListMetadata = Metadata2D[BasisMetadata, OperatorMetadata, Any]
