@@ -20,7 +20,6 @@ from slate_quantum.operator.build._position import (
     axis_periodic_operator,
     axis_scattering_operator,
     get_displacements_x,
-    get_displacements_x_stacked,
     nx_displacement_operator,
     nx_displacement_operators_stacked,
     scattering_operator,
@@ -35,6 +34,7 @@ from slate_quantum.operator.build._potential import (
     repeat_potential,
     sin_potential,
 )
+from slate_quantum.state._build import get_displacements_x_stacked
 
 __all__ = [
     "all_axis_periodic_operators",

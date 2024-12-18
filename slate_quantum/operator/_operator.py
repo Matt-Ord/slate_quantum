@@ -16,8 +16,7 @@ from slate.basis import (
 from slate.linalg import into_diagonal
 from slate.metadata import BasisMetadata, Metadata2D, NestedLength, SimpleMetadata
 
-from slate_quantum.state import State
-from slate_quantum.state._state import StateList
+from slate_quantum.state._state import State, StateList
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Iterator
