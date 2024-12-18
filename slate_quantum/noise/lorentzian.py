@@ -52,7 +52,7 @@ def get_lorentzian_isotropic_noise_kernel[M: SpacedLengthMetadata, E: AxisDirect
     metadata: StackedMetadata[M, E],
     a: float,
     lambda_: float,
-) -> IsotropicNoiseKernel[StackedMetadata[M, E], np.complex128]:
+) -> IsotropicNoiseKernel[StackedMetadata[M, E], np.complexfloating]:
     """Get an isotropic noise kernel for a lorentzian correlation.
 
     beta(x,x') = a**2 * lambda_**2 / ((x-x')**2 + lambda_**2)
@@ -93,12 +93,12 @@ def get_lorentzian_operators_explicit_taylor[M: VolumeMetadata, DT: np.generic](
 ) -> OperatorList[
     EigenvalueMetadata,
     M,
-    np.complex128,
+    np.complexfloating,
     TupleBasis2D[
-        np.complex128,
+        np.complexfloating,
         FundamentalBasis[EigenvalueMetadata],
         DiagonalBasis[
-            np.complex128,
+            np.complexfloating,
             Basis[M, np.generic],
             Basis[M, np.generic],
             None,

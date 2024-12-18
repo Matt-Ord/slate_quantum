@@ -3,11 +3,10 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, cast, overload, override
 
 import numpy as np
-from slate import basis, linalg
+from slate import FundamentalBasis, basis, linalg
 from slate.array import Array
 from slate.basis import (
     Basis,
-    FundamentalBasis,
     TupleBasis2D,
     are_dual_shapes,
     as_tuple_basis,
@@ -119,7 +118,7 @@ class Operator[
         out = cast("Array[Any, DT1]", super()).__mul__(cast("float", other))
         return Operator[Any, Any](out.basis, out.raw_data)
 
-    def as_diagonal(self) -> Array[M, np.complex128]:
+    def as_diagonal(self) -> Array[M, np.complexfloating]:
         diagonal = into_diagonal(
             Operator(self.basis, self.raw_data.astype(np.complex128))
         )
@@ -188,7 +187,7 @@ class OperatorList[
     ](
         self: OperatorList[Any, Any, DT1, B1],
         basis: B1,
-        data: np.ndarray[Any, np.dtype[DT]],
+        data: np.ndarray[Any, np.dtype[DT1]],
     ) -> None:
         super().__init__(cast("Any", basis), cast("Any", data))
         _assert_operator_list_basis(self.basis)
@@ -275,7 +274,14 @@ class OperatorList[
     ) -> Operator[_M1, _DT1, _B1]: ...
 
     @overload
-    def __getitem__(self, /, index: int) -> Operator[M1, DT]: ...
+    def __getitem__[
+        _M1: BasisMetadata,
+        _DT1: np.generic,
+    ](
+        self: OperatorList[Any, _M1, _DT1, Any],
+        /,
+        index: int,
+    ) -> Operator[_M1, _DT1]: ...
 
     def __getitem__(self, /, index: int) -> Operator[Any, Any, Any]:
         as_tuple = self.with_list_basis(

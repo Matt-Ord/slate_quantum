@@ -41,9 +41,9 @@ def build_isotropic_kernel_from_function[M: LengthMetadata](
     metadata: M,
     fn: Callable[
         [np.ndarray[Any, np.dtype[np.float64]]],
-        np.ndarray[Any, np.dtype[np.complex128]],
+        np.ndarray[Any, np.dtype[np.complexfloating]],
     ],
-) -> IsotropicNoiseKernel[M, np.complex128]:
+) -> IsotropicNoiseKernel[M, np.complexfloating]:
     """
     Get an Isotropic Kernel with a correlation beta(x-x').
 
@@ -52,7 +52,7 @@ def build_isotropic_kernel_from_function[M: LengthMetadata](
     basis : StackedBasisWithVolumeLike
     fn : Callable[
         [np.ndarray[Any, np.dtype[np.float64]]],
-        np.ndarray[Any, np.dtype[np.complex128]],
+        np.ndarray[Any, np.dtype[np.complexfloating]],
     ]
         beta(x-x'), the correlation as a function of displacement
 
@@ -75,9 +75,9 @@ def build_isotropic_kernel_from_function_stacked[
     metadata: StackedMetadata[M, E],
     fn: Callable[
         [np.ndarray[Any, np.dtype[np.float64]]],
-        np.ndarray[Any, np.dtype[np.complex128]],
+        np.ndarray[Any, np.dtype[np.complexfloating]],
     ],
-) -> IsotropicNoiseKernel[StackedMetadata[M, E], np.complex128]:
+) -> IsotropicNoiseKernel[StackedMetadata[M, E], np.complexfloating]:
     """
     Get an Isotropic Kernel with a correlation beta(x-x').
 
@@ -86,7 +86,7 @@ def build_isotropic_kernel_from_function_stacked[
     basis : StackedBasisWithVolumeLike
     fn : Callable[
         [np.ndarray[Any, np.dtype[np.float64]]],
-        np.ndarray[Any, np.dtype[np.complex128]],
+        np.ndarray[Any, np.dtype[np.complexfloating]],
     ]
         beta(x-x'), the correlation as a function of displacement
 
@@ -106,9 +106,9 @@ def build_axis_kernel_from_function_stacked[M: SpacedLengthMetadata](
     metadata: StackedMetadata[M, Any],
     fn: Callable[
         [np.ndarray[Any, np.dtype[np.float64]]],
-        np.ndarray[Any, np.dtype[np.complex128]],
+        np.ndarray[Any, np.dtype[np.complexfloating]],
     ],
-) -> AxisKernel[M, np.complex128]:
+) -> AxisKernel[M, np.complexfloating]:
     """
     Get an Isotropic Kernel with a correlation beta(x-x').
 
@@ -117,7 +117,7 @@ def build_axis_kernel_from_function_stacked[M: SpacedLengthMetadata](
     basis : StackedBasisWithVolumeLike
     fn : Callable[
         [np.ndarray[Any, np.dtype[np.float64]]],
-        np.ndarray[Any, np.dtype[np.complex128]],
+        np.ndarray[Any, np.dtype[np.complexfloating]],
     ]
         beta(x-x'), the correlation as a function of displacement
 
@@ -135,7 +135,8 @@ def build_axis_kernel_from_function_stacked[M: SpacedLengthMetadata](
 def gaussian_correlation_fn(
     a: float, sigma: float
 ) -> Callable[
-    [np.ndarray[Any, np.dtype[np.float64]]], np.ndarray[Any, np.dtype[np.complex128]]
+    [np.ndarray[Any, np.dtype[np.float64]]],
+    np.ndarray[Any, np.dtype[np.complexfloating]],
 ]:
     r"""Get a correlation function for a gaussian noise kernel.
 
@@ -148,7 +149,7 @@ def gaussian_correlation_fn(
 
     def fn(
         displacements: np.ndarray[Any, np.dtype[np.float64]],
-    ) -> np.ndarray[Any, np.dtype[np.complex128]]:
+    ) -> np.ndarray[Any, np.dtype[np.complexfloating]]:
         return (a**2 * np.exp(-(displacements**2) / (2 * sigma**2))).astype(
             np.complex128,
         )
@@ -159,7 +160,8 @@ def gaussian_correlation_fn(
 def lorentzian_correlation_fn(
     a: float, lambda_: float
 ) -> Callable[
-    [np.ndarray[Any, np.dtype[np.float64]]], np.ndarray[Any, np.dtype[np.complex128]]
+    [np.ndarray[Any, np.dtype[np.float64]]],
+    np.ndarray[Any, np.dtype[np.complexfloating]],
 ]:
     r"""Get a correlation function for a lorentzian noise kernel.
 
@@ -172,7 +174,7 @@ def lorentzian_correlation_fn(
 
     def fn(
         displacements: np.ndarray[Any, np.dtype[np.float64]],
-    ) -> np.ndarray[Any, np.dtype[np.complex128]]:
+    ) -> np.ndarray[Any, np.dtype[np.complexfloating]]:
         return (a**2 * lambda_**2 / (displacements**2 + lambda_**2)).astype(
             np.complex128
         )
@@ -183,7 +185,8 @@ def lorentzian_correlation_fn(
 def caldeira_leggett_correlation_fn(
     a: float, lambda_: float
 ) -> Callable[
-    [np.ndarray[Any, np.dtype[np.float64]]], np.ndarray[Any, np.dtype[np.complex128]]
+    [np.ndarray[Any, np.dtype[np.float64]]],
+    np.ndarray[Any, np.dtype[np.complexfloating]],
 ]:
     r"""Get a correlation function for a lorentzian noise kernel.
 
@@ -196,18 +199,18 @@ def caldeira_leggett_correlation_fn(
 
     def fn(
         displacements: np.ndarray[Any, np.dtype[np.float64]],
-    ) -> np.ndarray[Any, np.dtype[np.complex128]]:
+    ) -> np.ndarray[Any, np.dtype[np.complexfloating]]:
         return (a**2 - (lambda_**2 / 4) * displacements**2).astype(np.complex128)
 
     return fn
 
 
 def get_temperature_corrected_operators[M0: BasisMetadata, M1: BasisMetadata](
-    hamiltonian: Operator[M1, np.complex128],
-    operators: OperatorList[M0, M1, np.complex128],
+    hamiltonian: Operator[M1, np.complexfloating],
+    operators: OperatorList[M0, M1, np.complexfloating],
     temperature: float,
     eta: float,
-) -> OperatorList[M0, M1, np.complex128]:
+) -> OperatorList[M0, M1, np.complexfloating]:
     """Get the temperature corrected operators."""
     commutator = get_commutator_operator_list(hamiltonian, operators)
     thermal_energy = Boltzmann * temperature
@@ -217,9 +220,9 @@ def get_temperature_corrected_operators[M0: BasisMetadata, M1: BasisMetadata](
 
 
 def truncate_noise_operator_list[M0: EigenvalueMetadata, M1: BasisMetadata](
-    operators: OperatorList[M0, M1, np.complex128],
+    operators: OperatorList[M0, M1, np.complexfloating],
     truncation: Iterable[int],
-) -> OperatorList[M0, M1, np.complex128]:
+) -> OperatorList[M0, M1, np.complexfloating]:
     """
     Get a truncated list of diagonal operators.
 
@@ -245,9 +248,9 @@ def truncate_noise_operator_list[M0: EigenvalueMetadata, M1: BasisMetadata](
 
 
 def truncate_noise_kernel[M: SuperOperatorMetadata](
-    kernel: NoiseKernel[M, np.complex128],
+    kernel: NoiseKernel[M, np.complexfloating],
     truncation: Iterable[int],
-) -> NoiseKernel[M, np.complex128]:
+) -> NoiseKernel[M, np.complexfloating]:
     """
     Given a noise kernel, retain only the first n noise operators.
 
@@ -269,9 +272,9 @@ def truncate_noise_kernel[M: SuperOperatorMetadata](
 def truncate_diagonal_noise_kernel[
     M: BasisMetadata,
 ](
-    kernel: DiagonalNoiseKernel[M, np.complex128],
+    kernel: DiagonalNoiseKernel[M, np.complexfloating],
     truncation: Iterable[int],
-) -> DiagonalNoiseKernel[M, np.complex128]:
+) -> DiagonalNoiseKernel[M, np.complexfloating]:
     """
     Given a noise kernel, retain only the first n noise operators.
 

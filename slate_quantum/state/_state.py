@@ -18,9 +18,10 @@ if TYPE_CHECKING:
     from collections.abc import Iterator
 
 
-class State[M: BasisMetadata, B: Basis[Any, np.complex128] = Basis[M, np.complex128]](
-    Array[M, np.complex128, B]
-):
+class State[
+    M: BasisMetadata,
+    B: Basis[Any, np.complexfloating] = Basis[M, np.complexfloating],
+](Array[M, np.complexfloating, B]):
     """represents a state vector in a basis."""
 
     def __init__[
@@ -111,7 +112,7 @@ class StateList[
     def __iter__(self, /) -> Iterator[State[M1, Basis[Any, np.complexfloating]]]:  # type: ignore bad overload
         return (State(a.basis, a.raw_data) for a in super().__iter__())
 
-    def __getitem__(self, /, index: int) -> State[M1, Basis[Any, np.complex128]]:
+    def __getitem__(self, /, index: int) -> State[M1, Basis[Any, np.complexfloating]]:
         as_tuple = self.with_list_basis(
             _basis.as_index_basis(_basis.as_tuple_basis(self.basis)[0])
         )

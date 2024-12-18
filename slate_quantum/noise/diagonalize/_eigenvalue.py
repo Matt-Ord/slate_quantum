@@ -15,8 +15,8 @@ if TYPE_CHECKING:
 
 
 def get_periodic_noise_operators_eigenvalue[M: BasisMetadata](
-    kernel: NoiseKernel[M, np.complex128],
-) -> OperatorList[EigenvalueMetadata, M, np.complex128]:
+    kernel: NoiseKernel[M, np.complexfloating],
+) -> OperatorList[EigenvalueMetadata, M, np.complexfloating]:
     r"""
     Given a noise kernel, find the noise operator which diagonalizes the kernel.
 
@@ -65,8 +65,8 @@ def get_periodic_noise_operators_eigenvalue[M: BasisMetadata](
 
 
 def get_periodic_noise_operators_diagonal_eigenvalue[M: BasisMetadata](
-    kernel: DiagonalNoiseKernel[M, np.complex128],
-) -> OperatorList[EigenvalueMetadata, M, np.complex128]:
+    kernel: DiagonalNoiseKernel[M, np.complexfloating],
+) -> OperatorList[EigenvalueMetadata, M, np.complexfloating]:
     r"""
     For a diagonal kernel it is possible to find N independent noise sources, each of which is diagonal.
 

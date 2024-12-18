@@ -48,7 +48,7 @@ def get_gaussian_isotropic_noise_kernel[
     metadata: StackedMetadata[M, E],
     a: float,
     lambda_: float,
-) -> IsotropicNoiseKernel[StackedMetadata[M, E], np.complex128]:
+) -> IsotropicNoiseKernel[StackedMetadata[M, E], np.complexfloating]:
     """Get the noise kernel for a gaussian correllated surface."""
     return build_isotropic_kernel_from_function_stacked(
         metadata, gaussian_correlation_fn(a, lambda_)
@@ -59,7 +59,7 @@ def get_gaussian_axis_noise_kernel[M: SpacedLengthMetadata](
     metadata: StackedMetadata[M, Any],
     a: float,
     lambda_: float,
-) -> AxisKernel[M, np.complex128]:
+) -> AxisKernel[M, np.complexfloating]:
     """Get the noise kernel for a gaussian correllated surface."""
     return build_axis_kernel_from_function_stacked(
         metadata, gaussian_correlation_fn(a, lambda_)
@@ -73,7 +73,7 @@ def get_gaussian_noise_kernel[
     metadata: StackedMetadata[M, E],
     a: float,
     lambda_: float,
-) -> DiagonalNoiseKernel[StackedMetadata[M, E], np.complex128]:
+) -> DiagonalNoiseKernel[StackedMetadata[M, E], np.complexfloating]:
     """Get the noise kernel for a gaussian correllated surface."""
     return get_gaussian_isotropic_noise_kernel(metadata, a, lambda_).unwrap()
 
@@ -114,7 +114,7 @@ def get_effective_gaussian_noise_kernel[
     temperature: float,
     *,
     lambda_factor: float = 2 * np.sqrt(2),
-) -> DiagonalNoiseKernel[StackedMetadata[M, E], np.complex128]:
+) -> DiagonalNoiseKernel[StackedMetadata[M, E], np.complexfloating]:
     """
     Get the noise kernel for a gaussian correllated surface, given the Caldeira leggett parameters.
 
@@ -148,7 +148,7 @@ def get_effective_gaussian_isotropic_noise_kernel[
     temperature: float,
     *,
     lambda_factor: float = 2 * np.sqrt(2),
-) -> IsotropicNoiseKernel[StackedMetadata[M, E], np.complex128]:
+) -> IsotropicNoiseKernel[StackedMetadata[M, E], np.complexfloating]:
     """
     Get the noise kernel for a gaussian correllated surface, given the Caldeira leggett parameters.
 
@@ -185,7 +185,7 @@ def get_gaussian_noise_operators_periodic[
 ) -> OperatorList[
     EigenvalueMetadata,
     StackedMetadata[M, E],
-    np.complex128,
+    np.complexfloating,
 ]:
     """Get the noise operators for a gausssian kernel in the given basis.
 
@@ -223,7 +223,7 @@ def get_effective_gaussian_noise_operators_periodic[
 ) -> OperatorList[
     EigenvalueMetadata,
     StackedMetadata[M, E],
-    np.complex128,
+    np.complexfloating,
 ]:
     """Get the noise operators for a gausssian kernel in the given basis.
 
@@ -267,7 +267,7 @@ def get_periodic_gaussian_operators_explicit_taylor[M: SpacedLengthMetadata](
 ) -> OperatorList[
     EigenvalueMetadata,
     M,
-    np.complex128,
+    np.complexfloating,
 ]:
     """Calculate the noise operators for an isotropic gaussian noise kernel, using an explicit Taylor expansion.
 
@@ -307,11 +307,11 @@ def get_linear_gaussian_noise_operators_explicit_taylor[M: SpacedLengthMetadata]
 ) -> OperatorList[
     EigenvalueMetadata,
     M,
-    np.complex128,
+    np.complexfloating,
     TupleBasis2D[
-        np.complex128,
+        np.complexfloating,
         FundamentalBasis[EigenvalueMetadata],
-        DiagonalBasis[np.complex128, Basis[M, Any], Basis[M, Any], None],
+        DiagonalBasis[np.complexfloating, Basis[M, Any], Basis[M, Any], None],
         None,
     ],
 ]:
@@ -355,7 +355,7 @@ def get_periodic_gaussian_operators_explicit_taylor_stacked[M: SpacedLengthMetad
     lambda_: float,
     *,
     shape: tuple[int, ...] | None = None,
-) -> OperatorList[EigenvalueMetadata, StackedMetadata[M, E], np.complex128]:
+) -> OperatorList[EigenvalueMetadata, StackedMetadata[M, E], np.complexfloating]:
     """Calculate the noise operators for an isotropic gaussian noise kernel, using an explicit Taylor expansion.
 
     This function makes use of the analytical expression for the Taylor expansion of gaussian
@@ -383,7 +383,7 @@ def get_linear_gaussian_operators_explicit_taylor_stacked[M: SpacedLengthMetadat
     lambda_: float,
     *,
     shape: tuple[int, ...] | None = None,
-) -> OperatorList[EigenvalueMetadata, StackedMetadata[M, E], np.complex128]:
+) -> OperatorList[EigenvalueMetadata, StackedMetadata[M, E], np.complexfloating]:
     """Calculate the noise operators for an isotropic gaussian noise kernel, using an explicit Taylor expansion.
 
     This function makes use of the analytical expression for the Taylor expansion of gaussian

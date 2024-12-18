@@ -39,9 +39,9 @@ def _get_repeat_basis_metadata(
 
 
 def repeat_potential(
-    potential: Potential[SpacedLengthMetadata, AxisDirections, np.complex128],
+    potential: Potential[SpacedLengthMetadata, AxisDirections, np.complexfloating],
     shape: tuple[int, ...],
-) -> Potential[SpacedLengthMetadata, AxisDirections, np.complex128]:
+) -> Potential[SpacedLengthMetadata, AxisDirections, np.complexfloating]:
     """Create a new potential by repeating the original potential in each direction."""
     transformed_basis = fundamental_transformed_tuple_basis_from_metadata(
         potential.basis.outer_recast.metadata()
@@ -66,7 +66,7 @@ def repeat_potential(
 def cos_potential(
     metadata: SpacedVolumeMetadata,
     height: float,
-) -> Potential[SpacedLengthMetadata, AxisDirections, np.complex128]:
+) -> Potential[SpacedLengthMetadata, AxisDirections, np.complexfloating]:
     """Build a cosine potential."""
     transformed_basis = fundamental_transformed_tuple_basis_from_metadata(metadata)
     # We need only the three lowest fourier components to represent this potential
@@ -85,7 +85,7 @@ def cos_potential(
 def sin_potential(
     metadata: SpacedVolumeMetadata,
     height: float,
-) -> Potential[SpacedLengthMetadata, AxisDirections, np.complex128]:
+) -> Potential[SpacedLengthMetadata, AxisDirections, np.complexfloating]:
     """Build a cosine potential."""
     transformed_basis = fundamental_transformed_tuple_basis_from_metadata(metadata)
     # We need only the three lowest fourier components to represent this potential

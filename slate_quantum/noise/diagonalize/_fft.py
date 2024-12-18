@@ -24,7 +24,9 @@ if TYPE_CHECKING:
 
 
 def _get_noise_eigenvalues_isotropic_fft[M: BasisMetadata](
-    kernel: IsotropicNoiseKernel[M, np.complex128], *, fundamental_n: int | None = None
+    kernel: IsotropicNoiseKernel[M, np.complexfloating],
+    *,
+    fundamental_n: int | None = None,
 ) -> EigenvalueMetadata:
     fundamental_n = kernel.basis.size if fundamental_n is None else fundamental_n
     coefficients = np.fft.ifft(
@@ -36,8 +38,8 @@ def _get_noise_eigenvalues_isotropic_fft[M: BasisMetadata](
 
 
 def get_periodic_noise_operators_isotropic_fft[M: BasisMetadata](
-    kernel: IsotropicNoiseKernel[M, np.complex128],
-) -> OperatorList[EigenvalueMetadata, M, np.complex128]:
+    kernel: IsotropicNoiseKernel[M, np.complexfloating],
+) -> OperatorList[EigenvalueMetadata, M, np.complexfloating]:
     r"""
     For an isotropic noise kernel, the noise operators are independent in k space.
 
@@ -65,7 +67,7 @@ def get_periodic_noise_operators_isotropic_fft[M: BasisMetadata](
 
 
 def _get_noise_eigenvalues_isotropic_stacked_fft[M: BasisMetadata, E](
-    kernel: IsotropicNoiseKernel[StackedMetadata[M, E], np.complex128],
+    kernel: IsotropicNoiseKernel[StackedMetadata[M, E], np.complexfloating],
     *,
     fundamental_shape: tuple[int, ...] | None = None,
 ) -> EigenvalueMetadata:
@@ -89,7 +91,7 @@ def _get_noise_eigenvalues_isotropic_stacked_fft[M: BasisMetadata, E](
 
 
 def build_periodic_noise_operators[
-    B: Basis[EigenvalueMetadata, np.complex128],
+    B: Basis[EigenvalueMetadata, np.complexfloating],
     M1: BasisMetadata,
     E,
 ](
@@ -98,7 +100,7 @@ def build_periodic_noise_operators[
 ) -> OperatorList[
     EigenvalueMetadata,
     StackedMetadata[M1, E],
-    np.complex128,
+    np.complexfloating,
     TupleBasis2D[
         Any, B, RecastDiagonalOperatorBasis[StackedMetadata[M1, E], Any], None
     ],
@@ -117,14 +119,14 @@ def build_periodic_noise_operators[
 
     Parameters
     ----------
-    kernel : IsotropicNoiseKernel[M, np.complex128]
+    kernel : IsotropicNoiseKernel[M, np.complexfloating]
 
     Returns
     -------
     OperatorList[
         EigenvalueMetadata,
         M,
-        np.complex128,
+        np.complexfloating,
         TupleBasis2D[
             Any,
             FundamentalBasis[SimpleMetadata],
@@ -145,13 +147,13 @@ def build_periodic_noise_operators[
 
 
 def get_periodic_noise_operators_isotropic_stacked_fft[M: BasisMetadata, E](
-    kernel: IsotropicNoiseKernel[StackedMetadata[M, E], np.complex128],
+    kernel: IsotropicNoiseKernel[StackedMetadata[M, E], np.complexfloating],
     *,
     fundamental_shape: tuple[int, ...] | None = None,
 ) -> OperatorList[
     EigenvalueMetadata,
     StackedMetadata[M, E],
-    np.complex128,
+    np.complexfloating,
     TupleBasis2D[
         Any,
         FundamentalBasis[SimpleMetadata],

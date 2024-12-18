@@ -25,7 +25,7 @@ def into_diagonal[M: BasisMetadata, DT: np.complexfloating](
     operator: Operator[M, DT],
 ) -> Operator[
     M,
-    np.complex128,
+    np.complexfloating,
     DiagonalBasis[
         DT,
         ExplicitBasis[M, DT],
@@ -42,7 +42,7 @@ def into_diagonal_hermitian[M: BasisMetadata, DT: np.complexfloating](
     operator: Operator[M, DT],
 ) -> Operator[
     M,
-    np.complex128,
+    np.complexfloating,
     DiagonalBasis[
         DT,
         EigenstateBasis[M],
@@ -69,9 +69,9 @@ def into_diagonal_hermitian[M: BasisMetadata, DT: np.complexfloating](
 
 
 def matmul[M0: BasisMetadata](
-    lhs: Operator[M0, np.complex128],
-    rhs: Operator[M0, np.complex128],
-) -> Operator[M0, np.complex128]:
+    lhs: Operator[M0, np.complexfloating],
+    rhs: Operator[M0, np.complexfloating],
+) -> Operator[M0, np.complexfloating]:
     """
     Multiply each operator in rhs by lhs.
 
@@ -91,9 +91,9 @@ def matmul[M0: BasisMetadata](
 
 
 def commute[M0: BasisMetadata](
-    lhs: Operator[M0, np.complex128],
-    rhs: Operator[M0, np.complex128],
-) -> Operator[M0, np.complex128]:
+    lhs: Operator[M0, np.complexfloating],
+    rhs: Operator[M0, np.complexfloating],
+) -> Operator[M0, np.complexfloating]:
     """
     Given two operators lhs, rhs, calculate the commutator.
 
@@ -107,8 +107,8 @@ def commute[M0: BasisMetadata](
 
 
 def dagger[M0: BasisMetadata](
-    operator: Operator[M0, np.complex128],
-) -> Operator[M0, np.complex128]:
+    operator: Operator[M0, np.complexfloating],
+) -> Operator[M0, np.complexfloating]:
     """Get the hermitian conjugate of an operator."""
     res = array.dagger(operator)
     # TODO: what should array.dagger's basis be?  # noqa: FIX002
@@ -116,9 +116,9 @@ def dagger[M0: BasisMetadata](
 
 
 def matmul_list_operator[M0: BasisMetadata, M1: BasisMetadata](
-    lhs: OperatorList[M0, M1, np.complex128],
-    rhs: Operator[M1, np.complex128],
-) -> OperatorList[M0, M1, np.complex128]:
+    lhs: OperatorList[M0, M1, np.complexfloating],
+    rhs: Operator[M1, np.complexfloating],
+) -> OperatorList[M0, M1, np.complexfloating]:
     """
     Multiply each operator in rhs by lhs.
 
@@ -138,9 +138,9 @@ def matmul_list_operator[M0: BasisMetadata, M1: BasisMetadata](
 
 
 def matmul_operator_list[M0: BasisMetadata, M1: BasisMetadata](
-    lhs: Operator[M1, np.complex128],
-    rhs: OperatorList[M0, M1, np.complex128],
-) -> OperatorList[M0, M1, np.complex128]:
+    lhs: Operator[M1, np.complexfloating],
+    rhs: OperatorList[M0, M1, np.complexfloating],
+) -> OperatorList[M0, M1, np.complexfloating]:
     """
     Multiply each operator in rhs by lhs.
 
@@ -160,9 +160,9 @@ def matmul_operator_list[M0: BasisMetadata, M1: BasisMetadata](
 
 
 def get_commutator_operator_list[M0: BasisMetadata, M1: BasisMetadata](
-    lhs: Operator[M1, np.complex128],
-    rhs: OperatorList[M0, M1, np.complex128],
-) -> OperatorList[M0, M1, np.complex128]:
+    lhs: Operator[M1, np.complexfloating],
+    rhs: OperatorList[M0, M1, np.complexfloating],
+) -> OperatorList[M0, M1, np.complexfloating]:
     """
     Given two operators lhs, rhs, calculate the commutator.
 

@@ -65,10 +65,10 @@ def kinetic_energy_operator[M: SpacedLengthMetadata, E: AxisDirections](
 
 
 def kinetic_hamiltonian[M: SpacedLengthMetadata, E: AxisDirections](
-    potential: Potential[M, E, np.complex128],
+    potential: Potential[M, E, np.complexfloating],
     mass: float,
     bloch_fraction: np.ndarray[Any, np.dtype[np.float64]] | None = None,
-) -> Operator[StackedMetadata[M, E], np.complex128]:
+) -> Operator[StackedMetadata[M, E], np.complexfloating]:
     """
     Calculate the total hamiltonian in momentum basis for a given potential and mass.
 

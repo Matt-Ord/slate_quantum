@@ -139,15 +139,15 @@ class Potential[M: BasisMetadata, E: AxisDirections, DT: np.generic](
 class MomentumOperator[M: BasisMetadata, E: AxisDirections](
     DiagonalOperator[
         StackedMetadata[M, E],
-        np.complex128,
-        TupleBasis[M, E, np.complex128, StackedMetadata[M, E]],
-        Basis[StackedMetadata[M, E], np.complex128],
+        np.complexfloating,
+        TupleBasis[M, E, np.complexfloating, StackedMetadata[M, E]],
+        Basis[StackedMetadata[M, E], np.complexfloating],
     ]
 ):
     def __init__(
         self,
         basis: Basis[StackedMetadata[M, E], Any],
-        raw_data: np.ndarray[Any, np.dtype[np.complex128]],
+        raw_data: np.ndarray[Any, np.dtype[np.complexfloating]],
     ) -> None:
         super().__init__(
             fundamental_transformed_tuple_basis_from_metadata(
@@ -161,15 +161,15 @@ class MomentumOperator[M: BasisMetadata, E: AxisDirections](
 type MomentumOperatorBasis[M: BasisMetadata, E: AxisDirections] = (
     RecastDiagonalOperatorBasis[
         StackedMetadata[M, E],
-        np.complex128,
-        TupleBasis[M, E, np.complex128, StackedMetadata[M, E]],
-        Basis[StackedMetadata[M, E], np.complex128],
+        np.complexfloating,
+        TupleBasis[M, E, np.complexfloating, StackedMetadata[M, E]],
+        Basis[StackedMetadata[M, E], np.complexfloating],
     ]
 )
 
 
 def momentum_operator_basis[M: BasisMetadata, E: AxisDirections](
-    basis: Basis[StackedMetadata[M, E], np.complex128],
+    basis: Basis[StackedMetadata[M, E], np.complexfloating],
 ) -> MomentumOperatorBasis[M, E]:
     return recast_diagonal_basis(
         fundamental_transformed_tuple_basis_from_metadata(
