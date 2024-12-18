@@ -14,6 +14,7 @@ from slate.basis import (
 from slate.metadata import BasisMetadata, Metadata2D
 from slate.util import timed
 
+from slate_quantum import operator
 from slate_quantum.state import State, StateList
 
 try:
@@ -124,14 +125,17 @@ def solve_stochastic_schrodinger_equation_banded[
     r_threshold = kwargs.get("r_threshold", 1e-8)
     target_delta = kwargs.get("target_delta", 1e-3)
 
-    times = basis.as_index_basis(times)
-    simulation_time_points = times.metadata().values[times.points]
-
     hamiltonian_tuple = hamiltonian.with_basis(as_tuple_basis(hamiltonian.basis))
-    hamiltonian_norm = np.linalg.norm(
-        hamiltonian_tuple.raw_data.reshape(hamiltonian_tuple.basis.shape)
+    initial_state_converted = initial_state.with_basis(hamiltonian_tuple.basis[0])
+    # TODO: slate linalg norm  # noqa: FIX002
+    initial_step = np.linalg.norm(
+        operator.apply(hamiltonian, initial_state_converted).raw_data
     ).item()
-    dt = hbar * (target_delta / hamiltonian_norm)
+    dt = hbar * (target_delta / initial_step)
+
+    times = basis.as_index_basis(times)
+    simulation_time_points = times.metadata().values[times.points] / dt
+
     operators_data = [
         o.with_basis(hamiltonian_tuple.basis).raw_data.reshape(
             hamiltonian_tuple.basis.shape
@@ -152,7 +156,6 @@ def solve_stochastic_schrodinger_equation_banded[
         ],
         r_threshold,
     )
-    initial_state_converted = initial_state.with_basis(hamiltonian_tuple.basis[0])
     ts = datetime.datetime.now(tz=datetime.UTC)
 
     if sse_solver_py is None:
@@ -165,7 +168,7 @@ def solve_stochastic_schrodinger_equation_banded[
         banded_collapse,
         sse_solver_py.SimulationConfig(
             times=cast("list[float]", simulation_time_points.tolist()),
-            dt=dt,
+            dt=1,
             delta=(None, target_delta, None),
             n_trajectories=kwargs.get("n_trajectories", 1),
             n_realizations=kwargs.get("n_realizations", 1),
