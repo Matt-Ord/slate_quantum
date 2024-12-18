@@ -30,25 +30,15 @@ from slate_quantum.operator._diagonal import (
     recast_diagonal_basis,
 )
 from slate_quantum.operator._operator import Operator, OperatorList
+from slate_quantum.state._build import wrap_displacements
 
 if TYPE_CHECKING:
     from slate.metadata import (
         BasisMetadata,
         SimpleMetadata,
-        SpacedVolumeMetadata,
         StackedMetadata,
     )
     from slate.metadata.length import LengthMetadata
-
-
-def _wrap_displacements(
-    displacements: np.ndarray[Any, np.dtype[np.floating]],
-    max_displacement: float | np.floating,
-) -> np.ndarray[Any, np.dtype[np.floating]]:
-    return (
-        np.remainder((displacements + max_displacement), 2 * max_displacement)
-        - max_displacement
-    ).astype(np.float64)
 
 
 def get_displacements_x[M: LengthMetadata](
@@ -67,48 +57,10 @@ def get_displacements_x[M: LengthMetadata](
     """
     distances = np.array(list(metadata.values)) - origin
     max_distance = np.linalg.norm(metadata.delta) / 2
-    data = _wrap_displacements(distances, max_distance)
+    data = wrap_displacements(distances, max_distance)
 
     basis = FundamentalBasis(metadata)
     return Array(basis, data)
-
-
-def _get_displacements_x_along_axis(
-    metadata: SpacedVolumeMetadata,
-    origin: float,
-    axis: int,
-) -> Array[
-    SpacedVolumeMetadata,
-    np.floating,
-    TupleBasis[LengthMetadata, AxisDirections, np.generic],
-]:
-    distances = _metadata.volume.fundamental_stacked_x_points(metadata)[axis] - np.real(
-        origin
-    )
-    delta_x = np.linalg.norm(
-        _metadata.volume.fundamental_stacked_delta_x(metadata)[axis]
-    )
-    max_distance = delta_x / 2
-    data = _wrap_displacements(distances, max_distance)
-
-    return Array(basis.from_metadata(metadata), data)
-
-
-def get_displacements_x_stacked(
-    metadata: SpacedVolumeMetadata, origin: tuple[float, ...]
-) -> tuple[
-    Array[
-        SpacedVolumeMetadata,
-        np.floating,
-        TupleBasis[LengthMetadata, AxisDirections, np.generic],
-    ],
-    ...,
-]:
-    """Get the displacements from origin."""
-    return tuple(
-        _get_displacements_x_along_axis(metadata, o, axis)
-        for (axis, o) in enumerate(origin)
-    )
 
 
 def nx_displacement_operators_stacked[M: StackedMetadata[BasisMetadata, Any]](
@@ -207,7 +159,7 @@ def _get_displacements_matrix_x_along_axis[M: SpacedLengthMetadata, E: AxisDirec
         _metadata.volume.fundamental_stacked_delta_x(metadata)[axis]
     )
     max_distance = delta_x / 2
-    data = _wrap_displacements(distances, max_distance)
+    data = wrap_displacements(distances, max_distance)
 
     ax = basis.from_metadata(metadata)
     return Operator(tuple_basis((ax, ax.dual_basis())), data)
@@ -266,7 +218,7 @@ def total_x_displacement_operator[M: SpacedLengthMetadata, E: AxisDirections](
 
 def x_operator[M: SpacedLengthMetadata, E: AxisDirections](
     metadata: StackedMetadata[M, E], *, idx: int
-) -> PositionOperator[M, E, np.complex128]:
+) -> PositionOperator[M, E, np.complexfloating]:
     """Get the x operator."""
     points = _metadata.volume.fundamental_stacked_x_points(metadata)[idx].astype(
         np.complex128
@@ -276,19 +228,19 @@ def x_operator[M: SpacedLengthMetadata, E: AxisDirections](
 
 def axis_periodic_operator[M: BasisMetadata](
     inner_basis: Basis[M, Any], *, n_k: int
-) -> DiagonalOperator[M, np.complex128]:
+) -> DiagonalOperator[M, np.complexfloating]:
     """Get the generalized e^(ik.x) operator in some general basis.
 
     k is chosen such that k = 2 * np.pi n_k / N
     """
     transformed = TransformedBasis(inner_basis, direction="backward")
     outer_basis = TruncatedBasis(Truncation(1, 1, n_k), transformed)
-    return DiagonalOperator(inner_basis, outer_basis, np.array([1]))
+    return DiagonalOperator(inner_basis, outer_basis, np.array([1 + 0j]))
 
 
 def axis_scattering_operator[M: BasisMetadata](
     metadata: M, *, n_k: int
-) -> DiagonalOperator[M, np.complex128]:
+) -> DiagonalOperator[M, np.complexfloating]:
     """Get the e^(ik.x) operator.
 
     k is chosen such that k = 2 * np.pi n_k / N
@@ -302,7 +254,7 @@ def all_axis_periodic_operators[M: BasisMetadata](
 ) -> OperatorList[
     SimpleMetadata,
     M,
-    np.complex128,
+    np.complexfloating,
     DiagonalBasis[
         Any,
         FundamentalBasis[SimpleMetadata],
@@ -325,7 +277,7 @@ def all_axis_scattering_operators[M: BasisMetadata](
 ) -> OperatorList[
     SimpleMetadata,
     M,
-    np.complex128,
+    np.complexfloating,
     DiagonalBasis[
         Any,
         FundamentalBasis[SimpleMetadata],
@@ -340,7 +292,7 @@ def all_axis_scattering_operators[M: BasisMetadata](
 
 def periodic_operator[M: BasisMetadata, E](
     inner_basis: TupleBasis[M, E, Any], *, n_k: tuple[int, ...]
-) -> DiagonalOperator[StackedMetadata[M, E], np.complex128]:
+) -> DiagonalOperator[StackedMetadata[M, E], np.complexfloating]:
     """Get the generalized e^(ik.x) operator in some general basis.
 
     k is chosen such that k = 2 * np.pi n_k / N
@@ -351,12 +303,12 @@ def periodic_operator[M: BasisMetadata, E](
             Truncation(1, 1, n_k[i]), TransformedBasis(inner, direction="backward")
         ),
     )
-    return DiagonalOperator(inner_basis, outer_basis, np.array([1]))
+    return DiagonalOperator(inner_basis, outer_basis, np.array([1 + 0j]))
 
 
 def scattering_operator[M: SpacedLengthMetadata, E: AxisDirections](
     metadata: StackedMetadata[M, E], *, n_k: tuple[int, ...]
-) -> PositionOperator[M, E, np.complex128]:
+) -> PositionOperator[M, E, np.complexfloating]:
     """Get the e^(ik.x) operator.
 
     k is chosen such that k = 2 * np.pi n_k / N
@@ -375,7 +327,7 @@ def all_periodic_operators[M: BasisMetadata, E](
 ) -> OperatorList[
     SimpleMetadata,
     StackedMetadata[M, E],
-    np.complex128,
+    np.complexfloating,
     DiagonalBasis[
         Any,
         FundamentalBasis[SimpleMetadata],
@@ -401,7 +353,7 @@ def all_scattering_operators[M: BasisMetadata, E](
 ) -> OperatorList[
     SimpleMetadata,
     StackedMetadata[M, E],
-    np.complex128,
+    np.complexfloating,
     DiagonalBasis[
         Any,
         FundamentalBasis[SimpleMetadata],

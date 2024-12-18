@@ -3,11 +3,10 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, cast, overload, override
 
 import numpy as np
-from slate import basis
+from slate import FundamentalBasis, basis, linalg
 from slate.array import Array
 from slate.basis import (
     Basis,
-    FundamentalBasis,
     TupleBasis2D,
     are_dual_shapes,
     as_tuple_basis,
@@ -15,6 +14,8 @@ from slate.basis import (
 )
 from slate.linalg import into_diagonal
 from slate.metadata import BasisMetadata, Metadata2D, NestedLength, SimpleMetadata
+
+from slate_quantum.state._state import State, StateList
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Iterator
@@ -117,7 +118,7 @@ class Operator[
         out = cast("Array[Any, DT1]", super()).__mul__(cast("float", other))
         return Operator[Any, Any](out.basis, out.raw_data)
 
-    def as_diagonal(self) -> Array[M, np.complex128]:
+    def as_diagonal(self) -> Array[M, np.complexfloating]:
         diagonal = into_diagonal(
             Operator(self.basis, self.raw_data.astype(np.complex128))
         )
@@ -131,6 +132,40 @@ def _assert_operator_list_basis(basis: Basis[BasisMetadata, Any]) -> None:
         msg = "Basis is not 2d"
         raise TypeError(msg)
     _assert_operator_basis(as_tuple_basis(basis)[1])
+
+
+def expectation[M: BasisMetadata](
+    operator: Operator[M, np.complexfloating],
+    state: State[M],
+) -> complex:
+    """Calculate the expectation value of an operator."""
+    return linalg.einsum("i' ,(i j'),j -> ", state, operator, state).as_array().item()
+
+
+def expectation_of_each[M0: BasisMetadata, M: BasisMetadata](
+    operator: Operator[M, np.complexfloating],
+    states: StateList[M0, M],
+) -> Array[M0, np.complexfloating]:
+    """Calculate the expectation value of an operator."""
+    return linalg.einsum("(a i'),(i j'),(a j)-> a", states, operator, states)
+
+
+def apply[M: BasisMetadata](
+    operator: Operator[M, np.complexfloating],
+    state: State[M],
+) -> State[M]:
+    """Apply an operator to a state."""
+    out = linalg.einsum("(i j'),j -> i", operator, state)
+    return State(out.basis, out.raw_data)
+
+
+def apply_to_each[M0: BasisMetadata, M: BasisMetadata](
+    operator: Operator[M, np.complexfloating],
+    states: StateList[M0, M],
+) -> StateList[M0, M]:
+    """Apply an operator to a state."""
+    out = linalg.einsum("(i j'),(k j) -> (k i)", operator, states)
+    return StateList(out.basis, out.raw_data)
 
 
 OperatorListMetadata = Metadata2D[BasisMetadata, OperatorMetadata, Any]
@@ -152,7 +187,7 @@ class OperatorList[
     ](
         self: OperatorList[Any, Any, DT1, B1],
         basis: B1,
-        data: np.ndarray[Any, np.dtype[DT]],
+        data: np.ndarray[Any, np.dtype[DT1]],
     ) -> None:
         super().__init__(cast("Any", basis), cast("Any", data))
         _assert_operator_list_basis(self.basis)
@@ -239,7 +274,14 @@ class OperatorList[
     ) -> Operator[_M1, _DT1, _B1]: ...
 
     @overload
-    def __getitem__(self, /, index: int) -> Operator[M1, DT]: ...
+    def __getitem__[
+        _M1: BasisMetadata,
+        _DT1: np.generic,
+    ](
+        self: OperatorList[Any, _M1, _DT1, Any],
+        /,
+        index: int,
+    ) -> Operator[_M1, _DT1]: ...
 
     def __getitem__(self, /, index: int) -> Operator[Any, Any, Any]:
         as_tuple = self.with_list_basis(

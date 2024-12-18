@@ -2,8 +2,9 @@ from __future__ import annotations
 
 import numpy as np
 from scipy.constants import hbar  # type: ignore stubs
+from slate import plot
 from slate.metadata.volume import spaced_volume_metadata_from_stacked_delta_x
-from slate.plot import get_figure, plot_data_1d_k, plot_data_1d_x
+from slate.plot import get_figure
 
 from slate_quantum import operator
 
@@ -22,12 +23,12 @@ if __name__ == "__main__":
     # The eigenstates of a free particle are plane waves
     fig, ax = get_figure()
     for state in list(eigenstates)[:3]:
-        plot_data_1d_x(state, ax=ax, measure="abs")
+        plot.basis_against_array_1d_x(state, ax=ax, measure="abs")
     fig.show()
 
     fig, ax = get_figure()
     for state in list(eigenstates)[:3]:
-        plot_data_1d_k(state, ax=ax, measure="abs")
+        plot.basis_against_array_1d_k(state, ax=ax, measure="abs")
     fig.show()
 
     # Now we modify the potential to have a barrier
@@ -39,7 +40,7 @@ if __name__ == "__main__":
     # The eigenstates are now localized around the potential minima
     fig, ax = get_figure()
     for state in list(eigenstates)[:3]:
-        plot_data_1d_x(state, ax=ax, measure="abs")
+        plot.basis_against_array_1d_x(state, ax=ax, measure="abs")
     fig.show()
 
     input()

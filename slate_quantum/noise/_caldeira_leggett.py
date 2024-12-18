@@ -22,7 +22,7 @@ def build_periodic_caldeira_leggett_axis_operators[M: SpacedLengthMetadata](
 ) -> OperatorList[
     EigenvalueMetadata,
     M,
-    np.complex128,
+    np.complexfloating,
     TupleBasis2D[
         Any,
         FundamentalBasis[EigenvalueMetadata],
@@ -56,7 +56,7 @@ def build_periodic_caldeira_leggett_operators[
 ) -> OperatorList[
     EigenvalueMetadata,
     StackedMetadata[M, E],
-    np.complex128,
+    np.complexfloating,
     TupleBasis2D[
         Any,
         FundamentalBasis[EigenvalueMetadata],
@@ -91,7 +91,7 @@ def build_periodic_caldeira_leggett_real_operators[
 ) -> OperatorList[
     EigenvalueMetadata,
     StackedMetadata[M, E],
-    np.complex128,
+    np.complexfloating,
     TupleBasis2D[
         Any,
         FundamentalBasis[EigenvalueMetadata],

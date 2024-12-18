@@ -31,43 +31,42 @@ if TYPE_CHECKING:
 
 def _solve_schrodinger_equation_diagonal[
     M: BasisMetadata,
-    TB: Basis[TimeMetadata, np.complex128],
-    B: Basis[BasisMetadata, np.complex128] = Basis[M, np.complex128],
+    TB: Basis[TimeMetadata, np.complexfloating],
+    B: Basis[BasisMetadata, np.complexfloating] = Basis[M, np.complexfloating],
 ](
     initial_state: State[BasisMetadata],
     times: TB,
     hamiltonian: Operator[
         M,
         np.number[Any],
-        DiagonalBasis[np.complex128, B, B, Any],
+        DiagonalBasis[np.complexfloating, B, B, Any],
     ],
 ) -> StateList[
     TimeMetadata,
     M,
-    TupleBasis2D[np.complex128, TB, B, None],
+    TupleBasis2D[np.complexfloating, TB, B, None],
 ]:
     coefficients = initial_state.with_basis(hamiltonian.basis.inner[0]).raw_data
     eigenvalues = hamiltonian.raw_data
 
     time_values = np.array(list(times.metadata().values))[times.points]
-    vectors = (
-        coefficients[np.newaxis, :]
-        * np.exp(-1j * eigenvalues * time_values[:, np.newaxis] / hbar)
-    ).astype(np.complex128)
+    vectors = coefficients[np.newaxis, :] * np.exp(
+        -1j * eigenvalues * time_values[:, np.newaxis] / hbar
+    )
     return StateList(tuple_basis((times, hamiltonian.basis.inner[0])), vectors)
 
 
 def solve_schrodinger_equation_decomposition[
     M: BasisMetadata,
-    TB: Basis[TimeMetadata, np.complex128],
+    TB: Basis[TimeMetadata, np.complexfloating],
 ](
     initial_state: State[BasisMetadata],
     times: TB,
-    hamiltonian: Operator[M, np.complex128],
+    hamiltonian: Operator[M, np.complexfloating],
 ) -> StateList[
     TimeMetadata,
     M,
-    TupleBasis2D[np.complex128, TB, EigenstateBasis[M], None],
+    TupleBasis2D[np.complexfloating, TB, EigenstateBasis[M], None],
 ]:
     """Solve the schrodinger equation by directly finding eigenstates for the given initial state and hamiltonian."""
     diagonal = into_diagonal_hermitian(hamiltonian)
@@ -76,15 +75,15 @@ def solve_schrodinger_equation_decomposition[
 
 def solve_schrodinger_equation[
     M: BasisMetadata,
-    TB: Basis[TimeMetadata, np.complex128],
+    TB: Basis[TimeMetadata, np.complexfloating],
 ](
     initial_state: State[BasisMetadata],
     times: TB,
-    hamiltonian: Operator[M, np.complex128],
+    hamiltonian: Operator[M, np.complexfloating],
 ) -> StateList[
     TimeMetadata,
     M,
-    TupleBasis2D[np.complex128, TB, Basis[M, np.complex128], None],
+    TupleBasis2D[np.complexfloating, TB, Basis[M, np.complexfloating], None],
 ]:
     """Solve the schrodinger equation iteratively for the given initial state and hamiltonian.
 
