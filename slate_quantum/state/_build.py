@@ -1,13 +1,66 @@
 from __future__ import annotations
 
-import numpy as np
-from slate import StackedMetadata, basis
-from slate.metadata import AxisDirections, SpacedLengthMetadata
+from typing import Any
 
-from slate_quantum.operator.build._position import (
-    get_displacements_x_stacked,
+import numpy as np
+from slate import Array, StackedMetadata, TupleBasis, basis
+from slate import metadata as _metadata
+from slate.metadata import (
+    AxisDirections,
+    LengthMetadata,
+    SpacedLengthMetadata,
+    SpacedVolumeMetadata,
 )
+
 from slate_quantum.state._state import State
+
+
+def wrap_displacements(
+    displacements: np.ndarray[Any, np.dtype[np.floating]],
+    max_displacement: float | np.floating,
+) -> np.ndarray[Any, np.dtype[np.floating]]:
+    return (
+        np.remainder((displacements + max_displacement), 2 * max_displacement)
+        - max_displacement
+    ).astype(np.float64)
+
+
+def _get_displacements_x_along_axis(
+    metadata: SpacedVolumeMetadata,
+    origin: float,
+    axis: int,
+) -> Array[
+    SpacedVolumeMetadata,
+    np.floating,
+    TupleBasis[LengthMetadata, AxisDirections, np.generic],
+]:
+    distances = _metadata.volume.fundamental_stacked_x_points(metadata)[axis] - np.real(
+        origin
+    )
+    delta_x = np.linalg.norm(
+        _metadata.volume.fundamental_stacked_delta_x(metadata)[axis]
+    )
+    max_distance = delta_x / 2
+    data = wrap_displacements(distances, max_distance)
+
+    return Array(basis.from_metadata(metadata), data)
+
+
+def get_displacements_x_stacked(
+    metadata: SpacedVolumeMetadata, origin: tuple[float, ...]
+) -> tuple[
+    Array[
+        SpacedVolumeMetadata,
+        np.floating,
+        TupleBasis[LengthMetadata, AxisDirections, np.generic],
+    ],
+    ...,
+]:
+    """Get the displacements from origin."""
+    return tuple(
+        _get_displacements_x_along_axis(metadata, o, axis)
+        for (axis, o) in enumerate(origin)
+    )
 
 
 def build_coherent_state[M: SpacedLengthMetadata, E: AxisDirections](
