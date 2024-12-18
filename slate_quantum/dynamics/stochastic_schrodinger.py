@@ -32,7 +32,7 @@ if TYPE_CHECKING:
 
 def _get_operator_diagonals(
     operator: list[list[complex]],
-) -> np.ndarray[tuple[int, ...], np.dtype[np.complex128]]:
+) -> np.ndarray[tuple[int, ...], np.dtype[np.complexfloating]]:
     operator_array = np.array(operator)
     return np.array(
         [
@@ -109,7 +109,7 @@ def solve_stochastic_schrodinger_equation_banded[
     ],
     **kwargs: Unpack[SSEConfig],
 ) -> StateList[
-    TimeMetadata,
+    MT,
     M,
     TupleBasis2D[
         np.complexfloating,
@@ -160,7 +160,7 @@ def solve_stochastic_schrodinger_equation_banded[
         raise ImportError(msg)
 
     data = sse_solver_py.solve_sse_banded(
-        list(initial_state_converted.raw_data),
+        [x.item() for x in initial_state_converted.raw_data],
         banded_h,
         banded_collapse,
         sse_solver_py.SimulationConfig(

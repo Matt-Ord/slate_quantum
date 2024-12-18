@@ -77,7 +77,7 @@ def get_periodic_noise_operators_explicit_taylor_expansion[
     polynomial_coefficients: np.ndarray[tuple[int], np.dtype[np.floating]],
     *,
     n_terms: int | None = None,
-) -> OperatorList[EigenvalueMetadata, M, np.complex128]:
+) -> OperatorList[EigenvalueMetadata, M, np.complexfloating]:
     """Note polynomial_coefficients should be properly normalized."""
     n_terms = (basis.size // 2) if n_terms is None else n_terms
 
@@ -111,11 +111,11 @@ def _get_linear_operators_for_noise[M: BasisMetadata](
 ) -> OperatorList[
     BasisMetadata,
     M,
-    np.complex128,
+    np.complexfloating,
     TupleBasis2D[
-        np.complex128,
+        np.complexfloating,
         FundamentalBasis[SimpleMetadata],
-        DiagonalBasis[np.complex128, Basis[M, Any], Basis[M, Any], None],
+        DiagonalBasis[np.complexfloating, Basis[M, Any], Basis[M, Any], None],
         None,
     ],
 ]:
@@ -152,11 +152,11 @@ def get_linear_noise_operators_explicit_taylor_expansion[M: BasisMetadata](
 ) -> OperatorList[
     EigenvalueMetadata,
     M,
-    np.complex128,
+    np.complexfloating,
     TupleBasis2D[
-        np.complex128,
+        np.complexfloating,
         FundamentalBasis[EigenvalueMetadata],
-        DiagonalBasis[np.complex128, Basis[M, Any], Basis[M, Any], None],
+        DiagonalBasis[np.complexfloating, Basis[M, Any], Basis[M, Any], None],
         None,
     ],
 ]:
@@ -174,17 +174,17 @@ def get_linear_noise_operators_explicit_taylor_expansion[M: BasisMetadata](
 
 
 def get_periodic_noise_operators_real_isotropic_taylor_expansion[M: BasisMetadata](
-    kernel: IsotropicNoiseKernel[M, np.complex128],
+    kernel: IsotropicNoiseKernel[M, np.complexfloating],
     *,
     n: int | None = None,
 ) -> OperatorList[
     EigenvalueMetadata,
     M,
-    np.complex128,
+    np.complexfloating,
     TupleBasis2D[
-        np.complex128,
+        np.complexfloating,
         FundamentalBasis[EigenvalueMetadata],
-        DiagonalBasis[np.complex128, Basis[M, Any], Basis[M, Any], None],
+        DiagonalBasis[np.complexfloating, Basis[M, Any], Basis[M, Any], None],
         None,
     ],
 ]:
@@ -240,14 +240,14 @@ def get_periodic_noise_operators_real_isotropic_stacked_taylor_expansion[
 ](
     kernel: IsotropicNoiseKernel[
         StackedMetadata[M, Any],
-        np.complex128,
+        np.complexfloating,
     ],
     *,
     shape: tuple[int | None, ...] | None = None,
 ) -> OperatorList[
     EigenvalueMetadata,
     StackedMetadata[M, Any],
-    np.complex128,
+    np.complexfloating,
     Basis[
         Metadata2D[
             EigenvalueMetadata,
@@ -258,7 +258,7 @@ def get_periodic_noise_operators_real_isotropic_stacked_taylor_expansion[
             ],
             Any,
         ],
-        np.complex128,
+        np.complexfloating,
     ],
 ]:
     """Calculate the noise operators for a general isotropic noise kernel.

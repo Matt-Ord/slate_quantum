@@ -255,15 +255,15 @@ class IsotropicNoiseKernel[
         )
 
 
-type AxisKernel[M: BasisMetadata, DT: np.complex128] = tuple[
+type AxisKernel[M: BasisMetadata, DT: np.complexfloating] = tuple[
     IsotropicNoiseKernel[M, DT],
     ...,
 ]
 
 
-def as_isotropic_kernel_from_axis[M: BasisMetadata, DT: np.complex128](
+def as_isotropic_kernel_from_axis[M: BasisMetadata, DT: np.complexfloating](
     kernels: AxisKernel[M, DT],
-) -> IsotropicNoiseKernel[StackedMetadata[M, Any], np.complex128]:
+) -> IsotropicNoiseKernel[StackedMetadata[M, Any], np.complexfloating]:
     """Convert an axis kernel to an isotropic kernel."""
     full_basis = tuple(kernel_i.basis for kernel_i in kernels)
     full_data = tuple(kernel_i.raw_data.ravel() for kernel_i in kernels)
@@ -275,7 +275,7 @@ def as_isotropic_kernel_from_axis[M: BasisMetadata, DT: np.complex128](
 
 def as_axis_kernel_from_isotropic[
     M: BasisMetadata,
-    DT: np.complex128,
+    DT: np.complexfloating,
 ](
     kernel: IsotropicNoiseKernel[StackedMetadata[M, Any], DT],
 ) -> AxisKernel[M, DT]:
@@ -302,7 +302,7 @@ def get_diagonal_noise_operators_from_axis[M: BasisMetadata, E](
         OperatorList[
             EigenvalueMetadata,
             M,
-            np.complex128,
+            np.complexfloating,
         ],
         ...,
     ],
@@ -312,11 +312,11 @@ def get_diagonal_noise_operators_from_axis[M: BasisMetadata, E](
     StackedMetadata[M, E],
     np.complex128,
     TupleBasis2D[
-        np.complex128,
+        np.complexfloating,
         FundamentalBasis[EigenvalueMetadata],
         RecastDiagonalOperatorBasis[
             StackedMetadata[M, E],
-            np.complex128,
+            np.complexfloating,
         ],
         None,
     ],
@@ -368,27 +368,29 @@ def get_diagonal_noise_operators_from_axis[M: BasisMetadata, E](
 
 type NoiseOperatorList[
     M: BasisMetadata,
-    B: Basis[Metadata2D[BasisMetadata, BasisMetadata, None], np.complex128] = Basis[  # noqa: E251
-        Metadata2D[M, M, None], np.complex128
+    B: Basis[
+        Metadata2D[BasisMetadata, BasisMetadata, None], np.complexfloating
+    ] = Basis[  # noqa: E251
+        Metadata2D[M, M, None], np.complexfloating
     ],
 ] = OperatorList[
     EigenvalueMetadata,
     M,
-    np.complex128,
-    TupleBasis2D[np.complex128, FundamentalBasis[EigenvalueMetadata], B, None],
+    np.complexfloating,
+    TupleBasis2D[np.complexfloating, FundamentalBasis[EigenvalueMetadata], B, None],
 ]
 
 type DiagonalNoiseOperatorList[
     M: BasisMetadata,
     B: DiagonalBasis[
-        np.complex128,
-        Basis[BasisMetadata, np.complex128],
-        Basis[BasisMetadata, np.complex128],
+        np.complexfloating,
+        Basis[BasisMetadata, np.complexfloating],
+        Basis[BasisMetadata, np.complexfloating],
         None,
     ] = DiagonalBasis[  # noqa: E251
-        np.complex128,
-        Basis[M, np.complex128],
-        Basis[M, np.complex128],
+        np.complexfloating,
+        Basis[M, np.complexfloating],
+        Basis[M, np.complexfloating],
         None,
     ],
 ] = NoiseOperatorList[M, B]

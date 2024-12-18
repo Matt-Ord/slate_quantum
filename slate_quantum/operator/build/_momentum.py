@@ -39,8 +39,8 @@ def p_operator[M: SpacedLengthMetadata, E: AxisDirections](
 
 
 def filter_scatter_operator(
-    operator: Operator[SpacedVolumeMetadata, np.complex128],
-) -> Operator[SpacedVolumeMetadata, np.complex128]:
+    operator: Operator[SpacedVolumeMetadata, np.complexfloating],
+) -> Operator[SpacedVolumeMetadata, np.complexfloating]:
     converted = operator.with_basis(
         basis.fundamental_transformed_tuple_basis_from_metadata(
             operator.basis.metadata(), is_dual=operator.basis.is_dual
@@ -59,8 +59,8 @@ def filter_scatter_operator(
 
 
 def filter_scatter_operators[M: BasisMetadata](
-    operator: OperatorList[M, SpacedVolumeMetadata, np.complex128],
-) -> OperatorList[M, SpacedVolumeMetadata, np.complex128]:
+    operator: OperatorList[M, SpacedVolumeMetadata, np.complexfloating],
+) -> OperatorList[M, SpacedVolumeMetadata, np.complexfloating]:
     is_dual = basis.as_tuple_basis(operator.basis).is_dual[1]
     converted = operator.with_operator_basis(
         basis.fundamental_transformed_tuple_basis_from_metadata(
