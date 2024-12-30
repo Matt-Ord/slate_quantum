@@ -4,6 +4,8 @@ import datetime
 from typing import TYPE_CHECKING, Any, TypedDict, Unpack, cast
 
 import numpy as np
+import slate
+import slate.linalg
 from scipy.constants import hbar  # type: ignore lib
 from slate import basis
 from slate.basis import (
@@ -127,11 +129,9 @@ def solve_stochastic_schrodinger_equation_banded[
 
     hamiltonian_tuple = hamiltonian.with_basis(as_tuple_basis(hamiltonian.basis))
     initial_state_converted = initial_state.with_basis(hamiltonian_tuple.basis[0])
-    # TODO: slate linalg norm  # noqa: FIX002
-    initial_step = np.linalg.norm(
-        operator.apply(hamiltonian, initial_state_converted).raw_data
-    ).item()
-    dt = hbar * (target_delta / initial_step)
+    coherent_step = operator.apply(hamiltonian, initial_state_converted)
+
+    dt = hbar * (target_delta / slate.linalg.norm(coherent_step).item())
 
     times = basis.as_index_basis(times)
     simulation_time_points = times.metadata().values[times.points] / dt

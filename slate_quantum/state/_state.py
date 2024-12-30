@@ -72,11 +72,11 @@ def normalization(
 
 def get_occupations[B: Basis[BasisMetadata, Any]](
     state: State[Any, B],
-) -> Array[BasisStateMetadata[B], np.float64, FundamentalBasis[BasisStateMetadata[B]]]:
+) -> Array[BasisStateMetadata[B], np.floating, FundamentalBasis[BasisStateMetadata[B]]]:
     state_cast = array.cast_basis(
         state, FundamentalBasis(BasisStateMetadata(state.basis))
     )
-    return linalg.abs(linalg.einsum("i', i -> i", state_cast, state_cast)).with_basis(
+    return array.abs(linalg.einsum("i', i -> i", state_cast, state_cast)).with_basis(
         state_cast.basis
     )
 
