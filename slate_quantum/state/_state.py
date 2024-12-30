@@ -54,7 +54,7 @@ def normalization(
     state: State[BasisMetadata],
 ) -> np.float64:
     """
-    calculate the normalization of a state.
+    Calculate the normalization of a state.
 
     This should always be 1
 
