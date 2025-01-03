@@ -2,13 +2,17 @@
 
 from __future__ import annotations
 
-from .schrodinger import (
+from slate_quantum.dynamics.schrodinger import (
     solve_schrodinger_equation,
     solve_schrodinger_equation_decomposition,
 )
-from .stochastic_schrodinger import solve_stochastic_schrodinger_equation_banded
+from slate_quantum.dynamics.stochastic_schrodinger import (
+    select_realization,
+    solve_stochastic_schrodinger_equation_banded,
+)
 
 __all__ = [
+    "select_realization",
     "solve_schrodinger_equation",
     "solve_schrodinger_equation_decomposition",
     "solve_stochastic_schrodinger_equation_banded",
