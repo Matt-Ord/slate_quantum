@@ -29,7 +29,7 @@ def _assert_operator_basis(basis: Basis[BasisMetadata, Any]) -> None:
     assert are_dual_shapes(is_dual[0], is_dual[1])
 
 
-type OperatorMetadata[M: BasisMetadata = BasisMetadata] = Metadata2D[M, M, None]  # noqa: E251
+type OperatorMetadata[M: BasisMetadata = BasisMetadata] = Metadata2D[M, M, None]
 
 
 def operator_basis[M: BasisMetadata, DT: np.generic](

@@ -68,7 +68,7 @@ class NoiseKernel[
 type DiagonalKernelBasis[
     M: BasisMetadata,
     DT: np.generic,
-    OuterB: Basis[OperatorMetadata, Any] = Basis[OperatorMetadata[M], DT],  # noqa: E251
+    OuterB: Basis[OperatorMetadata, Any] = Basis[OperatorMetadata[M], DT],
 ] = RecastBasis[
     SuperOperatorMetadata[M],
     Metadata2D[M, M, None],
@@ -156,7 +156,7 @@ class DiagonalNoiseKernel[
 type IsotropicKernelBasis[
     M: BasisMetadata,
     DT: np.generic,
-    OuterB: Basis[BasisMetadata, Any] = Basis[M, DT],  # noqa: E251
+    OuterB: Basis[BasisMetadata, Any] = Basis[M, DT],
 ] = DiagonalKernelBasis[
     M,
     DT,
@@ -370,7 +370,7 @@ type NoiseOperatorList[
     M: BasisMetadata,
     B: Basis[
         Metadata2D[BasisMetadata, BasisMetadata, None], np.complexfloating
-    ] = Basis[  # noqa: E251
+    ] = Basis[
         Metadata2D[M, M, None], np.complexfloating
     ],
 ] = OperatorList[
@@ -387,7 +387,7 @@ type DiagonalNoiseOperatorList[
         Basis[BasisMetadata, np.complexfloating],
         Basis[BasisMetadata, np.complexfloating],
         None,
-    ] = DiagonalBasis[  # noqa: E251
+    ] = DiagonalBasis[
         np.complexfloating,
         Basis[M, np.complexfloating],
         Basis[M, np.complexfloating],
