@@ -10,6 +10,7 @@ from scipy.constants import hbar  # type: ignore lib
 from slate import FundamentalBasis, SimpleMetadata, basis
 from slate.basis import (
     TupleBasis2D,
+    as_fundamental,
     as_tuple_basis,
     tuple_basis,
 )
@@ -112,7 +113,7 @@ def solve_stochastic_schrodinger_equation_banded[
     ],
     **kwargs: Unpack[SSEConfig],
 ) -> StateList[
-    Metadata2D[SimpleMetadata, MT, np.complexfloating],
+    Metadata2D[SimpleMetadata, MT, None],
     M,
     TupleBasis2D[
         np.complexfloating,
@@ -192,4 +193,19 @@ def solve_stochastic_schrodinger_equation_banded[
             )
         ),
         np.array(data),
+    )
+
+
+def select_realization[MT: BasisMetadata, M: BasisMetadata](
+    states: StateList[Metadata2D[SimpleMetadata, MT, None], M], idx: int = 0
+) -> StateList[MT, M]:
+    """Select a realization from a state list."""
+    list_basis = as_tuple_basis(as_tuple_basis(states.basis)[0])
+
+    states = states.with_list_basis(
+        tuple_basis((as_fundamental(list_basis[0]), list_basis[1]))
+    )
+    return StateList(
+        tuple_basis((states.basis[0][1], states.basis[1])),
+        states.raw_data.reshape(*states.basis[0].shape, -1)[idx],
     )
