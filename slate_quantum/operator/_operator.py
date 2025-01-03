@@ -147,7 +147,13 @@ def expectation_of_each[M0: BasisMetadata, M: BasisMetadata](
     states: StateList[M0, M],
 ) -> Array[M0, np.complexfloating]:
     """Calculate the expectation value of an operator."""
-    return linalg.einsum("(a i'),(i j'),(a j)-> a", states, operator, states)
+    basis = as_tuple_basis(states.basis)[1]
+    return linalg.einsum(
+        "(a i'),(i j'),(a j) -> a",
+        states.with_state_basis(basis.dual_basis()),
+        operator,
+        states,
+    )
 
 
 def apply[M: BasisMetadata](

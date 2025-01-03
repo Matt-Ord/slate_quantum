@@ -7,7 +7,7 @@ import numpy as np
 import slate
 import slate.linalg
 from scipy.constants import hbar  # type: ignore lib
-from slate import basis
+from slate import FundamentalBasis, SimpleMetadata, basis
 from slate.basis import (
     TupleBasis2D,
     as_tuple_basis,
@@ -112,11 +112,16 @@ def solve_stochastic_schrodinger_equation_banded[
     ],
     **kwargs: Unpack[SSEConfig],
 ) -> StateList[
-    MT,
+    Metadata2D[SimpleMetadata, MT, np.complexfloating],
     M,
     TupleBasis2D[
         np.complexfloating,
-        Basis[MT, np.complexfloating],
+        TupleBasis2D[
+            np.complexfloating,
+            FundamentalBasis[SimpleMetadata],
+            Basis[MT, np.complexfloating],
+            None,
+        ],
         Basis[M, np.complexfloating],
         None,
     ],
@@ -131,10 +136,8 @@ def solve_stochastic_schrodinger_equation_banded[
     initial_state_converted = initial_state.with_basis(hamiltonian_tuple.basis[0])
     coherent_step = operator.apply(hamiltonian, initial_state_converted)
 
-    dt = hbar * (target_delta / slate.linalg.norm(coherent_step).item())
-
+    dt = hbar * (target_delta / abs(slate.linalg.norm(coherent_step).item()))
     times = basis.as_index_basis(times)
-    simulation_time_points = times.metadata().values[times.points] / dt
 
     operators_data = [
         o.with_basis(hamiltonian_tuple.basis).raw_data.reshape(
@@ -162,20 +165,31 @@ def solve_stochastic_schrodinger_equation_banded[
         msg = "sse_solver_py is not installed, please install it using `pip install slate_quantum[sse_solver_py]`"
         raise ImportError(msg)
 
+    n_realizations = kwargs.get("n_realizations", 1)
     data = sse_solver_py.solve_sse_banded(
         [x.item() for x in initial_state_converted.raw_data],
         banded_h,
         banded_collapse,
         sse_solver_py.SimulationConfig(
-            times=cast("list[float]", simulation_time_points.tolist()),
+            times=cast(
+                "list[float]", (times.metadata().values[times.points] / dt).tolist()
+            ),
             dt=1,
             delta=(None, target_delta, None),
             n_trajectories=kwargs.get("n_trajectories", 1),
-            n_realizations=kwargs.get("n_realizations", 1),
+            n_realizations=n_realizations,
             method=kwargs.get("method", "Euler"),
         ),
     )
 
     te = datetime.datetime.now(tz=datetime.UTC)
     print(f"solve rust banded took: {(te - ts).total_seconds()} sec")  # noqa: T201
-    return StateList(tuple_basis((times, hamiltonian_tuple.basis[0])), np.array(data))
+    return StateList(
+        tuple_basis(
+            (
+                tuple_basis((FundamentalBasis.from_size(n_realizations), times)),
+                hamiltonian_tuple.basis[0],
+            )
+        ),
+        np.array(data),
+    )
