@@ -13,6 +13,7 @@ from slate_quantum.state._state import (
     get_occupations,
     inner_product,
     normalization,
+    normalize_states,
 )
 
 __all__ = [
@@ -26,4 +27,5 @@ __all__ = [
     "get_occupations",
     "inner_product",
     "normalization",
+    "normalize_states",
 ]
