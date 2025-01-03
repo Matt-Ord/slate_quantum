@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Callable
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 from slate import basis
@@ -21,6 +21,9 @@ from slate.metadata import (
 
 from slate_quantum._util import outer_product
 from slate_quantum.operator._diagonal import Potential
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 def _get_repeat_basis_metadata(

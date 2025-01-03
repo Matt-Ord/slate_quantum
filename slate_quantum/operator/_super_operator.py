@@ -13,7 +13,7 @@ from slate_quantum.operator._operator import Operator, OperatorMetadata
 if TYPE_CHECKING:
     from slate.array import Array
 
-type SuperOperatorMetadata[M: BasisMetadata = BasisMetadata] = OperatorMetadata[  # noqa: E251
+type SuperOperatorMetadata[M: BasisMetadata = BasisMetadata] = OperatorMetadata[
     OperatorMetadata[M],
 ]
 

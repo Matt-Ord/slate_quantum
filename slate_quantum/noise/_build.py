@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Callable
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 from scipy.constants import Boltzmann  # type: ignore stubs
@@ -21,7 +21,7 @@ from slate_quantum.noise.diagonalize._eigenvalue import (
 from slate_quantum.operator import SuperOperatorMetadata, get_commutator_operator_list
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable
+    from collections.abc import Callable, Iterable
 
     from slate.metadata import (
         BasisMetadata,

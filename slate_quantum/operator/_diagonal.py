@@ -18,8 +18,8 @@ from slate_quantum.operator._operator import Operator
 type RecastDiagonalOperatorBasis[
     M: BasisMetadata,
     DT: np.generic,
-    BInner: Basis[BasisMetadata, Any] = Basis[M, DT],  # noqa: E251
-    BOuter: Basis[BasisMetadata, Any] = Basis[M, DT],  # noqa: E251
+    BInner: Basis[BasisMetadata, Any] = Basis[M, DT],
+    BOuter: Basis[BasisMetadata, Any] = Basis[M, DT],
 ] = RecastBasis[
     Metadata2D[M, M, None], M, DT, DiagonalBasis[Any, BInner, BInner, None], BOuter
 ]
