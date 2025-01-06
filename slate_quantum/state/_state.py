@@ -190,9 +190,9 @@ def get_all_occupations[M0: BasisMetadata, B: Basis[BasisMetadata, Any]](
     states: StateList[M0, Any, TupleBasis2D[np.complexfloating, Any, B, None]],
 ) -> Array[
     Metadata2D[M0, BasisStateMetadata[B], None],
-    np.float64,
+    np.floating,
     TupleBasis2D[
-        np.float64,
+        np.floating,
         Basis[M0, Any],
         FundamentalBasis[BasisStateMetadata[B]],
         None,
@@ -205,9 +205,9 @@ def get_all_occupations[M0: BasisMetadata, M1: BasisMetadata](
     states: StateList[M0, M1],
 ) -> Array[
     Metadata2D[M0, BasisStateMetadata[Basis[M1, Any]], None],
-    np.float64,
+    np.floating,
     TupleBasis2D[
-        np.float64,
+        np.floating,
         Basis[M0, Any],
         FundamentalBasis[BasisStateMetadata[Basis[M1, Any]]],
         None,
@@ -219,24 +219,26 @@ def get_all_occupations[M0: BasisMetadata, B: Basis[Any, Any]](
     states: StateList[M0, Any],
 ) -> Array[
     Metadata2D[M0, BasisStateMetadata[Basis[Any, Any]], None],
-    np.float64,
+    np.floating,
     TupleBasis2D[
-        np.float64,
+        np.floating,
         Basis[M0, Any],
         FundamentalBasis[BasisStateMetadata[Basis[Any, Any]]],
         None,
     ],
 ]:
     states_as_tuple = array.as_tuple_basis(states)
-    cast_states = array.cast_basis(
-        states_as_tuple,
-        _basis.with_modified_child(
-            states_as_tuple.basis,
-            lambda x: FundamentalBasis(BasisStateMetadata(x)),
-            1,
-        ),
+    basis = tuple_basis(
+        (
+            states_as_tuple.basis[0],
+            FundamentalBasis(BasisStateMetadata(states_as_tuple.basis[1])),
+        )
     )
-    return linalg.abs(linalg.einsum("(m i'),(m i) -> (m i)", cast_states, cast_states))  # type: ignore TODO: better type annotations
+
+    cast_states = array.cast_basis(states_as_tuple, basis)
+    return array.abs(
+        linalg.einsum("(m i'),(m i) -> (m i)", cast_states, cast_states)
+    ).with_basis(cast_states.basis)
 
 
 @overload
@@ -278,12 +280,12 @@ def get_average_occupations(
 ) -> tuple[
     Array[
         BasisStateMetadata[Basis[Any, Any]],
-        np.float64,
+        np.floating,
         FundamentalBasis[BasisStateMetadata[Basis[Any, Any]]],
     ],
     Array[
         BasisStateMetadata[Basis[Any, Any]],
-        np.float64,
+        np.floating,
         FundamentalBasis[BasisStateMetadata[Basis[Any, Any]]],
     ],
 ]:

@@ -74,7 +74,7 @@ def build_coherent_state[M: SpacedLengthMetadata, E: AxisDirections](
 
     # stores distance from x0
     distance = np.linalg.norm(
-        [d / s for d, s in zip(raw_displacements, sigma_0)],
+        [d / s for d, s in zip(raw_displacements, sigma_0, strict=False)],
         axis=0,
     )
 

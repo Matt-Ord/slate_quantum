@@ -343,7 +343,7 @@ def get_diagonal_noise_operators_from_axis[M: BasisMetadata, E](
         for i in range(0, len(operators_list) * 2, 2)
     )
     input_subscripts = ",".join(["".join(group) for group in subscripts])
-    output_subscript = "".join("".join(group) for group in zip(*subscripts))
+    output_subscript = "".join("".join(group) for group in zip(*subscripts, strict=False))
     einsum_string = f"{input_subscripts}->{output_subscript}"
 
     full_data = tuple(
