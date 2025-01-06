@@ -255,7 +255,7 @@ def _get_explicit_taylor_coefficients_gaussian(
     n_terms: int = 1,
 ) -> np.ndarray[Any, np.dtype[np.floating]]:
     i = np.arange(0, n_terms)
-    return (a**2 / factorial(i)) * ((-1 / (2 * lambda_**2)) ** i)
+    return (a**2 / factorial(i)) * ((-1 / (2 * lambda_**2)) ** i)  # type: ignore unknown
 
 
 def get_periodic_gaussian_operators_explicit_taylor[M: SpacedLengthMetadata](
