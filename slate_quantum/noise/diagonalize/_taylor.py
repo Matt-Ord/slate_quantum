@@ -48,7 +48,7 @@ def _get_cos_coefficients_for_taylor_series(
 
     i = np.arange(0, n_nonzero_terms).reshape(1, -1)
     m = np.arange(0, n_nonzero_terms).reshape(-1, 1)
-    coefficients_prefactor = ((-1) ** m) / (factorial(2 * m))
+    coefficients_prefactor = ((-1) ** m) / cast("float", factorial(2 * m))
     coefficients_matrix = coefficients_prefactor * (i ** (2 * m))
     cos_series_coefficients = np.linalg.solve(
         coefficients_matrix, polynomial_coefficients
