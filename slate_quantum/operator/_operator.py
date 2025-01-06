@@ -3,8 +3,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, cast, overload, override
 
 import numpy as np
-from slate import FundamentalBasis, basis, linalg
-from slate.array import Array
+from slate import FundamentalBasis, linalg
+from slate.array import Array, NestedIndex
 from slate.basis import (
     Basis,
     TupleBasis2D,
@@ -276,7 +276,7 @@ class OperatorList[
     ](
         self: OperatorList[Any, _M1, _DT1, TupleBasis2D[Any, Any, _B1, None]],
         /,
-        index: int,
+        index: tuple[int, slice[None]],
     ) -> Operator[_M1, _DT1, _B1]: ...
 
     @overload
@@ -286,24 +286,34 @@ class OperatorList[
     ](
         self: OperatorList[Any, _M1, _DT1, Any],
         /,
-        index: int,
+        index: tuple[int, slice[None, None, None]],
     ) -> Operator[_M1, _DT1]: ...
 
-    def __getitem__(self, /, index: int) -> Operator[Any, Any, Any]:
-        as_tuple = self.with_list_basis(
-            basis.as_index_basis(basis.as_tuple_basis(self.basis)[0])
-        )
+    @overload
+    def __getitem__[_DT: np.generic](
+        self: Array[Any, _DT],
+        index: int,
+    ) -> _DT: ...
 
-        index_sparse = np.argwhere(as_tuple.basis[0].points == index)
-        if index_sparse.size == 0:
-            return Operator(
-                as_tuple.basis[1],
-                np.zeros(as_tuple.basis.shape[1], dtype=np.complex128),
-            )
-        return Operator(
-            as_tuple.basis[1],
-            as_tuple.raw_data.reshape(as_tuple.basis.shape)[index_sparse],
-        )
+    @overload
+    def __getitem__[_DT: np.generic](
+        self: Array[Any, _DT],
+        index: tuple[NestedIndex, ...] | slice,
+    ) -> Array[Any, _DT]: ...
+
+    @override
+    def __getitem__[_M1: BasisMetadata, _DT: np.generic](  # type: ignore override
+        self: Array[Any, _DT], index: NestedIndex
+    ) -> Array[Any, _DT] | _DT | Operator[Any, _DT]:
+        out = cast("Array[Any, _DT]", super()).__getitem__(index)
+        if (
+            isinstance(index, tuple)
+            and isinstance(index[0], int)
+            and index[1] == slice(None)
+        ):
+            out = cast("Array[Any, _DT]", out)
+            return Operator(out.basis, out.raw_data)
+        return out
 
     @staticmethod
     def from_operators[

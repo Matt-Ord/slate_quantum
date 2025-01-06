@@ -46,7 +46,7 @@ if __name__ == "__main__":
     fig, ax = get_figure()
     for i in range(3):
         plot.basis_against_array_1d_x(
-            array.as_outer_array(operators[i]), ax=ax, measure="real"
+            array.as_outer_array(operators[i, :]), ax=ax, measure="real"
         )
     fig.show()
     ax.set_title("The real part of the first three noise operators")
