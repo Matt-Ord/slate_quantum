@@ -112,21 +112,35 @@ class StateList[
     def __iter__(self, /) -> Iterator[State[M1, Basis[Any, np.complexfloating]]]:  # type: ignore bad overload
         return (State(a.basis, a.raw_data) for a in super().__iter__())
 
-    def __getitem__(self, /, index: int) -> State[M1, Basis[Any, np.complexfloating]]:
-        as_tuple = self.with_list_basis(
-            _basis.as_index_basis(_basis.as_tuple_basis(self.basis)[0])
-        )
+    @overload
+    def __getitem__[_M1: BasisMetadata](
+        self: StateList[Any, _M1],
+        index: tuple[int, slice[None]],
+    ) -> State[_M1, Basis[Any, np.complexfloating]]: ...
 
-        index_sparse = np.argwhere(as_tuple.basis[0].points == index)
-        if index_sparse.size == 0:
-            return State(
-                as_tuple.basis[1],
-                np.zeros(as_tuple.basis.shape[1], dtype=np.complex128),
-            )
-        return State(
-            as_tuple.basis[1],
-            as_tuple.raw_data.reshape(as_tuple.basis.shape)[index_sparse],
-        )
+    @overload
+    def __getitem__[_DT: np.generic](
+        self: Array[Any, _DT],
+        index: int,
+    ) -> _DT: ...
+
+    @overload
+    def __getitem__[_DT: np.generic](
+        self: Array[Any, _DT],
+        index: tuple[array.NestedIndex, ...] | slice,
+    ) -> Array[Any, _DT]: ...
+
+    @override
+    def __getitem__(self, index: array.NestedIndex) -> Any:  # type: ignore overload bad
+        out = cast("Array[Any, Any]", super()).__getitem__(index)
+        if (
+            isinstance(index, tuple)
+            and isinstance(index[0], int)
+            and index[1] == slice(None)
+        ):
+            out = cast("Array[Any, Any]", out)
+            return State(out.basis, out.raw_data)
+        return out
 
     @overload
     def with_state_basis[B0: Basis[Any, Any], B1: Basis[Any, Any]](  # B1: B

@@ -24,7 +24,7 @@ if __name__ == "__main__":
 
     # Let's simulate the evolution of the system starting
     # in an eigenstate of the Hamiltonian
-    initial_state = eigenstates[1]
+    initial_state = eigenstates[1, :]
     times = FundamentalBasis(
         SpacedTimeMetadata(60, spacing=LabelSpacing(delta=8 * np.pi * hbar))
     )
