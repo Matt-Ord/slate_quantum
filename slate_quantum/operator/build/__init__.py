@@ -30,6 +30,7 @@ from slate_quantum.operator.build._position import (
 )
 from slate_quantum.operator.build._potential import (
     cos_potential,
+    fcc_potential,
     potential_from_function,
     repeat_potential,
     sin_potential,
@@ -44,6 +45,7 @@ __all__ = [
     "axis_periodic_operator",
     "axis_scattering_operator",
     "cos_potential",
+    "fcc_potential",
     "filter_scatter_operator",
     "filter_scatter_operators",
     "get_displacements_x",

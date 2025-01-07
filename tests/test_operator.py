@@ -296,6 +296,33 @@ def test_build_cos_operator() -> None:
     np.testing.assert_allclose(actual.as_array(), expected.as_array())
 
 
+def test_build_fcc_operator() -> None:
+    metadata = spaced_volume_metadata_from_stacked_delta_x(
+        (
+            np.array([np.sin(np.pi / 3), np.cos(np.pi / 3)]),
+            np.array([0, 1]),
+        ),
+        (16, 16),
+    )
+
+    actual = operator.build.fcc_potential(metadata, 1)
+
+    # Functional form from david's thesis
+    # page 106 eq. 4.9
+    eta = 2 * np.pi * (2 / np.sqrt(3))
+    expected = operator.build.potential_from_function(
+        metadata,
+        lambda x: (1 / 3)
+        + (2 / 9)
+        * (
+            np.cos(eta * x[0] + 0 * x[1])
+            + np.cos(eta * np.cos(np.pi / 3) * x[0] + eta * np.sin(np.pi / 3) * x[1])
+            + np.cos(-eta * np.cos(np.pi / 3) * x[0] + eta * np.sin(np.pi / 3) * x[1])
+        ),
+    )
+    np.testing.assert_allclose(actual.as_array(), expected.as_array())
+
+
 def test_build_cl_operators() -> None:
     metadata = spaced_volume_metadata_from_stacked_delta_x(
         (np.array([2 * np.pi]),), (16,)
