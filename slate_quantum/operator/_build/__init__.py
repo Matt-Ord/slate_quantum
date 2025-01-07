@@ -2,17 +2,17 @@
 
 from __future__ import annotations
 
-from slate_quantum.operator.build._hamiltonian import (
+from slate_quantum.operator._build._hamiltonian import (
     kinetic_energy_operator,
     kinetic_hamiltonian,
 )
-from slate_quantum.operator.build._momentum import (
+from slate_quantum.operator._build._momentum import (
     filter_scatter_operator,
     filter_scatter_operators,
     k_operator,
     p_operator,
 )
-from slate_quantum.operator.build._position import (
+from slate_quantum.operator._build._position import (
     all_axis_periodic_operators,
     all_axis_scattering_operators,
     all_periodic_operators,
@@ -28,7 +28,7 @@ from slate_quantum.operator.build._position import (
     x_displacement_operators_stacked,
     x_operator,
 )
-from slate_quantum.operator.build._potential import (
+from slate_quantum.operator._build._potential import (
     cos_potential,
     fcc_potential,
     potential_from_function,

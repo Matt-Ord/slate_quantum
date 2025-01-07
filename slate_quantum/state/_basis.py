@@ -14,9 +14,7 @@ class EigenstateBasis[M: BasisMetadata](ExplicitUnitaryBasis[M, np.complexfloati
 
     @property
     @override
-    def eigenvectors(
-        self,
-    ) -> StateList[BasisMetadata, M]:
+    def eigenvectors(self) -> StateList[BasisMetadata, M]:
         """Get the eigenstates of the basis."""
         states = super().eigenvectors
         return StateList(states.basis, states.raw_data)
