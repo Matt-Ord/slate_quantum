@@ -16,9 +16,7 @@ if __name__ == "__main__":
 
     potential = operator.build.cos_potential(metadata, 0)
     hamiltonian = operator.build.kinetic_hamiltonian(potential, hbar**2)
-    diagonal_hamiltonian = operator.into_diagonal_hermitian(hamiltonian)
-    # TODO: we want to make this more natural ...  # noqa: FIX002
-    eigenstates = diagonal_hamiltonian.basis.inner[1].eigenvectors
+    eigenstates = operator.get_eigenstates_hermitian(hamiltonian)
 
     # The eigenstates of a free particle are plane waves
     fig, ax = get_figure()
@@ -34,8 +32,7 @@ if __name__ == "__main__":
     # Now we modify the potential to have a barrier
     potential = operator.build.cos_potential(metadata, 1)
     hamiltonian = operator.build.kinetic_hamiltonian(potential, hbar**2)
-    diagonal_hamiltonian = operator.into_diagonal_hermitian(hamiltonian)
-    eigenstates = diagonal_hamiltonian.basis.inner[1].eigenvectors
+    eigenstates = operator.get_eigenstates_hermitian(hamiltonian)
 
     # The eigenstates are now localized around the potential minima
     fig, ax = get_figure()
