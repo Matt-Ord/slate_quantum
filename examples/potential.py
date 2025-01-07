@@ -38,4 +38,25 @@ if __name__ == "__main__":
     fig, ax, line = plot.basis_against_array_2d_x(array.as_outer_array(potential))
     fig.show()
 
+    # For a 2D volume with fcc symmetry, the cos potential is not suitable
+    metadata = spaced_volume_metadata_from_stacked_delta_x(
+        (
+            np.array([np.sin(np.pi / 3), np.cos(np.pi / 3)]),
+            np.array([0, 1]),
+        ),
+        (600, 600),
+    )
+    potential = operator.build.cos_potential(metadata, 10)
+    # A single cos potential in 2D, height 10
+    fig, ax, line = plot.basis_against_array_1d_x(array.as_outer_array(potential))
+    fig.show()
+    fig, ax, line = plot.basis_against_array_2d_x(array.as_outer_array(potential))
+    fig.show()
+
+    potential = operator.build.fcc_potential(metadata, 1)
+    fig, ax, line = plot.basis_against_array_1d_x(array.as_outer_array(potential))
+    fig.show()
+    fig, ax, line = plot.basis_against_array_2d_x(array.as_outer_array(potential))
+    fig.show()
+
     input()

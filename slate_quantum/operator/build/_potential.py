@@ -104,10 +104,36 @@ def sin_potential(
     )
 
 
+def fcc_potential(
+    metadata: SpacedVolumeMetadata,
+    height: float,
+) -> Potential[SpacedLengthMetadata, AxisDirections, np.complexfloating]:
+    """Generate a potential suitable for modelling an fcc surface.
+
+    This potential contains the lowest fourier components - however for an fcc surface
+    there are only six degenerate fourier components.
+    """
+    transformed_basis = fundamental_transformed_tuple_basis_from_metadata(metadata)
+    # We need only the three lowest fourier components to represent this potential
+    cropped = basis.with_modified_children(
+        transformed_basis,
+        lambda _i, y: CroppedBasis(3, y),
+    )
+    n_dim = len(cropped.shape)
+    # TODO: generalize to n_dim  # noqa: FIX002
+    assert n_dim == 2  # noqa: PLR2004
+
+    data = np.array([[3, 1, 1], [1, 1, 0], [1, 0, 1]])
+    return Potential(
+        cropped,
+        (1 / 3) ** n_dim * data * height * np.sqrt(transformed_basis.size),
+    )
+
+
 def potential_from_function[M: SpacedLengthMetadata, E: AxisDirections, DT: np.generic](
     metadata: StackedMetadata[M, E],
     fn: Callable[
-        [tuple[np.ndarray[Any, np.dtype[np.float64]], ...]],
+        [tuple[np.ndarray[Any, np.dtype[np.floating]], ...]],
         np.ndarray[Any, np.dtype[DT]],
     ],
 ) -> Potential[M, E, DT]:
