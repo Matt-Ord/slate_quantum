@@ -4,7 +4,6 @@ from typing import TYPE_CHECKING, Any, TypeVar
 
 import numpy as np
 import scipy.linalg  # type:ignore lib
-
 from surface_potential_analysis.basis.legacy import (
     BasisLike,
     FundamentalBasis,
@@ -55,7 +54,6 @@ from surface_potential_analysis.wavepacket.wavepacket import (
 
 if TYPE_CHECKING:
     from slate.metadata._metadata import BasisMetadata
-
     from surface_potential_analysis.basis.legacy import (
         FundamentalPositionBasis,
     )

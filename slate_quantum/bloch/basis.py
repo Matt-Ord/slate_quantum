@@ -4,29 +4,12 @@ from functools import cached_property
 from typing import TYPE_CHECKING, Any, override
 
 import numpy as np
-from slate.metadata import BasisMetadata, LabelSpacing
-from slate.metadata.length import SpacedLengthMetadata
+from slate.metadata import BasisMetadata
 
 from slate_quantum.state import EigenstateBasis, StateList
 
 if TYPE_CHECKING:
     from slate.basis import Basis
-
-
-class BlochLengthMetadata(SpacedLengthMetadata):
-    def __init__(self, inner: SpacedLengthMetadata, n_repeats: int) -> None:
-        self._inner = inner
-        self.n_repeats = n_repeats
-        super().__init__(
-            inner.fundamental_size * n_repeats,
-            spacing=LabelSpacing(
-                start=inner.spacing.start, delta=n_repeats * inner.spacing.delta
-            ),
-        )
-
-    @property
-    def inner(self) -> SpacedLengthMetadata:
-        return self._inner
 
 
 type BlochWavefunctionList[Any] = StateList[Any]
@@ -35,6 +18,17 @@ type BlochWavefunctionList[Any] = StateList[Any]
 
 type BlochWavefunctionListList[Any] = StateList[Any]
 """Represents a list of wavefunctions, indexed by band and bloch k."""
+
+
+# Overall strategy:
+# 1 The full matrix is represented by a block diagonal matrix
+# 2 we diagonalize each block separately, and return a diagonalized block matrix
+# 3 this diagonalized matrix stores the states in some reduced representation
+# since they are only states in a single block (this is the "matrix" used in explicit basis).
+# The list basis would be TupleBasis[BandIndex, BlochIndex] and the data is stored as a
+# states in the original basis, but we apply a BlockDiagonalBasis wrapper over the
+# whole thing (diagonal on bloch index == band index)
+# 4 We can re-cast these matrices as a list of bloch states where appropriate
 
 
 def get_wavepacket_basis(

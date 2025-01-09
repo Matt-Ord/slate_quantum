@@ -343,7 +343,9 @@ def get_diagonal_noise_operators_from_axis[M: BasisMetadata, E](
         for i in range(0, len(operators_list) * 2, 2)
     )
     input_subscripts = ",".join(["".join(group) for group in subscripts])
-    output_subscript = "".join("".join(group) for group in zip(*subscripts, strict=False))
+    output_subscript = "".join(
+        "".join(group) for group in zip(*subscripts, strict=False)
+    )
     einsum_string = f"{input_subscripts}->{output_subscript}"
 
     full_data = tuple(
@@ -370,14 +372,12 @@ type NoiseOperatorList[
     M: BasisMetadata,
     B: Basis[
         Metadata2D[BasisMetadata, BasisMetadata, None], np.complexfloating
-    ] = Basis[
-        Metadata2D[M, M, None], np.complexfloating
-    ],
+    ] = Basis[Metadata2D[M, M, None], np.complexfloating],
 ] = OperatorList[
     EigenvalueMetadata,
     M,
     np.complexfloating,
-    TupleBasis2D[np.complexfloating, FundamentalBasis[EigenvalueMetadata], B, None],
+    TupleBasis2D[np.complexfloating, Basis[EigenvalueMetadata, Any], B, None],
 ]
 
 type DiagonalNoiseOperatorList[

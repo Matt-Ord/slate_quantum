@@ -3,7 +3,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Literal, TypeVar, TypeVarTuple, cast, overload
 
 import numpy as np
-
 from surface_potential_analysis.basis.util import BasisUtil
 from surface_potential_analysis.stacked_basis.conversion import (
     tuple_basis_as_fundamental,
@@ -14,10 +13,6 @@ from surface_potential_analysis.stacked_basis.util import (
 )
 from surface_potential_analysis.state_vector.conversion import (
     convert_state_vector_to_position_basis,
-)
-from surface_potential_analysis.types import (
-    SingleFlatIndexLike,
-    SingleStackedIndexLike,
 )
 from surface_potential_analysis.util.decorators import timed
 from surface_potential_analysis.wavepacket.conversion import (
@@ -40,7 +35,9 @@ if TYPE_CHECKING:
     )
     from surface_potential_analysis.types import (
         ArrayIndexLike,
+        SingleFlatIndexLike,
         SingleIndexLike,
+        SingleStackedIndexLike,
     )
 
     _FB0 = TypeVar("_FB0", bound=FundamentalBasis[Any])
@@ -137,7 +134,7 @@ def localize_tightly_bound_wavepacket_idx(
     angle: float = 0,
 ) -> BlochWavefunctionList[_SB0, _SB1]:
     """
-    localize a wavepacket in momentum basis.
+    Localize a wavepacket in momentum basis.
 
     Parameters
     ----------
@@ -192,7 +189,7 @@ def get_wavepacket_two_points(
     )  # type: ignore[arg-type,var-annotated]
     converted_util = BasisUtil(converted["basis"])
     idx_0 = cast(  # can't infer np.argmax
-        SingleStackedIndexLike,
+        "SingleStackedIndexLike",
         converted_util.get_stacked_index(np.argmax(np.abs(converted["data"]), axis=-1)),
     )
     idx_0 = wrap_index_around_origin(wavepacket["basis"][1], idx_0, origin=origin)
@@ -320,7 +317,7 @@ def localize_tightly_bound_wavepacket_max_point(
     converted = convert_state_vector_to_position_basis(
         get_wavepacket_state_vector(wavepacket, 0)
     )
-    max_idx = cast(SingleFlatIndexLike, np.argmax(np.abs(converted["data"]), axis=-1))
+    max_idx = cast("SingleFlatIndexLike", np.argmax(np.abs(converted["data"]), axis=-1))
     max_idx = BasisUtil(converted["basis"]).get_stacked_index(max_idx)
     max_idx = wrap_index_around_origin(wavepacket["basis"][1], max_idx, axes=(0, 1))
 
