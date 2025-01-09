@@ -19,7 +19,6 @@ from typing import (
 
 import numpy as np
 import scipy.ndimage  # type:ignore lib
-
 from surface_potential_analysis.basis.legacy import (
     BasisLike,
     FundamentalBasis,
@@ -38,9 +37,6 @@ from surface_potential_analysis.state_vector.conversion import (
 from surface_potential_analysis.state_vector.state_vector import (
     as_legacy_dual_vector,
     legacy_calculate_inner_product,
-)
-from surface_potential_analysis.state_vector.state_vector_list import (
-    LegacyStateVectorList,
 )
 from surface_potential_analysis.types import ArrayFlatIndexLike, FlatIndexLike
 from surface_potential_analysis.wavepacket.get_eigenstate import (
@@ -66,6 +62,9 @@ if TYPE_CHECKING:
         FundamentalTransformedPositionBasis,
     )
     from surface_potential_analysis.state_vector.state_vector import LegacyStateVector
+    from surface_potential_analysis.state_vector.state_vector_list import (
+        LegacyStateVectorList,
+    )
     from surface_potential_analysis.wavepacket.localization_operator import (
         LocalizationOperator,
     )
@@ -363,7 +362,7 @@ def x0x1_symmetry_op(
 def _get_fundamental_k_points(
     basis: TupleBasisLike[*tuple[_FB0, ...]], symmetry: Sequence[SymmetryOp[Any]]
 ) -> ArrayFlatIndexLike[tuple[int]]:
-    fundamental_idx = np.arange(cast(int, basis.n))
+    fundamental_idx = np.arange(cast("int", basis.n))
     for op in symmetry:
         b = op(fundamental_idx, basis.shape)
         fundamental_idx = np.minimum(b, fundamental_idx)
@@ -494,7 +493,7 @@ def _write_localization_files_wannier90(
     with mmn_filename.open("w") as f:
         f.write(_build_mmn_file(converted, n_nkp_file, options=options))
     if options.projection.get("data", None) is not None:
-        projection = cast(LegacyStateVectorList[_B1, Any], options.projection)
+        projection = cast("LegacyStateVectorList[_B1, Any]", options.projection)
         amn_filename = tmp_dir_path / "spa.amn"
         with amn_filename.open("w") as f:
             f.write(_build_amn_file(converted, projection))

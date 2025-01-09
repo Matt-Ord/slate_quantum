@@ -31,7 +31,7 @@ if TYPE_CHECKING:
 def kinetic_energy_operator[M: SpacedLengthMetadata, E: AxisDirections](
     metadata: StackedMetadata[M, E],
     mass: float,
-    bloch_fraction: np.ndarray[Any, np.dtype[np.float64]] | None = None,
+    bloch_fraction: np.ndarray[Any, np.dtype[np.floating]] | None = None,
 ) -> MomentumOperator[M, E]:
     """
     Given a mass and a basis calculate the kinetic part of the Hamiltonian.
@@ -67,7 +67,7 @@ def kinetic_energy_operator[M: SpacedLengthMetadata, E: AxisDirections](
 def kinetic_hamiltonian[M: SpacedLengthMetadata, E: AxisDirections](
     potential: Potential[M, E, np.complexfloating],
     mass: float,
-    bloch_fraction: np.ndarray[Any, np.dtype[np.float64]] | None = None,
+    bloch_fraction: np.ndarray[Any, np.dtype[np.floating]] | None = None,
 ) -> Operator[StackedMetadata[M, E], np.complexfloating]:
     """
     Calculate the total hamiltonian in momentum basis for a given potential and mass.

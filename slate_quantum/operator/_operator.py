@@ -239,7 +239,9 @@ class OperatorList[
     @overload
     def with_list_basis[B0: Basis[Any, Any]](  # B1: B
         self, basis: B0
-    ) -> OperatorList[M0, M1, DT, TupleBasis2D[Any, B0, Any, None]]: ...
+    ) -> OperatorList[
+        M0, M1, DT, TupleBasis2D[Any, B0, Basis[Metadata2D[M1, M1, None], Any], None]
+    ]: ...
 
     def with_list_basis(  # B1: B
         self, basis: Basis[Any, Any]

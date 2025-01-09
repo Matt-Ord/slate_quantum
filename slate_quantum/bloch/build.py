@@ -1,49 +1,171 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from itertools import starmap
+from typing import TYPE_CHECKING, Any, override
 
-from slate.metadata import BasisMetadata
+import numpy as np
+from slate import StackedMetadata, basis, tuple_basis
+from slate import metadata as _metadata
+from slate.basis import BlockDiagonalBasis
+from slate.metadata import (
+    AxisDirections,
+    LabeledMetadata,
+    SpacedLengthMetadata,
+    SpacedVolumeMetadata,
+)
+
+from slate_quantum import operator
+from slate_quantum.operator._build._potential import RepeatedLengthMetadata
+from slate_quantum.operator._operator import Operator, OperatorList
 
 if TYPE_CHECKING:
-    import numpy as np
-    from slate.basis import Basis, DiagonalBasis
+    from slate.basis import Basis, TupleBasis2D
 
-    from slate_quantum.bloch.basis import BlochDiagonalBasis, BlochEigenstateBasis
-    from slate_quantum.model.operator._operator import Operator
+    from slate_quantum.operator._diagonal import Potential
 
 
-def build_bloch_operator[M: BasisMetadata]() -> (
-    Operator[
-        np.complex128,
-        BlochDiagonalBasis[np.complex128, Basis[Any]],
-    ]
-):
-    """Build the diagonalized Bloch Hamiltonian."""
-    msg = "Not yet implemented"
-    raise NotImplementedError(msg)
+class BlochFractionMetadata(LabeledMetadata[np.floating]):
+    """Metadata for the Bloch fraction."""
+
+    def __init__(self, size: int) -> None:
+        super().__init__(size)
+
+    @property
+    @override
+    def values(self) -> np.ndarray[Any, np.dtype[np.floating]]:
+        """Shape of the full data."""
+        return _metadata.fundamental_nk_points(self) / self.fundamental_size
+
+    @staticmethod
+    def from_repeats(
+        repeat: tuple[int, ...],
+    ) -> StackedMetadata[BlochFractionMetadata, None]:
+        """Build a stacked metadata from a tuple of repeats."""
+        return StackedMetadata(tuple(BlochFractionMetadata(n) for n in repeat), None)
 
 
-def eigh_bloch_operator[M: BasisMetadata]() -> (
-    Operator[
-        np.complex128,
-        DiagonalBasis[
-            np.complex128, BlochEigenstateBasis[M], BlochEigenstateBasis[M], None
+def _get_sample_fractions[M: BlochFractionMetadata](
+    metadata: StackedMetadata[M, None],
+) -> tuple[np.ndarray[tuple[int], np.dtype[np.floating]], ...]:
+    """
+    Get the frequencies of the samples in a wavepacket, as a fraction of dk.
+
+    Parameters
+    ----------
+    shape : np.ndarray[tuple[_NDInv], np.dtype[np.int_]]
+
+    Returns
+    -------
+    np.ndarray[tuple[Literal[_NDInv], int], np.dtype[np.float_]]
+    """
+    mesh = np.meshgrid(
+        *(n.values for n in metadata),
+        indexing="ij",
+    )
+    return tuple(nki.ravel() for nki in mesh)
+
+
+def bloch_operator_from_list[
+    M0: StackedMetadata[BlochFractionMetadata, None],
+    M1: SpacedVolumeMetadata,
+](
+    operators: OperatorList[M0, M1, np.complexfloating],
+) -> Operator[
+    StackedMetadata[RepeatedLengthMetadata, AxisDirections],
+    np.complexfloating,
+    BlockDiagonalBasis[
+        np.complexfloating,
+        RepeatedLengthMetadata,
+        AxisDirections,
+        # TODO: what is the correct basis here?
+        TupleBasis2D[
+            np.complexfloating,
+            Basis[
+                StackedMetadata[RepeatedLengthMetadata, AxisDirections],
+                np.complexfloating,
+            ],
+            Basis[
+                StackedMetadata[RepeatedLengthMetadata, AxisDirections],
+                np.complexfloating,
+            ],
+            None,
         ],
-    ]
-):
-    """Build the diagonalized Bloch Hamiltonian."""
-    msg = "Not yet implemented"
-    raise NotImplementedError(msg)
+    ],
+]:
+    """Build the block diagonal Bloch Hamiltonian from a list of operators."""
+    operators = operators.with_list_basis(
+        basis.from_metadata(operators.basis.metadata()[0])
+    )
+    operators = operators.with_operator_basis(
+        basis.fundamental_transformed_tuple_basis_from_metadata(
+            operators.basis[1].metadata(), is_dual=operators.basis[1].is_dual
+        )
+    )
+    list_meta = operators.basis.metadata()[0]
+    single_operator_meta = operators.basis.metadata()[1][0]
+    full_operator_metadata = StackedMetadata(
+        tuple(
+            starmap(
+                RepeatedLengthMetadata,
+                zip(
+                    single_operator_meta.children,
+                    list_meta.shape,
+                    strict=True,
+                ),
+            )
+        ),
+        single_operator_meta.extra,
+    )
+    # TODO: what basis wraps this so that k is in the right spot here?
+    operator_basis = basis.fundamental_transformed_tuple_basis_from_metadata(
+        full_operator_metadata
+    )
+    out_basis = BlockDiagonalBasis(
+        tuple_basis((operator_basis, operator_basis.dual_basis())),
+        operators.basis.metadata()[1].shape,
+    )
+    return Operator(out_basis, operators.raw_data)
 
 
-def build_diagonal_bloch_operator[M: BasisMetadata]() -> (
-    Operator[
-        np.complex128,
-        DiagonalBasis[
-            np.complex128, BlochEigenstateBasis[M], BlochEigenstateBasis[M], None
+def kinetic_hamiltonian[M: SpacedLengthMetadata, E: AxisDirections](
+    potential: Potential[M, E, np.complexfloating],
+    mass: float,
+    repeat: tuple[int, ...],
+) -> Operator[
+    StackedMetadata[RepeatedLengthMetadata, AxisDirections],
+    np.complexfloating,
+    BlockDiagonalBasis[
+        np.complexfloating,
+        RepeatedLengthMetadata,
+        AxisDirections,
+        # TODO: what is the correct basis here?
+        TupleBasis2D[
+            np.complexfloating,
+            Basis[
+                StackedMetadata[RepeatedLengthMetadata, AxisDirections],
+                np.complexfloating,
+            ],
+            Basis[
+                StackedMetadata[RepeatedLengthMetadata, AxisDirections],
+                np.complexfloating,
+            ],
+            None,
         ],
-    ]
-):
-    """Build the diagonalized Bloch Hamiltonian."""
-    msg = "Not yet implemented"
-    raise NotImplementedError(msg)
+    ],
+]:
+    """Build a kinetic Hamiltonian in the Bloch basis."""
+    list_metadata = BlochFractionMetadata.from_repeats(repeat)
+    bloch_fractions = _get_sample_fractions(list_metadata)
+    list_basis = basis.from_metadata(list_metadata)
+
+    operators = OperatorList.from_operators(
+        [
+            operator.build.kinetic_hamiltonian(potential, mass, fraction)
+            for fraction in zip(*bloch_fractions, strict=True)
+        ]
+    )
+    operators = OperatorList(
+        tuple_basis((list_basis, operators.basis[1])), operators.raw_data
+    )
+
+    return bloch_operator_from_list(operators)
