@@ -4,13 +4,68 @@ import itertools
 from typing import TYPE_CHECKING, Any, cast, override
 
 import numpy as np
-from slate.basis import BasisFeature, TupleBasis2D, WrappedBasis
+from slate.basis import BasisFeature, Padding, Truncation, TupleBasis2D, WrappedBasis
 from slate.metadata import Metadata2D
+from slate.util import pad_along_axis, truncate_along_axis
 
 if TYPE_CHECKING:
     from collections.abc import Callable
 
     from slate.basis import Basis
+
+
+def _spec_from_indices[DT: int | np.signedinteger](
+    indices: tuple[DT, ...],
+) -> str:
+    return "".join(chr(cast("int", 97 + i)) for i in indices)
+
+
+def extract_diagonal[DT: np.generic](
+    array: np.ndarray[Any, np.dtype[DT]], axes: tuple[int, ...], out_axis: int = -1
+) -> np.ndarray[Any, np.dtype[DT]]:
+    input_indices = np.arange(array.ndim)
+    input_indices[list(axes)] = input_indices[axes[0]]
+
+    output_indices = np.delete(np.arange(array.ndim), list(axes))
+    output_indices = np.insert(output_indices, out_axis, input_indices[axes[0]])
+
+    square_slice = np.array([slice(None)] * array.ndim)
+    n_out = np.min(np.array(array.shape)[list(axes)])
+    square_slice[list(axes)] = slice(n_out)
+
+    subscripts = f"{_spec_from_indices(tuple(input_indices))}->{_spec_from_indices(tuple(output_indices))}"
+    return np.einsum(subscripts, array[tuple(square_slice)])  # type: ignore unknown
+
+
+def build_diagonal[DT: np.generic](
+    array: np.ndarray[Any, np.dtype[DT]],
+    axis: int = -1,
+    out_axes: tuple[int, ...] = (-1, -2),
+    out_shape: tuple[int, ...] | None = None,
+) -> np.ndarray[Any, np.dtype[DT]]:
+    out_shape = out_shape or (array.shape[axis],) * len(out_axes)
+    assert len(out_shape) == len(out_axes)
+    n_dim_out = array.ndim - 1 + len(out_axes)
+
+    eye_indices = np.mod(out_axes, n_dim_out)
+
+    output_indices = np.arange(n_dim_out)
+
+    input_indices = np.delete(np.arange(n_dim_out), list(out_axes))
+    input_indices = np.insert(input_indices, axis, eye_indices[0])
+
+    eye = np.zeros(out_shape, dtype=array.dtype)
+    np.fill_diagonal(eye, 1)
+
+    if array.shape[axis] == out_shape[0]:
+        padded = array
+    elif array.shape[axis] < out_shape[0]:
+        padded = pad_along_axis(array, Padding(out_shape[0], 0, 0), axis)
+    else:
+        padded = truncate_along_axis(array, Truncation(out_shape[0], 0, 0), axis)
+
+    subscripts = f"{_spec_from_indices(tuple(input_indices))},{_spec_from_indices(tuple(eye_indices))}->{_spec_from_indices(tuple(output_indices))}"
+    return np.einsum(subscripts, padded, eye)  # type: ignore unknown
 
 
 class BlockDiagonalBasis[
@@ -67,40 +122,20 @@ class BlockDiagonalBasis[
         vectors: np.ndarray[Any, np.dtype[DT1]],
         axis: int = -1,
     ) -> np.ndarray[Any, np.dtype[DT1]]:
-        swapped = vectors.swapaxes(axis, 0)
-        stacked = swapped.reshape(self.n_repeats, *self.block_shape, *swapped.shape[1:])
-        stacked = np.moveaxis(stacked, 0, 2)
+        axis %= vectors.ndim
 
-        out = np.zeros(
-            (*self.block_shape, np.prod(self.repeat_shape).item(), *swapped.shape[1:]),
-            dtype=stacked.dtype,
+        stacked = vectors.reshape(
+            *vectors.shape[:axis],
+            self.n_repeats,
+            *self.block_shape,
+            *vectors.shape[axis + 1 :],
         )
-        for i in range(self.n_repeats):
-            out[:, :, i * (self.repeat_shape[0] + 1)] = stacked[:, :, i]
-        out = np.moveaxis(out, 2, 0)
-
-        return out.reshape(self.inner.size, *swapped.shape[1:]).swapaxes(axis, 0)
-
-    # @override
-    # def __from_inner__[DT1: np.generic](  # [DT1: DT]
-    #     self,
-    #     vectors: np.ndarray[Any, np.dtype[DT1]],
-    #     axis: int = -1,
-    # ) -> np.ndarray[Any, np.dtype[DT1]]:
-    #     swapped = vectors.swapaxes(axis, 0)
-    #     stacked = swapped.reshape(
-    #         self.block_shape[0], self.block_shape[1], -1, *swapped.shape[1:]
-    #     )
-    #     # TODO: this is actually complicated - need to copy from the old impl...
-    #     out = np.zeros(
-    #         (*self.block_shape, self.n_repeats, *swapped.shape[1:]), dtype=stacked.dtype
-    #     )
-    #     for i in range(self.n_repeats):
-    #         print(i, self.repeat_shape, i * (self.repeat_shape[1] + 1))
-    #         print(stacked[:, i * (self.repeat_shape[1] + 1)])
-    #         # out[:, i] = stacked[:, i * (self.repeat_shape[1] + 1)]
-
-    #     return out.reshape(self.size, *swapped.shape[1:]).swapaxes(axis, 0)
+        return build_diagonal(
+            stacked,
+            axis,
+            out_shape=self.repeat_shape,
+            out_axes=tuple(range(axis, axis + 2 * len(self.block_shape), 2)),
+        )
 
     @override
     def __from_inner__[DT1: np.generic](  # [DT1: DT]
@@ -114,30 +149,18 @@ class BlockDiagonalBasis[
         # the shape [(list,momentum), (list,momentum),...]
         k_shape = self.block_shape
         list_shape = self.repeat_shape
-        print(k_shape, list_shape)
-
         inner_shape = tuple(
             (n_list, n_k) for (n_k, n_list) in zip(k_shape, list_shape, strict=False)
         )
-
-        shifted = vectors.reshape(
+        stacked = vectors.reshape(
             *vectors.shape[:axis],
             *(itertools.chain(*inner_shape)),
             *vectors.shape[axis + 1 :],
         )
-        print(shifted.shape)
-        print(shifted[0, :, 0])
 
-        # Flip the vectors into basis [(list, list, ...), (momentum, momentum, ...)]
-        flipped = shifted.transpose(
-            *range(axis),
-            *range(axis, axis + 2 * len(inner_shape), 2),
-            *range(axis + 1, axis + 2 * len(inner_shape), 2),
-            *range(axis + 2 * len(inner_shape), shifted.ndim),
+        return extract_diagonal(
+            stacked, tuple(range(axis, axis + 2 * len(inner_shape), 2)), axis
         )
-        # TODO: N dimensional diag ...
-
-        return np.moveaxis(np.diagonal(flipped, axis1=axis, axis2=axis + 1), -1, axis)
 
     @override
     def __eq__(self, other: object) -> bool:

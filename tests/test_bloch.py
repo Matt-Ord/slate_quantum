@@ -13,7 +13,7 @@ def test_block_basis() -> None:
     block_basis = BlockDiagonalBasis(array.basis, (2, 2))
 
     in_block_basis = array.with_basis(block_basis)
-    print(data)
+
     np.testing.assert_allclose(
         in_block_basis.raw_data,
         [0, 1, 6, 7, 14, 15, 20, 21],
@@ -21,9 +21,9 @@ def test_block_basis() -> None:
     np.testing.assert_allclose(
         in_block_basis.as_array(),
         [
-            [0.0, 1.0, 0.0, 0.0],
-            [6.0, 7.0, 0.0, 0.0],
-            [0.0, 0.0, 14.0, 20.0],
-            [0.0, 0.0, 15.0, 21.0],
+            [0.0, 1.0, 0.0, 0.0, 0.0, 0.0],
+            [6.0, 7.0, 0.0, 0.0, 0.0, 0.0],
+            [0.0, 0.0, 14.0, 15.0, 0.0, 0.0],
+            [0.0, 0.0, 20.0, 21.0, 0.0, 0.0],
         ],
     )
