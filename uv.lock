@@ -536,7 +536,7 @@ wheels = [
 [[package]]
 name = "slate"
 version = "0.0.1"
-source = { git = "https://github.com/Matt-Ord/slate.git?rev=2ca4076#2ca40762e46b7807bbdff1a0604e5d14a55ad144" }
+source = { git = "https://github.com/Matt-Ord/slate.git?rev=e9d6a0f#e9d6a0f1ea8e0a645b97c5b89df6fc7f944e64bf" }
 dependencies = [
     { name = "numpy" },
 ]
@@ -583,7 +583,7 @@ requires-dist = [
     { name = "numpy", specifier = ">=2.0.0,<3.0.0" },
     { name = "qutip", marker = "extra == 'qutip'", specifier = ">=5.0.0,<6.0.0" },
     { name = "scipy", specifier = ">=1.14.1,<2.0.0" },
-    { name = "slate", git = "https://github.com/Matt-Ord/slate.git?rev=2ca4076" },
+    { name = "slate", git = "https://github.com/Matt-Ord/slate.git?rev=e9d6a0f" },
     { name = "slate", extras = ["plot"], marker = "extra == 'plot'" },
     { name = "sse-solver-py", marker = "extra == 'sse-solver-py'", git = "https://github.com/Matt-Ord/sse_solver.git?subdirectory=sse_solver_py&rev=135cbe1" },
 ]
