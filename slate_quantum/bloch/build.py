@@ -15,11 +15,13 @@ from slate.metadata import (
 )
 
 from slate_quantum import operator
+from slate_quantum.bloch._shifted_basis import BlochShiftedBasis
+from slate_quantum.bloch._transposed_basis import BlochTransposedBasis
 from slate_quantum.operator._build._potential import RepeatedLengthMetadata
 from slate_quantum.operator._operator import Operator, OperatorList
 
 if TYPE_CHECKING:
-    from slate.basis import Basis, TupleBasis2D
+    from slate.basis import TupleBasis2D
 
     from slate_quantum.operator._diagonal import Potential
 
@@ -44,25 +46,34 @@ class BlochFractionMetadata(LabeledMetadata[np.floating]):
         return StackedMetadata(tuple(BlochFractionMetadata(n) for n in repeat), None)
 
 
-def _get_sample_fractions[M: BlochFractionMetadata](
-    metadata: StackedMetadata[M, None],
-) -> tuple[np.ndarray[tuple[int], np.dtype[np.floating]], ...]:
-    """
-    Get the frequencies of the samples in a wavepacket, as a fraction of dk.
-
-    Parameters
-    ----------
-    shape : np.ndarray[tuple[_NDInv], np.dtype[np.int_]]
-
-    Returns
-    -------
-    np.ndarray[tuple[Literal[_NDInv], int], np.dtype[np.float_]]
-    """
-    mesh = np.meshgrid(
-        *(n.values for n in metadata),
-        indexing="ij",
+def metadata_from_split(
+    fraction_meta: StackedMetadata[BlochFractionMetadata, None],
+    state_meta: SpacedVolumeMetadata,
+) -> StackedMetadata[RepeatedLengthMetadata, AxisDirections]:
+    """Get the metadata for the Bloch operator."""
+    return StackedMetadata(
+        tuple(
+            starmap(
+                RepeatedLengthMetadata,
+                zip(state_meta.children, fraction_meta.shape, strict=True),
+            )
+        ),
+        state_meta.extra,
     )
-    return tuple(nki.ravel() for nki in mesh)
+
+
+def basis_from_metadata(
+    metadata: StackedMetadata[RepeatedLengthMetadata, AxisDirections],
+) -> BlochTransposedBasis[
+    np.complexfloating,
+    RepeatedLengthMetadata,
+    AxisDirections,
+]:
+    """Build the Bloch basis."""
+    operator_basis = basis.fundamental_transformed_tuple_basis_from_metadata(metadata)
+    return BlochTransposedBasis(
+        basis.with_modified_children(operator_basis, lambda _, i: BlochShiftedBasis(i))
+    )
 
 
 def bloch_operator_from_list[
@@ -77,16 +88,17 @@ def bloch_operator_from_list[
         np.complexfloating,
         RepeatedLengthMetadata,
         AxisDirections,
-        # TODO: what is the correct basis here?
         TupleBasis2D[
             np.complexfloating,
-            Basis[
-                StackedMetadata[RepeatedLengthMetadata, AxisDirections],
+            BlochTransposedBasis[
                 np.complexfloating,
+                RepeatedLengthMetadata,
+                AxisDirections,
             ],
-            Basis[
-                StackedMetadata[RepeatedLengthMetadata, AxisDirections],
+            BlochTransposedBasis[
                 np.complexfloating,
+                RepeatedLengthMetadata,
+                AxisDirections,
             ],
             None,
         ],
@@ -103,28 +115,21 @@ def bloch_operator_from_list[
     )
     list_meta = operators.basis.metadata()[0]
     single_operator_meta = operators.basis.metadata()[1][0]
-    full_operator_metadata = StackedMetadata(
-        tuple(
-            starmap(
-                RepeatedLengthMetadata,
-                zip(
-                    single_operator_meta.children,
-                    list_meta.shape,
-                    strict=True,
-                ),
-            )
-        ),
-        single_operator_meta.extra,
-    )
-    # TODO: what basis wraps this so that k is in the right spot here?
-    operator_basis = basis.fundamental_transformed_tuple_basis_from_metadata(
-        full_operator_metadata
-    )
+    full_operator_metadata = metadata_from_split(list_meta, single_operator_meta)
+    operator_basis = basis_from_metadata(full_operator_metadata)
     out_basis = BlockDiagonalBasis(
         tuple_basis((operator_basis, operator_basis.dual_basis())),
         operators.basis.metadata()[1].shape,
     )
     return Operator(out_basis, operators.raw_data)
+
+
+def _get_sample_fractions[M: BlochFractionMetadata](
+    metadata: StackedMetadata[M, None],
+) -> tuple[np.ndarray[tuple[int], np.dtype[np.floating]], ...]:
+    """Get the frequencies of the samples in a wavepacket, as a fraction of dk."""
+    mesh = np.meshgrid(*(n.values for n in metadata), indexing="ij")
+    return tuple(nki.ravel() for nki in mesh)
 
 
 def kinetic_hamiltonian[M: SpacedLengthMetadata, E: AxisDirections](
@@ -138,16 +143,17 @@ def kinetic_hamiltonian[M: SpacedLengthMetadata, E: AxisDirections](
         np.complexfloating,
         RepeatedLengthMetadata,
         AxisDirections,
-        # TODO: what is the correct basis here?
         TupleBasis2D[
             np.complexfloating,
-            Basis[
-                StackedMetadata[RepeatedLengthMetadata, AxisDirections],
+            BlochTransposedBasis[
                 np.complexfloating,
+                RepeatedLengthMetadata,
+                AxisDirections,
             ],
-            Basis[
-                StackedMetadata[RepeatedLengthMetadata, AxisDirections],
+            BlochTransposedBasis[
                 np.complexfloating,
+                RepeatedLengthMetadata,
+                AxisDirections,
             ],
             None,
         ],
