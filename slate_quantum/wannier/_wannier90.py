@@ -53,7 +53,7 @@ from surface_potential_analysis.wavepacket.wavepacket import (
     wavepacket_list_into_iter,
 )
 
-from ._projection import (
+from slate_quantum.wannier._projection import (
     get_state_projections_many_band,
 )
 
@@ -259,7 +259,7 @@ def _parse_nnk_points_file(
     nnk_points_file: str,
 ) -> tuple[int, list[tuple[int, int, int, int, int]]]:
     block = re.search(
-        "begin nnkpts((.|\n)+?)end nnkpts",
+        r"begin nnkpts((.|\n)+?)end nnkpts",
         nnk_points_file,  # cSpell:disable-line
     )
     if block is None:

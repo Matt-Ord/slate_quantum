@@ -25,6 +25,7 @@ from slate_quantum.operator._diagonal import Potential
 if TYPE_CHECKING:
     from collections.abc import Callable
 
+
 class RepeatedLengthMetadata(SpacedLengthMetadata):
     def __init__(self, inner: SpacedLengthMetadata, n_repeats: int) -> None:
         self._inner = inner
@@ -39,7 +40,8 @@ class RepeatedLengthMetadata(SpacedLengthMetadata):
     @property
     def inner(self) -> SpacedLengthMetadata:
         return self._inner
-    
+
+
 type RepeatedVolumeMetadata = StackedMetadata[RepeatedLengthMetadata, AxisDirections]
 
 
@@ -49,7 +51,7 @@ def _get_repeat_basis_metadata(
     return StackedMetadata(
         tuple(
             RepeatedLengthMetadata(
-               d,s
+               d, s
             )
             for (s, d) in zip(shape, metadata.children, strict=True)
         ),

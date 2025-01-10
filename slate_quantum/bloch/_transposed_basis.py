@@ -26,15 +26,11 @@ class BlochTransposedBasis[
 ):
     """A basis designed to show the underlying sparsity of the Bloch Hamiltonian.
 
-    In the transformed basis, states in total momentum order according to
+    In the inner basis, states are indexed by [(inner_index, block_index), (inner_index, block_index), ...]
 
-    k_tot = k_bloch + k_inner
+    this basis instead orders them according to [(block_index, block_index, ...), (inner_index, inner_index, ...)]
 
-    However if we instead order the basis so we cna index using (block_index, inner_index)
-    we can use a block diagonal basis to represent the Hamiltonian.
-
-    This basis therefore deals with the necessary re-ordering of states for a
-    transformed basis to be sparse under this representation.
+    This is so that they can play nice with BlockDiagonalBasis.
     """
 
     def __init__[
