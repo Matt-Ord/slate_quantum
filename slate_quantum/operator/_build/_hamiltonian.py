@@ -11,6 +11,7 @@ from slate.basis import (
     fundamental_transformed_tuple_basis_from_metadata,
 )
 from slate.metadata.volume import (
+    fundamental_stacked_delta_k,
     fundamental_stacked_dk,
     fundamental_stacked_k_points,
 )
@@ -27,7 +28,21 @@ if TYPE_CHECKING:
 
     from slate_quantum.operator._diagonal import Potential
 
-
+def _wrap_k_points(k_points: np.ndarray[Any, np.dtype[np.floating]], delta_k:tuple[float, ...]) -> np.ndarray[Any, np.dtype[np.floating]]:
+    """
+    Wrap values into the range [-a, a].
+    
+    Parameters:
+    - values (np.ndarray): The input array of values.
+    - a (float): The positive range limit.
+    
+    Returns:
+    - np.ndarray: The array with values wrapped to the range [-a, a].
+    """
+    shift = np.array(delta_k).reshape(-1, 1) / 2
+    return np.mod(k_points + shift, 2*shift) - shift
+    
+    
 def kinetic_energy_operator[M: SpacedLengthMetadata, E: AxisDirections](
     metadata: StackedMetadata[M, E],
     mass: float,
@@ -55,6 +70,7 @@ def kinetic_energy_operator[M: SpacedLengthMetadata, E: AxisDirections](
         fundamental_stacked_dk(metadata), bloch_fraction, axes=(0, 0)
     )
     k_points = fundamental_stacked_k_points(metadata) + bloch_phase[:, np.newaxis]
+    k_points = _wrap_k_points(k_points, tuple(np.linalg.norm(fundamental_stacked_delta_k(metadata),axis=1)))
     energy = cast(
         "Any",
         np.sum(np.square(hbar * k_points) / (2 * mass), axis=0, dtype=np.complex128),

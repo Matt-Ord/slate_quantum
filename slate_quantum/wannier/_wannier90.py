@@ -116,7 +116,7 @@ def _build_real_lattice_block(
 
     newline = "\n"
     return f"""begin unit_cell_cart
-{newline.join(' '.join(str(x) for x in o) for o in delta_x_padded) }
+{newline.join(" ".join(str(x) for x in o) for o in delta_x_padded)}
 end unit_cell_cart"""
 
 
@@ -166,7 +166,7 @@ num_iter = {options.num_iter}
 conv_tol = {options.convergence_tolerance}
 conv_window = {options.convergence_window}
 write_u_matrices = .true.
-{"auto_projections = .true."if has_projections else "use_bloch_phases = .true."}
+{"auto_projections = .true." if has_projections else "use_bloch_phases = .true."}
 num_wann = {wavepackets["basis"][0][0].n}
 {_build_real_lattice_block(util.delta_x_stacked)}
 {_build_k_points_block(wavepackets["basis"][0][1])}
@@ -334,10 +334,12 @@ def _build_amn_file(
     )
     return f"""
 {n_wavefunctions} {n_k_points} {n_projections}
-{newline.join(
-    f"{m + 1} {n + 1} {k + 1} {np.real(s)!r} {np.imag(s)!r}"
-    for ((k, m, n), s) in np.ndenumerate(stacked)
-)}
+{
+        newline.join(
+            f"{m + 1} {n + 1} {k + 1} {np.real(s)!r} {np.imag(s)!r}"
+            for ((k, m, n), s) in np.ndenumerate(stacked)
+        )
+    }
 """
 
 
@@ -393,16 +395,16 @@ def _build_dmn_file(
     return f"""
 {n_wavefunctions} {n_symmetry} {n_k_points_irr} {n_k_points}
 
-{newline.join(
-    " ".join((j + 1) for j in i if j != -1)
-    for i in idx_padded.reshape(10, -1)
-)}
 {
-newline.join(
-    " ".join((j + 1) for j in i if j != -1)
-    for i in u_padded.reshape(10, -1)
-)
-}
+        newline.join(
+            " ".join((j + 1) for j in i if j != -1) for i in idx_padded.reshape(10, -1)
+        )
+    }
+{
+        newline.join(
+            " ".join((j + 1) for j in i if j != -1) for i in u_padded.reshape(10, -1)
+        )
+    }
 """
 
 
@@ -560,8 +562,7 @@ def get_localization_operator_wannier90(
     wavefunctions: BlochWavefunctionListList[_B0, _SB0, _SBL0],
     *,
     options: Wannier90Options[_B1],
-) -> LocalizationOperator[_SB0, _B1, _B0]:
-    ...
+) -> LocalizationOperator[_SB0, _B1, _B0]: ...
 
 
 @overload
@@ -569,8 +570,7 @@ def get_localization_operator_wannier90(
     wavefunctions: BlochWavefunctionListList[_B0, _SB0, _SBL0],
     *,
     options: None = None,
-) -> LocalizationOperator[_SB0, FundamentalBasis[BasisMetadata], _B0]:
-    ...
+) -> LocalizationOperator[_SB0, FundamentalBasis[BasisMetadata], _B0]: ...
 
 
 def get_localization_operator_wannier90(
