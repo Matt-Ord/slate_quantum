@@ -28,12 +28,7 @@ def into_diagonal[M: BasisMetadata, DT: np.complexfloating](
 ) -> Operator[
     M,
     np.complexfloating,
-    DiagonalBasis[
-        DT,
-        ExplicitBasis[M, DT],
-        ExplicitBasis[M, DT],
-        None,
-    ],
+    DiagonalBasis[DT, ExplicitBasis[M, DT], ExplicitBasis[M, DT], None],
 ]:
     """Get a list of eigenstates for a given operator, assuming it is hermitian."""
     diagonal = into_diagonal_array(operator)
@@ -45,19 +40,14 @@ def into_diagonal_hermitian[M: BasisMetadata, DT: np.complexfloating](
 ) -> Operator[
     M,
     np.complexfloating,
-    DiagonalBasis[
-        DT,
-        EigenstateBasis[M],
-        EigenstateBasis[M],
-        None,
-    ],
+    DiagonalBasis[DT, EigenstateBasis[M], EigenstateBasis[M], None],
 ]:
     """Get a list of eigenstates for a given operator, assuming it is hermitian."""
     diagonal = into_diagonal_hermitian_array(operator)
     inner_basis = diagonal.basis.inner[0]
     # TODO: this doesn't play well with fast diagonal support  # noqa: FIX002
     # Need to use einsum inside ExplicitBasis to prevent conversion of states
-    # to a dense array.
+    # to a dense array when we do the transformation.
     new_inner_basis = EigenstateBasis(
         inner_basis.transform,
         direction="forward",
