@@ -30,6 +30,7 @@ sse_solver_py = [
 
 [tool.ruff]
 unsafe-fixes = true
+exclude = [".git", ".git-rewrite", ".vscode"]
 
 [tool.ruff.lint]
 select = ["ALL"]

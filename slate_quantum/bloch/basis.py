@@ -21,7 +21,7 @@ type BlochWavefunctionListList[Any] = StateList[Any]
 
 
 # Overall strategy:
-# 1 The full matrix is represented by a block diagonal matrix
+# 1 The full matrix is represented by a block diagonal matrix (done)
 # 2 we diagonalize each block separately, and return a diagonalized block matrix
 # 3 this diagonalized matrix stores the states in some reduced representation
 # since they are only states in a single block (this is the "matrix" used in explicit basis).
