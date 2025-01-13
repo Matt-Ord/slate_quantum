@@ -145,7 +145,9 @@ def solve_stochastic_schrodinger_equation_banded[
             hamiltonian_tuple.basis.shape
         )
         * (np.sqrt(e) / np.sqrt(2))
-        for o, e in zip(noise, noise.basis[0].metadata().values[noise.basis[0].points], strict=False)
+        for o, e in zip(
+            noise, noise.basis[0].metadata().values[noise.basis[0].points], strict=False
+        )
     ]
 
     banded_collapse = _get_banded_operators(

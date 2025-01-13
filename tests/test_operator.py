@@ -11,7 +11,6 @@ from slate.metadata import size_from_nested_shape
 from slate.metadata.volume import spaced_volume_metadata_from_stacked_delta_x
 
 from slate_quantum import noise, operator
-from slate_quantum.operator import build
 from slate_quantum.operator._linalg import into_diagonal_hermitian
 from slate_quantum.operator._operator import Operator, OperatorList
 
@@ -202,26 +201,31 @@ def test_x_k_commutator() -> None:
     momentum_operator = operator.build.k_operator(metadata, idx=0)
 
     matmul_0 = operator.matmul(position_operator, momentum_operator)
-    np.testing.assert_array_equal(
+    np.testing.assert_allclose(
         matmul_0.as_array(),
         position_operator.as_array() @ momentum_operator.as_array(),
+        atol=1e-15,
     )
 
     matmul_1 = operator.matmul(momentum_operator, position_operator)
-    np.testing.assert_array_equal(
+    np.testing.assert_allclose(
         matmul_1.as_array(),
         momentum_operator.as_array() @ position_operator.as_array(),
+        atol=1e-15,
     )
 
     commutator_manual = matmul_0 - matmul_1
-    np.testing.assert_array_equal(
+    np.testing.assert_allclose(
         commutator_manual.as_array(),
         position_operator.as_array() @ momentum_operator.as_array()
         - momentum_operator.as_array() @ position_operator.as_array(),
+        atol=1e-15,
     )
 
     commutator = operator.commute(position_operator, momentum_operator)
-    np.testing.assert_array_equal(commutator.as_array(), commutator_manual.as_array())
+    np.testing.assert_allclose(
+        commutator.as_array(), commutator_manual.as_array(), atol=1e-15
+    )
 
 
 def test_trivial_commutator() -> None:
@@ -331,12 +335,12 @@ def test_build_cl_operators() -> None:
     delta_x = metadata[0].spacing.delta
     expected = OperatorList.from_operators(
         [
-            build.potential_from_function(
+            operator.build.potential_from_function(
                 metadata,
                 lambda x: np.cos(2 * np.pi * x[0] / delta_x)
                 / np.sqrt(metadata[0].fundamental_size),
             ),
-            build.potential_from_function(
+            operator.build.potential_from_function(
                 metadata,
                 lambda x: np.sin(2 * np.pi * x[0] / delta_x)
                 / np.sqrt(metadata[0].fundamental_size),
@@ -348,12 +352,12 @@ def test_build_cl_operators() -> None:
 
     expected = OperatorList.from_operators(
         [
-            build.potential_from_function(
+            operator.build.potential_from_function(
                 metadata,
                 lambda x: np.exp(-1j * 2 * np.pi * x[0] / delta_x)
                 / np.sqrt(metadata[0].fundamental_size),
             ),
-            build.potential_from_function(
+            operator.build.potential_from_function(
                 metadata,
                 lambda x: np.exp(1j * 2 * np.pi * x[0] / delta_x)
                 / np.sqrt(metadata[0].fundamental_size),

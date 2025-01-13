@@ -41,10 +41,10 @@ if __name__ == "__main__":
     # For a 2D volume with fcc symmetry, the cos potential is not suitable
     metadata = spaced_volume_metadata_from_stacked_delta_x(
         (
-            np.array([np.sin(np.pi / 3), np.cos(np.pi / 3)]),
-            np.array([0, 1]),
+            np.array([1, 0]),
+            np.array([np.cos(np.pi / 3), np.sin(np.pi / 3)]),
         ),
-        (600, 600),
+        (6, 6),
     )
     potential = operator.build.cos_potential(metadata, 10)
     # A single cos potential in 2D, height 10

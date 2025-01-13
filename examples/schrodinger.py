@@ -18,9 +18,7 @@ if __name__ == "__main__":
 
     potential = operator.build.cos_potential(metadata, 1)
     hamiltonian = operator.build.kinetic_hamiltonian(potential, hbar**2)
-    # TODO: we want to make this more natural ...  # noqa: FIX002
-    diagonal_hamiltonian = operator.into_diagonal_hermitian(hamiltonian)
-    eigenstates = diagonal_hamiltonian.basis.inner[1].eigenvectors
+    eigenstates = operator.get_eigenstates_hermitian(hamiltonian)
 
     # Let's simulate the evolution of the system starting
     # in an eigenstate of the Hamiltonian

@@ -11,6 +11,7 @@ from slate.basis import (
     fundamental_transformed_tuple_basis_from_metadata,
 )
 from slate.metadata.volume import (
+    fundamental_stacked_delta_k,
     fundamental_stacked_dk,
     fundamental_stacked_k_points,
 )
@@ -28,10 +29,16 @@ if TYPE_CHECKING:
     from slate_quantum.operator._diagonal import Potential
 
 
+def _wrap_k_points(k_points: np.ndarray[Any, np.dtype[np.floating]], delta_k: tuple[float, ...]) -> np.ndarray[Any, np.dtype[np.floating]]:
+    """Wrap values into the range [-delta_k/2, delta_k/2]."""
+    shift = np.array(delta_k).reshape(-1, 1) / 2
+    return np.mod(k_points + shift, 2 * shift) - shift
+
+
 def kinetic_energy_operator[M: SpacedLengthMetadata, E: AxisDirections](
     metadata: StackedMetadata[M, E],
     mass: float,
-    bloch_fraction: np.ndarray[Any, np.dtype[np.float64]] | None = None,
+    bloch_fraction: np.ndarray[Any, np.dtype[np.floating]] | None = None,
 ) -> MomentumOperator[M, E]:
     """
     Given a mass and a basis calculate the kinetic part of the Hamiltonian.
@@ -55,6 +62,7 @@ def kinetic_energy_operator[M: SpacedLengthMetadata, E: AxisDirections](
         fundamental_stacked_dk(metadata), bloch_fraction, axes=(0, 0)
     )
     k_points = fundamental_stacked_k_points(metadata) + bloch_phase[:, np.newaxis]
+    k_points = _wrap_k_points(k_points, tuple(np.linalg.norm(fundamental_stacked_delta_k(metadata), axis=1)))
     energy = cast(
         "Any",
         np.sum(np.square(hbar * k_points) / (2 * mass), axis=0, dtype=np.complex128),
@@ -67,7 +75,7 @@ def kinetic_energy_operator[M: SpacedLengthMetadata, E: AxisDirections](
 def kinetic_hamiltonian[M: SpacedLengthMetadata, E: AxisDirections](
     potential: Potential[M, E, np.complexfloating],
     mass: float,
-    bloch_fraction: np.ndarray[Any, np.dtype[np.float64]] | None = None,
+    bloch_fraction: np.ndarray[Any, np.dtype[np.floating]] | None = None,
 ) -> Operator[StackedMetadata[M, E], np.complexfloating]:
     """
     Calculate the total hamiltonian in momentum basis for a given potential and mass.

@@ -2,7 +2,17 @@
 
 from __future__ import annotations
 
-from slate_quantum.operator import build
+from slate_quantum.operator import _build as build
+from slate_quantum.operator import _linalg as linalg
+from slate_quantum.operator._build import (
+    kinetic_energy_operator as build_kinetic_energy_operator,
+)
+from slate_quantum.operator._build import (
+    kinetic_hamiltonian as build_kinetic_hamiltonian,
+)
+from slate_quantum.operator._build import (
+    repeat_potential,
+)
 from slate_quantum.operator._diagonal import (
     MomentumOperator,
     MomentumOperatorBasis,
@@ -19,6 +29,7 @@ from slate_quantum.operator._linalg import (
     commute,
     dagger,
     get_commutator_operator_list,
+    get_eigenstates_hermitian,
     into_diagonal,
     into_diagonal_hermitian,
     matmul,
@@ -38,15 +49,6 @@ from slate_quantum.operator._operator import (
 from slate_quantum.operator._super_operator import (
     SuperOperator,
     SuperOperatorMetadata,
-)
-from slate_quantum.operator.build import (
-    kinetic_energy_operator as build_kinetic_energy_operator,
-)
-from slate_quantum.operator.build import (
-    kinetic_hamiltonian as build_kinetic_hamiltonian,
-)
-from slate_quantum.operator.build import (
-    repeat_potential,
 )
 
 __all__ = [
@@ -72,8 +74,10 @@ __all__ = [
     "expectation",
     "expectation_of_each",
     "get_commutator_operator_list",
+    "get_eigenstates_hermitian",
     "into_diagonal",
     "into_diagonal_hermitian",
+    "linalg",
     "matmul",
     "matmul_list_operator",
     "matmul_operator_list",
