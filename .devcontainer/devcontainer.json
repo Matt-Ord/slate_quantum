@@ -144,7 +144,9 @@
 					"pytest",
 					"pylint",
 					"pydocstyle",
-					"isort"
+					"isort",
+					"pyright",
+					"pydata"
 				]
 			},
 			"extensions": [
