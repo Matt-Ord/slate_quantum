@@ -17,7 +17,7 @@ from slate_quantum.operator import (
 )
 
 
-def build_periodic_caldeira_leggett_axis_operators[M: SpacedLengthMetadata](
+def periodic_caldeira_leggett_axis_operators[M: SpacedLengthMetadata](
     metadata: M,
 ) -> OperatorList[
     EigenvalueMetadata,
@@ -48,7 +48,7 @@ def build_periodic_caldeira_leggett_axis_operators[M: SpacedLengthMetadata](
     )
 
 
-def build_periodic_caldeira_leggett_operators[
+def periodic_caldeira_leggett_operators[
     M: SpacedLengthMetadata,
     E: AxisDirections,
 ](
@@ -83,7 +83,7 @@ def build_periodic_caldeira_leggett_operators[
     )
 
 
-def build_periodic_caldeira_leggett_real_operators[
+def real_periodic_caldeira_leggett_operators[
     M: SpacedLengthMetadata,
     E: AxisDirections,
 ](
