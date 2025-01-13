@@ -59,4 +59,4 @@ if __name__ == "__main__":
     fig, ax, line = plot.basis_against_array_2d_x(array.as_outer_array(potential))
     fig.show()
 
-    input()
+    plot.wait_for_close()
