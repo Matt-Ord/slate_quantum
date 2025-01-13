@@ -71,4 +71,4 @@ if __name__ == "__main__":
     ax.legend()
     fig.show()
 
-    input()
+    plot.wait_for_close()

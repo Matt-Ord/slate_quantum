@@ -56,4 +56,4 @@ if __name__ == "__main__":
     # We find that the CL kernel is a good approximation to the Gaussian kernel
     # for small displacements, but this approximation falls apart as we
     # move further from the origin.
-    input()
+    plot.wait_for_close()

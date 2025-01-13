@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import numpy as np
 from scipy.constants import hbar  # type: ignore stubs
-from slate import FundamentalBasis
+from slate import FundamentalBasis, plot
 from slate.metadata import LabelSpacing, spaced_volume_metadata_from_stacked_delta_x
 from slate.plot import animate_data_over_list_1d_x
 
@@ -38,4 +38,4 @@ if __name__ == "__main__":
     ax.set_title("Abs state, which does not change with time")
     fig.show()
 
-    input()
+    plot.wait_for_close()

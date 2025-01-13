@@ -61,4 +61,5 @@ if __name__ == "__main__":
     )
     ax.set_label("Temperature corrected noise operator")
     fig.show()
-    input()
+
+    plot.wait_for_close()
