@@ -6,7 +6,7 @@ import numpy as np
 from scipy.constants import hbar  # type: ignore unknown
 from slate import Array, BasisMetadata, SimpleMetadata, basis, linalg
 
-from slate_quantum.noise._build import truncate_noise_operator_list
+from slate_quantum.noise.build import truncate_noise_operator_list
 from slate_quantum.noise.diagonalize._eigenvalue import (
     get_periodic_noise_operators_diagonal_eigenvalue,
 )

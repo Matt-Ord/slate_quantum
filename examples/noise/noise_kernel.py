@@ -8,7 +8,7 @@ from slate.metadata import spaced_volume_metadata_from_stacked_delta_x
 from slate.plot import get_figure
 
 from slate_quantum.noise import (
-    build_isotropic_kernel_from_function_stacked,
+    build,
     caldeira_leggett_correlation_fn,
     gaussian_correlation_fn,
 )
@@ -24,7 +24,7 @@ if __name__ == "__main__":
     _lambda = 2 / np.pi
 
     correlation = gaussian_correlation_fn(1, np.sqrt(2) / _lambda)
-    kernel = build_isotropic_kernel_from_function_stacked(metadata, correlation)
+    kernel = build.isotropic_kernel_from_function_stacked(metadata, correlation)
 
     # We can plot the kernel to see how the correlation decays with distance.
     # The correlation falls by $e^-1$ at a distance of $\pi / 2$.
@@ -42,7 +42,7 @@ if __name__ == "__main__":
     # If we want to represent the noise using the caldeira-leggett model
     # the kernel we are simulating will be slightly different to the 'true' kernel.
     correlation = caldeira_leggett_correlation_fn(1, _lambda)
-    kernel_cl = build_isotropic_kernel_from_function_stacked(metadata, correlation)
+    kernel_cl = build.isotropic_kernel_from_function_stacked(metadata, correlation)
     cl_data = array.as_outer_array(array.as_outer_array(kernel_cl))
 
     fig, ax = get_figure()

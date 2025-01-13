@@ -3,7 +3,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 import numpy as np
-from scipy.constants import Boltzmann  # type: ignore stubs
+from scipy.constants import Boltzmann, hbar  # type: ignore stubs
+from slate import array, linalg
 from slate.basis import CoordinateBasis, as_index_basis, as_tuple_basis
 from slate.metadata import AxisDirections
 
@@ -18,7 +19,11 @@ from slate_quantum.noise.diagonalize._eigenvalue import (
     get_periodic_noise_operators_diagonal_eigenvalue,
     get_periodic_noise_operators_eigenvalue,
 )
-from slate_quantum.operator import SuperOperatorMetadata, get_commutator_operator_list
+from slate_quantum.operator import (
+    Operator,
+    SuperOperatorMetadata,
+    get_commutator_operator_list,
+)
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterable
@@ -30,14 +35,13 @@ if TYPE_CHECKING:
     from slate.metadata.length import LengthMetadata, SpacedLengthMetadata
 
     from slate_quantum.operator import (
-        Operator,
         OperatorList,
     )
 
     from ._kernel import AxisKernel
 
 
-def build_isotropic_kernel_from_function[M: LengthMetadata](
+def isotropic_kernel_from_function[M: LengthMetadata](
     metadata: M,
     fn: Callable[
         [np.ndarray[Any, np.dtype[np.float64]]],
@@ -68,7 +72,7 @@ def build_isotropic_kernel_from_function[M: LengthMetadata](
     return IsotropicNoiseKernel(displacements.basis[0], correlation)
 
 
-def build_isotropic_kernel_from_function_stacked[
+def isotropic_kernel_from_function_stacked[
     M: SpacedLengthMetadata,
     E: AxisDirections,
 ](
@@ -102,7 +106,7 @@ def build_isotropic_kernel_from_function_stacked[
     return IsotropicNoiseKernel(displacements.basis[0], correlation)
 
 
-def build_axis_kernel_from_function_stacked[M: SpacedLengthMetadata](
+def axis_kernel_from_function_stacked[M: SpacedLengthMetadata](
     metadata: StackedMetadata[M, Any],
     fn: Callable[
         [np.ndarray[Any, np.dtype[np.float64]]],
@@ -128,7 +132,7 @@ def build_axis_kernel_from_function_stacked[M: SpacedLengthMetadata](
     ]
     """
     return tuple(
-        build_isotropic_kernel_from_function(child, fn) for child in metadata.children
+        isotropic_kernel_from_function(child, fn) for child in metadata.children
     )
 
 
@@ -205,7 +209,7 @@ def caldeira_leggett_correlation_fn(
     return fn
 
 
-def get_temperature_corrected_operators[M0: BasisMetadata, M1: BasisMetadata](
+def temperature_corrected_operators[M0: BasisMetadata, M1: BasisMetadata](
     hamiltonian: Operator[M1, np.complexfloating],
     operators: OperatorList[M0, M1, np.complexfloating],
     temperature: float,
@@ -217,6 +221,21 @@ def get_temperature_corrected_operators[M0: BasisMetadata, M1: BasisMetadata](
     correction = commutator * (-1 * np.sqrt(eta / (8 * thermal_energy)))
     operators *= np.sqrt(2 * eta * thermal_energy)
     return correction + operators
+
+
+def hamiltonain_shift[M1: BasisMetadata](
+    hamiltonian: Operator[M1, np.complexfloating],
+    operators: OperatorList[BasisMetadata, M1, np.complexfloating],
+    eta: float,
+) -> Operator[M1, np.complexfloating]:
+    """Get the temperature corrected Hamiltonian shift."""
+    shift_product = linalg.einsum(
+        "(i (j k)),(i (k l))->(k l)", array.dagger(operators), operators
+    )
+    shift_product = Operator(shift_product.basis, shift_product.raw_data)
+    commutator = operator.commute(hamiltonian, shift_product)
+    pre_factor = 1j * eta / (4 * hbar)
+    return commutator * pre_factor
 
 
 def truncate_noise_operator_list[M0: EigenvalueMetadata, M1: BasisMetadata](

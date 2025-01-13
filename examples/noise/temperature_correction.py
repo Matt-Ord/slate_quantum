@@ -6,10 +6,9 @@ from slate import array, plot
 from slate.metadata import spaced_volume_metadata_from_stacked_delta_x
 
 from slate_quantum.noise import (
-    build_isotropic_kernel_from_function_stacked,
+    build,
     gaussian_correlation_fn,
     get_periodic_noise_operators_isotropic_stacked_fft,
-    get_temperature_corrected_operators,
 )
 from slate_quantum.operator import (
     build_kinetic_energy_operator,
@@ -29,7 +28,7 @@ if __name__ == "__main__":
     )
     lambda_ = np.pi / 2
     correlation = gaussian_correlation_fn(1, lambda_)
-    kernel = build_isotropic_kernel_from_function_stacked(metadata, correlation)
+    kernel = build.isotropic_kernel_from_function_stacked(metadata, correlation)
     operators = get_periodic_noise_operators_isotropic_stacked_fft(kernel)
 
     # For an ohmic environment, the correlation is given by
@@ -37,7 +36,7 @@ if __name__ == "__main__":
     # To see the effect of the temperature correction, we can
     # plot the operators before and after the correction.
     hamiltonian = build_kinetic_energy_operator(metadata, hbar**2)
-    corrected_operators = get_temperature_corrected_operators(
+    corrected_operators = build.temperature_corrected_operators(
         hamiltonian, operators, temperature=20 * hbar / Boltzmann, eta=1
     )
 

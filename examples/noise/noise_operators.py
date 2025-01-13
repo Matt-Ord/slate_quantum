@@ -9,7 +9,7 @@ from slate.plot import get_figure
 
 from slate_quantum.noise import (
     IsotropicNoiseKernel,
-    build_isotropic_kernel_from_function_stacked,
+    build,
     gaussian_correlation_fn,
     get_periodic_noise_operators_isotropic_stacked_fft,
     truncate_noise_operator_list,
@@ -24,7 +24,7 @@ if __name__ == "__main__":
     )
 
     correlation = gaussian_correlation_fn(1, sigma=np.pi / 2)
-    kernel = build_isotropic_kernel_from_function_stacked(metadata, correlation)
+    kernel = build.isotropic_kernel_from_function_stacked(metadata, correlation)
 
     # We can plot the kernel to see how the correlation decays with distance.
     # The correlation falls by $e^-1$ at a distance of \pi / 2$.
