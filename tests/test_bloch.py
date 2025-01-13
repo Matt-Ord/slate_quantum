@@ -43,8 +43,7 @@ def test_build_bloch_operator(shape: tuple[int, ...], repeat: tuple[int, ...]) -
     np.testing.assert_allclose(
         sparse.with_basis(transformed).raw_data.reshape(transformed.shape),
         full.with_basis(transformed).raw_data.reshape(transformed.shape),
-        atol=1e-15,
-        rtol=np.inf,
+        atol=1e-14,
     )
 
     np.testing.assert_allclose(sparse.as_array(), full.as_array(), atol=1e-14)
