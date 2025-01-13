@@ -347,7 +347,7 @@ def test_build_cl_operators() -> None:
             ),
         ]
     )
-    operators = noise.build_periodic_caldeira_leggett_real_operators(metadata)
+    operators = noise.build.real_periodic_caldeira_leggett_operators(metadata)
     np.testing.assert_allclose(operators.as_array(), expected.as_array())
 
     expected = OperatorList.from_operators(
@@ -364,7 +364,7 @@ def test_build_cl_operators() -> None:
             ),
         ]
     )
-    operators_complex = noise.build_periodic_caldeira_leggett_operators(metadata)
+    operators_complex = noise.build.periodic_caldeira_leggett_operators(metadata)
     np.testing.assert_allclose(operators_complex.as_array(), expected.as_array())
 
     np.testing.assert_allclose(

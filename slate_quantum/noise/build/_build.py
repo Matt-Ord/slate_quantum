@@ -15,7 +15,7 @@ from slate_quantum.noise._kernel import (
     IsotropicNoiseKernel,
     NoiseKernel,
 )
-from slate_quantum.noise.diagonalize._eigenvalue import (
+from slate_quantum.noise.diagonalize import (
     get_periodic_noise_operators_diagonal_eigenvalue,
     get_periodic_noise_operators_eigenvalue,
 )
@@ -34,11 +34,10 @@ if TYPE_CHECKING:
     )
     from slate.metadata.length import LengthMetadata, SpacedLengthMetadata
 
+    from slate_quantum.noise._kernel import AxisKernel
     from slate_quantum.operator import (
         OperatorList,
     )
-
-    from ._kernel import AxisKernel
 
 
 def isotropic_kernel_from_function[M: LengthMetadata](
