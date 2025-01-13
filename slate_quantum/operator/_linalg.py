@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, cast
 
 import numpy as np
-from slate import FundamentalBasis, array, basis
+from slate import FundamentalBasis, array, basis, tuple_basis
 from slate.basis import (
     Basis,
     diagonal_basis,
@@ -117,6 +117,17 @@ def dagger[M0: BasisMetadata](
     res = array.dagger(operator)
     # TODO: what should array.dagger's basis be?  # noqa: FIX002
     return Operator(res.basis.dual_basis(), res.raw_data)
+
+
+def dagger_each[M0: BasisMetadata, M1: BasisMetadata](
+    operators: OperatorList[M0, M1, np.complexfloating],
+) -> OperatorList[M0, M1, np.complexfloating]:
+    """Get the hermitian conjugate of an operator."""
+    out = OperatorList.from_operators([dagger(operator) for operator in operators])
+    return OperatorList(
+        tuple_basis((basis.from_metadata(operators.basis.metadata()[0]), out.basis[1])),
+        out.raw_data,
+    )
 
 
 def matmul_list_operator[M0: BasisMetadata, M1: BasisMetadata](

@@ -28,6 +28,7 @@ from slate_quantum.operator._diagonal import (
 from slate_quantum.operator._linalg import (
     commute,
     dagger,
+    dagger_each,
     get_commutator_operator_list,
     get_eigenstates_hermitian,
     into_diagonal,
@@ -71,6 +72,7 @@ __all__ = [
     "build_kinetic_hamiltonian",
     "commute",
     "dagger",
+    "dagger_each",
     "expectation",
     "expectation_of_each",
     "get_commutator_operator_list",
