@@ -24,17 +24,7 @@ if TYPE_CHECKING:
 def sample_noise_from_operators[M: BasisMetadata](
     operators: NoiseOperatorList[M], *, n_samples: int
 ) -> OperatorList[SimpleMetadata, M, np.complexfloating]:
-    """Generate noise from a set of noise operators.
-
-    Parameters
-    ----------
-    operators : NoiseOperatorList[_B0, _B1, _B2]
-    n_samples : int
-
-    Returns
-    -------
-    OperatorList[FundamentalBasis[BasisMetadata], _B1, _B2]
-    """
+    """Generate noise from a set of noise operators."""
     n_operators = operators.basis[0].size
 
     rng = np.random.default_rng()
