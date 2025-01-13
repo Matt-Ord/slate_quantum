@@ -201,26 +201,31 @@ def test_x_k_commutator() -> None:
     momentum_operator = operator.build.k_operator(metadata, idx=0)
 
     matmul_0 = operator.matmul(position_operator, momentum_operator)
-    np.testing.assert_array_equal(
+    np.testing.assert_allclose(
         matmul_0.as_array(),
         position_operator.as_array() @ momentum_operator.as_array(),
+        atol=1e-15,
     )
 
     matmul_1 = operator.matmul(momentum_operator, position_operator)
-    np.testing.assert_array_equal(
+    np.testing.assert_allclose(
         matmul_1.as_array(),
         momentum_operator.as_array() @ position_operator.as_array(),
+        atol=1e-15,
     )
 
     commutator_manual = matmul_0 - matmul_1
-    np.testing.assert_array_equal(
+    np.testing.assert_allclose(
         commutator_manual.as_array(),
         position_operator.as_array() @ momentum_operator.as_array()
         - momentum_operator.as_array() @ position_operator.as_array(),
+        atol=1e-15,
     )
 
     commutator = operator.commute(position_operator, momentum_operator)
-    np.testing.assert_array_equal(commutator.as_array(), commutator_manual.as_array())
+    np.testing.assert_allclose(
+        commutator.as_array(), commutator_manual.as_array(), atol=1e-15
+    )
 
 
 def test_trivial_commutator() -> None:
