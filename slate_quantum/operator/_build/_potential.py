@@ -50,9 +50,7 @@ def _get_repeat_basis_metadata(
 ) -> RepeatedVolumeMetadata:
     return StackedMetadata(
         tuple(
-            RepeatedLengthMetadata(
-               d, s
-            )
+            RepeatedLengthMetadata(d, s)
             for (s, d) in zip(shape, metadata.children, strict=True)
         ),
         metadata.extra,

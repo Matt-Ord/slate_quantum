@@ -13,8 +13,8 @@ from slate.metadata import (
 )
 from slate.metadata.volume import fundamental_stacked_delta_x
 
-from slate_quantum.noise._build import (
-    build_isotropic_kernel_from_function_stacked,
+from slate_quantum.noise.build import (
+    isotropic_kernel_from_function_stacked,
     lorentzian_correlation_fn,
 )
 from slate_quantum.noise.diagonalize._taylor import (
@@ -69,7 +69,7 @@ def get_lorentzian_isotropic_noise_kernel[M: SpacedLengthMetadata, E: AxisDirect
     TupleBasisLike[*tuple[FundamentalPositionBasis, ...]],
     ]
     """
-    return build_isotropic_kernel_from_function_stacked(
+    return isotropic_kernel_from_function_stacked(
         metadata, lorentzian_correlation_fn(a, lambda_)
     )
 
