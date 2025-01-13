@@ -138,7 +138,12 @@
 					"yerr",
 					"ylabel",
 					"ylim",
-					"yscale"
+					"yscale",
+					"numpy",
+					"pytest",
+					"pylint",
+					"pydocstyle",
+					"isort"
 				]
 			},
 			"extensions": [
