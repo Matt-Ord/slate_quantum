@@ -232,7 +232,7 @@ def hamiltonain_shift[M1: BasisMetadata](
 ) -> Operator[M1, np.complexfloating]:
     """Get the temperature corrected Hamiltonian shift."""
     shift_product = linalg.einsum(
-        "(i (j k)),(i (k' l))->(k l)", operator.dagger_each(operators), operators
+        "(i (j k)),(i (k' l))->(k' l)", operator.dagger_each(operators), operators
     )
     shift_product = Operator(shift_product.basis, shift_product.raw_data)
     commutator = operator.commute(hamiltonian, shift_product)

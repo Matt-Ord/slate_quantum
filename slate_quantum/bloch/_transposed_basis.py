@@ -10,7 +10,7 @@ from slate.metadata import (
     AxisDirections,
 )
 
-from slate_quantum.operator._build._potential import RepeatedLengthMetadata
+from slate_quantum.metadata import RepeatedLengthMetadata
 
 if TYPE_CHECKING:
     from collections.abc import Callable
