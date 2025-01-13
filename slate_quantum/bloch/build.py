@@ -17,7 +17,7 @@ from slate.metadata import (
 from slate_quantum import operator
 from slate_quantum.bloch._shifted_basis import BlochShiftedBasis
 from slate_quantum.bloch._transposed_basis import BlochTransposedBasis
-from slate_quantum.operator._build._potential import RepeatedLengthMetadata
+from slate_quantum.metadata import RepeatedLengthMetadata
 from slate_quantum.operator._operator import Operator, OperatorList
 
 if TYPE_CHECKING:

@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any, cast, override
 import numpy as np
 from slate.basis import BasisFeature, WrappedBasis
 
-from slate_quantum.operator._build._potential import RepeatedLengthMetadata
+from slate_quantum.metadata import RepeatedLengthMetadata
 
 if TYPE_CHECKING:
     from collections.abc import Callable

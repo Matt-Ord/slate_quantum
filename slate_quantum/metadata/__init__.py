@@ -10,12 +10,20 @@ from slate_quantum.metadata._label import (
     TimeMetadata,
     eigenvalue_basis,
 )
+from slate_quantum.metadata._repeat import (
+    RepeatedLengthMetadata,
+    RepeatedVolumeMetadata,
+    repeat_volume_metadata,
+)
 
 __all__ = [
     "EigenvalueMetadata",
     "MomentumMetadata",
+    "RepeatedLengthMetadata",
+    "RepeatedVolumeMetadata",
     "SpacedMomentumMetadata",
     "SpacedTimeMetadata",
     "TimeMetadata",
     "eigenvalue_basis",
+    "repeat_volume_metadata",
 ]

@@ -13,48 +13,17 @@ from slate.basis import (
 )
 from slate.metadata import (
     AxisDirections,
-    LabelSpacing,
     SpacedLengthMetadata,
     SpacedVolumeMetadata,
     StackedMetadata,
 )
 
 from slate_quantum._util import outer_product
+from slate_quantum.metadata import RepeatedLengthMetadata, repeat_volume_metadata
 from slate_quantum.operator._diagonal import Potential
 
 if TYPE_CHECKING:
     from collections.abc import Callable
-
-
-class RepeatedLengthMetadata(SpacedLengthMetadata):
-    def __init__(self, inner: SpacedLengthMetadata, n_repeats: int) -> None:
-        self._inner = inner
-        self.n_repeats = n_repeats
-        super().__init__(
-            inner.fundamental_size * n_repeats,
-            spacing=LabelSpacing(
-                start=inner.spacing.start, delta=n_repeats * inner.spacing.delta
-            ),
-        )
-
-    @property
-    def inner(self) -> SpacedLengthMetadata:
-        return self._inner
-
-
-type RepeatedVolumeMetadata = StackedMetadata[RepeatedLengthMetadata, AxisDirections]
-
-
-def _get_repeat_basis_metadata(
-    metadata: SpacedVolumeMetadata, shape: tuple[int, ...]
-) -> RepeatedVolumeMetadata:
-    return StackedMetadata(
-        tuple(
-            RepeatedLengthMetadata(d, s)
-            for (s, d) in zip(shape, metadata.children, strict=True)
-        ),
-        metadata.extra,
-    )
 
 
 def repeat_potential(
@@ -67,7 +36,7 @@ def repeat_potential(
     )
     as_transformed = potential.with_outer_basis(transformed_basis)
     converted_basis = fundamental_transformed_tuple_basis_from_metadata(
-        _get_repeat_basis_metadata(potential.basis.outer_recast.metadata(), shape)
+        repeat_volume_metadata(potential.basis.outer_recast.metadata(), shape)
     )
     repeat_basis = basis.with_modified_children(
         converted_basis,
