@@ -225,7 +225,7 @@ def temperature_corrected_operators[M0: BasisMetadata, M1: BasisMetadata](
     return correction + operators
 
 
-def hamiltonain_shift[M1: BasisMetadata](
+def hamiltonian_shift[M1: BasisMetadata](
     hamiltonian: Operator[M1, np.complexfloating],
     operators: OperatorList[BasisMetadata, M1, np.complexfloating],
     eta: float,

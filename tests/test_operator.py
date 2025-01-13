@@ -24,7 +24,7 @@ def test_build_kinetic_operator() -> None:
     np.testing.assert_allclose(kinetic_operator.raw_data, [0.0, 0.5, 2.0, 2.0, 0.5])
 
 
-def test_build_hamiltonain() -> None:
+def test_build_hamiltonian() -> None:
     metadata = spaced_volume_metadata_from_stacked_delta_x(
         (np.array([2 * np.pi]),), (5,)
     )
@@ -55,7 +55,7 @@ def test_build_hamiltonain() -> None:
     np.testing.assert_allclose(kinetic_operator.as_array(), hamiltonian.as_array())
 
 
-def test_hamiltonain_eigenstates() -> None:
+def test_hamiltonian_eigenstates() -> None:
     metadata = spaced_volume_metadata_from_stacked_delta_x(
         (np.array([2 * np.pi]),), (5,)
     )
