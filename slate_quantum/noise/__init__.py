@@ -26,7 +26,7 @@ from slate_quantum.noise.build import (
     truncate_noise_operator_list,
 )
 from slate_quantum.noise.build import (
-    hamiltonain_shift as build_hamiltonian_shift,
+    hamiltonian_shift as build_hamiltonian_shift,
 )
 from slate_quantum.noise.build import (
     isotropic_kernel_from_function as build_isotropic_kernel_from_function,
