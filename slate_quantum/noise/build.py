@@ -215,11 +215,14 @@ def temperature_corrected_operators[M0: BasisMetadata, M1: BasisMetadata](
     temperature: float,
     eta: float,
 ) -> OperatorList[M0, M1, np.complexfloating]:
-    """Get the temperature corrected operators."""
+    """Get the temperature corrected operators.
+
+    Note this returns the operators multiplied by hbar, to avoid numerical issues.
+    """
     commutator = get_commutator_operator_list(hamiltonian, operators)
     thermal_energy = Boltzmann * temperature
     correction = commutator * (-1 * np.sqrt(eta / (8 * thermal_energy)))
-    operators *= np.sqrt(2 * eta * thermal_energy)
+    operators *= np.sqrt(2 * eta * thermal_energy / hbar**2)
     return correction + operators
 
 

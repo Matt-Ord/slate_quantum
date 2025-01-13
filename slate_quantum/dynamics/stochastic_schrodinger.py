@@ -127,7 +127,29 @@ def solve_stochastic_schrodinger_equation_banded[
         None,
     ],
 ]:
-    """Given an initial state, use the stochastic schrodinger equation to solve the dynamics of the system."""
+    r"""Given an initial state, use the stochastic schrodinger equation to solve the dynamics of the system.
+
+    The stochastic schrodinger equation is a numerical method used to simulate the
+    open system described by the hamiltonian
+
+    .. math::
+        H = H_0 + \frac{hbar}{2} \sum_i (\sqrt{\gamma_i} L_i B_i^\dagger + \sqrt{\gamma_i}^* L_i^\dagger B_i)
+
+    where :math:`H_0` is the hamiltonian of the system, and :math:`L_i` are the system interaction operators
+    and :math:`B_i` are normalized environmental operators such that :math:`[B_i, B_j^\dagger ]= \delta_{i,j}`.
+
+    The corresponding stochastic schrodinger equation is then given by
+
+    .. math::
+        d|\psi(t)> = -\frac{i}{\hbar} H |\psi(t)> dt + \sum_i ...
+
+    where :math:`d\epsilon` are the Wiener increments
+
+    .. math::
+        <d\epsilon_i(t) d\epsilon_j(t)> = \delta_{i,j} dt
+
+    This solves the stochastic schrodinger equation using the banded solver implemented in rust.
+    """
     # We get the best numerical performace if we set the norm of the largest collapse operators
     # to be one. This prevents us from accumulating large errors when multiplying state * dt * operator * conj_operator
     r_threshold = kwargs.get("r_threshold", 1e-8)
@@ -144,12 +166,14 @@ def solve_stochastic_schrodinger_equation_banded[
         o.with_basis(hamiltonian_tuple.basis).raw_data.reshape(
             hamiltonian_tuple.basis.shape
         )
-        * (np.sqrt(e) / np.sqrt(2))
+        * (np.sqrt(e))
         for o, e in zip(
             noise, noise.basis[0].metadata().values[noise.basis[0].points], strict=False
         )
     ]
 
+    # We re-scale dt to be equal to 1 when the coherent step is equal to
+    # the target delta. This is done to avoid numerical issues
     banded_collapse = _get_banded_operators(
         [[list(x * np.sqrt(dt / hbar)) for x in o] for o in operators_data],
         r_threshold,
