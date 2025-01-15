@@ -29,7 +29,7 @@ if __name__ == "__main__":
     # We can plot the kernel to see how the correlation decays with distance.
     # The correlation falls by $e^-1$ at a distance of \pi / 2$.
     full_data = array.as_outer_array(array.as_outer_array(kernel))
-    fig, ax, _ = plot.basis_against_array_1d_x(full_data)
+    fig, ax, _ = plot.array_against_axes_1d(full_data)
     ax.set_title(r"Isotropic Gaussian Kernel with $\sigma = \pi / 2$")
     fig.show()
 
@@ -45,7 +45,7 @@ if __name__ == "__main__":
     # $e^{ikx}$.
     fig, ax = get_figure()
     for i in range(3):
-        plot.basis_against_array_1d_x(
+        plot.array_against_axes_1d(
             array.as_outer_array(operators[i, :]), ax=ax, measure="real"
         )
     fig.show()
@@ -62,10 +62,10 @@ if __name__ == "__main__":
     # This is because the noise operators we have taken are the
     # lowest frequency components of the kernel.
     fig, ax = get_figure()
-    _, _, line = plot.basis_against_array_1d_x(full_data, ax=ax)
+    _, _, line = plot.array_against_axes_1d(full_data, ax=ax)
     line.set_label("Original kernel")
     line.set_linestyle("--")
-    _, _, line = plot.basis_against_array_1d_x(restored_data, ax=ax)
+    _, _, line = plot.array_against_axes_1d(restored_data, ax=ax)
     line.set_label("Restored kernel")
     ax.set_title("Restored noise kernel, from the first 3 operators")
     ax.legend()

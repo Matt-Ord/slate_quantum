@@ -10,6 +10,7 @@ from slate.basis import BlockDiagonalBasis
 from slate.metadata import (
     AxisDirections,
     LabeledMetadata,
+    Metadata2D,
     SpacedLengthMetadata,
     SpacedVolumeMetadata,
 )
@@ -76,6 +77,24 @@ def basis_from_metadata(
     )
 
 
+def _metadata_from_operator_list(
+    meta: Metadata2D[
+        StackedMetadata[BlochFractionMetadata, None],
+        Metadata2D[SpacedVolumeMetadata, SpacedVolumeMetadata, None],
+        None,
+    ],
+) -> BlochTransposedBasis[
+    np.complexfloating,
+    RepeatedLengthMetadata,
+    AxisDirections,
+]:
+    """Get the metadata for the Bloch operator."""
+    list_meta = meta[0]
+    single_operator_meta = meta[1][0]
+    full_operator_metadata = metadata_from_split(list_meta, single_operator_meta)
+    return basis_from_metadata(full_operator_metadata)
+
+
 def bloch_operator_from_list[
     M0: StackedMetadata[BlochFractionMetadata, None],
     M1: SpacedVolumeMetadata,
@@ -113,10 +132,8 @@ def bloch_operator_from_list[
             operators.basis[1].metadata(), is_dual=operators.basis[1].is_dual
         )
     )
-    list_meta = operators.basis.metadata()[0]
-    single_operator_meta = operators.basis.metadata()[1][0]
-    full_operator_metadata = metadata_from_split(list_meta, single_operator_meta)
-    operator_basis = basis_from_metadata(full_operator_metadata)
+
+    operator_basis = _metadata_from_operator_list(operators.basis.metadata())
     out_basis = BlockDiagonalBasis(
         tuple_basis((operator_basis, operator_basis.dual_basis())),
         operators.basis.metadata()[1].shape,

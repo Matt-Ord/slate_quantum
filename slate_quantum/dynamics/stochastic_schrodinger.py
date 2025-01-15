@@ -7,13 +7,8 @@ import numpy as np
 import slate
 import slate.linalg
 from scipy.constants import hbar  # type: ignore lib
-from slate import FundamentalBasis, SimpleMetadata, basis
-from slate.basis import (
-    TupleBasis2D,
-    as_fundamental,
-    as_tuple_basis,
-    tuple_basis,
-)
+from slate import FundamentalBasis, SimpleMetadata, array, basis
+from slate.basis import TupleBasis2D, tuple_basis
 from slate.metadata import BasisMetadata, Metadata2D
 from slate.util import timed
 
@@ -155,10 +150,12 @@ def solve_stochastic_schrodinger_equation_banded[
     r_threshold = kwargs.get("r_threshold", 1e-8)
     target_delta = kwargs.get("target_delta", 1e-3)
 
-    hamiltonian_tuple = hamiltonian.with_basis(as_tuple_basis(hamiltonian.basis))
+    hamiltonian_tuple = array.as_tuple_basis(hamiltonian)
     initial_state_converted = initial_state.with_basis(hamiltonian_tuple.basis[0])
     coherent_step = operator.apply(hamiltonian, initial_state_converted)
 
+    # The actual coherent step is H / hbar not H, so to get the correct
+    # step size we need to multiply by hbar
     dt = hbar * (target_delta / abs(slate.linalg.norm(coherent_step).item()))
     times = basis.as_index_basis(times)
 
@@ -175,10 +172,10 @@ def solve_stochastic_schrodinger_equation_banded[
     # We re-scale dt to be equal to 1 when the coherent step is equal to
     # the target delta. This is done to avoid numerical issues
     banded_collapse = _get_banded_operators(
-        [[list(x * np.sqrt(dt / hbar)) for x in o] for o in operators_data],
+        [[list(x * np.sqrt(dt)) for x in o] for o in operators_data],
         r_threshold,
     )
-
+    # The rust sse solver expects the hamiltonian to be divided by hbar
     banded_h = _get_banded_operator(
         [
             list(x * (dt / hbar))
@@ -191,6 +188,8 @@ def solve_stochastic_schrodinger_equation_banded[
     if sse_solver_py is None:
         msg = "sse_solver_py is not installed, please install it using `pip install slate_quantum[sse_solver_py]`"
         raise ImportError(msg)
+
+    print(f"start solver, estimated {times.metadata().delta / dt:.2g} timesteps")  # noqa: T201
 
     n_realizations = kwargs.get("n_realizations", 1)
     data = sse_solver_py.solve_sse_banded(
@@ -226,12 +225,4 @@ def select_realization[MT: BasisMetadata, M: BasisMetadata](
     states: StateList[Metadata2D[SimpleMetadata, MT, None], M], idx: int = 0
 ) -> StateList[MT, M]:
     """Select a realization from a state list."""
-    list_basis = as_tuple_basis(as_tuple_basis(states.basis)[0])
-
-    states = states.with_list_basis(
-        tuple_basis((as_fundamental(list_basis[0]), list_basis[1]))
-    )
-    return StateList(
-        tuple_basis((states.basis[0][1], states.basis[1])),
-        states.raw_data.reshape(*states.basis[0].shape, -1)[idx],
-    )
+    return states[(idx, slice(None)), :]

@@ -29,13 +29,13 @@ if __name__ == "__main__":
     # We can plot the kernel to see how the correlation decays with distance.
     # The correlation falls by $e^-1$ at a distance of $\pi / 2$.
     full_data = array.as_outer_array(array.as_outer_array(kernel))
-    fig, ax, _ = plot.basis_against_array_1d_x(full_data)
+    fig, ax, _ = plot.array_against_axes_1d(full_data)
     ax.set_title(r"Isotropic Gaussian Kernel with $\sigma = \pi / \sqrt{2}$")
     fig.show()
     # We can also plot the 'full' isotropic kernel, to see the correlation
     # between all points in the system.
     diagonal_data = array.flatten(array.as_outer_array(kernel))
-    fig, ax, _ = plot.basis_against_array_2d_x(diagonal_data)
+    fig, ax, _ = plot.array_against_axes_2d_x(diagonal_data)
     ax.set_title(r"Isotropic Gaussian Kernel with $\sigma = \pi / \sqrt{2}$")
     fig.show()
 
@@ -46,9 +46,9 @@ if __name__ == "__main__":
     cl_data = array.as_outer_array(array.as_outer_array(kernel_cl))
 
     fig, ax = get_figure()
-    _, _, line = plot.basis_against_array_1d_x(full_data, ax=ax)
+    _, _, line = plot.array_against_axes_1d(full_data, ax=ax)
     line.set_label("Gaussian Kernel")
-    _, _, line = plot.basis_against_array_1d_x(cl_data, ax=ax)
+    _, _, line = plot.array_against_axes_1d(cl_data, ax=ax)
     line.set_label("Caldeira Leggett Kernel")
     ax.legend()
     ax.set_title("Comaprison of CL approximation to Gaussian Kernel")

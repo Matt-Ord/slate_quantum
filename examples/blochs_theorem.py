@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import numpy as np
 from scipy.constants import hbar  # type: ignore stubs
-from slate import plot
+from slate import Array, plot
 from slate.metadata import spaced_volume_metadata_from_stacked_delta_x
 from slate.plot import get_figure
 
@@ -15,19 +15,33 @@ if __name__ == "__main__":
         (np.array([2 * np.pi]),), (60,)
     )
 
-    potential = operator.build.cos_potential(metadata, 0)
+    rng = np.random.default_rng()
+    potential = operator.build.potential_from_function(
+        metadata, lambda x: 400 * rng.normal(size=x[0].size).astype(np.complex128)
+    )
     hamiltonian = bloch.build.kinetic_hamiltonian(potential, hbar**2, (3,))
+
+    # The hamiltonian is block diagonal, when we use the BlochTransposedBasis
+    diag_data = Array.from_array(
+        hamiltonian.with_basis(hamiltonian.basis.inner).raw_data.reshape(
+            hamiltonian.basis.inner.shape
+        )
+    )
+    fig, ax, _ = plot.array_against_axes_2d(diag_data)
+    fig.show()
+
+    # Into-diag is aware the initial matrix is block diagonal - so
+    # this 'just works' and is much faster than the naive diag.
     eigenstates = operator.get_eigenstates_hermitian(hamiltonian)
 
-    # The eigenstates of a free particle are plane waves
     fig, ax = get_figure()
     for state in list(eigenstates)[:3]:
-        plot.basis_against_array_1d_x(state, ax=ax, measure="abs")
+        plot.array_against_axes_1d(state, ax=ax, measure="abs")
     fig.show()
 
     fig, ax = get_figure()
     for state in list(eigenstates)[:3]:
-        plot.basis_against_array_1d_k(state, ax=ax, measure="abs")
+        plot.array_against_axes_1d_k(state, ax=ax, measure="abs")
     fig.show()
 
     plot.wait_for_close()

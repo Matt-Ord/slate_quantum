@@ -21,12 +21,12 @@ if __name__ == "__main__":
     # The eigenstates of a free particle are plane waves
     fig, ax = get_figure()
     for state in list(eigenstates)[:3]:
-        plot.basis_against_array_1d_x(state, ax=ax, measure="abs")
+        plot.array_against_axes_1d(state, ax=ax, measure="abs")
     fig.show()
 
     fig, ax = get_figure()
     for state in list(eigenstates)[:3]:
-        plot.basis_against_array_1d_k(state, ax=ax, measure="abs")
+        plot.array_against_axes_1d_k(state, ax=ax, measure="abs")
     fig.show()
 
     # Now we modify the potential to have a barrier
@@ -37,7 +37,7 @@ if __name__ == "__main__":
     # The eigenstates are now localized around the potential minima
     fig, ax = get_figure()
     for state in list(eigenstates)[:3]:
-        plot.basis_against_array_1d_x(state, ax=ax, measure="abs")
+        plot.array_against_axes_1d(state, ax=ax, measure="abs")
     fig.show()
 
     plot.wait_for_close()
