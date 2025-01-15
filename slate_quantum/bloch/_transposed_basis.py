@@ -1,25 +1,19 @@
 from __future__ import annotations
 
 import itertools
-from typing import TYPE_CHECKING, Any, cast, override
+from typing import Any, cast, override
 
 import numpy as np
 from slate import StackedMetadata, TupleBasis
 from slate.basis import BasisFeature, WrappedBasis
-from slate.metadata import (
-    AxisDirections,
-)
 
 from slate_quantum.metadata import RepeatedLengthMetadata
-
-if TYPE_CHECKING:
-    from collections.abc import Callable
 
 
 class BlochTransposedBasis[
     DT: np.generic,
     M: RepeatedLengthMetadata,
-    E: AxisDirections,
+    E,
     B: TupleBasis[Any, Any, Any] = TupleBasis[M, E, DT],
 ](
     WrappedBasis[Any, DT, B],
@@ -126,25 +120,6 @@ class BlochTransposedBasis[
     @override
     def __hash__(self) -> int:
         return hash((3, self.inner, self.is_dual))
-
-    @override
-    def with_inner[  # type: ignore there is no way to bound inner in parent
-        _B: TupleBasis[Any, Any, Any],
-    ](self, inner: _B) -> BlochTransposedBasis[DT, M, E, _B]:
-        return self.with_modified_inner(lambda _: inner)
-
-    @override
-    def with_modified_inner[  # type: ignore there is no way to bound the wrapper function in the parent class
-        _DT: np.generic,
-        _M: RepeatedLengthMetadata,
-        _E: AxisDirections,
-        _B: TupleBasis[Any, Any, Any] = TupleBasis[_M, _E, _DT],
-    ](
-        self,
-        wrapper: Callable[[TupleBasis[_M, _E, _DT]], _B],
-    ) -> BlochTransposedBasis[_DT, _M, _E, _B]:
-        """Get the wrapped basis after wrapper is applied to inner."""
-        return BlochTransposedBasis[_DT, _M, _E, _B](wrapper(self.inner))
 
     @property
     @override

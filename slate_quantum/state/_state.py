@@ -114,20 +114,20 @@ class StateList[
 
     @overload
     def __getitem__[_M1: BasisMetadata](
-        self: StateList[Any, _M1],
-        index: tuple[int, slice[None]],
-    ) -> State[_M1, Basis[Any, np.complexfloating]]: ...
+        self: StateList[Any, _M1], index: tuple[int, slice[None]]
+    ) -> State[_M1]: ...
+
+    @overload
+    def __getitem__[_M1: BasisMetadata, _I: slice | tuple[array.NestedIndex, ...]](
+        self: StateList[Any, _M1], index: tuple[_I, slice[None]]
+    ) -> StateList[Any, _M1]: ...
+
+    @overload
+    def __getitem__[_DT: np.generic](self: Array[Any, _DT], index: int) -> _DT: ...
 
     @overload
     def __getitem__[_DT: np.generic](
-        self: Array[Any, _DT],
-        index: int,
-    ) -> _DT: ...
-
-    @overload
-    def __getitem__[_DT: np.generic](
-        self: Array[Any, _DT],
-        index: tuple[array.NestedIndex, ...] | slice,
+        self: Array[Any, _DT], index: tuple[array.NestedIndex, ...] | slice
     ) -> Array[Any, _DT]: ...
 
     @override

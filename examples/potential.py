@@ -14,12 +14,12 @@ if __name__ == "__main__":
     # A single cos potential in 1D, height 10 with 100 points
     # Here .diagonal() is used to get the potential as an array
     # of points along the diagonal
-    fig, ax, line = plot.basis_against_array_1d_x(array.as_outer_array(potential))
+    fig, ax, line = plot.array_against_axes_1d(array.as_outer_array(potential))
     fig.show()
 
     potential = operator.repeat_potential(potential, (3,))
     # A repeated cos potential, with 3 repeats
-    fig, ax, line = plot.basis_against_array_1d_x(array.as_outer_array(potential))
+    fig, ax, line = plot.array_against_axes_1d(array.as_outer_array(potential))
     fig.show()
 
     # Metadata for a 2D volume with 100 points and a width of 14, 10
@@ -28,14 +28,14 @@ if __name__ == "__main__":
     )
     potential = operator.build.cos_potential(metadata, 10)
     # A single cos potential in 2D, height 10
-    fig, ax, line = plot.basis_against_array_1d_x(array.as_outer_array(potential))
+    fig, ax, line = plot.array_against_axes_1d(array.as_outer_array(potential))
     fig.show()
-    fig, ax, line = plot.basis_against_array_2d_x(array.as_outer_array(potential))
+    fig, ax, line = plot.array_against_axes_2d_x(array.as_outer_array(potential))
     fig.show()
 
     potential = operator.repeat_potential(potential, (3, 4))
     # A repeated cos potential, with (3, 4) repeats
-    fig, ax, line = plot.basis_against_array_2d_x(array.as_outer_array(potential))
+    fig, ax, line = plot.array_against_axes_2d_x(array.as_outer_array(potential))
     fig.show()
 
     # For a 2D volume with fcc symmetry, the cos potential is not suitable
@@ -48,15 +48,15 @@ if __name__ == "__main__":
     )
     potential = operator.build.cos_potential(metadata, 10)
     # A single cos potential in 2D, height 10
-    fig, ax, line = plot.basis_against_array_1d_x(array.as_outer_array(potential))
+    fig, ax, line = plot.array_against_axes_1d(array.as_outer_array(potential))
     fig.show()
-    fig, ax, line = plot.basis_against_array_2d_x(array.as_outer_array(potential))
+    fig, ax, line = plot.array_against_axes_2d_x(array.as_outer_array(potential))
     fig.show()
 
     potential = operator.build.fcc_potential(metadata, 1)
-    fig, ax, line = plot.basis_against_array_1d_x(array.as_outer_array(potential))
+    fig, ax, line = plot.array_against_axes_1d(array.as_outer_array(potential))
     fig.show()
-    fig, ax, line = plot.basis_against_array_2d_x(array.as_outer_array(potential))
+    fig, ax, line = plot.array_against_axes_2d_x(array.as_outer_array(potential))
     fig.show()
 
     plot.wait_for_close()

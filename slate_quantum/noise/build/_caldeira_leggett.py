@@ -103,14 +103,13 @@ def real_periodic_caldeira_leggett_operators[
     k = fundamental_stacked_dk(metadata)[0][0]
     n = size_from_nested_shape(metadata.fundamental_shape)
     eigenvalue = n / (4 * k**2)
-    delta_x = metadata[0].spacing.delta
     operators = OperatorList.from_operators(
         [
             build.potential_from_function(
-                metadata, lambda x: np.cos(2 * np.pi * x[0] / delta_x) / np.sqrt(n)
+                metadata, lambda x: np.cos(k * x[0]) / np.sqrt(n)
             ),
             build.potential_from_function(
-                metadata, lambda x: np.sin(2 * np.pi * x[0] / delta_x) / np.sqrt(n)
+                metadata, lambda x: np.sin(k * x[0]) / np.sqrt(n)
             ),
         ]
     )

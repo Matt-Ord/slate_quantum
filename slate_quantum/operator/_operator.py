@@ -292,15 +292,20 @@ class OperatorList[
     ) -> Operator[_M1, _DT1]: ...
 
     @overload
-    def __getitem__[_DT: np.generic](
-        self: Array[Any, _DT],
-        index: int,
-    ) -> _DT: ...
+    def __getitem__[
+        _M1: BasisMetadata,
+        _DT1: np.generic,
+        _I: slice | tuple[NestedIndex, ...],
+    ](
+        self: OperatorList[Any, _M1, _DT1], index: tuple[_I, slice[None]]
+    ) -> OperatorList[Any, _M1, _DT1]: ...
+
+    @overload
+    def __getitem__[_DT: np.generic](self: Array[Any, _DT], index: int) -> _DT: ...
 
     @overload
     def __getitem__[_DT: np.generic](
-        self: Array[Any, _DT],
-        index: tuple[NestedIndex, ...] | slice,
+        self: Array[Any, _DT], index: tuple[NestedIndex, ...] | slice
     ) -> Array[Any, _DT]: ...
 
     @override

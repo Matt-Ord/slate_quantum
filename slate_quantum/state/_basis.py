@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Literal, cast, override
 
 import numpy as np
-from slate import Array, Basis
+from slate import Array, Basis, SimpleMetadata
 from slate.explicit_basis import ExplicitUnitaryBasis
 from slate.metadata import BasisMetadata, Metadata2D
 
@@ -20,7 +20,10 @@ type Direction = Literal["forward", "backward"]
 class EigenstateBasis[
     M: BasisMetadata,
     B: Basis[Any, np.complexfloating] = Basis[M, np.complexfloating],
-](ExplicitUnitaryBasis[M, np.complexfloating, B]):
+    BTransform: Basis[Any, Any] = Basis[
+        Metadata2D[SimpleMetadata, BasisStateMetadata[B], None], Any
+    ],
+](ExplicitUnitaryBasis[M, np.complexfloating, B, BTransform]):
     """A basis with data stored as eigenstates."""
 
     def __init__[B1: Basis[Any, Any]](

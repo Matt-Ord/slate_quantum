@@ -41,21 +41,21 @@ if __name__ == "__main__":
     )
 
     idx = -2
-    fig, ax, _ = plot.basis_against_array_2d_x(array.flatten(operators[idx, :]))
+    fig, ax, _ = plot.array_against_axes_2d_x(array.flatten(operators[idx, :]))
     ax.set_label("Original noise operator")
     fig.show()
 
-    fig, ax, _ = plot.basis_against_array_2d_k(array.flatten(operators[idx, :]))
+    fig, ax, _ = plot.array_against_axes_2d_k(array.flatten(operators[idx, :]))
     ax.set_label("Original noise operator")
     fig.show()
 
-    fig, ax, _ = plot.basis_against_array_2d_x(
+    fig, ax, _ = plot.array_against_axes_2d_x(
         array.flatten(corrected_operators[idx, :])
     )
     ax.set_label("Temperature corrected noise operator")
     fig.show()
 
-    fig, ax, _ = plot.basis_against_array_2d_k(
+    fig, ax, _ = plot.array_against_axes_2d_k(
         array.flatten(corrected_operators[idx, :]), measure="abs"
     )
     ax.set_label("Temperature corrected noise operator")
