@@ -220,10 +220,8 @@ def temperature_corrected_operators[M0: BasisMetadata, M1: BasisMetadata](
     """
     commutator = get_commutator_operator_list(hamiltonian, operators)
     thermal_energy = Boltzmann * temperature
-    # These corrections are hbar**2 / 2 the paper conventions
-    # TODO: double check this ...  # noqa: FIX002
-    correction = commutator * (-1 * np.sqrt(eta / (16 * thermal_energy)))
-    operators *= np.sqrt(eta * thermal_energy)
+    correction = commutator * (-1 * np.sqrt(eta / (8 * thermal_energy * hbar**2)))
+    operators *= np.sqrt(2 * eta * thermal_energy / hbar**2)
     return correction + operators
 
 
@@ -238,10 +236,7 @@ def hamiltonian_shift[M1: BasisMetadata](
     )
     shift_product = Operator(shift_product.basis, shift_product.raw_data)
     commutator = operator.commute(hamiltonian, shift_product)
-    # These corrections are hbar**2 / 2 the paper conventions
-    # TODO: double check this ...  # noqa: FIX002
-    # pre_factor = 1j * eta / (4 * hbar) is what we have in the paper
-    pre_factor = 1j * eta * hbar / 8
+    pre_factor = 1j * eta / (4 * hbar)
     return commutator * pre_factor
 
 
