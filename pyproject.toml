@@ -15,7 +15,7 @@ dependencies = [
 dev = [
     "ruff",
     "pytest >=8.3.3,<9.0.0",
-    "pyright ==1.1.391",
+    "pyright ==1.1.392",
     "sphinx >=8.1.3,<9.0.0",
     "pydata-sphinx-theme >=0.16.0,<0.17.0",
 ]
