@@ -103,12 +103,12 @@ def real_periodic_caldeira_leggett_operators[
     k = fundamental_stacked_dk(metadata)[0][0]
     n = size_from_nested_shape(metadata.fundamental_shape)
     eigenvalue = n / (4 * k**2)
-    # The eigenvalue is scaled by sqrt(2),
+    # The eigenvalue is scaled by 2.
     # When we convert from complex e^ikx operators
     # to real cos(kx) and sin(kx) operators, we actually
-    # only have 1/(sqrt(2))(e^ikx +- e^-ikx)
-    # This scaling therefore accounts for this difference
-    eigenvalue *= np.sqrt(2)
+    # only have (e^ikx +- e^-ikx)
+    # This scaling accounts for this difference
+    eigenvalue *= 2
     operators = OperatorList.from_operators(
         [
             build.potential_from_function(

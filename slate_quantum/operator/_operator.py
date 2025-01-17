@@ -313,13 +313,16 @@ class OperatorList[
         self: Array[Any, _DT], index: NestedIndex
     ) -> Array[Any, _DT] | _DT | Operator[Any, _DT]:
         out = cast("Array[Any, _DT]", super()).__getitem__(index)
+        out = cast("Array[Any, _DT]", out)
         if (
             isinstance(index, tuple)
             and isinstance(index[0], int)
             and index[1] == slice(None)
         ):
-            out = cast("Array[Any, _DT]", out)
             return Operator(out.basis, out.raw_data)
+
+        if isinstance(index, tuple) and index[1] == slice(None):
+            return OperatorList(out.basis, out.raw_data)
         return out
 
     @staticmethod
