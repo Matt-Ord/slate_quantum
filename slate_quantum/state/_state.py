@@ -140,6 +140,8 @@ class StateList[
         ):
             out = cast("Array[Any, Any]", out)
             return State(out.basis, out.raw_data)
+        if isinstance(index, tuple) and index[1] == slice(None):
+            return StateList(out.basis, out.raw_data)
         return out
 
     @overload
