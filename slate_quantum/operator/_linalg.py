@@ -127,7 +127,11 @@ def dagger_each[M0: BasisMetadata, M1: BasisMetadata](
     operators: OperatorList[M0, M1, np.complexfloating],
 ) -> OperatorList[M0, M1, np.complexfloating]:
     """Get the hermitian conjugate of an operator."""
-    out = OperatorList.from_operators([dagger(operator) for operator in operators])
+    daggered = [dagger(operator) for operator in operators]
+    if len(daggered) == 0:
+        return OperatorList(operators.basis, np.array([]))
+
+    out = OperatorList.from_operators(daggered)
     return OperatorList(
         tuple_basis((basis.from_metadata(operators.basis.metadata()[0]), out.basis[1])),
         out.raw_data,
