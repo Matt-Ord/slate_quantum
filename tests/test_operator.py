@@ -368,7 +368,7 @@ def test_build_cl_operators() -> None:
     np.testing.assert_allclose(operators_complex.as_array(), expected.as_array())
 
     np.testing.assert_allclose(
-        operators_complex.basis[0].metadata().values * np.sqrt(2),
+        operators_complex.basis[0].metadata().values * 2,
         operators.basis[0].metadata().values,
     )
 
