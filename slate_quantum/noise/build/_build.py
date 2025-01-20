@@ -185,29 +185,6 @@ def lorentzian_correlation_fn(
     return fn
 
 
-def caldeira_leggett_correlation_fn(
-    a: float, lambda_: float
-) -> Callable[
-    [np.ndarray[Any, np.dtype[np.float64]]],
-    np.ndarray[Any, np.dtype[np.complexfloating]],
-]:
-    r"""Get a correlation function for a lorentzian noise kernel.
-
-    A lorentzian noise kernel is isotropic, and separable into individual
-    axis kernels. The kernel is given by
-
-    .. math::
-        \beta(x, x') = a^2 - \frac{\lambda^2}{4} (x-x')^2
-    """
-
-    def fn(
-        displacements: np.ndarray[Any, np.dtype[np.float64]],
-    ) -> np.ndarray[Any, np.dtype[np.complexfloating]]:
-        return (a**2 - (lambda_**2 / 4) * displacements**2).astype(np.complex128)
-
-    return fn
-
-
 def temperature_corrected_operators[M0: BasisMetadata, M1: BasisMetadata](
     hamiltonian: Operator[M1, np.complexfloating],
     operators: OperatorList[M0, M1, np.complexfloating],

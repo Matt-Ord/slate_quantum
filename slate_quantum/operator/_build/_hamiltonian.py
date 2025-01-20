@@ -5,9 +5,7 @@ from typing import TYPE_CHECKING, Any, cast
 import numpy as np
 from scipy.constants import hbar  # type: ignore lib
 from slate.basis import (
-    DiagonalBasis,
     SplitBasis,
-    as_tuple_basis,
     fundamental_transformed_tuple_basis_from_metadata,
 )
 from slate.metadata.volume import (
@@ -94,15 +92,11 @@ def kinetic_hamiltonian[M: SpacedLengthMetadata, E: AxisDirections](
     -------
     MomentumBasisHamiltonian[_L0, _L1, _L2]
     """
-    basis = as_tuple_basis(potential.basis.inner)
-    potential_hamiltonian = potential.with_basis(DiagonalBasis(basis))
     kinetic_hamiltonian = kinetic_energy_operator(
-        basis.metadata().children[0], mass, bloch_fraction
+        potential.basis.metadata().children[0], mass, bloch_fraction
     )
 
     return Operator(
-        SplitBasis(potential_hamiltonian.basis, kinetic_hamiltonian.basis),
-        np.concatenate(
-            [potential_hamiltonian.raw_data, kinetic_hamiltonian.raw_data], axis=None
-        ),
+        SplitBasis(potential.basis, kinetic_hamiltonian.basis),
+        np.concatenate([potential.raw_data, kinetic_hamiltonian.raw_data], axis=None),
     )
