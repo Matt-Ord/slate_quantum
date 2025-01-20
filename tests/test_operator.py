@@ -31,7 +31,7 @@ def test_build_hamiltonian() -> None:
     potential = operator.build.cos_potential(metadata, 0)
     hamiltonian = operator.build.kinetic_hamiltonian(potential, hbar**2)
     np.testing.assert_allclose(
-        hamiltonian.raw_data, [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.5, 2.0, 2.0, 0.5]
+        hamiltonian.raw_data, [0.0, 0.0, 0.0, 0.0, 0.5, 2.0, 2.0, 0.5]
     )
     transformed_basis = fundamental_transformed_tuple_basis_from_metadata(metadata)
     transformed_operator = hamiltonian.with_basis(
@@ -370,8 +370,8 @@ def test_build_cl_operators() -> None:
     )
 
     np.testing.assert_allclose(
-        # TODO: why is this 4, rather than 2? We need to check the conventions  # noqa: FIX002
-        # for the complex operators if we want to use them in the future
+        # Scaled by a factor of 4
+        # NOTE: the operators are scales by sqrt(eigenvalue)
         operators_complex.basis[0].metadata().values * 4,
         operators.basis[0].metadata().values,
     )
