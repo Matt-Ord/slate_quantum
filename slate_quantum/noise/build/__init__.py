@@ -2,7 +2,6 @@ from __future__ import annotations  # noqa: D104
 
 from slate_quantum.noise.build._build import (
     axis_kernel_from_function_stacked,
-    caldeira_leggett_correlation_fn,
     gaussian_correlation_fn,
     hamiltonian_shift,
     isotropic_kernel_from_function,
@@ -14,6 +13,8 @@ from slate_quantum.noise.build._build import (
     truncate_noise_operator_list,
 )
 from slate_quantum.noise.build._caldeira_leggett import (
+    caldeira_leggett_correlation_fn,
+    caldeira_leggett_operators,
     periodic_caldeira_leggett_axis_operators,
     periodic_caldeira_leggett_operators,
     real_periodic_caldeira_leggett_operators,
@@ -22,6 +23,7 @@ from slate_quantum.noise.build._caldeira_leggett import (
 __all__ = [
     "axis_kernel_from_function_stacked",
     "caldeira_leggett_correlation_fn",
+    "caldeira_leggett_operators",
     "gaussian_correlation_fn",
     "hamiltonian_shift",
     "isotropic_kernel_from_function",

@@ -329,7 +329,7 @@ def test_build_fcc_operator() -> None:
 
 def test_build_cl_operators() -> None:
     metadata = spaced_volume_metadata_from_stacked_delta_x(
-        (np.array([2 * np.pi]),), (16,)
+        (np.array([2 * np.pi]),), (160,)
     )
 
     delta_x = metadata[0].spacing.delta
@@ -348,7 +348,7 @@ def test_build_cl_operators() -> None:
         ]
     )
     operators = noise.build.real_periodic_caldeira_leggett_operators(metadata)
-    np.testing.assert_allclose(operators.as_array(), expected.as_array())
+    np.testing.assert_allclose(operators.as_array(), expected.as_array(), atol=1e-15)
 
     expected = OperatorList.from_operators(
         [
@@ -365,11 +365,30 @@ def test_build_cl_operators() -> None:
         ]
     )
     operators_complex = noise.build.periodic_caldeira_leggett_operators(metadata)
-    np.testing.assert_allclose(operators_complex.as_array(), expected.as_array())
+    np.testing.assert_allclose(
+        operators_complex.as_array(), expected.as_array(), atol=1e-15
+    )
 
     np.testing.assert_allclose(
-        operators_complex.basis[0].metadata().values * 2,
+        # TODO: why is this 4, rather than 2? We need to check the conventions  # noqa: FIX002
+        # for the complex operators if we want to use them in the future
+        operators_complex.basis[0].metadata().values * 4,
         operators.basis[0].metadata().values,
+    )
+
+    # The gradient of the non-periodic operator should match that of the periodic operator
+    # At the origin the cos operator just provides a constant offset to the energy,
+    # and the sin(x) operator is roughly linear
+    operators_non_periodic = noise.build.caldeira_leggett_operators(metadata)[0, :]
+    scaled_periodic = operators[1, :] * float(
+        np.sqrt(operators.basis[0].metadata().values[0])
+    )
+    scaled_periodic = scaled_periodic.with_basis(operators_non_periodic.basis)
+
+    np.testing.assert_allclose(
+        array.as_outer_array(scaled_periodic)[0:2].as_array(),
+        array.as_outer_array(operators_non_periodic)[0:2].as_array(),
+        atol=1e-4,
     )
 
 

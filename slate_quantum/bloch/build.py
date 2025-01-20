@@ -163,14 +163,10 @@ def kinetic_hamiltonian[M: SpacedLengthMetadata, E: AxisDirections](
         TupleBasis2D[
             np.complexfloating,
             BlochTransposedBasis[
-                np.complexfloating,
-                RepeatedLengthMetadata,
-                AxisDirections,
+                np.complexfloating, RepeatedLengthMetadata, AxisDirections
             ],
             BlochTransposedBasis[
-                np.complexfloating,
-                RepeatedLengthMetadata,
-                AxisDirections,
+                np.complexfloating, RepeatedLengthMetadata, AxisDirections
             ],
             None,
         ],
