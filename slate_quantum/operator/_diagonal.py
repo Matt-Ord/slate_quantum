@@ -46,9 +46,9 @@ def recast_diagonal_basis[
 class DiagonalOperator[
     M: BasisMetadata,
     DT: np.generic,
-    BInner: Basis[BasisMetadata, Any] = Basis[M, DT],
-    BOuter: Basis[BasisMetadata, Any] = Basis[M, DT],
-](Operator[M, DT, RecastDiagonalOperatorBasis[M, DT, BInner, BOuter]]):
+    BInner: Basis[BasisMetadata, Any] = Basis[M, Any],
+    BOuter: Basis[BasisMetadata, Any] = Basis[M, Any],
+](Operator[M, DT, RecastDiagonalOperatorBasis[M, Any, BInner, BOuter]]):
     def __init__[
         _M: BasisMetadata,
         _DT: np.generic,
@@ -58,7 +58,7 @@ class DiagonalOperator[
         self: DiagonalOperator[Any, Any, _BInner, _BOuter],
         inner_basis: _BInner,
         outer_basis: _BOuter,
-        raw_data: np.ndarray[Any, np.dtype[DT]],
+        raw_data: np.ndarray[Any, np.dtype[_DT]],
     ) -> None:
         basis = cast(
             "RecastDiagonalOperatorBasis[M, DT, BInner, BOuter]",
@@ -97,7 +97,7 @@ class PositionOperator[M: BasisMetadata, E: AxisDirections, DT: np.generic](
     DiagonalOperator[
         StackedMetadata[M, E],
         DT,
-        TupleBasis[M, E, DT, StackedMetadata[M, E]],
+        TupleBasis[M, E, Any, StackedMetadata[M, E]],
         Basis[StackedMetadata[M, E], Any],
     ]
 ):
