@@ -157,7 +157,8 @@
 				"charliermarsh.ruff",
 				"peakchen90.open-html-in-browser",
 				"github.vscode-github-actions",
-				"GitHub.copilot"
+				"GitHub.copilot",
+				"ms-python.vscode-pylance"
 			]
 		}
 	},
