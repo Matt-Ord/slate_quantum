@@ -118,17 +118,17 @@ class StateList[
     ) -> State[_M1]: ...
 
     @overload
-    def __getitem__[_M1: BasisMetadata, _I: slice | tuple[array.NestedIndex, ...]](
-        self: StateList[Any, _M1], index: tuple[_I, slice[None]]
+    def __getitem__[_M1: BasisMetadata, I: slice | tuple[array.NestedIndex, ...]](
+        self: StateList[Any, _M1], index: tuple[I, slice[None]]
     ) -> StateList[Any, _M1]: ...
 
     @overload
-    def __getitem__[_DT: np.generic](self: Array[Any, _DT], index: int) -> _DT: ...
+    def __getitem__[DT: np.generic](self: Array[Any, DT], index: int) -> DT: ...
 
     @overload
-    def __getitem__[_DT: np.generic](
-        self: Array[Any, _DT], index: tuple[array.NestedIndex, ...] | slice
-    ) -> Array[Any, _DT]: ...
+    def __getitem__[DT: np.generic](
+        self: Array[Any, DT], index: tuple[array.NestedIndex, ...] | slice
+    ) -> Array[Any, DT]: ...
 
     @override
     def __getitem__(self, index: array.NestedIndex) -> Any:  # type: ignore overload bad
