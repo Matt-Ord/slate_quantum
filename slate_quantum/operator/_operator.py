@@ -253,9 +253,9 @@ class OperatorList[
         )
 
     @overload
-    def __iter__[M1_: BasisMetadata, B1: Basis[Any, Any]](
-        self: OperatorList[Any, M1_, Any, TupleBasis2D[Any, Any, B1, None]], /
-    ) -> Iterator[Operator[M1, DT, B1]]: ...
+    def __iter__[M1_: BasisMetadata, B_: Basis[Any, Any]](
+        self: OperatorList[Any, M1_, Any, TupleBasis2D[Any, Any, B_, None]], /
+    ) -> Iterator[Operator[M1_, DT, B_]]: ...
 
     @overload
     def __iter__(self, /) -> Iterator[Operator[M1, DT]]: ...
