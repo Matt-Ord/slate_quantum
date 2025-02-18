@@ -253,9 +253,9 @@ class OperatorList[
         )
 
     @overload
-    def __iter__[_M1: BasisMetadata, _B1: Basis[Any, Any]](
-        self: OperatorList[Any, _M1, Any, TupleBasis2D[Any, Any, _B1, None]], /
-    ) -> Iterator[Operator[M1, DT, _B1]]: ...
+    def __iter__[_M1: BasisMetadata, B1: Basis[Any, Any]](
+        self: OperatorList[Any, _M1, Any, TupleBasis2D[Any, Any, B1, None]], /
+    ) -> Iterator[Operator[M1, DT, B1]]: ...
 
     @overload
     def __iter__(self, /) -> Iterator[Operator[M1, DT]]: ...
@@ -273,32 +273,32 @@ class OperatorList[
     @overload
     def __getitem__[
         _M1: BasisMetadata,
-        _DT1: np.generic,
-        _B1: Basis[OperatorMetadata, Any] = Basis[Metadata2D[_M1, _M1, None], _DT1],
+        DT1: np.generic,
+        B1: Basis[OperatorMetadata, Any] = Basis[Metadata2D[_M1, _M1, None], DT1],
     ](
-        self: OperatorList[Any, _M1, _DT1, TupleBasis2D[Any, Any, _B1, None]],
+        self: OperatorList[Any, _M1, DT1, TupleBasis2D[Any, Any, B1, None]],
         /,
         index: tuple[int, slice[None]],
-    ) -> Operator[_M1, _DT1, _B1]: ...
+    ) -> Operator[_M1, DT1, B1]: ...
 
     @overload
     def __getitem__[
         _M1: BasisMetadata,
-        _DT1: np.generic,
+        DT1: np.generic,
     ](
-        self: OperatorList[Any, _M1, _DT1, Any],
+        self: OperatorList[Any, _M1, DT1, Any],
         /,
         index: tuple[int, slice[None, None, None]],
-    ) -> Operator[_M1, _DT1]: ...
+    ) -> Operator[_M1, DT1]: ...
 
     @overload
     def __getitem__[
         _M1: BasisMetadata,
-        _DT1: np.generic,
-        _I: slice | tuple[NestedIndex, ...],
+        DT1: np.generic,
+        I: slice | tuple[NestedIndex, ...],
     ](
-        self: OperatorList[Any, _M1, _DT1], index: tuple[_I, slice[None]]
-    ) -> OperatorList[Any, _M1, _DT1]: ...
+        self: OperatorList[Any, _M1, DT1], index: tuple[I, slice[None]]
+    ) -> OperatorList[Any, _M1, DT1]: ...
 
     @overload
     def __getitem__[_DT: np.generic](self: Array[Any, _DT], index: int) -> _DT: ...
@@ -329,16 +329,16 @@ class OperatorList[
     def from_operators[
         DT1: np.generic,
         _M1: BasisMetadata,
-        _B1: Basis[Metadata2D[BasisMetadata, BasisMetadata, None], Any] = Basis[
+        B1: Basis[Metadata2D[BasisMetadata, BasisMetadata, None], Any] = Basis[
             Metadata2D[_M1, _M1, None], DT1
         ],
     ](
-        iter_: Iterable[Operator[_M1, DT1, _B1]],
+        iter_: Iterable[Operator[_M1, DT1, B1]],
     ) -> OperatorList[
         SimpleMetadata,
         _M1,
         DT1,
-        TupleBasis2D[Any, FundamentalBasis[SimpleMetadata], _B1, None],
+        TupleBasis2D[Any, FundamentalBasis[SimpleMetadata], B1, None],
     ]:
         operators = list(iter_)
         assert all(x.basis == operators[0].basis for x in operators)
