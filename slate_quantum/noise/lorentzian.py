@@ -59,7 +59,7 @@ def get_lorentzian_isotropic_noise_kernel[M: SpacedLengthMetadata, E: AxisDirect
 
     Parameters
     ----------
-    basis : TupleBasisWithLengthLike[*_B0s]
+    basis : TupleBasisWithLengthLike[*B_0s]
     a : float
     lambda_ : float
 

@@ -87,12 +87,12 @@ def matmul[M0: BasisMetadata](
 
     Parameters
     ----------
-    lhs : OperatorList[_B3, _B0, _B1]
-    rhs : Operator[_B1, _B2]
+    lhs : OperatorList[B_3, B_0, B_1]
+    rhs : Operator[B_1, B_2]
 
     Returns
     -------
-    OperatorList[_B3, _B0, _B2]
+    OperatorList[B_3, B_0, B_2]
     """
     data = einsum("(i k'),(k j) -> (i j)", lhs, rhs)
     return Operator(cast("Basis[Any, Any]", data.basis), data.raw_data)
@@ -149,12 +149,12 @@ def matmul_list_operator[M0: BasisMetadata, M1: BasisMetadata](
 
     Parameters
     ----------
-    lhs : OperatorList[_B3, _B0, _B1]
-    rhs : Operator[_B1, _B2]
+    lhs : OperatorList[B_3, B_0, B_1]
+    rhs : Operator[B_1, B_2]
 
     Returns
     -------
-    OperatorList[_B3, _B0, _B2]
+    OperatorList[B_3, B_0, B_2]
     """
     data = einsum("(m (i k')),(k j) -> (m (i j))", lhs, rhs)
     return OperatorList(cast("Basis[Any, Any]", data.basis), data.raw_data)
@@ -171,12 +171,12 @@ def matmul_operator_list[M0: BasisMetadata, M1: BasisMetadata](
 
     Parameters
     ----------
-    lhs : Operator[_B0, _B1]
-    rhs : OperatorList[_B3, _B1, _B2]
+    lhs : Operator[B_0, B_1]
+    rhs : OperatorList[B_3, B_1, B_2]
 
     Returns
     -------
-    OperatorList[_B3, _B0, _B2]
+    OperatorList[B_3, B_0, B_2]
     """
     data = einsum("(i k'),(m (k j)) -> (m (i j))", lhs, rhs)
     return OperatorList(cast("Basis[Any, Any]", data.basis), data.raw_data)

@@ -34,10 +34,10 @@ class BlochShiftedBasis[
     """
 
     def __init__[
-        _B: Basis[Any, Any],
+        B_: Basis[Any, Any],
     ](
-        self: BlochShiftedBasis[Any, Any, _B],
-        inner: _B,
+        self: BlochShiftedBasis[Any, Any, B_],
+        inner: B_,
     ) -> None:
         super().__init__(cast("Any", inner))
 
@@ -117,21 +117,21 @@ class BlochShiftedBasis[
 
     @override
     def with_inner[  # type: ignore there is no way to bound inner in parent
-        _B: Basis[Any, Any],
-    ](self, inner: _B) -> BlochShiftedBasis[DT, M, _B]:
+        B_: Basis[Any, Any],
+    ](self, inner: B_) -> BlochShiftedBasis[DT, M, B_]:
         return self.with_modified_inner(lambda _: inner)
 
     @override
     def with_modified_inner[  # type: ignore there is no way to bound the wrapper function in the parent class
-        _DT: np.generic,
-        _M: RepeatedLengthMetadata,
-        _B: Basis[Any, Any] = Basis[_M, _DT],
+        DT_: np.generic,
+        M_: RepeatedLengthMetadata,
+        B_: Basis[Any, Any] = Basis[M_, DT_],
     ](
         self,
-        wrapper: Callable[[Basis[_M, _DT]], _B],
-    ) -> BlochShiftedBasis[_DT, _M, _B]:
+        wrapper: Callable[[Basis[M_, DT_]], B_],
+    ) -> BlochShiftedBasis[DT_, M_, B_]:
         """Get the wrapped basis after wrapper is applied to inner."""
-        return BlochShiftedBasis[_DT, _M, _B](wrapper(self.inner))
+        return BlochShiftedBasis[DT_, M_, B_](wrapper(self.inner))
 
     @property
     @override

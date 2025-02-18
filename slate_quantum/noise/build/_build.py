@@ -226,12 +226,12 @@ def truncate_noise_operator_list[M0: EigenvalueMetadata, M1: BasisMetadata](
 
     Parameters
     ----------
-    operators : DiagonalNoiseOperatorList[FundamentalBasis[BasisMetadata], _B0, _B1]
+    operators : DiagonalNoiseOperatorList[FundamentalBasis[BasisMetadata], B_0, B_1]
     truncation : Iterable[int]
 
     Returns
     -------
-    DiagonalNoiseOperatorList[FundamentalBasis[BasisMetadata], _B0, _B1]
+    DiagonalNoiseOperatorList[FundamentalBasis[BasisMetadata], B_0, B_1]
     """
     converted = operators.with_basis(as_tuple_basis(operators.basis))
     converted_list = converted.with_list_basis(as_index_basis(converted.basis[0]))
@@ -254,12 +254,12 @@ def truncate_noise_kernel[M: SuperOperatorMetadata](
 
     Parameters
     ----------
-    kernel : NoiseKernel[_B0, _B1, _B0, _B1]
+    kernel : NoiseKernel[B_0, B_1, B_0, B_1]
     n : int
 
     Returns
     -------
-    NoiseKernel[_B0, _B1, _B0, _B1]
+    NoiseKernel[B_0, B_1, B_0, B_1]
     """
     operators = get_periodic_noise_operators_eigenvalue(kernel)
 
@@ -278,12 +278,12 @@ def truncate_diagonal_noise_kernel[
 
     Parameters
     ----------
-    kernel : NoiseKernel[_B0, _B1, _B0, _B1]
+    kernel : NoiseKernel[B_0, B_1, B_0, B_1]
     n : int
 
     Returns
     -------
-    NoiseKernel[_B0, _B1, _B0, _B1]
+    NoiseKernel[B_0, B_1, B_0, B_1]
     """
     operators = get_periodic_noise_operators_diagonal_eigenvalue(kernel)
 

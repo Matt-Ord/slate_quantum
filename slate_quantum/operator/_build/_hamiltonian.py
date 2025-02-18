@@ -45,14 +45,14 @@ def kinetic_energy_operator[M: SpacedLengthMetadata, E: AxisDirections](
 
     Parameters
     ----------
-    basis : _B0Inv
+    basis : B_0Inv
     mass : float
     bloch_fraction : np.ndarray[tuple[int], np.dtype[np.float_]] | None, optional
         bloch phase, by default None
 
     Returns
     -------
-    Hamiltonian[_B0Inv]
+    Hamiltonian[B_0Inv]
     """
     bloch_fraction = (
         np.zeros(len(metadata.children)) if bloch_fraction is None else bloch_fraction

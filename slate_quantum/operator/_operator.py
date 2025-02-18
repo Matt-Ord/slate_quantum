@@ -253,8 +253,8 @@ class OperatorList[
         )
 
     @overload
-    def __iter__[_M1: BasisMetadata, B1: Basis[Any, Any]](
-        self: OperatorList[Any, _M1, Any, TupleBasis2D[Any, Any, B1, None]], /
+    def __iter__[M1_: BasisMetadata, B1: Basis[Any, Any]](
+        self: OperatorList[Any, M1_, Any, TupleBasis2D[Any, Any, B1, None]], /
     ) -> Iterator[Operator[M1, DT, B1]]: ...
 
     @overload
@@ -272,48 +272,48 @@ class OperatorList[
 
     @overload
     def __getitem__[
-        _M1: BasisMetadata,
+        M1_: BasisMetadata,
         DT1: np.generic,
-        B1: Basis[OperatorMetadata, Any] = Basis[Metadata2D[_M1, _M1, None], DT1],
+        B1: Basis[OperatorMetadata, Any] = Basis[Metadata2D[M1_, M1_, None], DT1],
     ](
-        self: OperatorList[Any, _M1, DT1, TupleBasis2D[Any, Any, B1, None]],
+        self: OperatorList[Any, M1_, DT1, TupleBasis2D[Any, Any, B1, None]],
         /,
         index: tuple[int, slice[None]],
-    ) -> Operator[_M1, DT1, B1]: ...
+    ) -> Operator[M1_, DT1, B1]: ...
 
     @overload
     def __getitem__[
-        _M1: BasisMetadata,
+        M1_: BasisMetadata,
         DT1: np.generic,
     ](
-        self: OperatorList[Any, _M1, DT1, Any],
+        self: OperatorList[Any, M1_, DT1, Any],
         /,
         index: tuple[int, slice[None, None, None]],
-    ) -> Operator[_M1, DT1]: ...
+    ) -> Operator[M1_, DT1]: ...
 
     @overload
     def __getitem__[
-        _M1: BasisMetadata,
+        M1_: BasisMetadata,
         DT1: np.generic,
         I: slice | tuple[NestedIndex, ...],
     ](
-        self: OperatorList[Any, _M1, DT1], index: tuple[I, slice[None]]
-    ) -> OperatorList[Any, _M1, DT1]: ...
+        self: OperatorList[Any, M1_, DT1], index: tuple[I, slice[None]]
+    ) -> OperatorList[Any, M1_, DT1]: ...
 
     @overload
-    def __getitem__[_DT: np.generic](self: Array[Any, _DT], index: int) -> _DT: ...
+    def __getitem__[DT_: np.generic](self: Array[Any, DT_], index: int) -> DT_: ...
 
     @overload
-    def __getitem__[_DT: np.generic](
-        self: Array[Any, _DT], index: tuple[NestedIndex, ...] | slice
-    ) -> Array[Any, _DT]: ...
+    def __getitem__[DT_: np.generic](
+        self: Array[Any, DT_], index: tuple[NestedIndex, ...] | slice
+    ) -> Array[Any, DT_]: ...
 
     @override
-    def __getitem__[_M1: BasisMetadata, _DT: np.generic](  # type: ignore override
-        self: Array[Any, _DT], index: NestedIndex
-    ) -> Array[Any, _DT] | _DT | Operator[Any, _DT]:
-        out = cast("Array[Any, _DT]", super()).__getitem__(index)
-        out = cast("Array[Any, _DT]", out)
+    def __getitem__[M1_: BasisMetadata, DT_: np.generic](  # type: ignore override
+        self: Array[Any, DT_], index: NestedIndex
+    ) -> Array[Any, DT_] | DT_ | Operator[Any, DT_]:
+        out = cast("Array[Any, DT_]", super()).__getitem__(index)
+        out = cast("Array[Any, DT_]", out)
         if (
             isinstance(index, tuple)
             and isinstance(index[0], int)
@@ -328,15 +328,15 @@ class OperatorList[
     @staticmethod
     def from_operators[
         DT1: np.generic,
-        _M1: BasisMetadata,
+        M1_: BasisMetadata,
         B1: Basis[Metadata2D[BasisMetadata, BasisMetadata, None], Any] = Basis[
-            Metadata2D[_M1, _M1, None], DT1
+            Metadata2D[M1_, M1_, None], DT1
         ],
     ](
-        iter_: Iterable[Operator[_M1, DT1, B1]],
+        iter_: Iterable[Operator[M1_, DT1, B1]],
     ) -> OperatorList[
         SimpleMetadata,
-        _M1,
+        M1_,
         DT1,
         TupleBasis2D[Any, FundamentalBasis[SimpleMetadata], B1, None],
     ]:
@@ -351,23 +351,23 @@ class OperatorList[
 
     @overload
     def __add__[
-        _M0: BasisMetadata,
-        _M1: BasisMetadata,
+        M0_: BasisMetadata,
+        M1_: BasisMetadata,
         DT1: np.number[Any],
     ](
-        self: OperatorList[_M0, _M1, DT1],
-        other: OperatorList[_M0, _M1, DT1],
-    ) -> OperatorList[_M0, _M1, DT1]: ...
+        self: OperatorList[M0_, M1_, DT1],
+        other: OperatorList[M0_, M1_, DT1],
+    ) -> OperatorList[M0_, M1_, DT1]: ...
     @overload
-    def __add__[_M0: BasisMetadata, DT1: np.number[Any]](
-        self: Array[_M0, DT1],
-        other: Array[_M0, DT1],
-    ) -> Array[_M0, DT1]: ...
+    def __add__[M0_: BasisMetadata, DT1: np.number[Any]](
+        self: Array[M0_, DT1],
+        other: Array[M0_, DT1],
+    ) -> Array[M0_, DT1]: ...
     @override
-    def __add__[_M0: BasisMetadata, DT1: np.number[Any]](
-        self: Array[_M0, DT1],
-        other: Array[_M0, DT1],
-    ) -> Array[_M0, DT1]:
+    def __add__[M0_: BasisMetadata, DT1: np.number[Any]](
+        self: Array[M0_, DT1],
+        other: Array[M0_, DT1],
+    ) -> Array[M0_, DT1]:
         array = cast("Array[Any, DT1]", super()).__add__(other)
         if isinstance(other, OperatorList):
             return cast("Any", OperatorList(array.basis, array.raw_data))
@@ -376,25 +376,25 @@ class OperatorList[
 
     @overload
     def __sub__[
-        _M0: BasisMetadata,
-        _M1: BasisMetadata,
+        M0_: BasisMetadata,
+        M1_: BasisMetadata,
         DT1: np.number[Any],
     ](
-        self: OperatorList[_M0, _M1, DT1],
-        other: OperatorList[_M0, _M1, DT1],
-    ) -> OperatorList[_M0, _M1, DT1]: ...
+        self: OperatorList[M0_, M1_, DT1],
+        other: OperatorList[M0_, M1_, DT1],
+    ) -> OperatorList[M0_, M1_, DT1]: ...
 
     @overload
-    def __sub__[_M0: BasisMetadata, DT1: np.number[Any]](
-        self: Array[_M0, DT1],
-        other: Array[_M0, DT1],
-    ) -> Array[_M0, DT1]: ...
+    def __sub__[M0_: BasisMetadata, DT1: np.number[Any]](
+        self: Array[M0_, DT1],
+        other: Array[M0_, DT1],
+    ) -> Array[M0_, DT1]: ...
 
     @override
-    def __sub__[_M0: BasisMetadata, DT1: np.number[Any]](
-        self: Array[_M0, DT1],
-        other: Array[_M0, DT1],
-    ) -> Array[_M0, DT1]:
+    def __sub__[M0_: BasisMetadata, DT1: np.number[Any]](
+        self: Array[M0_, DT1],
+        other: Array[M0_, DT1],
+    ) -> Array[M0_, DT1]:
         array = cast("Array[Any, DT1]", super()).__sub__(other)
         if isinstance(other, OperatorList):
             return cast("Any", OperatorList(array.basis, array.raw_data))
@@ -403,12 +403,12 @@ class OperatorList[
 
     @override
     def __mul__[
-        _M0: BasisMetadata,
-        _M1: BasisMetadata,
+        M0_: BasisMetadata,
+        M1_: BasisMetadata,
         DT1: np.number[Any],
     ](
-        self: OperatorList[_M0, _M1, DT1],
+        self: OperatorList[M0_, M1_, DT1],
         other: float,
-    ) -> OperatorList[_M0, _M1, DT1]:
+    ) -> OperatorList[M0_, M1_, DT1]:
         out = cast("Array[Any, DT1]", super()).__mul__(other)
         return OperatorList[Any, Any, Any](out.basis, out.raw_data)
