@@ -191,7 +191,7 @@ def get_gaussian_noise_operators_periodic[
 
     Parameters
     ----------
-    hamiltonian : SingleBasisOperator[_BL0]
+    hamiltonian : SingleBasisOperator[B_L0]
     mass : float
     temperature : float
     gamma : float
@@ -229,7 +229,7 @@ def get_effective_gaussian_noise_operators_periodic[
 
     Parameters
     ----------
-    hamiltonian : SingleBasisOperator[_BL0]
+    hamiltonian : SingleBasisOperator[B_L0]
     mass : float
     temperature : float
     gamma : float
@@ -319,7 +319,7 @@ def get_linear_gaussian_noise_operators_explicit_taylor[M: SpacedLengthMetadata]
 
     Parameters
     ----------
-    hamiltonian : SingleBasisOperator[_BL0]
+    hamiltonian : SingleBasisOperator[B_L0]
     mass : float
     temperature : float
     gamma : float

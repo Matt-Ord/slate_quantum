@@ -28,10 +28,10 @@ class BlochTransposedBasis[
     """
 
     def __init__[
-        _B: TupleBasis[Any, Any, Any],
+        B_: TupleBasis[Any, Any, Any],
     ](
-        self: BlochTransposedBasis[Any, Any, Any, _B],
-        inner: _B,
+        self: BlochTransposedBasis[Any, Any, Any, B_],
+        inner: B_,
     ) -> None:
         super().__init__(cast("Any", inner))
 

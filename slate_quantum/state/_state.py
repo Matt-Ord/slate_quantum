@@ -113,14 +113,14 @@ class StateList[
         return (State(a.basis, a.raw_data) for a in super().__iter__())
 
     @overload
-    def __getitem__[_M1: BasisMetadata](
-        self: StateList[Any, _M1], index: tuple[int, slice[None]]
-    ) -> State[_M1]: ...
+    def __getitem__[M1_: BasisMetadata](
+        self: StateList[Any, M1_], index: tuple[int, slice[None]]
+    ) -> State[M1_]: ...
 
     @overload
-    def __getitem__[_M1: BasisMetadata, I: slice | tuple[array.NestedIndex, ...]](
-        self: StateList[Any, _M1], index: tuple[I, slice[None]]
-    ) -> StateList[Any, _M1]: ...
+    def __getitem__[M1_: BasisMetadata, I: slice | tuple[array.NestedIndex, ...]](
+        self: StateList[Any, M1_], index: tuple[I, slice[None]]
+    ) -> StateList[Any, M1_]: ...
 
     @overload
     def __getitem__[DT: np.generic](self: Array[Any, DT], index: int) -> DT: ...

@@ -50,15 +50,15 @@ class DiagonalOperator[
     BOuter: Basis[BasisMetadata, Any] = Basis[M, Any],
 ](Operator[M, DT, RecastDiagonalOperatorBasis[M, Any, BInner, BOuter]]):
     def __init__[
-        _M: BasisMetadata,
-        _DT: np.generic,
-        _BInner: Basis[BasisMetadata, Any] = Basis[_M, _DT],
-        _BOuter: Basis[BasisMetadata, Any] = Basis[_M, _DT],
+        M_: BasisMetadata,
+        DT_: np.generic,
+        BInner_: Basis[BasisMetadata, Any] = Basis[M_, DT_],
+        BOuter_: Basis[BasisMetadata, Any] = Basis[M_, DT_],
     ](
-        self: DiagonalOperator[Any, Any, _BInner, _BOuter],
-        inner_basis: _BInner,
-        outer_basis: _BOuter,
-        raw_data: np.ndarray[Any, np.dtype[_DT]],
+        self: DiagonalOperator[Any, Any, BInner_, BOuter_],
+        inner_basis: BInner_,
+        outer_basis: BOuter_,
+        raw_data: np.ndarray[Any, np.dtype[DT_]],
     ) -> None:
         basis = cast(
             "RecastDiagonalOperatorBasis[M, DT, BInner, BOuter]",
@@ -75,13 +75,13 @@ class DiagonalOperator[
         return self.basis.outer_recast
 
     def with_outer_basis[
-        _M: BasisMetadata,
-        _DT: np.generic,
-        _BInner: Basis[BasisMetadata, Any] = Basis[_M, Any],
-        _BOuter: Basis[BasisMetadata, Any] = Basis[_M, Any],
+        M_: BasisMetadata,
+        DT_: np.generic,
+        BInner_: Basis[BasisMetadata, Any] = Basis[M_, Any],
+        BOuter_: Basis[BasisMetadata, Any] = Basis[M_, Any],
     ](
-        self: DiagonalOperator[_M, _DT, _BInner, Basis[_M, Any]], basis: _BOuter
-    ) -> DiagonalOperator[_M, _DT, _BInner, _BOuter]:
+        self: DiagonalOperator[M_, DT_, BInner_, Basis[M_, Any]], basis: BOuter_
+    ) -> DiagonalOperator[M_, DT_, BInner_, BOuter_]:
         """Get the Potential with the outer recast basis set to basis."""
         return DiagonalOperator(
             self.inner_recast_basis,
