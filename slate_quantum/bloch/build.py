@@ -179,7 +179,7 @@ def kinetic_hamiltonian[M: SpacedLengthMetadata, E: AxisDirections](
 
     operators = OperatorList.from_operators(
         [
-            operator.build.kinetic_hamiltonian(potential, mass, fraction)
+            operator.build.kinetic_hamiltonian(potential, mass, np.array(fraction))
             for fraction in zip(*bloch_fractions, strict=True)
         ]
     )
