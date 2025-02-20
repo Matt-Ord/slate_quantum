@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, cast, overload, override
 
 import numpy as np
-from slate import FundamentalBasis, linalg
+from slate import FundamentalBasis, SimpleMetadata, linalg
 from slate.array import Array, NestedIndex
 from slate.basis import (
     Basis,
@@ -13,7 +13,7 @@ from slate.basis import (
     tuple_basis,
 )
 from slate.linalg import into_diagonal
-from slate.metadata import BasisMetadata, Metadata2D, NestedLength, SimpleMetadata
+from slate.metadata import BasisMetadata, Metadata2D, NestedLength
 
 from slate_quantum.state._state import State, StateList
 
@@ -253,18 +253,18 @@ class OperatorList[
         )
 
     @overload
-    def __iter__[M1_: BasisMetadata, B_: Basis[Any, Any]](
-        self: OperatorList[Any, M1_, Any, TupleBasis2D[Any, Any, B_, None]], /
-    ) -> Iterator[Operator[M1_, DT, B_]]: ...
+    def __iter__[M1_: BasisMetadata, B_: Basis[Any, Any], DT_: np.generic](
+        self: OperatorList[Any, M1_, DT_, TupleBasis2D[Any, Any, B_, None]], /
+    ) -> Iterator[Operator[M1_, DT_, B_]]: ...
 
     @overload
-    def __iter__(self, /) -> Iterator[Operator[M1, DT]]: ...
+    def __iter__(self, /) -> Iterator[Operator[M1, Any]]: ...
 
     @override
-    def __iter__(self, /) -> Iterator[Operator[M1, DT]]:  # type: ignore bad overload
+    def __iter__(self, /) -> Iterator[Operator[M1, Any]]:  # type: ignore bad overload
         return (
             Operator[M1, DT](
-                cast("Basis[Metadata2D[M1, M1, None], DT]", row.basis),
+                cast("Basis[Metadata2D[M1, M1, None], Any]", row.basis),
                 cast("Any", row.raw_data),
             )
             for row in super().__iter__()
