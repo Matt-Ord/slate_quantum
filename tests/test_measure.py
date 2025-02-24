@@ -13,7 +13,7 @@ def test_measure_x_position_state() -> None:
 
     for i in range(metadata.fundamental_size):
         position_state = state.build.position(metadata, (i,))
-        x = operator.measure.x(position_state, ax=0)
+        x = operator.measure.x(position_state, axis=0)
         assert x == i * volume.fundamental_stacked_dx(metadata)[0][0]
 
 
@@ -25,14 +25,14 @@ def test_measure_x_coherent_state() -> None:
     sigma_0 = (0.1 * np.pi,)
     coherent_state = state.build.coherent(metadata, (expected_x,), (0,), sigma_0)
 
-    x = operator.measure.x(coherent_state, ax=0)
+    x = operator.measure.x(coherent_state, axis=0)
     np.testing.assert_allclose(x, expected_x, rtol=1e-3)
 
     for i in range(metadata.fundamental_size):
         expected_x = i * volume.fundamental_stacked_dx(metadata)[0][0]
         coherent_state = state.build.coherent(metadata, (expected_x,), (0,), sigma_0)
 
-        periodic_x = operator.measure.periodic_x(coherent_state, ax=0)
+        periodic_x = operator.measure.periodic_x(coherent_state, axis=0)
         difference = (periodic_x - expected_x + np.pi) % (2 * np.pi) - np.pi
         np.testing.assert_allclose(
             difference,
@@ -40,7 +40,7 @@ def test_measure_x_coherent_state() -> None:
             atol=1e-7 * volume.fundamental_stacked_dx(metadata)[0][0],
         )
         wrapped_x = operator.measure.x(
-            coherent_state, ax=0, offset=-expected_x, wrapped=True
+            coherent_state, axis=0, offset=-expected_x, wrapped=True
         )
         np.testing.assert_allclose(
             wrapped_x,
@@ -59,7 +59,7 @@ def test_measure_width_coherent_state() -> None:
     for sigma_0 in (0.1 * np.pi, 0.01 * np.pi):
         coherent_state = state.build.coherent(metadata, x_0, (0,), (sigma_0,))
 
-        variance = operator.measure.variance_x(coherent_state, ax=0)
+        variance = operator.measure.variance_x(coherent_state, axis=0)
         np.testing.assert_allclose(
             np.sqrt(2 * variance),
             sigma_0,
@@ -75,7 +75,7 @@ def test_measure_width_coherent_state_2() -> None:
     sigma_0 = (0.1 * np.pi,)
     coherent_state = state.build.coherent(metadata, (expected_x,), (0,), sigma_0)
 
-    x = operator.measure.x(coherent_state, ax=0)
+    x = operator.measure.x(coherent_state, axis=0)
     np.testing.assert_allclose(x, expected_x, rtol=1e-3)
 
     x_squared = operator.measure.potential_from_function(

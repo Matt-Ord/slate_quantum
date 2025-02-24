@@ -219,15 +219,15 @@ def total_x_displacement_operator[M: SpacedLengthMetadata, E: AxisDirections](
 def x[M: SpacedLengthMetadata, E: AxisDirections](
     metadata: StackedMetadata[M, E],
     *,
-    ax: int,
+    axis: int,
     offset: float = 0,
     wrapped: bool = False,
 ) -> PositionOperator[M, E, np.complexfloating]:
     """Get the x operator."""
-    inner_offset = tuple(offset if i == ax else 0 for i in range(metadata.n_dim))
+    inner_offset = tuple(offset if i == axis else 0 for i in range(metadata.n_dim))
     points = _metadata.volume.fundamental_stacked_x_points(
         metadata, offset=inner_offset, wrapped=wrapped
-    )[ax]
+    )[axis]
     return Potential(basis.from_metadata(metadata), points.astype(np.complex128))
 
 
