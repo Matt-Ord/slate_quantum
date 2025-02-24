@@ -33,7 +33,7 @@ def potential_from_function[
     wrapped: bool = False,
     offset: tuple[float, ...] | None = None,
 ) -> float:
-    """Get the momentum of a wavepacket."""
+    """Get the expectation of a generic potential of a state."""
     momentum = _build.potential_from_function(
         state.basis.metadata(), fn=fn, wrapped=wrapped, offset=offset
     )
@@ -56,7 +56,7 @@ def all_potential_from_function[
     wrapped: bool = False,
     offset: tuple[float, ...] | None = None,
 ) -> Array[M0, np.floating]:
-    """Get the momentum of a wavepacket."""
+    """Get the expectation of a generic potential of all states."""
     momentum = _build.potential_from_function(
         states.basis.metadata()[1], fn=fn, wrapped=wrapped, offset=offset
     )
@@ -75,7 +75,7 @@ def x[
     offset: float = 0,
     wrapped: bool = False,
 ) -> float:
-    """Get the momentum of a wavepacket."""
+    """Get the position of a state."""
     momentum = _build.x(state.basis.metadata(), ax=ax, offset=offset, wrapped=wrapped)
 
     state = _state.normalize(state)
@@ -144,7 +144,7 @@ def variance_x[
 
     \braket{e^{iqx}} = e^{iq.x_0}\exp{(-\sigma_0^2q^2 / 4)}
     """
-    x = periodic_x(state, ax=0)
+    x = periodic_x(state, ax=ax)
 
     offset = tuple(-x if i == ax else 0 for i in range(state.basis.metadata().n_dim))
     return potential_from_function(
@@ -177,7 +177,7 @@ def all_x[
     *,
     ax: int,
 ) -> Array[M0, np.floating]:
-    """Get the momentum of a wavepacket."""
+    """Get the position of all states."""
     momentum = _build.x(states.basis.metadata()[1], ax=ax)
 
     states = _state.normalize_all(states)
@@ -284,7 +284,7 @@ def k[
     *,
     ax: int,
 ) -> float:
-    """Get the momentum of a wavepacket."""
+    """Get the momentum of a state."""
     momentum = _build.k(state.basis.metadata(), idx=ax)
 
     state = _state.normalize(state)
@@ -300,7 +300,7 @@ def all_k[
     *,
     ax: int,
 ) -> Array[M0, np.floating]:
-    """Get the momentum of a wavepacket."""
+    """Get the momentum of a all states."""
     momentum = _build.k(states.basis.metadata()[1], idx=ax)
 
     states = _state.normalize_all(states)
