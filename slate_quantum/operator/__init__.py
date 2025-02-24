@@ -4,8 +4,9 @@ from __future__ import annotations
 
 from slate_quantum.operator import _build as build
 from slate_quantum.operator import _linalg as linalg
+from slate_quantum.operator import _measure as measure
 from slate_quantum.operator._build import (
-    kinetic_energy_operator as build_kinetic_energy_operator,
+    kinetic_energy as build_kinetic_energy_operator,
 )
 from slate_quantum.operator._build import (
     kinetic_hamiltonian as build_kinetic_hamiltonian,
@@ -83,6 +84,7 @@ __all__ = [
     "matmul",
     "matmul_list_operator",
     "matmul_operator_list",
+    "measure",
     "momentum_operator_basis",
     "operator_basis",
     "position_operator_basis",

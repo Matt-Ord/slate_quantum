@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, cast, overload, override
 
 import numpy as np
-from slate import Array, FundamentalBasis, array, linalg, tuple_basis
+from slate import Array, FundamentalBasis, SimpleMetadata, array, linalg, tuple_basis
 from slate import basis as _basis
 from slate.basis import (
     Basis,
@@ -15,7 +15,7 @@ from slate.metadata import BasisMetadata, Metadata2D
 from slate_quantum.metadata import EigenvalueMetadata
 
 if TYPE_CHECKING:
-    from collections.abc import Iterator
+    from collections.abc import Iterable, Iterator
 
 
 class State[
@@ -68,6 +68,15 @@ def normalization(
     """
     product = inner_product(state, state)
     return np.abs(product)
+
+
+def normalize[M1: BasisMetadata](
+    state: State[M1],
+) -> State[M1]:
+    norm = normalization(state)
+    state_as_index = array.as_mul_basis(state)
+
+    return State(state_as_index.basis, state_as_index.raw_data / np.sqrt(norm))
 
 
 def get_occupations[B: Basis[BasisMetadata, Any]](
@@ -182,8 +191,28 @@ class StateList[
             final_basis, self.basis.__convert_vector_into__(self.raw_data, final_basis)
         )
 
+    @staticmethod
+    def from_states[
+        M1_: BasisMetadata,
+        B1: Basis[Any, np.complexfloating] = Basis[M1_, np.complexfloating],
+    ](
+        iter_: Iterable[State[M1_, B1]],
+    ) -> StateList[
+        SimpleMetadata,
+        M1_,
+        TupleBasis2D[Any, FundamentalBasis[SimpleMetadata], B1, None],
+    ]:
+        states = list(iter_)
+        assert all(x.basis == states[0].basis for x in states)
 
-def normalize_states[M0: BasisMetadata, M1: BasisMetadata](
+        list_basis = FundamentalBasis.from_size(len(states))
+        return StateList(
+            tuple_basis((list_basis, states[0].basis)),
+            np.array([x.raw_data for x in states]),
+        )
+
+
+def normalize_all[M0: BasisMetadata, M1: BasisMetadata](
     states: StateList[M0, M1],
 ) -> StateList[
     M0,

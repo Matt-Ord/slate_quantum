@@ -121,7 +121,13 @@ def potential_from_function[M: SpacedLengthMetadata, E: AxisDirections, DT: np.g
         [tuple[np.ndarray[Any, np.dtype[np.floating]], ...]],
         np.ndarray[Any, np.dtype[DT]],
     ],
+    *,
+    wrapped: bool = False,
+    offset: tuple[float, ...] | None = None,
 ) -> Potential[M, E, DT]:
     """Get the potential operator."""
-    positions = _metadata.volume.fundamental_stacked_x_points(metadata)
+    positions = _metadata.volume.fundamental_stacked_x_points(
+        metadata, offset=offset, wrapped=wrapped
+    )
+
     return Potential(basis.from_metadata(metadata), fn(positions))
