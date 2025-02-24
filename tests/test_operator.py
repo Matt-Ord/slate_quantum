@@ -169,7 +169,7 @@ def test_x_operator() -> None:
     metadata = spaced_volume_metadata_from_stacked_delta_x(
         (np.array([2 * np.pi]),), (5,)
     )
-    position_operator = operator.build.x(metadata, ax=0)
+    position_operator = operator.build.x(metadata, axis=0)
 
     np.testing.assert_array_equal(
         position_operator.as_array(),
@@ -181,7 +181,7 @@ def test_k_operator() -> None:
     metadata = spaced_volume_metadata_from_stacked_delta_x(
         (np.array([2 * np.pi]),), (5,)
     )
-    momentum_operator = operator.build.k(metadata, idx=0)
+    momentum_operator = operator.build.k(metadata, axis=0)
 
     basis_k = basis.fundamental_transformed_tuple_basis_from_metadata(metadata)
     np.testing.assert_array_equal(
@@ -204,8 +204,8 @@ def test_x_k_commutator() -> None:
     metadata = spaced_volume_metadata_from_stacked_delta_x(
         (np.array([2 * np.pi]),), (5,)
     )
-    position_operator = operator.build.x(metadata, ax=0)
-    momentum_operator = operator.build.k(metadata, idx=0)
+    position_operator = operator.build.x(metadata, axis=0)
+    momentum_operator = operator.build.k(metadata, axis=0)
 
     matmul_0 = operator.matmul(position_operator, momentum_operator)
     np.testing.assert_allclose(
@@ -239,8 +239,8 @@ def test_trivial_commutator() -> None:
     metadata = spaced_volume_metadata_from_stacked_delta_x(
         (np.array([2 * np.pi]),), (5,)
     )
-    position_operator = operator.build.x(metadata, ax=0)
-    momentum_operator = operator.build.k(metadata, idx=0)
+    position_operator = operator.build.x(metadata, axis=0)
+    momentum_operator = operator.build.k(metadata, axis=0)
 
     commutator = operator.commute(position_operator, position_operator)
     np.testing.assert_array_equal(commutator.as_array(), np.zeros((5, 5)))
@@ -404,7 +404,7 @@ def test_dagger() -> None:
         (np.array([2 * np.pi]),), (5,)
     )
 
-    position_operator = operator.build.x(metadata, ax=0)
+    position_operator = operator.build.x(metadata, axis=0)
     np.testing.assert_allclose(
         operator.dagger(position_operator).as_array(),
         position_operator.as_array().T.conj(),

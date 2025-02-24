@@ -144,6 +144,11 @@ def solve_stochastic_schrodinger_equation_banded[
         <d\epsilon_i(t) d\epsilon_j(t)> = \delta_{i,j} dt
 
     This solves the stochastic schrodinger equation using the banded solver implemented in rust.
+
+    Raises
+    ------
+    ImportError
+        If the rust sse_solver_py is not installed
     """
     # We get the best numerical performace if we set the norm of the largest collapse operators
     # to be one. This prevents us from accumulating large errors when multiplying state * dt * operator * conj_operator

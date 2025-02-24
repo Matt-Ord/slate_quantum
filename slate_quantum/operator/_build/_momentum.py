@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING, Any
+
 import numpy as np
 from scipy.constants import hbar  # type: ignore stubs
 from slate import BasisMetadata, StackedMetadata, basis
@@ -11,12 +13,15 @@ from slate_quantum.operator._diagonal import (
 )
 from slate_quantum.operator._operator import Operator, OperatorList
 
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
 
 def k[M: SpacedLengthMetadata, E: AxisDirections](
-    metadata: StackedMetadata[M, E], *, idx: int
+    metadata: StackedMetadata[M, E], *, axis: int
 ) -> MomentumOperator[M, E]:
     """Get the k operator."""
-    points = _metadata.volume.fundamental_stacked_k_points(metadata)[idx].astype(
+    points = _metadata.volume.fundamental_stacked_k_points(metadata)[axis].astype(
         np.complex128
     )
     return MomentumOperator(
@@ -26,16 +31,34 @@ def k[M: SpacedLengthMetadata, E: AxisDirections](
 
 
 def p[M: SpacedLengthMetadata, E: AxisDirections](
-    metadata: StackedMetadata[M, E], *, idx: int
+    metadata: StackedMetadata[M, E], *, axis: int
 ) -> MomentumOperator[M, E]:
     """Get the p operator."""
-    points = _metadata.volume.fundamental_stacked_k_points(metadata)[idx].astype(
+    points = _metadata.volume.fundamental_stacked_k_points(metadata)[axis].astype(
         np.complex128
     )
     return MomentumOperator(
         basis.fundamental_transformed_tuple_basis_from_metadata(metadata),
         (hbar * points).astype(np.complex128),
     )
+
+
+def momentum_from_function[M: SpacedLengthMetadata, E: AxisDirections, DT: np.generic](
+    metadata: StackedMetadata[M, E],
+    fn: Callable[
+        [tuple[np.ndarray[Any, np.dtype[np.floating]], ...]],
+        np.ndarray[Any, np.dtype[np.complexfloating]],
+    ],
+    *,
+    wrapped: bool = False,
+    offset: tuple[float, ...] | None = None,
+) -> MomentumOperator[M, E]:
+    """Get the k operator from a function."""
+    positions = _metadata.volume.fundamental_stacked_k_points(
+        metadata, offset=offset, wrapped=wrapped
+    )
+    out_basis = basis.fundamental_transformed_tuple_basis_from_metadata(metadata)
+    return MomentumOperator(out_basis, fn(positions))
 
 
 def filter_scatter(

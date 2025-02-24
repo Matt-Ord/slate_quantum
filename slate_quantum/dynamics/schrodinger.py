@@ -88,6 +88,11 @@ def solve_schrodinger_equation[
     """Solve the schrodinger equation iteratively for the given initial state and hamiltonian.
 
     Internally, this function makes use of the qutip package.
+
+    Raises
+    ------
+    ImportError
+        If qutip is not installed
     """
     if qutip is None:
         msg = "The qutip package is required to use this function. Please install it with `pip install qutip`."

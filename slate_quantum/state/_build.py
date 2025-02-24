@@ -94,7 +94,7 @@ def position[M: SpacedLengthMetadata, E: AxisDirections](
     metadata: StackedMetadata[M, E],
     idx: tuple[int, ...],
 ) -> State[StackedMetadata[M, E]]:
-    """Get the position of a wavepacket."""
+    """Get a position eigenstate."""
     position_basis = basis.from_metadata(metadata)
     data = np.zeros(metadata.shape, dtype=np.complex128)
     idx = tuple(i % n for (i, n) in zip(idx, metadata.shape, strict=True))
@@ -106,7 +106,7 @@ def momentum[M: SpacedLengthMetadata, E: AxisDirections](
     metadata: StackedMetadata[M, E],
     idx: tuple[int, ...],
 ) -> State[StackedMetadata[M, E]]:
-    """Get the momentum of a wavepacket."""
+    """Get a momentum eigenstate."""
     momentum_basis = basis.fundamental_transformed_tuple_basis_from_metadata(metadata)
     data = np.zeros(metadata.shape, dtype=np.complex128)
     idx = tuple(i % n for (i, n) in zip(idx, metadata.shape, strict=True))

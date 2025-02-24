@@ -10,6 +10,7 @@ from slate_quantum.operator._build._momentum import (
     all_filter_scatter,
     filter_scatter,
     k,
+    momentum_from_function,
     p,
 )
 from slate_quantum.operator._build._position import (
@@ -53,6 +54,7 @@ __all__ = [
     "k",
     "kinetic_energy",
     "kinetic_hamiltonian",
+    "momentum_from_function",
     "nx_displacement_operator",
     "nx_displacement_operators_stacked",
     "p",

@@ -12,5 +12,5 @@ if __name__ == "__main__":
 
     for i in range(metadata.fundamental_size):
         position_state = state.build.position(metadata, (i,))
-        x = operator.measure.x(position_state, ax=0)
+        x = operator.measure.x(position_state, axis=0)
         assert x == i * volume.fundamental_stacked_dx(metadata)[0][0]
