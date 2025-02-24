@@ -20,7 +20,7 @@ def test_build_kinetic_operator() -> None:
         (np.array([2 * np.pi]),), (5,)
     )
 
-    kinetic_operator = operator.build.kinetic_energy_operator(metadata, hbar**2)
+    kinetic_operator = operator.build.kinetic_energy(metadata, hbar**2)
     np.testing.assert_allclose(kinetic_operator.raw_data, [0.0, 0.5, 2.0, 2.0, 0.5])
 
 
@@ -51,7 +51,7 @@ def test_build_hamiltonian() -> None:
         atol=1e-15,
     )
 
-    kinetic_operator = operator.build.kinetic_energy_operator(metadata, hbar**2)
+    kinetic_operator = operator.build.kinetic_energy(metadata, hbar**2)
     np.testing.assert_allclose(kinetic_operator.as_array(), hamiltonian.as_array())
 
 
@@ -62,7 +62,7 @@ def test_hamiltonian_eigenstates() -> None:
     potential = operator.build.cos_potential(metadata, 0)
     hamiltonian = operator.build.kinetic_hamiltonian(potential, hbar**2)
 
-    kinetic_operator = operator.build.kinetic_energy_operator(metadata, hbar**2)
+    kinetic_operator = operator.build.kinetic_energy(metadata, hbar**2)
 
     np.testing.assert_allclose(
         np.sort(into_diagonal_hermitian(kinetic_operator).raw_data),
@@ -107,7 +107,7 @@ def test_build_axis_scattering_operator() -> None:
 
 def test_build_scattering_operator() -> None:
     metadata = spaced_volume_metadata_from_stacked_delta_x(
-        (np.array([2 * np.pi]),), (5,)
+        (np.array([3 * np.pi]),), (5,)
     )
     size = size_from_nested_shape(metadata.fundamental_shape)
 
@@ -122,6 +122,13 @@ def test_build_scattering_operator() -> None:
     np.testing.assert_allclose(
         array.as_outer_array(scatter_operator).as_array(),
         np.exp(1j * 2 * np.pi * np.arange(5) / 5) / np.sqrt(size),
+        atol=1e-15,
+    )
+
+    scatter_operator = operator.build.scattering_operator(metadata, n_k=(2,))
+    np.testing.assert_allclose(
+        array.as_outer_array(scatter_operator).as_array(),
+        np.exp(2j * 2 * np.pi * np.arange(5) / 5) / np.sqrt(size),
         atol=1e-15,
     )
 
@@ -162,7 +169,7 @@ def test_x_operator() -> None:
     metadata = spaced_volume_metadata_from_stacked_delta_x(
         (np.array([2 * np.pi]),), (5,)
     )
-    position_operator = operator.build.x_operator(metadata, idx=0)
+    position_operator = operator.build.x(metadata, ax=0)
 
     np.testing.assert_array_equal(
         position_operator.as_array(),
@@ -174,7 +181,7 @@ def test_k_operator() -> None:
     metadata = spaced_volume_metadata_from_stacked_delta_x(
         (np.array([2 * np.pi]),), (5,)
     )
-    momentum_operator = operator.build.k_operator(metadata, idx=0)
+    momentum_operator = operator.build.k(metadata, idx=0)
 
     basis_k = basis.fundamental_transformed_tuple_basis_from_metadata(metadata)
     np.testing.assert_array_equal(
@@ -197,8 +204,8 @@ def test_x_k_commutator() -> None:
     metadata = spaced_volume_metadata_from_stacked_delta_x(
         (np.array([2 * np.pi]),), (5,)
     )
-    position_operator = operator.build.x_operator(metadata, idx=0)
-    momentum_operator = operator.build.k_operator(metadata, idx=0)
+    position_operator = operator.build.x(metadata, ax=0)
+    momentum_operator = operator.build.k(metadata, idx=0)
 
     matmul_0 = operator.matmul(position_operator, momentum_operator)
     np.testing.assert_allclose(
@@ -232,8 +239,8 @@ def test_trivial_commutator() -> None:
     metadata = spaced_volume_metadata_from_stacked_delta_x(
         (np.array([2 * np.pi]),), (5,)
     )
-    position_operator = operator.build.x_operator(metadata, idx=0)
-    momentum_operator = operator.build.k_operator(metadata, idx=0)
+    position_operator = operator.build.x(metadata, ax=0)
+    momentum_operator = operator.build.k(metadata, idx=0)
 
     commutator = operator.commute(position_operator, position_operator)
     np.testing.assert_array_equal(commutator.as_array(), np.zeros((5, 5)))
@@ -251,7 +258,7 @@ def test_filter_scatter_operator() -> None:
         tuple_basis((basis_k, basis_k.dual_basis())),
         np.ones(25, dtype=np.complex128),
     )
-    filtered = operator.build.filter_scatter_operator(test_operator)
+    filtered = operator.build.filter_scatter(test_operator)
     np.testing.assert_array_equal(
         filtered.raw_data,
         np.array(
@@ -266,7 +273,7 @@ def test_filter_scatter_operator() -> None:
     )
 
     test_operators = OperatorList.from_operators([test_operator, test_operator])
-    filtered = operator.build.filter_scatter_operators(test_operators)
+    filtered = operator.build.all_filter_scatter(test_operators)
     for op in filtered:
         np.testing.assert_array_equal(
             op.raw_data,
@@ -397,7 +404,7 @@ def test_dagger() -> None:
         (np.array([2 * np.pi]),), (5,)
     )
 
-    position_operator = operator.build.x_operator(metadata, idx=0)
+    position_operator = operator.build.x(metadata, ax=0)
     np.testing.assert_allclose(
         operator.dagger(position_operator).as_array(),
         position_operator.as_array().T.conj(),

@@ -167,7 +167,7 @@ def caldeira_leggett_operators[M: SpacedLengthMetadata, E: AxisDirections](
     ],
 ]:
     assert len(metadata.fundamental_shape) == 1
-    operators = OperatorList.from_operators([build.x_operator(metadata, idx=0)])
+    operators = OperatorList.from_operators([build.x(metadata, ax=0)])
 
     return OperatorList(
         tuple_basis((eigenvalue_basis(np.array([1])), operators.basis[1])),

@@ -139,7 +139,16 @@ def expectation[M: BasisMetadata](
     state: State[M],
 ) -> complex:
     """Calculate the expectation value of an operator."""
-    return linalg.einsum("i' ,(i j'),j -> ", state, operator, state).as_array().item()
+    return (
+        linalg.einsum(
+            "i' ,(i j'),j -> ",
+            state.with_basis(state.basis.dual_basis()),
+            operator,
+            state,
+        )
+        .as_array()
+        .item()
+    )
 
 
 def expectation_of_each[M0: BasisMetadata, M: BasisMetadata](

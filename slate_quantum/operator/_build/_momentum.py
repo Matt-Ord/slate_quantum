@@ -12,7 +12,7 @@ from slate_quantum.operator._diagonal import (
 from slate_quantum.operator._operator import Operator, OperatorList
 
 
-def k_operator[M: SpacedLengthMetadata, E: AxisDirections](
+def k[M: SpacedLengthMetadata, E: AxisDirections](
     metadata: StackedMetadata[M, E], *, idx: int
 ) -> MomentumOperator[M, E]:
     """Get the k operator."""
@@ -25,7 +25,7 @@ def k_operator[M: SpacedLengthMetadata, E: AxisDirections](
     )
 
 
-def p_operator[M: SpacedLengthMetadata, E: AxisDirections](
+def p[M: SpacedLengthMetadata, E: AxisDirections](
     metadata: StackedMetadata[M, E], *, idx: int
 ) -> MomentumOperator[M, E]:
     """Get the p operator."""
@@ -38,7 +38,7 @@ def p_operator[M: SpacedLengthMetadata, E: AxisDirections](
     )
 
 
-def filter_scatter_operator(
+def filter_scatter(
     operator: Operator[SpacedVolumeMetadata, np.complexfloating],
 ) -> Operator[SpacedVolumeMetadata, np.complexfloating]:
     converted = operator.with_basis(
@@ -58,7 +58,7 @@ def filter_scatter_operator(
     return Operator(converted.basis, np.where(mask, data, 0))
 
 
-def filter_scatter_operators[M: BasisMetadata](
+def all_filter_scatter[M: BasisMetadata](
     operator: OperatorList[M, SpacedVolumeMetadata, np.complexfloating],
 ) -> OperatorList[M, SpacedVolumeMetadata, np.complexfloating]:
     is_dual = basis.as_tuple_basis(operator.basis).is_dual[1]

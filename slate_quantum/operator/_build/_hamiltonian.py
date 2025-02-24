@@ -35,7 +35,7 @@ def _wrap_k_points(
     return np.mod(k_points + shift, 2 * shift) - shift
 
 
-def kinetic_energy_operator[M: SpacedLengthMetadata, E: AxisDirections](
+def kinetic_energy[M: SpacedLengthMetadata, E: AxisDirections](
     metadata: StackedMetadata[M, E],
     mass: float,
     bloch_fraction: np.ndarray[Any, np.dtype[np.floating]] | None = None,
@@ -92,7 +92,7 @@ def kinetic_hamiltonian[M: SpacedLengthMetadata, E: AxisDirections](
     -------
     MomentumBasisHamiltonian[_L0, _L1, _L2]
     """
-    kinetic_hamiltonian = kinetic_energy_operator(
+    kinetic_hamiltonian = kinetic_energy(
         potential.basis.metadata().children[0], mass, bloch_fraction
     )
 
