@@ -32,6 +32,7 @@ from slate_quantum.operator._build._position import (
 from slate_quantum.operator._build._potential import (
     cos_potential,
     fcc_potential,
+    harmonic_potential,
     potential_from_function,
     repeat_potential,
     sin_potential,
@@ -51,6 +52,7 @@ __all__ = [
     "filter_scatter",
     "get_displacements_x",
     "get_displacements_x_stacked",
+    "harmonic_potential",
     "k",
     "kinetic_energy",
     "kinetic_hamiltonian",
