@@ -36,6 +36,7 @@ from slate_quantum.operator._build._potential import (
     potential_from_function,
     repeat_potential,
     sin_potential,
+    square_potential,
 )
 from slate_quantum.state._build import get_displacements_x_stacked
 
@@ -64,6 +65,7 @@ __all__ = [
     "repeat_potential",
     "scattering_operator",
     "sin_potential",
+    "square_potential",
     "total_x_displacement_operator",
     "x",
     "x_displacement_operator",

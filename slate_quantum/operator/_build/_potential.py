@@ -89,6 +89,39 @@ def sin_potential(
     )
 
 
+def _square_wave_points(
+    n_terms: int, lanczos_factor: float
+) -> np.ndarray[tuple[int], np.dtype[np.complex128]]:
+    prefactor = np.sinc(2 * np.fft.fftfreq(n_terms)) ** lanczos_factor
+    return prefactor * np.fft.ifft(
+        np.sign(np.cos(np.linspace(0, 2 * np.pi, n_terms, endpoint=False)))
+    )  # type: ignore can't infer shape of ifft
+
+
+def square_potential(
+    metadata: SpacedVolumeMetadata,
+    height: float,
+    *,
+    n_terms: tuple[int, ...] | None = None,
+    lanczos_factor: float = 0,
+) -> Potential[SpacedLengthMetadata, AxisDirections, np.complexfloating]:
+    """Build a square potential."""
+    transformed_basis = fundamental_transformed_tuple_basis_from_metadata(metadata)
+    # We need only the three lowest fourier components to represent this potential
+    cropped = basis.with_modified_children(
+        transformed_basis,
+        lambda i, y: y if n_terms is None else CroppedBasis(n_terms[i], y),
+    )
+
+    data = outer_product(
+        *(_square_wave_points(n, lanczos_factor) for n in cropped.shape)
+    )
+    return Potential(
+        cropped,
+        0.5 * height * data * np.sqrt(transformed_basis.size),
+    )
+
+
 def fcc_potential(
     metadata: SpacedVolumeMetadata,
     height: float,
