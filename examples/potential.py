@@ -33,6 +33,13 @@ if __name__ == "__main__":
     ax.set_ylabel("V(x)")
     fig.show()
 
+    # A square potential
+    potential = operator.build.square_potential(metadata, 10)
+    fig, ax, line = plot.array_against_axes_1d(array.as_outer_array(potential))
+    ax.set_title("Square Potential")
+    ax.set_ylabel("V(x)")
+    fig.show()
+
     # Metadata for a 2D volume with 100 points and a width of 14, 10
     metadata = spaced_volume_metadata_from_stacked_delta_x(
         (np.array([20, 0]), np.array([0, 10])), (100, 100)
@@ -51,6 +58,15 @@ if __name__ == "__main__":
     # A repeated cos potential, with (3, 4) repeats
     fig, ax, line = plot.array_against_axes_2d_x(array.as_outer_array(potential))
     ax.set_title("Repeated 2D Cos Potential")
+    fig.show()
+
+    # A square potential
+    potential = operator.build.square_potential(
+        metadata, 10, n_terms=(30, 30), lanczos_factor=1
+    )
+    fig, ax, line = plot.array_against_axes_2d_x(array.as_outer_array(potential))
+    ax.set_title("2D Square Potential")
+    ax.set_ylabel("V(x)")
     fig.show()
 
     # For a 2D volume with fcc symmetry, the cos potential is not suitable
