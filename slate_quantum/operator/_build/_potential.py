@@ -131,3 +131,21 @@ def potential_from_function[M: SpacedLengthMetadata, E: AxisDirections, DT: np.g
     )
 
     return Potential(basis.from_metadata(metadata), fn(positions))
+
+
+def harmonic_potential(
+    metadata: SpacedVolumeMetadata,
+    frequency: float,
+    *,
+    offset: tuple[float, ...] | None = None,
+) -> Potential[SpacedLengthMetadata, AxisDirections, np.complexfloating]:
+    """Build a harmonic potential.
+
+    V(x) = 0.5 * frequency^2 * ||x||^2
+    """
+    return potential_from_function(
+        metadata,
+        lambda x: (0.5 * frequency**2 * np.linalg.norm(x, axis=0) ** 2),
+        wrapped=True,
+        offset=offset,
+    )
