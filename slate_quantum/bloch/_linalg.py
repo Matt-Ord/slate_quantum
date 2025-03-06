@@ -3,8 +3,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, cast
 
 import numpy as np
-from slate import BasisMetadata, FundamentalBasis, SimpleMetadata, StackedMetadata
-from slate.basis import (
+from slate_core import BasisMetadata, FundamentalBasis, SimpleMetadata, StackedMetadata
+from slate_core.basis import (
     BasisStateMetadata,
     BlockDiagonalBasis,
     DiagonalBasis,

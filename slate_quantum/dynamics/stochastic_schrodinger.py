@@ -7,10 +7,10 @@ import numpy as np
 import slate
 import slate.linalg
 from scipy.constants import hbar  # type: ignore lib
-from slate import FundamentalBasis, SimpleMetadata, array, basis
-from slate.basis import TupleBasis2D, tuple_basis
-from slate.metadata import BasisMetadata, Metadata2D
-from slate.util import timed
+from slate_core import FundamentalBasis, SimpleMetadata, array, basis
+from slate_core.basis import TupleBasis2D, tuple_basis
+from slate_core.metadata import BasisMetadata, Metadata2D
+from slate_core.util import timed
 
 from slate_quantum import operator
 from slate_quantum.state import State, StateList
@@ -21,7 +21,7 @@ except ImportError:
     sse_solver_py = None
 
 if TYPE_CHECKING:
-    from slate.basis import Basis
+    from slate_core.basis import Basis
     from sse_solver_py import BandedData, SSEMethod
 
     from slate_quantum.metadata import EigenvalueMetadata, TimeMetadata

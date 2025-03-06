@@ -5,14 +5,14 @@ from typing import TYPE_CHECKING, Any
 import numpy as np
 from scipy.constants import Boltzmann, hbar  # type:ignore bad stub file
 from scipy.special import factorial  # type:ignore bad stub file
-from slate.basis import FundamentalBasis
-from slate.metadata import (
+from slate_core.basis import FundamentalBasis
+from slate_core.metadata import (
     AxisDirections,
     SpacedVolumeMetadata,
     StackedMetadata,
 )
-from slate.metadata.length import SpacedLengthMetadata
-from slate.metadata.volume import fundamental_stacked_delta_x
+from slate_core.metadata.length import SpacedLengthMetadata
+from slate_core.metadata.volume import fundamental_stacked_delta_x
 
 from slate_quantum.noise._kernel import get_diagonal_noise_operators_from_axis
 from slate_quantum.noise.build import (
@@ -32,7 +32,7 @@ from slate_quantum.noise.diagonalize._taylor import (
 if TYPE_CHECKING:
     from collections.abc import Iterable
 
-    from slate.basis import Basis, DiagonalBasis, TupleBasis2D
+    from slate_core.basis import Basis, DiagonalBasis, TupleBasis2D
 
     from slate_quantum.metadata import EigenvalueMetadata
     from slate_quantum.noise._kernel import IsotropicNoiseKernel

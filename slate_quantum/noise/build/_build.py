@@ -4,9 +4,9 @@ from typing import TYPE_CHECKING, Any
 
 import numpy as np
 from scipy.constants import Boltzmann, hbar  # type: ignore stubs
-from slate import linalg
-from slate.basis import CoordinateBasis, as_index_basis, as_tuple_basis
-from slate.metadata import AxisDirections
+from slate_core import linalg
+from slate_core.basis import CoordinateBasis, as_index_basis, as_tuple_basis
+from slate_core.metadata import AxisDirections
 
 from slate_quantum import operator
 from slate_quantum.metadata import EigenvalueMetadata
@@ -28,11 +28,11 @@ from slate_quantum.operator import (
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterable
 
-    from slate.metadata import (
+    from slate_core.metadata import (
         BasisMetadata,
         StackedMetadata,
     )
-    from slate.metadata.length import LengthMetadata, SpacedLengthMetadata
+    from slate_core.metadata.length import LengthMetadata, SpacedLengthMetadata
 
     from slate_quantum.noise._kernel import AxisKernel
     from slate_quantum.operator import (

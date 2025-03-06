@@ -3,13 +3,13 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import numpy as np
-from slate.basis import FundamentalBasis, as_tuple_basis, tuple_basis
+from slate_core.basis import FundamentalBasis, as_tuple_basis, tuple_basis
 
 from slate_quantum.metadata import EigenvalueMetadata
 from slate_quantum.operator._operator import OperatorList
 
 if TYPE_CHECKING:
-    from slate.metadata import BasisMetadata
+    from slate_core.metadata import BasisMetadata
 
     from slate_quantum.noise._kernel import DiagonalNoiseKernel, NoiseKernel
 

@@ -3,15 +3,15 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, cast, overload, override
 
 import numpy as np
-from slate.basis import (
+from slate_core.basis import (
     Basis,
 )
-from slate.metadata import BasisMetadata, Metadata2D
+from slate_core.metadata import BasisMetadata
 
 from slate_quantum.operator._operator import Operator, OperatorMetadata
 
 if TYPE_CHECKING:
-    from slate.array import Array
+    from slate_core.array import Array
 
 type SuperOperatorMetadata[M: BasisMetadata = BasisMetadata] = OperatorMetadata[
     OperatorMetadata[M],

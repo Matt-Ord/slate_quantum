@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any, cast, override
 
 import numpy as np
-from slate.basis import (
+from slate_core.basis import (
     Basis,
     DiagonalBasis,
     FundamentalBasis,
@@ -16,12 +16,12 @@ from slate.basis import (
     isotropic_basis,
     tuple_basis,
 )
-from slate.metadata import (
+from slate_core.metadata import (
     BasisMetadata,
     Metadata2D,
     StackedMetadata,
 )
-from slate.util import slice_ignoring_axes
+from slate_core.util import slice_ignoring_axes
 
 from slate_quantum._util import outer_product
 from slate_quantum.metadata import EigenvalueMetadata

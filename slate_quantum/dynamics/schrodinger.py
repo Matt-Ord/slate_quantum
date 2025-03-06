@@ -4,13 +4,13 @@ from typing import TYPE_CHECKING, Any
 
 import numpy as np
 from scipy.constants import hbar  # type: ignore lib
-from slate.basis import (
+from slate_core.basis import (
     DiagonalBasis,
     TupleBasis2D,
     as_tuple_basis,
     tuple_basis,
 )
-from slate.metadata import BasisMetadata
+from slate_core.metadata import BasisMetadata
 
 from slate_quantum.operator import into_diagonal_hermitian
 from slate_quantum.state import State, StateList
@@ -22,7 +22,7 @@ except ImportError:
     qutip = None
 
 if TYPE_CHECKING:
-    from slate.basis import Basis
+    from slate_core.basis import Basis
 
     from slate_quantum.metadata import TimeMetadata
     from slate_quantum.operator._operator import Operator

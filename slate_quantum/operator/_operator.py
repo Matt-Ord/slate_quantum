@@ -3,17 +3,25 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, cast, overload, override
 
 import numpy as np
-from slate import FundamentalBasis, SimpleMetadata, linalg
-from slate.array import Array, NestedIndex
-from slate.basis import (
+from slate_core import (
+    Array,
+    FundamentalBasis,
+    SimpleMetadata,
+    TupleBasis,
+    TupleMetadata,
+    array,
+    ctype,
+    linalg,
+)
+from slate_core.basis import (
     Basis,
-    TupleBasis2D,
+    TupleBasisLike,
+    TupleBasisLike2D,
     are_dual_shapes,
     as_tuple_basis,
-    tuple_basis,
 )
-from slate.linalg import into_diagonal
-from slate.metadata import BasisMetadata, Metadata2D, NestedLength
+from slate_core.linalg import into_diagonal
+from slate_core.metadata import BasisMetadata, NestedLength
 
 from slate_quantum.state._state import State, StateList
 
@@ -23,48 +31,77 @@ if TYPE_CHECKING:
 
 def _assert_operator_basis(basis: Basis[BasisMetadata, Any]) -> None:
     is_dual = basis.is_dual
-    if isinstance(is_dual, bool):
+    if isinstance(is_dual, bool) or len(is_dual) != 2:  # noqa: PLR2004
         msg = "Basis is not 2d"
         raise TypeError(msg)
     assert are_dual_shapes(is_dual[0], is_dual[1])
 
 
-type OperatorMetadata[M: BasisMetadata = BasisMetadata] = Metadata2D[M, M, None]
+type OperatorMetadata[M: BasisMetadata = BasisMetadata] = (
+    TupleMetadata[tuple[M, M], None] | TupleMetadata[tuple[M, ...], Any]
+)
 
 
-def operator_basis[M: BasisMetadata, DT: np.generic](
+def operator_basis[M: BasisMetadata, DT: ctype[np.generic]](
     basis: Basis[M, DT],
-) -> TupleBasis2D[DT, Basis[M, DT], Basis[M, DT], None]:
-    return tuple_basis((basis, basis.dual_basis()))
+) -> TupleBasisLike2D[tuple[M, M], None, DT]:
+    return TupleBasis((basis, basis.dual_basis())).upcast().downcast_metadata()
+
+
+class OperatorBuilder[B: Basis[OperatorMetadata], DT: np.dtype[np.generic]](
+    array.ArrayBuilder[B, DT]
+):
+    @override
+    def ok[DT_: np.generic](
+        self: OperatorBuilder[Basis[Any, ctype[DT_]], np.dtype[DT_]],
+    ) -> Operator[B, DT]:
+        _assert_operator_basis(self._basis)
+        return cast("Any", Operator(self._basis, self._data, 0))  # type: ignore safe to construct
+
+
+class OperatorConversion[
+    M0: OperatorMetadata,
+    B1: Basis[OperatorMetadata],
+    DT: np.dtype[np.generic],
+](array.ArrayConversion[M0, B1, DT]):
+    @override
+    def ok[M_: OperatorMetadata, DT_: np.generic](
+        self: OperatorConversion[M_, Basis[M_, ctype[DT_]], np.dtype[DT_]],
+    ) -> Operator[B1, DT]:
+        return cast(
+            "Operator[B1, DT]",
+            Operator.build(
+                self._new_basis,
+                self._old_basis.__convert_vector_into__(
+                    self._data, self._new_basis
+                ).ok(),
+            ).ok(),
+        )
 
 
 class Operator[
-    M: BasisMetadata,
-    DT: np.generic,
-    B: Basis[Metadata2D[BasisMetadata, BasisMetadata, Any], Any] = Basis[
-        Metadata2D[M, M, None], DT
-    ],
-](Array[Metadata2D[M, M, None], DT, B]):
+    B: Basis[OperatorMetadata],
+    DT: np.dtype[np.generic],
+](Array[B, DT]):
     """Represents an operator in a quantum system."""
 
-    def __init__[
-        DT1: np.generic,
-        B1: Basis[Metadata2D[BasisMetadata, BasisMetadata, Any], Any],
-    ](
-        self: Operator[Any, DT1, B1],
-        basis: B1,
-        data: np.ndarray[Any, np.dtype[DT]],
-    ) -> None:
-        super().__init__(cast("Any", basis), cast("Any", data))
-        _assert_operator_basis(self.basis)
+    @override
+    @staticmethod
+    def build[B_: Basis[OperatorMetadata], DT_: np.dtype[np.generic]](
+        basis: B_, data: np.ndarray[Any, DT_]
+    ) -> OperatorBuilder[B_, DT_]:
+        return OperatorBuilder(basis, data)
 
     @override
-    def with_basis[B1: Basis[Any, Any]](  # B1: B
-        self, basis: B1
-    ) -> Operator[M, DT, B1]:
-        """Get the Operator with the basis set to basis."""
-        array_with_basis = super().with_basis(basis)
-        return Operator(basis, array_with_basis.raw_data)
+    def with_basis[
+        DT_: np.dtype[np.complexfloating],
+        M0_: OperatorMetadata,
+        B1_: Basis[OperatorMetadata],
+    ](
+        self: Operator[Basis[M0_, Any], DT_],
+        basis: B1_,
+    ) -> OperatorConversion[M0_, B1_, DT_]:
+        return OperatorConversion(self.raw_data, self.basis, basis)
 
     @overload
     def __add__[M1: BasisMetadata, DT1: np.number[Any]](
@@ -126,23 +163,24 @@ class Operator[
         return Array(inner, diagonal.raw_data)
 
 
-def _assert_operator_list_basis(basis: Basis[BasisMetadata, Any]) -> None:
+def _assert_operator_list_basis(basis: Basis) -> None:
     is_dual = basis.is_dual
     if isinstance(is_dual, bool):
         msg = "Basis is not 2d"
         raise TypeError(msg)
-    _assert_operator_basis(as_tuple_basis(basis)[1])
+
+    _assert_operator_basis(as_tuple_basis(basis).children[1])
 
 
-def expectation[M: BasisMetadata](
-    operator: Operator[M, np.complexfloating],
-    state: State[M],
+def expectation[M: OperatorMetadata](
+    operator: Operator[Basis[M], np.dtype[np.complexfloating]],
+    state: State[Basis[M]],
 ) -> complex:
     """Calculate the expectation value of an operator."""
     return (
         linalg.einsum(
             "i' ,(i j'),j -> ",
-            state.with_basis(state.basis.dual_basis()),
+            array.dual_basis(state),
             operator,
             state,
         )
@@ -152,60 +190,80 @@ def expectation[M: BasisMetadata](
 
 
 def expectation_of_each[M0: BasisMetadata, M: BasisMetadata](
-    operator: Operator[M, np.complexfloating],
-    states: StateList[M0, M],
-) -> Array[M0, np.complexfloating]:
+    operator: Operator[Basis[OperatorMetadata[M]], np.dtype[np.complexfloating]],
+    states: StateList[TupleBasisLike[tuple[M0, M], None, ctype[np.complexfloating]]],
+) -> Array[Basis[M0], np.dtype[np.complexfloating]]:
     """Calculate the expectation value of an operator."""
-    basis = as_tuple_basis(states.basis)[1]
+    basis = as_tuple_basis(states.basis).children[1]
     return linalg.einsum(
         "(a i'),(i j'),(a j) -> a",
-        states.with_state_basis(basis.dual_basis()),
+        states.with_state_basis(basis.dual_basis()).ok(),
         operator,
         states,
     )
 
 
 def apply[M: BasisMetadata](
-    operator: Operator[M, np.complexfloating],
-    state: State[M],
-) -> State[M]:
+    operator: Operator[Basis[OperatorMetadata[M]], np.dtype[np.complexfloating]],
+    state: State[Basis[M]],
+) -> State[Basis[M]]:
     """Apply an operator to a state."""
     out = linalg.einsum("(i j'),j -> i", operator, state)
-    return State(out.basis, out.raw_data)
+    return State.build(out.basis, out.raw_data).ok()
 
 
 def apply_to_each[M0: BasisMetadata, M: BasisMetadata](
-    operator: Operator[M, np.complexfloating],
-    states: StateList[M0, M],
-) -> StateList[M0, M]:
+    operator: Operator[Basis[OperatorMetadata[M]], np.dtype[np.complexfloating]],
+    states: StateList[TupleBasisLike[tuple[M0, M], None]],
+) -> StateList[TupleBasisLike[tuple[M0, M], None]]:
     """Apply an operator to a state."""
     out = linalg.einsum("(i j'),(k j) -> (k i)", operator, states)
-    return StateList(out.basis, out.raw_data)
+    return StateList.build(out.basis, out.raw_data).ok()
 
 
-OperatorListMetadata = Metadata2D[BasisMetadata, OperatorMetadata, Any]
+type OperatorListMetadata[
+    M0: BasisMetadata = BasisMetadata,
+    M1: OperatorMetadata = OperatorMetadata,
+] = TupleMetadata[tuple[M0, M1], Any]
+
+
+class OperatorListBuilder[
+    B: Basis[OperatorListMetadata],
+    DT: np.dtype[np.generic],
+](array.ArrayBuilder[B, DT]):
+    @override
+    def ok[DT_: np.generic](
+        self: OperatorListBuilder[Basis[Any, ctype[DT_]], np.dtype[DT_]],
+    ) -> OperatorList[B, DT]:
+        _assert_operator_list_basis(self._basis)
+        return cast("Any", OperatorList(self._basis, self._data, 0))  # type: ignore safe to construct
+
+
+class OperatorListConversion[
+    M0: OperatorListMetadata,
+    B1: Basis[OperatorListMetadata],
+    DT: np.dtype[np.generic],
+](array.ArrayConversion[M0, B1, DT]):
+    @override
+    def ok[M_: OperatorListMetadata, DT_: np.generic](
+        self: OperatorListConversion[M_, Basis[M_, ctype[DT_]], np.dtype[DT_]],
+    ) -> OperatorList[B1, DT]:
+        return cast(
+            "OperatorList[B1, DT]",
+            OperatorList.build(
+                self._new_basis,
+                self._old_basis.__convert_vector_into__(
+                    self._data, self._new_basis
+                ).ok(),
+            ).ok(),
+        )
 
 
 class OperatorList[
-    M0: BasisMetadata,
-    M1: BasisMetadata,
-    DT: np.generic,
-    B: Basis[OperatorListMetadata, Any] = Basis[
-        Metadata2D[M0, Metadata2D[M1, M1, None], None], DT
-    ],
-](Array[Metadata2D[M0, Metadata2D[M1, M1, None], None], DT, B]):
+    B: Basis[OperatorListMetadata] = Basis[OperatorListMetadata],
+    DT: np.dtype[np.generic] = np.dtype[np.generic],
+](Array[B, DT]):
     """Represents an operator in a quantum system."""
-
-    def __init__[
-        DT1: np.generic,
-        B1: Basis[OperatorListMetadata, Any],
-    ](
-        self: OperatorList[Any, Any, DT1, B1],
-        basis: B1,
-        data: np.ndarray[Any, np.dtype[DT1]],
-    ) -> None:
-        super().__init__(cast("Any", basis), cast("Any", data))
-        _assert_operator_list_basis(self.basis)
 
     @property
     @override
@@ -213,13 +271,22 @@ class OperatorList[
         return cast("tuple[NestedLength, NestedLength]", super().fundamental_shape)
 
     @override
-    def with_basis[B1: Basis[Any, Any]](  # B1: B
-        self, basis: B1
-    ) -> OperatorList[M0, M1, DT, B1]:
-        """Get the Operator with the basis set to basis."""
-        return OperatorList(
-            basis, self.basis.__convert_vector_into__(self.raw_data, basis)
-        )
+    @staticmethod
+    def build[B_: Basis[OperatorListMetadata], DT_: np.dtype[np.generic]](
+        basis: B_, data: np.ndarray[Any, DT_]
+    ) -> OperatorListBuilder[B_, DT_]:
+        return OperatorListBuilder(basis, data)
+
+    @override
+    def with_basis[
+        DT_: np.dtype[np.generic],
+        M0_: OperatorListMetadata,
+        B1_: Basis[OperatorListMetadata],
+    ](
+        self: OperatorList[Basis[M0_, Any], DT_],
+        basis: B1_,
+    ) -> OperatorListConversion[M0_, B1_, DT_]:
+        return OperatorListConversion(self.raw_data, self.basis, basis)
 
     @overload
     def with_operator_basis[B0: Basis[Any, Any], B1: Basis[Any, Any]](  # B1: B
@@ -335,28 +402,21 @@ class OperatorList[
         return out
 
     @staticmethod
-    def from_operators[
-        DT1: np.generic,
-        M1_: BasisMetadata,
-        B1: Basis[Metadata2D[BasisMetadata, BasisMetadata, None], Any] = Basis[
-            Metadata2D[M1_, M1_, None], DT1
-        ],
-    ](
-        iter_: Iterable[Operator[M1_, DT1, B1]],
-    ) -> OperatorList[
-        SimpleMetadata,
-        M1_,
-        DT1,
-        TupleBasis2D[Any, FundamentalBasis[SimpleMetadata], B1, None],
-    ]:
-        operators = list(iter_)
-        assert all(x.basis == operators[0].basis for x in operators)
+    def from_operators[M_: OperatorMetadata, DT_: np.dtype[np.floating]](
+        iter_: Iterable[Operator[Basis[M_], DT_]],
+    ) -> OperatorList[TupleBasisLike[tuple[SimpleMetadata, M_], None], DT_]:
+        states = list(iter_)
+        assert all(x.basis == states[0].basis for x in states)
 
-        list_basis = FundamentalBasis.from_size(len(operators))
-        return OperatorList(
-            tuple_basis((list_basis, operators[0].basis)),
-            np.array([x.raw_data for x in operators]),
-        )
+        list_basis = FundamentalBasis.from_size(len(states))
+        state_basis = cast(
+            "TupleBasis[tuple[FundamentalBasis, Basis[M_]], None, ctype[np.floating]]",
+            TupleBasis((list_basis, states[0].basis)),
+        ).downcast_metadata()
+        return OperatorList.build(
+            state_basis,
+            cast("np.ndarray[Any, DT_]", np.array([x.raw_data for x in states])),
+        ).ok()
 
     @overload
     def __add__[

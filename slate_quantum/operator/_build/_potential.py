@@ -3,15 +3,15 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 import numpy as np
-from slate import basis
-from slate import metadata as _metadata
-from slate.basis import (
+from slate_core import basis
+from slate_core import metadata as _metadata
+from slate_core.basis import (
     CroppedBasis,
     TruncatedBasis,
     Truncation,
     fundamental_transformed_tuple_basis_from_metadata,
 )
-from slate.metadata import (
+from slate_core.metadata import (
     AxisDirections,
     SpacedLengthMetadata,
     SpacedVolumeMetadata,

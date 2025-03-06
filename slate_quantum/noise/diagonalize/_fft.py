@@ -3,22 +3,22 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 import numpy as np
-from slate import Basis, TupleBasis
-from slate.basis import (
+from slate_core import Basis, TupleBasis
+from slate_core.basis import (
     FundamentalBasis,
     TupleBasis2D,
     as_tuple_basis,
     tuple_basis,
 )
-from slate.util import pad_ft_points
+from slate_core.util import pad_ft_points
 
 from slate_quantum import operator
 from slate_quantum.metadata import EigenvalueMetadata
 from slate_quantum.operator import OperatorList, RecastDiagonalOperatorBasis
 
 if TYPE_CHECKING:
-    from slate import SimpleMetadata
-    from slate.metadata import BasisMetadata, StackedMetadata
+    from slate_core import SimpleMetadata
+    from slate_core.metadata import BasisMetadata, StackedMetadata
 
     from slate_quantum.noise._kernel import IsotropicNoiseKernel
 

@@ -3,11 +3,15 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 import numpy as np
-from slate import StackedMetadata, basis, tuple_basis
-from slate.basis import CoordinateBasis, FundamentalBasis, TupleBasis2D
-from slate.metadata import AxisDirections, SpacedLengthMetadata, size_from_nested_shape
-from slate.metadata.length import fundamental_dk
-from slate.metadata.volume import fundamental_stacked_dk
+from slate_core import StackedMetadata, basis, tuple_basis
+from slate_core.basis import CoordinateBasis, FundamentalBasis, TupleBasis2D
+from slate_core.metadata import (
+    AxisDirections,
+    SpacedLengthMetadata,
+    size_from_nested_shape,
+)
+from slate_core.metadata.length import fundamental_dk
+from slate_core.metadata.volume import fundamental_stacked_dk
 
 from slate_quantum.metadata._label import EigenvalueMetadata, eigenvalue_basis
 from slate_quantum.operator import (

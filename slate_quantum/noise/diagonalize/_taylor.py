@@ -4,7 +4,7 @@ from typing import Any, cast
 
 import numpy as np
 from scipy.special import factorial  # type: ignore library type
-from slate.basis import (
+from slate_core.basis import (
     Basis,
     DiagonalBasis,
     FundamentalBasis,
@@ -16,8 +16,13 @@ from slate.basis import (
     tuple_basis,
     with_modified_child,
 )
-from slate.metadata import BasisMetadata, Metadata2D, SimpleMetadata, StackedMetadata
-from slate.util import pad_ft_points
+from slate_core.metadata import (
+    BasisMetadata,
+    Metadata2D,
+    SimpleMetadata,
+    StackedMetadata,
+)
+from slate_core.util import pad_ft_points
 
 from slate_quantum import operator
 from slate_quantum.metadata import EigenvalueMetadata

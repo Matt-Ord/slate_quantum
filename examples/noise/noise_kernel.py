@@ -3,9 +3,9 @@ from __future__ import annotations
 from statistics import correlation
 
 import numpy as np
-from slate import array, plot
-from slate.metadata import spaced_volume_metadata_from_stacked_delta_x
-from slate.plot import get_figure
+from slate_core import array, plot
+from slate_core.metadata import spaced_volume_metadata_from_stacked_delta_x
+from slate_core.plot import get_figure
 
 from slate_quantum.noise import (
     build,

@@ -4,14 +4,14 @@ from typing import TYPE_CHECKING, Any, cast
 
 import numpy as np
 from scipy.constants import Boltzmann, hbar  # type: ignore stubs
-from slate.basis import DiagonalBasis, TupleBasis2D, as_tuple_basis
-from slate.metadata import (
+from slate_core.basis import DiagonalBasis, TupleBasis2D, as_tuple_basis
+from slate_core.metadata import (
     AxisDirections,
     SpacedLengthMetadata,
     VolumeMetadata,
     shallow_shape_from_nested,
 )
-from slate.metadata.volume import fundamental_stacked_delta_x
+from slate_core.metadata.volume import fundamental_stacked_delta_x
 
 from slate_quantum.noise.build import (
     isotropic_kernel_from_function_stacked,
@@ -22,8 +22,8 @@ from slate_quantum.noise.diagonalize._taylor import (
 )
 
 if TYPE_CHECKING:
-    from slate import StackedMetadata
-    from slate.basis import Basis, FundamentalBasis
+    from slate_core import StackedMetadata
+    from slate_core.basis import Basis, FundamentalBasis
 
     from slate_quantum.metadata import EigenvalueMetadata
     from slate_quantum.noise._kernel import IsotropicNoiseKernel

@@ -1,54 +1,49 @@
 from __future__ import annotations
 
-from typing import Any, cast
+from typing import Any, Never, cast
 
 import numpy as np
-from slate import Basis, BasisMetadata, StackedMetadata, TupleBasis
-from slate import basis as _basis
-from slate.basis import (
+from slate_core import Basis, BasisMetadata, TupleBasis, ctype
+from slate_core import basis as _basis
+from slate_core.basis import (
     DiagonalBasis,
     RecastBasis,
-    diagonal_basis,
-    fundamental_transformed_tuple_basis_from_metadata,
 )
-from slate.metadata import AxisDirections, Metadata2D
+from slate_core.metadata import AxisDirections
 
 from slate_quantum.operator._operator import Operator
 
 type RecastDiagonalOperatorBasis[
-    M: BasisMetadata,
-    DT: np.generic,
-    BInner: Basis[BasisMetadata, Any] = Basis[M, DT],
-    BOuter: Basis[BasisMetadata, Any] = Basis[M, DT],
+    BInner: Basis = Basis,
+    BOuter: Basis = Basis,
+    DT: ctype[Never] = ctype[Never],
 ] = RecastBasis[
-    Metadata2D[M, M, None], M, DT, DiagonalBasis[Any, BInner, BInner, None], BOuter
+    DiagonalBasis[TupleBasis[tuple[BInner, BInner], None]],
+    BInner,
+    BOuter,
+    DT,
 ]
 
 
 def recast_diagonal_basis[
-    M: BasisMetadata,
-    DT: np.generic,
-    BInner: Basis[BasisMetadata, Any] = Basis[M, DT],
-    BOuter: Basis[BasisMetadata, Any] = Basis[M, DT],
+    BInner: Basis = Basis,
+    BOuter: Basis = Basis,
 ](
     inner_basis: BInner, outer_basis: BOuter
-) -> RecastDiagonalOperatorBasis[Any, Any, BInner, BOuter]:
-    return cast(
-        "RecastDiagonalOperatorBasis[M, DT, BInner, BOuter]",
-        RecastBasis(
-            diagonal_basis((inner_basis, inner_basis.dual_basis())),
-            inner_basis.dual_basis(),
-            outer_basis.dual_basis(),
-        ),
+) -> RecastDiagonalOperatorBasis[BInner, BOuter]:
+    return RecastBasis(
+        DiagonalBasis(TupleBasis((inner_basis, inner_basis.dual_basis()))),
+        inner_basis.dual_basis(),
+        outer_basis.dual_basis(),
     )
 
 
 class DiagonalOperator[
-    M: BasisMetadata,
-    DT: np.generic,
-    BInner: Basis[BasisMetadata, Any] = Basis[M, Any],
-    BOuter: Basis[BasisMetadata, Any] = Basis[M, Any],
-](Operator[M, DT, RecastDiagonalOperatorBasis[M, Any, BInner, BOuter]]):
+    BInner: Basis,
+    BOuter: Basis,
+    DT: np.dtype[np.generic],
+](Operator[RecastDiagonalOperatorBasis[BInner, BOuter], DT]):
+    # TODO: init
     def __init__[
         M_: BasisMetadata,
         DT_: np.generic,
@@ -60,10 +55,7 @@ class DiagonalOperator[
         outer_basis: BOuter_,
         raw_data: np.ndarray[Any, np.dtype[DT_]],
     ) -> None:
-        basis = cast(
-            "RecastDiagonalOperatorBasis[M, DT, BInner, BOuter]",
-            recast_diagonal_basis(inner_basis, outer_basis),
-        )
+        basis = recast_diagonal_basis(inner_basis, outer_basis)
         super().__init__(basis, raw_data)
 
     @property

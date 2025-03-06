@@ -3,8 +3,8 @@ from __future__ import annotations
 from typing import Any
 
 import numpy as np
-from slate import FundamentalBasis
-from slate.metadata import (
+from slate_core import FundamentalBasis
+from slate_core.metadata import (
     DeltaMetadata,
     ExplicitLabeledMetadata,
     SpacedLabeledMetadata,

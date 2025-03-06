@@ -4,9 +4,13 @@ from typing import TYPE_CHECKING, Any
 
 import numpy as np
 from scipy.constants import hbar  # type: ignore stubs
-from slate import BasisMetadata, StackedMetadata, basis
-from slate import metadata as _metadata
-from slate.metadata import AxisDirections, SpacedLengthMetadata, SpacedVolumeMetadata
+from slate_core import BasisMetadata, StackedMetadata, basis
+from slate_core import metadata as _metadata
+from slate_core.metadata import (
+    AxisDirections,
+    SpacedLengthMetadata,
+    SpacedVolumeMetadata,
+)
 
 from slate_quantum.operator._diagonal import (
     MomentumOperator,

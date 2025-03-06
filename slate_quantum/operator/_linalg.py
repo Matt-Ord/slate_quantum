@@ -3,15 +3,11 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, cast
 
 import numpy as np
-from slate import FundamentalBasis, array, basis, tuple_basis
-from slate.basis import (
-    Basis,
-    diagonal_basis,
-)
-from slate.linalg import einsum
-from slate.linalg import into_diagonal as into_diagonal_array
-from slate.linalg import into_diagonal_hermitian as into_diagonal_hermitian_array
-from slate.metadata import BasisMetadata
+from slate_core import FundamentalBasis, TupleBasis, array, basis, ctype
+from slate_core.linalg import einsum
+from slate_core.linalg import into_diagonal as into_diagonal_array
+from slate_core.linalg import into_diagonal_hermitian as into_diagonal_hermitian_array
+from slate_core.metadata import BasisMetadata
 
 from slate_quantum.metadata._label import EigenvalueMetadata
 from slate_quantum.operator._operator import Operator, OperatorList
@@ -19,16 +15,18 @@ from slate_quantum.state._basis import EigenstateBasis
 from slate_quantum.state._state import StateList
 
 if TYPE_CHECKING:
-    from slate.basis import DiagonalBasis
-    from slate.explicit_basis import ExplicitBasis
+    from slate_core.basis import (
+        Basis,
+        DiagonalBasis,
+    )
 
 
-def into_diagonal[M: BasisMetadata, DT: np.complexfloating](
+def into_diagonal[M: BasisMetadata, DT: ctype[np.complexfloating]](
     operator: Operator[M, DT],
 ) -> Operator[
-    M,
-    np.complexfloating,
-    DiagonalBasis[DT, ExplicitBasis[M, DT], ExplicitBasis[M, DT], None],
+    DiagonalBasis[TupleBasis[tuple[Basis[M, DT], Basis[M, DT]], None]],
+    np.dtype[np.complexfloating],
+    # DiagonalBasis[DT, ExplicitBasis[M, DT], ExplicitBasis[M, DT], None],
 ]:
     """Get a list of eigenstates for a given operator, assuming it is hermitian."""
     diagonal = into_diagonal_array(operator)

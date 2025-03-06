@@ -3,9 +3,9 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 import numpy as np
-from slate import Array, StackedMetadata, TupleBasis, basis
-from slate import metadata as _metadata
-from slate.metadata import (
+from slate_core import Array, StackedMetadata, TupleBasis, basis
+from slate_core import metadata as _metadata
+from slate_core.metadata import (
     AxisDirections,
     LengthMetadata,
     SpacedLengthMetadata,

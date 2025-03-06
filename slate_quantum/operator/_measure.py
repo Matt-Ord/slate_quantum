@@ -3,9 +3,9 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 import numpy as np
-from slate import Array, BasisMetadata, array, metadata
-from slate.basis import from_metadata
-from slate.metadata import AxisDirections, SpacedLengthMetadata
+from slate_core import Array, BasisMetadata, array, metadata
+from slate_core.basis import from_metadata
+from slate_core.metadata import AxisDirections, SpacedLengthMetadata
 
 from slate_quantum import state as _state
 from slate_quantum.operator import _build
@@ -14,8 +14,6 @@ from slate_quantum.operator._operator import expectation, expectation_of_each
 
 if TYPE_CHECKING:
     from collections.abc import Callable
-
-    from slate import StackedMetadata
 
     from slate_quantum.state._state import State, StateList
 
