@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, cast, overload, override
+from typing import TYPE_CHECKING, Any, Never, cast, overload, override
 
 import numpy as np
 from slate_core import (
@@ -13,7 +13,7 @@ from slate_core import (
     linalg,
 )
 from slate_core import basis as _basis
-from slate_core.basis import Basis, BasisStateMetadata, TupleBasisLike
+from slate_core.basis import Basis, BasisStateMetadata, TupleBasisLike, TupleBasisLike2D
 from slate_core.metadata import BasisMetadata
 
 from slate_quantum.metadata import EigenvalueMetadata
@@ -131,10 +131,7 @@ def get_occupations[B: Basis](
     )
 
 
-TupleBasis2D = TupleBasisLike[tuple[BasisMetadata, BasisMetadata], None]
-
-
-class StateListBuilder[B: TupleBasis2D, DT: np.dtype[np.complexfloating]](
+class StateListBuilder[B: TupleBasisLike2D, DT: np.dtype[np.complexfloating]](
     array.ArrayBuilder[B, DT]
 ):
     @override
@@ -146,7 +143,7 @@ class StateListBuilder[B: TupleBasis2D, DT: np.dtype[np.complexfloating]](
 
 class StateListConversion[
     M0: BasisMetadata,
-    B1: TupleBasis2D,
+    B1: TupleBasisLike2D,
     DT: np.dtype[np.complexfloating],
 ](array.ArrayConversion[M0, B1, DT]):
     @override
@@ -165,7 +162,7 @@ class StateListConversion[
 
 
 class StateList[
-    B: TupleBasis2D = TupleBasis2D,
+    B: TupleBasisLike2D = TupleBasisLike2D,
     DT: np.dtype[np.complexfloating] = np.dtype[np.complexfloating],
 ](Array[B, DT]):
     """represents a state vector in a basis."""
@@ -174,7 +171,7 @@ class StateList[
     def with_basis[
         DT_: np.dtype[np.complexfloating],
         M0_: BasisMetadata,
-        B1_: TupleBasis2D,
+        B1_: TupleBasisLike2D,
     ](
         self: Array[Basis[M0_, Any], DT_],
         basis: B1_,
@@ -220,13 +217,13 @@ class StateList[
 
     @overload
     def with_state_basis[B0: Basis[Any, Any], B1: Basis[Any, Any]](  # B1: B
-        self: StateList[Any, Any, TupleBasis2D[Any, B0, Any, None]], basis: B1
-    ) -> StateList[M0, M1, TupleBasis2D[Any, B0, B1, None]]: ...
+        self: StateList[Any, Any, TupleBasisLike2D[Any, B0, Any, None]], basis: B1
+    ) -> StateList[M0, M1, TupleBasisLike2D[Any, B0, B1, None]]: ...
 
     @overload
     def with_state_basis[B1: Basis[Any, Any]](  # B1: B
         self, basis: B1
-    ) -> StateList[M0, M1, TupleBasis2D[Any, Any, B1, None]]: ...
+    ) -> StateList[M0, M1, TupleBasisLike2D[Any, Any, B1, None]]: ...
 
     def with_state_basis(  # B1: B
         self, basis: Basis[BasisMetadata, Any]
@@ -239,13 +236,13 @@ class StateList[
 
     @overload
     def with_list_basis[B0: Basis[Any, Any], B1: Basis[Any, Any]](  # B1: B
-        self: StateList[Any, Any, TupleBasis2D[Any, Any, B1, None]], basis: B0
-    ) -> StateList[M0, M1, TupleBasis2D[Any, B0, B1, None]]: ...
+        self: StateList[Any, Any, TupleBasisLike2D[Any, Any, B1, None]], basis: B0
+    ) -> StateList[M0, M1, TupleBasisLike2D[Any, B0, B1, None]]: ...
 
     @overload
     def with_list_basis[B0: Basis[Any, Any]](  # B1: B
         self, basis: B0
-    ) -> StateList[M0, M1, TupleBasis2D[Any, B0, Any, None]]: ...
+    ) -> StateList[M0, M1, TupleBasisLike2D[Any, B0, Any, None]]: ...
 
     def with_list_basis(  # B1: B
         self, basis: Basis[Any, Any]
@@ -257,17 +254,18 @@ class StateList[
         )
 
     @staticmethod
-    def from_states[M_: BasisMetadata, DT_: np.dtype[np.complexfloating]](
-        iter_: Iterable[State[Basis[M_], DT_]],
+    def from_states[
+        M_: BasisMetadata,
+        DT1: ctype[Never],
+        DT_: np.dtype[np.complexfloating],
+    ](
+        iter_: Iterable[State[Basis[M_, DT1], DT_]],
     ) -> StateList[TupleBasisLike[tuple[SimpleMetadata, M_], None], DT_]:
         states = list(iter_)
         assert all(x.basis == states[0].basis for x in states)
 
         list_basis = FundamentalBasis.from_size(len(states))
-        state_basis = cast(
-            "TupleBasis[tuple[FundamentalBasis, Basis[M_]], None, ctype[np.complexfloating]]",
-            TupleBasis((list_basis, states[0].basis)),
-        ).downcast_metadata()
+        state_basis = TupleBasis((list_basis, states[0].basis)).resolve_ctype().upcast()
         return StateList.build(
             state_basis,
             cast("np.ndarray[Any, DT_]", np.array([x.raw_data for x in states])),
@@ -275,7 +273,7 @@ class StateList[
 
     @override
     @staticmethod
-    def build[B_: TupleBasis2D, DT_: np.dtype[np.complexfloating]](
+    def build[B_: TupleBasisLike2D, DT_: np.dtype[np.complexfloating]](
         basis: B_, data: np.ndarray[Any, DT_]
     ) -> StateListBuilder[B_, DT_]:
         return StateListBuilder(basis, data)
@@ -313,7 +311,7 @@ def normalize_all[
 
 @overload
 def get_all_occupations[M0: BasisMetadata, B: Basis[BasisMetadata, Any]](
-    states: StateList[M0, Any, TupleBasis2D[np.complexfloating, Any, B, None]],
+    states: StateList[M0, Any, TupleBasisLike2D[np.complexfloating, Any, B, None]],
 ) -> Array[
     TupleBasisLike[tuple[M0, BasisStateMetadata[B]], None, ctype[np.floating]],
     np.dtype[np.floating],
@@ -326,7 +324,7 @@ def get_all_occupations[M0: BasisMetadata, M1: BasisMetadata](
 ) -> Array[
     Metadata2D[M0, BasisStateMetadata[Basis[M1, Any]], None],
     np.floating,
-    TupleBasis2D[
+    TupleBasisLike2D[
         np.floating,
         Basis[M0, Any],
         FundamentalBasis[BasisStateMetadata[Basis[M1, Any]]],
@@ -340,7 +338,7 @@ def get_all_occupations[M0: BasisMetadata, B: Basis[Any, Any]](
 ) -> Array[
     Metadata2D[M0, BasisStateMetadata[Basis[Any, Any]], None],
     np.floating,
-    TupleBasis2D[
+    TupleBasisLike2D[
         np.floating,
         Basis[M0, Any],
         FundamentalBasis[BasisStateMetadata[Basis[Any, Any]]],
@@ -365,7 +363,7 @@ def get_all_occupations[M0: BasisMetadata, B: Basis[Any, Any]](
 
 @overload
 def get_average_occupations[B: Basis[BasisMetadata, Any]](
-    states: StateList[Any, Any, TupleBasis2D[np.complexfloating, Any, B, None]],
+    states: StateList[Any, Any, TupleBasisLike2D[np.complexfloating, Any, B, None]],
 ) -> tuple[
     Array[
         BasisStateMetadata[B],

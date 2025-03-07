@@ -22,7 +22,6 @@ from slate_quantum.noise.diagonalize._taylor import (
 )
 
 if TYPE_CHECKING:
-    from slate_core import StackedMetadata
     from slate_core.basis import Basis, FundamentalBasis
 
     from slate_quantum.metadata import EigenvalueMetadata
@@ -49,10 +48,10 @@ def get_effective_lorentzian_parameter(
 
 
 def get_lorentzian_isotropic_noise_kernel[M: SpacedLengthMetadata, E: AxisDirections](
-    metadata: StackedMetadata[M, E],
+    metadata: TupleMetadata[tuple[M, ...], E],
     a: float,
     lambda_: float,
-) -> IsotropicNoiseKernel[StackedMetadata[M, E], np.complexfloating]:
+) -> IsotropicNoiseKernel[TupleMetadata[tuple[M, ...], E], np.complexfloating]:
     """Get an isotropic noise kernel for a lorentzian correlation.
 
     beta(x,x') = a**2 * lambda_**2 / ((x-x')**2 + lambda_**2)

@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, cast
 
 import numpy as np
-from slate_core import BasisMetadata, FundamentalBasis, SimpleMetadata, StackedMetadata
+from slate_core import BasisMetadata, FundamentalBasis, SimpleMetadata
 from slate_core.basis import (
     BasisStateMetadata,
     BlockDiagonalBasis,
@@ -20,7 +20,7 @@ if TYPE_CHECKING:
     from slate_quantum.operator._operator import Operator
 
 type BlochEigenstateBasis[M: RepeatedLengthMetadata, E] = EigenstateBasis[
-    StackedMetadata[M, E],
+    TupleMetadata[tuple[M, ...], E],
     BlochTransposedBasis[np.complexfloating, M, E],
     BlockDiagonalBasis[
         np.generic,
@@ -48,7 +48,7 @@ type DiagonalBlochBasis[M: RepeatedLengthMetadata, E] = DiagonalBasis[
 
 def into_diagonal[M: RepeatedLengthMetadata, E](
     operator: Operator[
-        StackedMetadata[M, E],
+        TupleMetadata[tuple[M, ...], E],
         np.complexfloating,
         BlockDiagonalBasis[
             np.complexfloating,
@@ -63,12 +63,12 @@ def into_diagonal[M: RepeatedLengthMetadata, E](
         ],
     ],
 ) -> Operator[
-    StackedMetadata[M, E],
+    TupleMetadata[tuple[M, ...], E],
     np.complexfloating,
     DiagonalBlochBasis[M, E],
 ]:
     diagonal = _operator.into_diagonal_hermitian(operator)
     return cast(
-        "Operator[StackedMetadata[M, E], np.complexfloating, DiagonalBlochBasis[M, E]]",
+        "Operator[TupleMetadata[tuple[M, ...], E], np.complexfloating, DiagonalBlochBasis[M, E]]",
         diagonal,
     )

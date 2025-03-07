@@ -4,7 +4,7 @@ import itertools
 from typing import Any, cast, override
 
 import numpy as np
-from slate_core import StackedMetadata, TupleBasis
+from slate_core import TupleBasis
 from slate_core.basis import BasisFeature, WrappedBasis
 
 from slate_quantum.metadata import RepeatedLengthMetadata
@@ -41,7 +41,7 @@ class BlochTransposedBasis[
         return self._inner
 
     @override
-    def metadata(self) -> StackedMetadata[M, E]:
+    def metadata(self) -> TupleMetadata[tuple[M, ...], E]:
         """Metadata associated with the basis.
 
         Note: this should be a property, but this would ruin variance.

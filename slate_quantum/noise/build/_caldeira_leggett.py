@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 import numpy as np
-from slate_core import StackedMetadata, basis, tuple_basis
+from slate_core import basis, tuple_basis
 from slate_core.basis import CoordinateBasis, FundamentalBasis, TupleBasis2D
 from slate_core.metadata import (
     AxisDirections,
@@ -59,15 +59,15 @@ def periodic_caldeira_leggett_operators[
     M: SpacedLengthMetadata,
     E: AxisDirections,
 ](
-    metadata: StackedMetadata[M, E],
+    metadata: TupleMetadata[tuple[M, ...], E],
 ) -> OperatorList[
     EigenvalueMetadata,
-    StackedMetadata[M, E],
+    TupleMetadata[tuple[M, ...], E],
     np.complexfloating,
     TupleBasis2D[
         Any,
         FundamentalBasis[EigenvalueMetadata],
-        RecastDiagonalOperatorBasis[StackedMetadata[M, E], Any],
+        RecastDiagonalOperatorBasis[TupleMetadata[tuple[M, ...], E], Any],
         None,
     ],
 ]:
@@ -94,15 +94,15 @@ def real_periodic_caldeira_leggett_operators[
     M: SpacedLengthMetadata,
     E: AxisDirections,
 ](
-    metadata: StackedMetadata[M, E],
+    metadata: TupleMetadata[tuple[M, ...], E],
 ) -> OperatorList[
     EigenvalueMetadata,
-    StackedMetadata[M, E],
+    TupleMetadata[tuple[M, ...], E],
     np.complexfloating,
     TupleBasis2D[
         Any,
         FundamentalBasis[EigenvalueMetadata],
-        RecastDiagonalOperatorBasis[StackedMetadata[M, E], Any],
+        RecastDiagonalOperatorBasis[TupleMetadata[tuple[M, ...], E], Any],
         None,
     ],
 ]:
@@ -158,15 +158,15 @@ def caldeira_leggett_correlation_fn(
 
 
 def caldeira_leggett_operators[M: SpacedLengthMetadata, E: AxisDirections](
-    metadata: StackedMetadata[M, E],
+    metadata: TupleMetadata[tuple[M, ...], E],
 ) -> OperatorList[
     EigenvalueMetadata,
-    StackedMetadata[M, E],
+    TupleMetadata[tuple[M, ...], E],
     np.complexfloating,
     TupleBasis2D[
         Any,
         FundamentalBasis[EigenvalueMetadata],
-        RecastDiagonalOperatorBasis[StackedMetadata[M, E], Any],
+        RecastDiagonalOperatorBasis[TupleMetadata[tuple[M, ...], E], Any],
         None,
     ],
 ]:

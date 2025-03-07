@@ -18,7 +18,7 @@ from slate_quantum.operator import OperatorList, RecastDiagonalOperatorBasis
 
 if TYPE_CHECKING:
     from slate_core import SimpleMetadata
-    from slate_core.metadata import BasisMetadata, StackedMetadata
+    from slate_core.metadata import BasisMetadata
 
     from slate_quantum.noise._kernel import IsotropicNoiseKernel
 
@@ -67,7 +67,7 @@ def get_periodic_noise_operators_isotropic_fft[M: BasisMetadata](
 
 
 def _get_noise_eigenvalues_isotropic_stacked_fft[M: BasisMetadata, E](
-    kernel: IsotropicNoiseKernel[StackedMetadata[M, E], np.complexfloating],
+    kernel: IsotropicNoiseKernel[TupleMetadata[tuple[M, ...], E], np.complexfloating],
     *,
     fundamental_shape: tuple[int, ...] | None = None,
 ) -> EigenvalueMetadata:
@@ -99,10 +99,10 @@ def build_periodic_noise_operators[
     inner_basis: TupleBasis[M1, E, Any],
 ) -> OperatorList[
     EigenvalueMetadata,
-    StackedMetadata[M1, E],
+    TupleMetadata[tuple[M1, ...], E],
     np.complexfloating,
     TupleBasis2D[
-        Any, B, RecastDiagonalOperatorBasis[StackedMetadata[M1, E], Any], None
+        Any, B, RecastDiagonalOperatorBasis[TupleMetadata[tuple[M1, ...], E], Any], None
     ],
 ]:
     r"""
@@ -147,17 +147,17 @@ def build_periodic_noise_operators[
 
 
 def get_periodic_noise_operators_isotropic_stacked_fft[M: BasisMetadata, E](
-    kernel: IsotropicNoiseKernel[StackedMetadata[M, E], np.complexfloating],
+    kernel: IsotropicNoiseKernel[TupleMetadata[tuple[M, ...], E], np.complexfloating],
     *,
     fundamental_shape: tuple[int, ...] | None = None,
 ) -> OperatorList[
     EigenvalueMetadata,
-    StackedMetadata[M, E],
+    TupleMetadata[tuple[M, ...], E],
     np.complexfloating,
     TupleBasis2D[
         Any,
         FundamentalBasis[SimpleMetadata],
-        RecastDiagonalOperatorBasis[StackedMetadata[M, E], Any],
+        RecastDiagonalOperatorBasis[TupleMetadata[tuple[M, ...], E], Any],
         None,
     ],
 ]:

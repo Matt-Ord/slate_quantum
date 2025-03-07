@@ -10,27 +10,37 @@ from slate_core.linalg import into_diagonal_hermitian as into_diagonal_hermitian
 from slate_core.metadata import BasisMetadata
 
 from slate_quantum.metadata._label import EigenvalueMetadata
-from slate_quantum.operator._operator import Operator, OperatorList
+from slate_quantum.operator._operator import (
+    Operator,
+    OperatorBasis,
+    OperatorList,
+    OperatorMetadata,
+)
 from slate_quantum.state._basis import EigenstateBasis
 from slate_quantum.state._state import StateList
 
 if TYPE_CHECKING:
-    from slate_core.basis import (
-        Basis,
-        DiagonalBasis,
-    )
+    from slate_core.basis import AsUpcast, Basis, DiagonalBasis
 
 
 def into_diagonal[M: BasisMetadata, DT: ctype[np.complexfloating]](
-    operator: Operator[M, DT],
+    operator: Operator[
+        OperatorBasis[M, ctype[np.complexfloating]], np.dtype[np.complexfloating]
+    ],
 ) -> Operator[
-    DiagonalBasis[TupleBasis[tuple[Basis[M, DT], Basis[M, DT]], None]],
+    AsUpcast[
+        DiagonalBasis[
+            TupleBasis[tuple[Basis[M, DT], Basis[M, DT]], None],
+            ctype[np.complexfloating[Any, Any]],
+        ],
+        OperatorMetadata,
+        ctype[np.complexfloating[Any, Any]],
+    ],
     np.dtype[np.complexfloating],
-    # DiagonalBasis[DT, ExplicitBasis[M, DT], ExplicitBasis[M, DT], None],
 ]:
     """Get a list of eigenstates for a given operator, assuming it is hermitian."""
     diagonal = into_diagonal_array(operator)
-    return Operator(diagonal.basis, diagonal.raw_data)
+    return Operator.build(diagonal.basis.upcast(), diagonal.raw_data).ok()
 
 
 def into_diagonal_hermitian[M: BasisMetadata, DT: np.complexfloating](

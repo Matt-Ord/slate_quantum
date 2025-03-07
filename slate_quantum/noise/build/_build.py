@@ -75,12 +75,12 @@ def isotropic_kernel_from_function_stacked[
     M: SpacedLengthMetadata,
     E: AxisDirections,
 ](
-    metadata: StackedMetadata[M, E],
+    metadata: TupleMetadata[tuple[M, ...], E],
     fn: Callable[
         [np.ndarray[Any, np.dtype[np.float64]]],
         np.ndarray[Any, np.dtype[np.complexfloating]],
     ],
-) -> IsotropicNoiseKernel[StackedMetadata[M, E], np.complexfloating]:
+) -> IsotropicNoiseKernel[TupleMetadata[tuple[M, ...], E], np.complexfloating]:
     """
     Get an Isotropic Kernel with a correlation beta(x-x').
 

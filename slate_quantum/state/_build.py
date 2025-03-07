@@ -3,7 +3,14 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 import numpy as np
-from slate_core import Array, StackedMetadata, TupleBasis, basis
+from slate_core import (
+    Array,
+    Basis,
+    TupleBasis,
+    TupleMetadata,
+    basis,
+    ctype,
+)
 from slate_core import metadata as _metadata
 from slate_core.metadata import (
     AxisDirections,
@@ -34,9 +41,8 @@ def _get_displacements_x_along_axis(
     origin: float,
     axis: int,
 ) -> Array[
-    SpacedVolumeMetadata,
-    np.floating,
-    TupleBasis[LengthMetadata, AxisDirections, np.generic],
+    TupleBasis[tuple[Basis[LengthMetadata], ...], AxisDirections, ctype[np.generic]],
+    np.dtype[np.floating],
 ]:
     distances = _metadata.volume.fundamental_stacked_x_points(metadata)[axis] - np.real(
         origin
@@ -47,16 +53,17 @@ def _get_displacements_x_along_axis(
     max_distance = delta_x / 2
     data = wrap_displacements(distances, max_distance)
 
-    return Array(basis.from_metadata(metadata), data)
+    return Array.build(basis.from_metadata(metadata), data).ok()
 
 
 def get_displacements_x_stacked(
     metadata: SpacedVolumeMetadata, origin: tuple[float, ...]
 ) -> tuple[
     Array[
-        SpacedVolumeMetadata,
-        np.floating,
-        TupleBasis[LengthMetadata, AxisDirections, np.generic],
+        TupleBasis[
+            tuple[Basis[LengthMetadata], ...], AxisDirections, ctype[np.generic]
+        ],
+        np.dtype[np.floating],
     ],
     ...,
 ]:
@@ -68,11 +75,11 @@ def get_displacements_x_stacked(
 
 
 def coherent[M: SpacedLengthMetadata, E: AxisDirections](
-    metadata: StackedMetadata[M, E],
+    metadata: TupleMetadata[tuple[M, ...], E],
     x_0: tuple[float, ...],
     k_0: tuple[float, ...],
     sigma_0: tuple[float, ...],
-) -> State[StackedMetadata[M, E]]:
+) -> State[TupleBasis[tuple[Basis[M], ...], E]]:
     displacements = get_displacements_x_stacked(metadata, origin=x_0)
     raw_displacements = np.array([d.as_array() for d in displacements])
 
@@ -87,35 +94,35 @@ def coherent[M: SpacedLengthMetadata, E: AxisDirections](
     data = np.exp(1j * phi - np.square(distance) / 2)
     norm = np.sqrt(np.sum(np.square(np.abs(data))))
 
-    return State(basis.from_metadata(metadata), data / norm)
+    return State.build(basis.from_metadata(metadata), data / norm).ok()
 
 
 def position[M: SpacedLengthMetadata, E: AxisDirections](
-    metadata: StackedMetadata[M, E],
+    metadata: TupleMetadata[tuple[M, ...], E],
     idx: tuple[int, ...],
-) -> State[StackedMetadata[M, E]]:
+) -> State[TupleBasis[tuple[Basis[M], ...], E]]:
     """Get a position eigenstate."""
     position_basis = basis.from_metadata(metadata)
     data = np.zeros(metadata.shape, dtype=np.complex128)
     idx = tuple(i % n for (i, n) in zip(idx, metadata.shape, strict=True))
     data[idx] = 1.0
-    return State(position_basis, data)
+    return State.build(position_basis, data).ok()
 
 
 def momentum[M: SpacedLengthMetadata, E: AxisDirections](
-    metadata: StackedMetadata[M, E],
+    metadata: TupleMetadata[tuple[M, ...], E],
     idx: tuple[int, ...],
-) -> State[StackedMetadata[M, E]]:
+) -> State[TupleBasis[tuple[Basis[M], ...], E]]:
     """Get a momentum eigenstate."""
-    momentum_basis = basis.fundamental_transformed_tuple_basis_from_metadata(metadata)
+    momentum_basis = basis.transformed_from_metadata(metadata)
     data = np.zeros(metadata.shape, dtype=np.complex128)
     idx = tuple(i % n for (i, n) in zip(idx, metadata.shape, strict=True))
     data[idx] = 1.0
-    return State(momentum_basis, data)
+    return State.build(momentum_basis, data).ok()
 
 
 def from_function[M: SpacedLengthMetadata, E: AxisDirections](
-    metadata: StackedMetadata[M, E],
+    metadata: TupleMetadata[tuple[M, ...], E],
     fn: Callable[
         [tuple[np.ndarray[Any, np.dtype[np.floating]], ...]],
         np.ndarray[Any, np.dtype[np.complexfloating]],
@@ -124,11 +131,11 @@ def from_function[M: SpacedLengthMetadata, E: AxisDirections](
     normalize: bool = True,
     offset: tuple[float, ...] | None = None,
     wrapped: bool = False,
-) -> State[StackedMetadata[M, E]]:
+) -> State[basis.TupleBasisLike[tuple[M, ...], E]]:
     """Get the potential operator."""
     positions = _metadata.volume.fundamental_stacked_x_points(
         metadata, offset=offset, wrapped=wrapped
     )
 
-    result = State(basis.from_metadata(metadata), fn(positions))
+    result = State.build(basis.from_metadata(metadata).upcast(), fn(positions)).ok()
     return normalize_state(result) if normalize else result

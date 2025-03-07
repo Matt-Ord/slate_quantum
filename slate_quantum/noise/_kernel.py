@@ -309,13 +309,13 @@ def get_diagonal_noise_operators_from_axis[M: BasisMetadata, E](
     extra: E,
 ) -> OperatorList[
     EigenvalueMetadata,
-    StackedMetadata[M, E],
+    TupleMetadata[tuple[M, ...], E],
     np.complex128,
     TupleBasis2D[
         np.complexfloating,
         FundamentalBasis[EigenvalueMetadata],
         RecastDiagonalOperatorBasis[
-            StackedMetadata[M, E],
+            TupleMetadata[tuple[M, ...], E],
             np.complexfloating,
         ],
         None,

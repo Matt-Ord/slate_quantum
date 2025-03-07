@@ -71,7 +71,7 @@ def basis_from_metadata(
     AxisDirections,
 ]:
     """Build the Bloch basis."""
-    operator_basis = basis.fundamental_transformed_tuple_basis_from_metadata(metadata)
+    operator_basis = basis.transformed_from_metadata(metadata)
     return BlochTransposedBasis(
         basis.with_modified_children(operator_basis, lambda _, i: BlochShiftedBasis(i))
     )
@@ -128,7 +128,7 @@ def bloch_operator_from_list[
         basis.from_metadata(operators.basis.metadata()[0])
     )
     operators = operators.with_operator_basis(
-        basis.fundamental_transformed_tuple_basis_from_metadata(
+        basis.transformed_from_metadata(
             operators.basis[1].metadata(), is_dual=operators.basis[1].is_dual
         )
     )
