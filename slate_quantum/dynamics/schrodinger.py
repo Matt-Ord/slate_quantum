@@ -1,14 +1,12 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 import numpy as np
 from scipy.constants import hbar  # type: ignore lib
-from slate_core import TupleBasis, ctype
+from slate_core import TupleBasis, array, ctype
 from slate_core.basis import (
-    DiagonalBasis,
-    TupleBasis2D,
-    as_tuple_basis,
+    Basis,
 )
 from slate_core.metadata import BasisMetadata
 
@@ -22,11 +20,13 @@ except ImportError:
     qutip = None
 
 if TYPE_CHECKING:
-    from slate_core.basis import Basis
+    from slate_core.basis import (
+        DiagonalBasis,
+        TupleBasis2D,
+    )
 
     from slate_quantum.metadata import TimeMetadata
-    from slate_quantum.operator._operator import Operator
-    from slate_quantum.state._basis import EigenstateBasis
+    from slate_quantum.operator._operator import Operator, OperatorBasis
 
 
 def _solve_schrodinger_equation_diagonal[
@@ -63,12 +63,8 @@ def solve_schrodinger_equation_decomposition[
 ](
     initial_state: State[Basis],
     times: TB,
-    hamiltonian: Operator[M, ctype[np.complexfloating]],
-) -> StateList[
-    TimeMetadata,
-    M,
-    TupleBasis2D[np.complexfloating, TB, EigenstateBasis[M], None],
-]:
+    hamiltonian: Operator[OperatorBasis[M], np.dtype[np.complexfloating]],
+) -> StateList[TupleBasis2D[tuple[TB, Basis[M]]], np.dtype[np.complexfloating]]:
     """Solve the schrodinger equation by directly finding eigenstates for the given initial state and hamiltonian."""
     diagonal = into_diagonal_hermitian(hamiltonian)
     return _solve_schrodinger_equation_diagonal(initial_state, times, diagonal)
@@ -76,16 +72,12 @@ def solve_schrodinger_equation_decomposition[
 
 def solve_schrodinger_equation[
     M: BasisMetadata,
-    TB: Basis[TimeMetadata, np.complexfloating],
+    TB: Basis[TimeMetadata, ctype[np.complexfloating]],
 ](
-    initial_state: State[BasisMetadata],
+    initial_state: State[Basis[M, ctype[np.complexfloating]]],
     times: TB,
-    hamiltonian: Operator[M, np.complexfloating],
-) -> StateList[
-    TimeMetadata,
-    M,
-    TupleBasis2D[np.complexfloating, TB, Basis[M, np.complexfloating], None],
-]:
+    hamiltonian: Operator[OperatorBasis[M], np.dtype[np.complexfloating]],
+) -> StateList[TupleBasis2D[tuple[TB, Basis[M]]], np.dtype[np.complexfloating]]:
     """Solve the schrodinger equation iteratively for the given initial state and hamiltonian.
 
     Internally, this function makes use of the qutip package.
@@ -99,18 +91,17 @@ def solve_schrodinger_equation[
         msg = "The qutip package is required to use this function. Please install it with `pip install qutip`."
         raise ImportError(msg)
 
-    hamiltonian_as_tuple = hamiltonian.with_basis(
-        as_tuple_basis(hamiltonian.basis)
-    ).ok()
+    hamiltonian_as_tuple = array.as_tuple_basis(hamiltonian)
     hamiltonian_data = hamiltonian_as_tuple.raw_data.reshape(
         hamiltonian_as_tuple.basis.shape
     )
     hamiltonian_qobj = qutip.Qobj(
         hamiltonian_data / hbar,
     )
-    initial_state_qobj = qutip.Qobj(
-        initial_state.with_basis(hamiltonian_as_tuple.basis[0]).raw_data
+    state_basis = cast(
+        "Basis[M, ctype[np.complexfloating]]", hamiltonian_as_tuple.basis.children[0]
     )
+    initial_state_qobj = qutip.Qobj(initial_state.with_basis(state_basis).ok().raw_data)
     time_values = np.array(list(times.metadata().values))[times.points]
     result = qutip.sesolve(  # type: ignore lib
         hamiltonian_qobj,
@@ -123,7 +114,7 @@ def solve_schrodinger_equation[
         },
     )
     return StateList.build(
-        TupleBasis((times, hamiltonian_as_tuple.basis[0])),
+        TupleBasis((times, state_basis)).resolve_ctype().upcast(),
         np.array(
             np.asarray([state.full().reshape(-1) for state in result.states]),  # type: ignore lib
             dtype=np.complex128,

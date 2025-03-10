@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, Any, cast
 
 import numpy as np
 from slate_core import FundamentalBasis, TupleBasis, array, basis, ctype
+from slate_core.basis import DiagonalBasis
 from slate_core.linalg import einsum
 from slate_core.linalg import into_diagonal as into_diagonal_array
 from slate_core.linalg import into_diagonal_hermitian as into_diagonal_hermitian_array
@@ -20,7 +21,7 @@ from slate_quantum.state._basis import EigenstateBasis
 from slate_quantum.state._state import StateList
 
 if TYPE_CHECKING:
-    from slate_core.basis import AsUpcast, Basis, DiagonalBasis
+    from slate_core.basis import AsUpcast, Basis
 
 
 def into_diagonal[M: BasisMetadata, DT: ctype[np.complexfloating]](
@@ -46,28 +47,33 @@ def into_diagonal[M: BasisMetadata, DT: ctype[np.complexfloating]](
 def into_diagonal_hermitian[M: BasisMetadata, DT: np.complexfloating](
     operator: Operator[M, DT],
 ) -> Operator[
-    M,
-    np.complexfloating,
-    DiagonalBasis[DT, EigenstateBasis[M], EigenstateBasis[M], None],
+    AsUpcast[
+        DiagonalBasis[TupleBasis[tuple[EigenstateBasis[M], EigenstateBasis[M]], None]],
+        OperatorMetadata[M],
+        ctype[np.complexfloating],
+    ],
+    np.dtype[np.complexfloating],
 ]:
     """Get a list of eigenstates for a given operator, assuming it is hermitian."""
     diagonal = into_diagonal_hermitian_array(operator)
     inner_basis = diagonal.basis.inner
 
-    new_basis = diagonal_basis(
-        (
-            EigenstateBasis(
-                inner_basis[0].matrix,
-                direction=inner_basis[0].direction,
-                data_id=inner_basis[0].data_id,
+    new_basis = DiagonalBasis(
+        TupleBasis(
+            (
+                EigenstateBasis(
+                    inner_basis[0].matrix,
+                    direction=inner_basis[0].direction,
+                    data_id=inner_basis[0].data_id,
+                ),
+                EigenstateBasis(
+                    inner_basis[1].matrix,
+                    direction=inner_basis[1].direction,
+                    data_id=inner_basis[1].data_id,
+                ),
             ),
-            EigenstateBasis(
-                inner_basis[1].matrix,
-                direction=inner_basis[1].direction,
-                data_id=inner_basis[1].data_id,
-            ),
+            diagonal.basis.metadata().extra,
         ),
-        diagonal.basis.metadata().extra,
     )
     return Operator(new_basis, diagonal.raw_data)
 
