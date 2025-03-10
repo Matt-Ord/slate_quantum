@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 import numpy as np
+from scipy.constants import hbar  # type: ignore stubs
 from slate import basis
 from slate.metadata.volume import spaced_volume_metadata_from_stacked_delta_x
 
-from slate_quantum import state
-from slate_quantum.state._state import State
+from slate_quantum import operator, state
+from slate_quantum.state import State
 
 
 def test_normalization_state() -> None:
@@ -74,3 +75,22 @@ def test_get_occupations() -> None:
         occupations.raw_data, np.array([1, 1, 0, 0, 0]), atol=1e-15
     )
     assert occupations.basis.metadata().basis == state_basis
+
+
+def test_bosonic_state() -> None:
+    metadata = spaced_volume_metadata_from_stacked_delta_x(
+        (np.array([4 * 2 * np.pi]),), (60,)
+    )
+    potential = operator.build.harmonic_potential(metadata, np.sqrt(hbar))
+    hamiltonian = operator.build.kinetic_hamiltonian(potential, hbar)
+    eigenstates = operator.get_eigenstates_hermitian(hamiltonian)
+
+    for n in range(5):
+        number_state = state.build.bosonic(metadata, n=n, wrapped_x=True)
+        np.testing.assert_allclose(state.normalization(number_state), 1, atol=1e-15)
+
+        np.testing.assert_allclose(
+            np.abs(eigenstates[n, :].as_array()),
+            np.abs(number_state.as_array()),
+            atol=1e-12,
+        )
