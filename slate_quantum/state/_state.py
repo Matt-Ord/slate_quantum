@@ -8,6 +8,7 @@ from slate_core import (
     FundamentalBasis,
     SimpleMetadata,
     TupleBasis,
+    TupleMetadata,
     array,
     ctype,
     linalg,
@@ -147,7 +148,10 @@ class StateListConversion[
     DT: np.dtype[np.complexfloating],
 ](array.ArrayConversion[M0, B1, DT]):
     @override
-    def ok[M_: BasisMetadata, DT_: np.complexfloating](
+    def ok[
+        M_: TupleMetadata[tuple[BasisMetadata, BasisMetadata]],
+        DT_: np.complexfloating,
+    ](
         self: StateListConversion[M_, Basis[M_, ctype[DT_]], np.dtype[DT_]],
     ) -> StateList[B1, DT]:
         return cast(
@@ -185,21 +189,23 @@ class StateList[
 
     @overload
     def __getitem__[M1_: BasisMetadata](
-        self: StateList[Any, M1_], index: tuple[int, slice[None]]
-    ) -> State[M1_]: ...
+        self: StateList[TupleBasisLike2D[tuple[Any, M1_]]],
+        index: tuple[int, slice[None]],
+    ) -> State[Basis[M1_], DT]: ...
 
     @overload
     def __getitem__[M1_: BasisMetadata, I: slice | tuple[array.NestedIndex, ...]](
-        self: StateList[Any, M1_], index: tuple[I, slice[None]]
-    ) -> StateList[Any, M1_]: ...
+        self: StateList[TupleBasisLike2D[tuple[Any, M1_]]], index: tuple[I, slice[None]]
+    ) -> StateList[TupleBasisLike2D[tuple[Any, M1_]], DT]: ...
 
     @overload
-    def __getitem__[DT: np.generic](self: Array[Any, DT], index: int) -> DT: ...
-
+    def __getitem__[DT1: ctype[Never], DT_: np.dtype[np.generic]](
+        self: Array[Any, DT_], index: int
+    ) -> DT_: ...
     @overload
-    def __getitem__[DT: np.generic](
-        self: Array[Any, DT], index: tuple[array.NestedIndex, ...] | slice
-    ) -> Array[Any, DT]: ...
+    def __getitem__[DT1: ctype[Never], DT_: np.dtype[np.generic]](
+        self: Array[Basis[Any, DT1], DT_], index: tuple[array.NestedIndex, ...] | slice
+    ) -> Array[Basis[BasisMetadata, DT1], DT_]: ...
 
     @override
     def __getitem__(self, index: array.NestedIndex) -> Any:  # type: ignore overload bad
@@ -209,10 +215,17 @@ class StateList[
             and isinstance(index[0], int)
             and index[1] == slice(None)
         ):
-            out = cast("Array[Any, Any]", out)
-            return State(out.basis, out.raw_data)
+            out = cast(
+                "Array[Basis[Any, ctype[np.generic]], np.dtype[np.complexfloating]]",
+                out,
+            )
+            return State.build(out.basis, out.raw_data).ok()
         if isinstance(index, tuple) and index[1] == slice(None):
-            return StateList(out.basis, out.raw_data)
+            out = cast(
+                "Array[Basis[Any, ctype[np.generic]], np.dtype[np.complexfloating]]",
+                out,
+            )
+            return StateList.build(out.basis, out.raw_data).ok()
         return out
 
     @overload

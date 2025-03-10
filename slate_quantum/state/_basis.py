@@ -7,7 +7,7 @@ from slate_core import Array, Basis, SimpleMetadata, ctype
 from slate_core.explicit_basis import ExplicitUnitaryBasis
 from slate_core.metadata import BasisMetadata, TupleMetadata
 
-from slate_quantum.state._state import StateList
+from slate_quantum.state._state import StateList, StateListBuilder
 
 if TYPE_CHECKING:
     import uuid
@@ -81,9 +81,6 @@ class EigenstateBasis[
         )
 
     @override
-    def eigenvectors(self) -> StateList[BasisMetadata, M]:
-        """Get the eigenstates of the basis."""
-
     def eigenvectors[
         M1_: SimpleMetadata,
         BInner_: Basis,
@@ -98,7 +95,7 @@ class EigenstateBasis[
                 DT_,
             ]
         ],
-    ) -> StateList[
+    ) -> StateListBuilder[
         AsUpcast[
             RecastBasis[
                 TupleBasis2D[tuple[Basis[M1_, ctype[np.generic]], BInner_], None],
@@ -114,8 +111,7 @@ class EigenstateBasis[
     ]:
         states = super().eigenvectors()
         # TODO: stricter types in parent
-        states.basis.upcast()
-        StateList.build(states.basis.upcast(), states._data)
+        return StateList.build(states.basis, states._data)
 
 
 type EigenstateBasisWithInner[Inner: Basis] = EigenstateBasis[
