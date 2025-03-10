@@ -182,3 +182,14 @@ def harmonic_potential(
         wrapped=True,
         offset=offset,
     )
+
+
+def identity(
+    metadata: SpacedVolumeMetadata,
+) -> Potential[SpacedLengthMetadata, AxisDirections, np.complexfloating]:
+    """Build an identity potential."""
+    return potential_from_function(
+        metadata,
+        lambda x: np.ones(x[0].size, dtype=np.complex128),
+        wrapped=True,
+    )

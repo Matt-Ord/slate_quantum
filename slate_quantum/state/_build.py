@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import math
 from typing import TYPE_CHECKING, Any
 
 import numpy as np
+from scipy import special  # type: ignore[import]
 from slate import Array, StackedMetadata, TupleBasis, basis
 from slate import metadata as _metadata
 from slate.metadata import (
@@ -88,6 +90,27 @@ def coherent[M: SpacedLengthMetadata, E: AxisDirections](
     norm = np.sqrt(np.sum(np.square(np.abs(data))))
 
     return State(basis.from_metadata(metadata), data / norm)
+
+
+def bosonic[M: SpacedLengthMetadata, E: AxisDirections](  # noqa: PLR0913
+    metadata: StackedMetadata[M, E],
+    factor: float = 1.0,
+    *,
+    n: int = 0,
+    axis: int = 0,
+    x_offset: tuple[float, ...] | None = None,
+    wrapped_x: bool = False,
+) -> State[StackedMetadata[M, E]]:
+    """Get the bosonic vacuum state."""
+    norm = np.sqrt(np.sqrt(factor) / (2**n * math.factorial(n) * np.sqrt(np.pi)))
+    return from_function(
+        metadata,
+        lambda x: norm
+        * np.exp(-np.square(factor * x[axis]) / 2)
+        * special.hermite(n)(factor * x[axis]),
+        offset=x_offset,
+        wrapped=wrapped_x,
+    )
 
 
 def position[M: SpacedLengthMetadata, E: AxisDirections](
