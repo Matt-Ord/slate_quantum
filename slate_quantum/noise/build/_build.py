@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any
 
 import numpy as np
 from scipy.constants import Boltzmann, hbar  # type: ignore stubs
-from slate_core import linalg
+from slate_core import TupleMetadata, linalg
 from slate_core.basis import CoordinateBasis, as_index_basis, as_tuple_basis
 from slate_core.metadata import AxisDirections
 
@@ -30,7 +30,6 @@ if TYPE_CHECKING:
 
     from slate_core.metadata import (
         BasisMetadata,
-        StackedMetadata,
     )
     from slate_core.metadata.length import LengthMetadata, SpacedLengthMetadata
 
@@ -106,7 +105,7 @@ def isotropic_kernel_from_function_stacked[
 
 
 def axis_kernel_from_function_stacked[M: SpacedLengthMetadata](
-    metadata: StackedMetadata[M, Any],
+    metadata: TupleMetadata[tuple[M, ...], Any],
     fn: Callable[
         [np.ndarray[Any, np.dtype[np.float64]]],
         np.ndarray[Any, np.dtype[np.complexfloating]],

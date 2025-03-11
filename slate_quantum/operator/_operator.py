@@ -310,7 +310,7 @@ class OperatorList[
         self, basis: Basis[OperatorMetadata, Any]
     ) -> OperatorList[M0, M1, DT, Any]:
         """Get the Operator with the operator basis set to basis."""
-        final_basis = tuple_basis((as_tuple_basis(self.basis)[0], basis))
+        final_basis = TupleBasis((as_tuple_basis(self.basis)[0], basis))
         return OperatorList(
             final_basis, self.basis.__convert_vector_into__(self.raw_data, final_basis)
         )
@@ -331,7 +331,7 @@ class OperatorList[
         self, basis: Basis[Any, Any]
     ) -> OperatorList[M0, M1, DT, Any]:
         """Get the Operator with the operator basis set to basis."""
-        final_basis = tuple_basis((basis, as_tuple_basis(self.basis)[1]))
+        final_basis = TupleBasis((basis, as_tuple_basis(self.basis)[1]))
         return OperatorList(
             final_basis, self.basis.__convert_vector_into__(self.raw_data, final_basis)
         )

@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import numpy as np
-from slate_core.basis import FundamentalBasis, as_tuple_basis, tuple_basis
+from slate_core.basis import FundamentalBasis, TupleBasis, as_tuple_basis
 
 from slate_quantum.metadata import EigenvalueMetadata
 from slate_quantum.operator._operator import OperatorList
@@ -26,7 +26,7 @@ def get_periodic_noise_operators_eigenvalue[M: BasisMetadata](
     """
     converted = kernel.with_basis(as_tuple_basis(kernel.basis))
     converted_second = converted.with_basis(
-        tuple_basis(
+        TupleBasis(
             (
                 as_tuple_basis(converted.basis[0]),
                 as_tuple_basis(converted.basis[0]).dual_basis(),
@@ -60,7 +60,7 @@ def get_periodic_noise_operators_eigenvalue[M: BasisMetadata](
     data = np.conj(np.transpose(res.eigenvectors)).reshape(-1)
     eigenvalue = FundamentalBasis(EigenvalueMetadata(res.eigenvalues))
 
-    basis = tuple_basis((eigenvalue, converted_second.basis[0]))
+    basis = TupleBasis((eigenvalue, converted_second.basis[0]))
     return OperatorList(basis, data)
 
 
@@ -109,5 +109,5 @@ def get_periodic_noise_operators_diagonal_eigenvalue[M: BasisMetadata](
     data = np.conj(np.transpose(res.eigenvectors))
     eigenvalue = FundamentalBasis(EigenvalueMetadata(res.eigenvalues))
 
-    basis = tuple_basis((eigenvalue, converted.basis.outer_recast))
+    basis = TupleBasis((eigenvalue, converted.basis.outer_recast))
     return OperatorList(basis, data)

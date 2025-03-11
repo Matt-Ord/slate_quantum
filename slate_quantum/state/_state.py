@@ -242,7 +242,7 @@ class StateList[
         self, basis: Basis[BasisMetadata, Any]
     ) -> StateList[M0, M1, Any]:
         """Get the Operator with the state basis set to basis."""
-        final_basis = tuple_basis((_basis.as_tuple_basis(self.basis)[0], basis))
+        final_basis = TupleBasis((_basis.as_tuple_basis(self.basis)[0], basis))
         return StateList(
             final_basis, self.basis.__convert_vector_into__(self.raw_data, final_basis)
         )
@@ -425,7 +425,7 @@ def get_average_occupations(
     occupations = get_all_occupations(states)
     # Dont include empty entries in average
     list_basis = _basis.as_state_list(_basis.as_index_basis(occupations.basis[0]))
-    average_basis = tuple_basis((list_basis, occupations.basis[1]))
+    average_basis = TupleBasis((list_basis, occupations.basis[1]))
     # TODO: this is wrong - must convert first  # noqa: FIX002
     occupations = array.cast_basis(occupations, average_basis)
 

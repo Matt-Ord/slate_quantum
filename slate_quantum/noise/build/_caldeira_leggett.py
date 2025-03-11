@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 import numpy as np
-from slate_core import basis, tuple_basis
+from slate_core import TupleBasis, basis
 from slate_core.basis import CoordinateBasis, FundamentalBasis, TupleBasis2D
 from slate_core.metadata import (
     AxisDirections,
@@ -48,7 +48,7 @@ def periodic_caldeira_leggett_axis_operators[M: SpacedLengthMetadata](
     )
     converted = operators.with_list_basis(list_basis)
     return OperatorList(
-        tuple_basis(
+        TupleBasis(
             (eigenvalue_basis(np.array([eigenvalue, eigenvalue])), converted.basis[1])
         ),
         converted.raw_data,
@@ -83,7 +83,7 @@ def periodic_caldeira_leggett_operators[
     )
     converted = operators.with_list_basis(list_basis)
     return OperatorList(
-        tuple_basis(
+        TupleBasis(
             (eigenvalue_basis(np.array([eigenvalue, eigenvalue])), converted.basis[1])
         ),
         converted.raw_data,
@@ -127,7 +127,7 @@ def real_periodic_caldeira_leggett_operators[
     )
 
     return OperatorList(
-        tuple_basis(
+        TupleBasis(
             (eigenvalue_basis(np.array([eigenvalue, eigenvalue])), operators.basis[1])
         ),
         operators.raw_data,
@@ -174,6 +174,6 @@ def caldeira_leggett_operators[M: SpacedLengthMetadata, E: AxisDirections](
     operators = OperatorList.from_operators([build.x(metadata, axis=0)])
 
     return OperatorList(
-        tuple_basis((eigenvalue_basis(np.array([1])), operators.basis[1])),
+        TupleBasis((eigenvalue_basis(np.array([1])), operators.basis[1])),
         operators.raw_data,
     )

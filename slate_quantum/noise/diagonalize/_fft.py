@@ -6,9 +6,9 @@ import numpy as np
 from slate_core import Basis, TupleBasis
 from slate_core.basis import (
     FundamentalBasis,
+    TupleBasis,
     TupleBasis2D,
     as_tuple_basis,
-    tuple_basis,
 )
 from slate_core.util import pad_ft_points
 
@@ -61,7 +61,7 @@ def get_periodic_noise_operators_isotropic_fft[M: BasisMetadata](
     operators = operators.with_basis(as_tuple_basis(operators.basis))
     eigenvalues = _get_noise_eigenvalues_isotropic_fft(kernel)
     return OperatorList(
-        tuple_basis((FundamentalBasis(eigenvalues), operators.basis.children[1])),
+        TupleBasis((FundamentalBasis(eigenvalues), operators.basis.children[1])),
         operators.raw_data,
     )
 
@@ -139,7 +139,7 @@ def build_periodic_noise_operators[
     operators = operators.with_basis(operators.basis.inner)
 
     return OperatorList(
-        tuple_basis(
+        TupleBasis(
             (FundamentalBasis(list_basis.metadata()), operators.basis.children[1])
         ),
         operators.raw_data,

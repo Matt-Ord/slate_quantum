@@ -8,7 +8,7 @@ import slate
 import slate.linalg
 from scipy.constants import hbar  # type: ignore lib
 from slate_core import FundamentalBasis, SimpleMetadata, array, basis
-from slate_core.basis import TupleBasis2D, tuple_basis
+from slate_core.basis import TupleBasis, TupleBasis2D
 from slate_core.metadata import BasisMetadata, Metadata2D
 from slate_core.util import timed
 
@@ -216,9 +216,9 @@ def solve_stochastic_schrodinger_equation_banded[
     te = datetime.datetime.now(tz=datetime.UTC)
     print(f"solve rust banded took: {(te - ts).total_seconds()} sec")  # noqa: T201
     return StateList(
-        tuple_basis(
+        TupleBasis(
             (
-                tuple_basis((FundamentalBasis.from_size(n_realizations), times)),
+                TupleBasis((FundamentalBasis.from_size(n_realizations), times)),
                 hamiltonian_tuple.basis[0],
             )
         ),

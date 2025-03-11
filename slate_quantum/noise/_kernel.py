@@ -1,25 +1,22 @@
 from __future__ import annotations
 
-from typing import Any, cast, override
+from typing import Any, Never, cast, override
 
 import numpy as np
+from slate_core import ctype
 from slate_core.basis import (
     Basis,
     DiagonalBasis,
     FundamentalBasis,
     IsotropicBasis,
     RecastBasis,
+    TupleBasis,
     TupleBasis2D,
     as_index_basis,
     as_tuple_basis,
-    diagonal_basis,
-    isotropic_basis,
-    tuple_basis,
 )
 from slate_core.metadata import (
     BasisMetadata,
-    Metadata2D,
-    StackedMetadata,
 )
 from slate_core.util import slice_ignoring_axes
 
@@ -28,18 +25,15 @@ from slate_quantum.metadata import EigenvalueMetadata
 from slate_quantum.operator import (
     OperatorList,
     OperatorMetadata,
-    RecastDiagonalOperatorBasis,
-    SuperOperator,
     SuperOperatorMetadata,
 )
 from slate_quantum.operator._diagonal import recast_diagonal_basis
+from slate_quantum.operator._operator import Operator
 
 
-class NoiseKernel[
-    M: BasisMetadata,
-    DT: np.generic,
-    B: Basis[SuperOperatorMetadata, Any] = Basis[SuperOperatorMetadata[M], DT],
-](SuperOperator[M, DT, B]):
+class NoiseKernel[B: Basis[SuperOperatorMetadata], DT: np.dtype[Never]](
+    Operator[B, DT]
+):
     r"""Represents a noise kernel which is diagonal."""
 
     @staticmethod
@@ -61,7 +55,7 @@ class NoiseKernel[
             operators_data.astype(np.complex128),
         )
         return NoiseKernel(
-            tuple_basis((converted_inner.basis[1], converted_inner.basis[1])), data
+            TupleBasis((converted_inner.basis[1], converted_inner.basis[1])), data
         )
 
 
@@ -84,10 +78,9 @@ type DiagonalKernelBasis[
 
 
 class DiagonalNoiseKernel[
-    M: BasisMetadata,
-    DT: np.generic,
-    B: Basis[SuperOperatorMetadata, Any] = DiagonalKernelBasis[M, DT],
-](NoiseKernel[M, DT, B]):
+    B: DiagonalKernelBasis,
+    DT: ctype[Never],
+](NoiseKernel[B, DT]):
     r"""Represents a noise kernel which is diagonal.
 
     If a kernel with basis ((a, b), (c, d)) is diagonal, then the kernel is
@@ -115,7 +108,7 @@ class DiagonalNoiseKernel[
         inner_recast = as_tuple_basis(basis)
         b0 = inner_recast.children[0]
         b1 = inner_recast.children[1]
-        inner = tuple_basis((diagonal_basis((b0, b0)), diagonal_basis((b1, b1))))
+        inner = TupleBasis((diagonal_basis((b0, b0)), diagonal_basis((b1, b1))))
         actual_basis = RecastBasis(inner, inner_recast, outer_recast)
         super().__init__(cast("Any", actual_basis), cast("Any", data))
 
@@ -269,7 +262,7 @@ def as_isotropic_kernel_from_axis[M: BasisMetadata, DT: np.complexfloating](
     full_data = tuple(kernel_i.raw_data.ravel() for kernel_i in kernels)
 
     return IsotropicNoiseKernel(
-        tuple_basis(full_basis, None), outer_product(*full_data).ravel()
+        TupleBasis(full_basis, None), outer_product(*full_data).ravel()
     )
 
 
@@ -333,7 +326,7 @@ def get_diagonal_noise_operators_from_axis[M: BasisMetadata, E](
         for operators in op_as_tuple
     )
 
-    full_basis_1 = tuple_basis(
+    full_basis_1 = TupleBasis(
         tuple(operators.basis[1].inner[1] for operators in op_as_tuple_nested), extra
     )
 
@@ -361,7 +354,7 @@ def get_diagonal_noise_operators_from_axis[M: BasisMetadata, E](
     eigenvalue_basis = FundamentalBasis(EigenvalueMetadata(eigenvalues))
 
     return OperatorList(
-        tuple_basis(
+        TupleBasis(
             (eigenvalue_basis, recast_diagonal_basis(full_basis_1, full_basis_1))
         ),
         data,

@@ -1,25 +1,21 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, cast, override
+from typing import TYPE_CHECKING, Any, Never, cast, override
 
 import numpy as np
-from slate_core.basis import BasisFeature, WrappedBasis
+from slate_core import ctype
+from slate_core.basis import AsUpcast, BasisConversion, BasisFeature, WrappedBasis
 
 from slate_quantum.metadata import RepeatedLengthMetadata
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
-
     from slate_core.basis import Basis
 
 
 class BlochShiftedBasis[
-    DT: np.generic,
-    M: RepeatedLengthMetadata,
-    B: Basis[Any, Any] = Basis[M, DT],
-](
-    WrappedBasis[Any, DT, B],
-):
+    B: Basis[RepeatedLengthMetadata] = Basis[RepeatedLengthMetadata],
+    DT: ctype[Never] = ctype[Never],
+](WrappedBasis[B, DT]):
     """A basis designed to show the underlying sparsity of the Bloch Hamiltonian.
 
     In the transformed basis, states in total momentum order according to
@@ -34,25 +30,12 @@ class BlochShiftedBasis[
     """
 
     def __init__[
-        B_: Basis[Any, Any],
+        B_: Basis[RepeatedLengthMetadata, Any],
     ](
-        self: BlochShiftedBasis[Any, Any, B_],
+        self: BlochShiftedBasis[B_, ctype[Never]],
         inner: B_,
     ) -> None:
         super().__init__(cast("Any", inner))
-
-    @property
-    @override
-    def inner(self) -> B:
-        return self._inner
-
-    @override
-    def metadata(self) -> M:
-        """Metadata associated with the basis.
-
-        Note: this should be a property, but this would ruin variance.
-        """
-        return self.inner.metadata()
 
     @property
     @override
@@ -60,48 +43,69 @@ class BlochShiftedBasis[
         return self.inner.size
 
     @override
-    def __into_inner__[DT1: np.generic](  # [DT1: DT]
-        self,
-        vectors: np.ndarray[Any, np.dtype[DT1]],
-        axis: int = -1,
-    ) -> np.ndarray[Any, np.dtype[DT1]]:
-        axis %= vectors.ndim
-
-        n_repeats = self.metadata().n_repeats
-        n_states = self.metadata().inner.fundamental_size
-
-        stacked = vectors.reshape(
-            *vectors.shape[:axis], n_states, n_repeats, *vectors.shape[axis + 1 :]
-        )
-        # Order from smallest to largest bloch k
-        shifted = np.fft.fftshift(stacked, axes=(axis, axis + 1))
-
-        # This list is in order from smallest to largest
-        # but we need to order according to fft conventions
-        shift = n_repeats // 2 + (n_repeats * (n_states // 2))
-        return np.roll(shifted.reshape(vectors.shape), -shift, axis=axis)
+    def resolve_ctype[DT_: ctype[Never]](
+        self: BlochShiftedBasis[Basis[Any, DT_], Any],
+    ) -> BlochShiftedBasis[B, DT_]:
+        """Upcast the wrapped basis to a more specific type."""
+        return cast("BlochShiftedBasis[B, DT_]", self)
 
     @override
-    def __from_inner__[DT1: np.generic](  # [DT1: DT]
-        self,
-        vectors: np.ndarray[Any, np.dtype[DT1]],
+    def upcast[M: RepeatedLengthMetadata](
+        self: BlochShiftedBasis[Basis[M]],
+    ) -> AsUpcast[BlochShiftedBasis[B, DT], M, DT]:
+        return cast("Any", AsUpcast(self, self.metadata()))
+
+    @override
+    def __into_inner__[DT1: np.generic, DT2: np.generic, DT3: np.generic](
+        self: WrappedBasis[Basis[Any, ctype[DT3]], ctype[DT1]],
+        vectors: np.ndarray[Any, np.dtype[DT2]],
         axis: int = -1,
-    ) -> np.ndarray[Any, np.dtype[DT1]]:
+    ) -> BasisConversion[DT1, DT2, DT3]:
         axis %= vectors.ndim
 
-        # The inner basis stores states in the
-        # order k_inner + k_bloch
-        n_repeats = self.metadata().n_repeats
-        n_states = self.metadata().inner.fundamental_size
-        # Apply a shift so we index like (k_inner, k_bloch)
-        shift = n_repeats // 2 + (n_repeats * (n_states // 2))
-        shifted = np.roll(vectors, shift, axis=axis)
-        stacked = shifted.reshape(
-            *vectors.shape[:axis], n_states, n_repeats, *vectors.shape[axis + 1 :]
-        )
-        # We want to index like (k_bloch, k_inner) using the
-        # fourier indexing conventions
-        return np.fft.ifftshift(stacked, axes=(axis, axis + 1)).reshape(vectors.shape)
+        def fn() -> np.ndarray[Any, np.dtype[DT2]]:
+            n_repeats = self.metadata().n_repeats
+            n_states = self.metadata().inner.fundamental_size
+
+            stacked = vectors.reshape(
+                *vectors.shape[:axis], n_states, n_repeats, *vectors.shape[axis + 1 :]
+            )
+            # Order from smallest to largest bloch k
+            shifted = np.fft.fftshift(stacked, axes=(axis, axis + 1))
+
+            # This list is in order from smallest to largest
+            # but we need to order according to fft conventions
+            shift = n_repeats // 2 + (n_repeats * (n_states // 2))
+            return np.roll(shifted.reshape(vectors.shape), -shift, axis=axis)
+
+        return BasisConversion(fn)
+
+    @override
+    def __from_inner__[DT1: np.generic, DT2: np.generic, DT3: np.generic](
+        self: WrappedBasis[Basis[Any, ctype[DT1]], ctype[DT3]],
+        vectors: np.ndarray[Any, np.dtype[DT2]],
+        axis: int = -1,
+    ) -> BasisConversion[DT1, DT2, DT3]:
+        axis %= vectors.ndim
+
+        def fn() -> np.ndarray[Any, np.dtype[DT2]]:
+            # The inner basis stores states in the
+            # order k_inner + k_bloch
+            n_repeats = self.metadata().n_repeats
+            n_states = self.metadata().inner.fundamental_size
+            # Apply a shift so we index like (k_inner, k_bloch)
+            shift = n_repeats // 2 + (n_repeats * (n_states // 2))
+            shifted = np.roll(vectors, shift, axis=axis)
+            stacked = shifted.reshape(
+                *vectors.shape[:axis], n_states, n_repeats, *vectors.shape[axis + 1 :]
+            )
+            # We want to index like (k_bloch, k_inner) using the
+            # fourier indexing conventions
+            return np.fft.ifftshift(stacked, axes=(axis, axis + 1)).reshape(
+                vectors.shape
+            )
+
+        return BasisConversion(fn)
 
     @override
     def __eq__(self, other: object) -> bool:
@@ -114,24 +118,6 @@ class BlochShiftedBasis[
     @override
     def __hash__(self) -> int:
         return hash((3, self.inner, self.is_dual))
-
-    @override
-    def with_inner[  # type: ignore there is no way to bound inner in parent
-        B_: Basis[Any, Any],
-    ](self, inner: B_) -> BlochShiftedBasis[DT, M, B_]:
-        return self.with_modified_inner(lambda _: inner)
-
-    @override
-    def with_modified_inner[  # type: ignore there is no way to bound the wrapper function in the parent class
-        DT_: np.generic,
-        M_: RepeatedLengthMetadata,
-        B_: Basis[Any, Any] = Basis[M_, DT_],
-    ](
-        self,
-        wrapper: Callable[[Basis[M_, DT_]], B_],
-    ) -> BlochShiftedBasis[DT_, M_, B_]:
-        """Get the wrapped basis after wrapper is applied to inner."""
-        return BlochShiftedBasis[DT_, M_, B_](wrapper(self.inner))
 
     @property
     @override
@@ -183,4 +169,9 @@ class BlochShiftedBasis[
         if "INDEX" not in self.features:
             msg = "points not implemented for this basis"
             raise NotImplementedError(msg)
-        return self.__from_inner__(self.inner.points)
+
+        return (
+            cast("WrappedBasis[Any, ctype[np.int_]]", self)
+            .__from_inner__(self.inner.points)
+            .ok()
+        )

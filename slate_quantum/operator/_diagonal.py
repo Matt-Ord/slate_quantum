@@ -20,7 +20,7 @@ type DiagonalOperatorBasis[
     DT: ctype[Never] = ctype[Never],
 ] = AsUpcast[
     RecastBasis[
-        DiagonalBasis[TupleBasis[tuple[BInner, BInner], None]], BInner, BOuter, DT
+        DiagonalBasis[TupleBasis[tuple[BInner, BInner], None, DT]], BInner, BOuter, DT
     ],
     OperatorMetadata,
     DT,
@@ -66,9 +66,12 @@ type PositionOperatorBasis[
 type PositionOperator[B: PositionOperatorBasis, DT: np.dtype[np.generic]] = (
     DiagonalOperator[B, DT]
 )
-type Potential[M: BasisMetadata, E: AxisDirections, DT: np.dtype[np.generic]] = (
-    PositionOperator[PositionOperatorBasis[M, E], DT]
-)
+type Potential[
+    M: BasisMetadata,
+    E: AxisDirections,
+    CT: ctype[Never],
+    DT: np.dtype[np.generic],
+] = PositionOperator[PositionOperatorBasis[M, E, CT], DT]
 
 
 def position_operator_basis[M: BasisMetadata, E, DT: ctype[Never]](
@@ -78,12 +81,15 @@ def position_operator_basis[M: BasisMetadata, E, DT: ctype[Never]](
     return recast_diagonal_basis(inner_recast, basis)
 
 
-type MomentumOperator[M: BasisMetadata, E: AxisDirections, DT: np.dtype[np.generic]] = (
-    DiagonalOperator[
-        MomentumOperatorBasis[M, E],
-        DT,
-    ]
-)
+type MomentumOperator[
+    M: BasisMetadata,
+    E: AxisDirections,
+    CT: ctype[Never],
+    DT: np.dtype[np.generic],
+] = DiagonalOperator[
+    MomentumOperatorBasis[M, E, CT],
+    DT,
+]
 type MomentumOperatorBasis[M: BasisMetadata, E, DT: ctype[Never] = ctype[Never]] = (
     DiagonalOperatorBasis[
         TupleBasis[tuple[Basis[M, ctype[np.complexfloating]], ...], E],

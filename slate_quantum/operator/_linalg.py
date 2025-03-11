@@ -84,7 +84,7 @@ def get_eigenstates_hermitian[M: BasisMetadata, DT: np.complexfloating](
     diagonal = into_diagonal_hermitian(operator)
     states = diagonal.basis.inner[0].eigenvectors
     as_tuple = states.with_list_basis(basis.from_metadata(states.basis.metadata()[0]))
-    out_basis = basis.tuple_basis(
+    out_basis = basis.TupleBasis(
         (FundamentalBasis(EigenvalueMetadata(diagonal.raw_data)), as_tuple.basis[1]),
     )
     return StateList(out_basis, as_tuple.raw_data)
@@ -147,7 +147,7 @@ def dagger_each[M0: BasisMetadata, M1: BasisMetadata](
 
     out = OperatorList.from_operators(daggered)
     return OperatorList(
-        tuple_basis((basis.from_metadata(operators.basis.metadata()[0]), out.basis[1])),
+        TupleBasis((basis.from_metadata(operators.basis.metadata()[0]), out.basis[1])),
         out.raw_data,
     )
 

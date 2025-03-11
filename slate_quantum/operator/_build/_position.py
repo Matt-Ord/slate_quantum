@@ -3,9 +3,10 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 import numpy as np
-from slate_core import Array, Basis, TupleMetadata, basis, ctype
+from slate_core import Array, Basis, TupleBasisLike, TupleMetadata, basis, ctype
 from slate_core import metadata as _metadata
 from slate_core.basis import (
+    AsUpcast,
     DiagonalBasis,
     FundamentalBasis,
     TransformedBasis,
@@ -43,6 +44,8 @@ if TYPE_CHECKING:
         SimpleMetadata,
     )
     from slate_core.metadata.length import LengthMetadata
+
+    from slate_quantum.operator._diagonal import DiagonalOperatorBasis
 
 
 def get_displacements_x[M: LengthMetadata](
@@ -197,7 +200,7 @@ def x[M: SpacedLengthMetadata, E: AxisDirections](
     axis: int,
     offset: float = 0,
     wrapped: bool = False,
-) -> Potential[M, E, np.dtype[np.complexfloating]]:
+) -> Potential[M, E, ctype[np.complexfloating], np.dtype[np.complexfloating]]:
     """Get the x operator."""
     inner_offset = tuple(offset if i == axis else 0 for i in range(metadata.n_dim))
     points = _metadata.volume.fundamental_stacked_x_points(
@@ -210,7 +213,7 @@ def x[M: SpacedLengthMetadata, E: AxisDirections](
 
 def axis_periodic_operator[M: BasisMetadata](
     inner_basis: Basis[M, Any], *, n_k: int
-) -> DiagonalOperator[M, np.dtype[np.complexfloating]]:
+) -> DiagonalOperatorLike[M, np.dtype[np.complexfloating]]:
     """Get the generalized e^(ik.x) operator in some general basis.
 
     k is chosen such that k = 2 * np.pi n_k / N
@@ -222,7 +225,7 @@ def axis_periodic_operator[M: BasisMetadata](
 
 def axis_scattering_operator[M: BasisMetadata](
     metadata: M, *, n_k: int
-) -> DiagonalOperator[M, np.dtype[np.complexfloating]]:
+) -> DiagonalOperatorLike[M, np.dtype[np.complexfloating]]:
     """Get the e^(ik.x) operator.
 
     k is chosen such that k = 2 * np.pi n_k / N
@@ -273,7 +276,7 @@ def all_axis_scattering_operators[M: BasisMetadata](
 
 
 def periodic_operator[M: BasisMetadata, E](
-    inner_basis: TupleBasis[M, E, Any], *, n_k: tuple[int, ...]
+    inner_basis: TupleBasis[tuple[Basis[M], ...], E, Any], *, n_k: tuple[int, ...]
 ) -> DiagonalOperatorLike[
     TupleMetadata[tuple[M, ...], E], np.dtype[np.complexfloating]
 ]:
@@ -284,15 +287,19 @@ def periodic_operator[M: BasisMetadata, E](
     outer_basis = basis.with_modified_children(
         inner_basis,
         lambda i, inner: TruncatedBasis(
-            Truncation(1, 1, n_k[i]), TransformedBasis(inner, direction="backward")
-        ),
+            Truncation(1, 1, n_k[i]),
+            TransformedBasis(inner, direction="backward").resolve_ctype().upcast(),
+        )
+        .resolve_ctype()
+        .upcast(),
     )
-    return DiagonalOperator(inner_basis, outer_basis, np.array([1 + 0j]))
+    basis_recast = recast_diagonal_basis(inner_basis, outer_basis)
+    return Operator.build(basis_recast, np.array([1 + 0j])).ok()
 
 
 def scattering_operator[M: SpacedLengthMetadata, E: AxisDirections](
     metadata: TupleMetadata[tuple[M, ...], E], *, n_k: tuple[int, ...]
-) -> PositionOperator[M, E, np.dtype[np.complexfloating]]:
+) -> Potential[M, E, ctype[np.complexfloating], np.dtype[np.complexfloating]]:
     """Get the e^(ik.x) operator.
 
     k is chosen such that k = 2 * np.pi * n_k / N
@@ -300,35 +307,48 @@ def scattering_operator[M: SpacedLengthMetadata, E: AxisDirections](
     outer_basis = basis.with_modified_children(
         basis.from_metadata(metadata),
         lambda i, inner: TruncatedBasis(
-            Truncation(1, 1, n_k[i]), TransformedBasis(inner, direction="backward")
-        ),
+            Truncation(1, 1, n_k[i]),
+            TransformedBasis(inner, direction="backward").resolve_ctype().upcast(),
+        )
+        .resolve_ctype()
+        .upcast(),
     )
     return PositionOperator(outer_basis, np.array([1]))
 
 
 def all_periodic_operators[M: BasisMetadata, E](
-    inner_basis: TupleBasis[M, E, Any],
+    inner_basis: TupleBasis[tuple[Basis[M], ...], E, Any],
 ) -> OperatorList[
-    SimpleMetadata,
-    TupleMetadata[tuple[M, ...], E],
-    np.dtype[np.complexfloating],
-    DiagonalBasis[
-        Any,
-        FundamentalBasis[SimpleMetadata],
-        RecastDiagonalOperatorBasis[TupleMetadata[tuple[M, ...], E], Any],
-        None,
+    AsUpcast[
+        DiagonalBasis[
+            TupleBasis[
+                tuple[
+                    FundamentalBasis[SimpleMetadata],
+                    DiagonalOperatorBasis[
+                        TupleBasisLike[tuple[M, ...], E],
+                        TupleBasisLike[tuple[M, ...], E],
+                    ],
+                ],
+                None,
+            ],
+        ],
+        TupleMetadata[
+            tuple[SimpleMetadata, OperatorMetadata[TupleMetadata[tuple[M, ...], None]]],
+            E,
+        ],
     ],
+    np.dtype[np.complexfloating],
 ]:
     """Get all generalized e^(ik.x) operator."""
     outer_basis = basis.with_modified_children(
         inner_basis,
-        lambda _i, inner: TransformedBasis(inner, direction="backward"),
+        lambda _i, inner: TransformedBasis(inner, direction="backward").upcast(),
     )
     operator_basis = recast_diagonal_basis(inner_basis, outer_basis)
 
     list_basis = DiagonalBasis(
         TupleBasis((FundamentalBasis.from_size(outer_basis.size), operator_basis))
-    )
+    ).upcast()
     return OperatorList.build(
         list_basis, np.ones(outer_basis.size, dtype=np.complex128)
     ).ok()
@@ -337,15 +357,25 @@ def all_periodic_operators[M: BasisMetadata, E](
 def all_scattering_operators[M: BasisMetadata, E](
     metadata: TupleMetadata[tuple[M, ...], E],
 ) -> OperatorList[
-    SimpleMetadata,
-    TupleMetadata[tuple[M, ...], E],
-    np.dtype[np.complexfloating],
-    DiagonalBasis[
-        Any,
-        FundamentalBasis[SimpleMetadata],
-        RecastDiagonalOperatorBasis[TupleMetadata[tuple[M, ...], E], Any],
-        None,
+    AsUpcast[
+        DiagonalBasis[
+            TupleBasis[
+                tuple[
+                    FundamentalBasis[SimpleMetadata],
+                    DiagonalOperatorBasis[
+                        TupleBasisLike[tuple[M, ...], E],
+                        TupleBasisLike[tuple[M, ...], E],
+                    ],
+                ],
+                None,
+            ],
+        ],
+        TupleMetadata[
+            tuple[SimpleMetadata, OperatorMetadata[TupleMetadata[tuple[M, ...], None]]],
+            E,
+        ],
     ],
+    np.dtype[np.complexfloating],
 ]:
     """Get the e^(ik.x) operator."""
     inner_basis = basis.from_metadata(metadata)

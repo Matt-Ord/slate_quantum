@@ -4,8 +4,8 @@ import numpy as np
 from scipy.constants import hbar  # type: ignore stubs
 from slate_core import array, basis
 from slate_core.basis import (
+    TupleBasis,
     transformed_from_metadata,
-    tuple_basis,
 )
 from slate_core.metadata import size_from_nested_shape
 from slate_core.metadata.volume import spaced_volume_metadata_from_stacked_delta_x
@@ -35,7 +35,7 @@ def test_build_hamiltonian() -> None:
     )
     transformed_basis = transformed_from_metadata(metadata)
     transformed_operator = hamiltonian.with_basis(
-        tuple_basis((transformed_basis, transformed_basis.dual_basis()))
+        TupleBasis((transformed_basis, transformed_basis.dual_basis()))
     )
 
     expected = [
@@ -186,7 +186,7 @@ def test_k_operator() -> None:
     basis_k = basis.transformed_from_metadata(metadata)
     np.testing.assert_array_equal(
         momentum_operator.with_basis(
-            tuple_basis((basis_k, basis_k.dual_basis()))
+            TupleBasis((basis_k, basis_k.dual_basis()))
         ).raw_data.reshape(5, 5),
         np.diag([0, 1, 2, -2, -1]),
     )
@@ -255,7 +255,7 @@ def test_filter_scatter_operator() -> None:
     )
     basis_k = basis.transformed_from_metadata(metadata)
     test_operator = Operator(
-        tuple_basis((basis_k, basis_k.dual_basis())),
+        TupleBasis((basis_k, basis_k.dual_basis())),
         np.ones(25, dtype=np.complex128),
     )
     filtered = operator.build.filter_scatter(test_operator)

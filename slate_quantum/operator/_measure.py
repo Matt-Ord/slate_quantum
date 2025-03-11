@@ -198,9 +198,13 @@ def all_x[
     states: StateList[TupleBasisLike[tuple[M0, TupleMetadata[tuple[M1, ...], E]]]],
     *,
     axis: int,
+    offset: float = 0,
+    wrapped: bool = False,
 ) -> Array[Basis[M0], np.dtype[np.floating]]:
     """Get the position of all states."""
-    momentum = _build.x(states.basis.metadata().children[1], axis=axis)
+    momentum = _build.x(
+        states.basis.metadata().children[1], axis=axis, offset=offset, wrapped=wrapped
+    )
 
     states = _state.normalize_all(states)
     return array.real(expectation_of_each(momentum, states))

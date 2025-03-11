@@ -10,10 +10,10 @@ from slate_core.basis import (
     FundamentalBasis,
     TruncatedBasis,
     Truncation,
+    TupleBasis,
     TupleBasis2D,
     as_tuple_basis,
     from_metadata,
-    tuple_basis,
     with_modified_child,
 )
 from slate_core.metadata import (
@@ -106,7 +106,7 @@ def get_periodic_noise_operators_explicit_taylor_expansion[
     eigenvalues = EigenvalueMetadata(coefficients.astype(np.complex128))
 
     return OperatorList(
-        tuple_basis((FundamentalBasis(eigenvalues), operators.basis.children[1])),
+        TupleBasis((FundamentalBasis(eigenvalues), operators.basis.children[1])),
         operators.raw_data,
     )
 
@@ -138,7 +138,7 @@ def _get_linear_operators_for_noise[M: BasisMetadata](
     data = np.array([displacements**n for n in range(n_terms)], dtype=np.complex128)
 
     return OperatorList(
-        tuple_basis(
+        TupleBasis(
             (
                 FundamentalBasis.from_size(n_terms),
                 DiagonalBasis(nx_displacements.basis),
@@ -173,7 +173,7 @@ def get_linear_noise_operators_explicit_taylor_expansion[M: BasisMetadata](
     eigenvalues = EigenvalueMetadata(polynomial_coefficients.astype(np.complex128))
 
     return OperatorList(
-        tuple_basis((FundamentalBasis(eigenvalues), operators.basis.children[1])),
+        TupleBasis((FundamentalBasis(eigenvalues), operators.basis.children[1])),
         operators.raw_data,
     )
 
@@ -235,7 +235,7 @@ def get_periodic_noise_operators_real_isotropic_taylor_expansion[M: BasisMetadat
     msg = "Need to implement for e^ikx operators."
     raise NotImplementedError(msg)
     return OperatorList(
-        tuple_basis((FundamentalBasis(eigenvalues), operators.basis[1])),
+        TupleBasis((FundamentalBasis(eigenvalues), operators.basis[1])),
         operators.raw_data,
     )
 

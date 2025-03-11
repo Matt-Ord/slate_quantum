@@ -9,7 +9,6 @@ from slate_core.basis import FundamentalBasis
 from slate_core.metadata import (
     AxisDirections,
     SpacedVolumeMetadata,
-    StackedMetadata,
 )
 from slate_core.metadata.length import SpacedLengthMetadata
 from slate_core.metadata.volume import fundamental_stacked_delta_x
@@ -32,6 +31,7 @@ from slate_quantum.noise.diagonalize._taylor import (
 if TYPE_CHECKING:
     from collections.abc import Iterable
 
+    from slate_core import TupleMetadata
     from slate_core.basis import Basis, DiagonalBasis, TupleBasis2D
 
     from slate_quantum.metadata import EigenvalueMetadata
@@ -56,7 +56,7 @@ def get_gaussian_isotropic_noise_kernel[
 
 
 def get_gaussian_axis_noise_kernel[M: SpacedLengthMetadata](
-    metadata: StackedMetadata[M, Any],
+    metadata: TupleMetadata[tuple[M, ...], Any],
     a: float,
     lambda_: float,
 ) -> AxisKernel[M, np.complexfloating]:
