@@ -5,12 +5,12 @@ from typing import TYPE_CHECKING, Any, Never, cast, overload, override
 import numpy as np
 from slate_core import (
     Array,
+    Ctype,
     FundamentalBasis,
     SimpleMetadata,
     TupleBasis,
     TupleMetadata,
     array,
-    ctype,
     linalg,
 )
 from slate_core.basis import (
@@ -42,13 +42,13 @@ type OperatorMetadata[M: BasisMetadata = BasisMetadata] = TupleMetadata[
 ]
 type OperatorBasis[
     M: BasisMetadata = BasisMetadata,
-    DT: ctype[Never] = ctype[Never],
-] = Basis[OperatorMetadata[M], DT]
+    CT: Ctype[Never] = Ctype[Never],
+] = Basis[OperatorMetadata[M], CT]
 
 
-def operator_basis[M: BasisMetadata, DT: ctype[np.generic]](
-    basis: Basis[M, DT],
-) -> TupleBasisLike2D[tuple[M, M], None, DT]:
+def operator_basis[M: BasisMetadata, CT: Ctype[np.generic]](
+    basis: Basis[M, CT],
+) -> TupleBasisLike2D[tuple[M, M], None, CT]:
     return TupleBasis((basis, basis.dual_basis())).resolve_ctype().upcast()
 
 
@@ -57,7 +57,7 @@ class OperatorBuilder[B: OperatorBasis, DT: np.dtype[np.generic]](
 ):
     @override
     def ok[DT_: np.generic](
-        self: OperatorBuilder[Basis[Any, ctype[DT_]], np.dtype[DT_]],
+        self: OperatorBuilder[Basis[Any, Ctype[DT_]], np.dtype[DT_]],
     ) -> Operator[B, DT]:
         _assert_operator_basis(self._basis)
         return cast("Any", Operator(self._basis, self._data, 0))  # type: ignore safe to construct
@@ -70,7 +70,7 @@ class OperatorConversion[
 ](array.ArrayConversion[M0, B1, DT]):
     @override
     def ok[M_: OperatorMetadata, DT_: np.generic](
-        self: OperatorConversion[M_, Basis[M_, ctype[DT_]], np.dtype[DT_]],
+        self: OperatorConversion[M_, Basis[M_, Ctype[DT_]], np.dtype[DT_]],
     ) -> Operator[B1, DT]:
         return cast(
             "Operator[B1, DT]",
@@ -241,7 +241,7 @@ class OperatorListBuilder[
 ](array.ArrayBuilder[B, DT]):
     @override
     def ok[DT_: np.generic](
-        self: OperatorListBuilder[Basis[Any, ctype[DT_]], np.dtype[DT_]],
+        self: OperatorListBuilder[Basis[Any, Ctype[DT_]], np.dtype[DT_]],
     ) -> OperatorList[B, DT]:
         _assert_operator_list_basis(self._basis)
         return cast("Any", OperatorList(self._basis, self._data, 0))  # type: ignore safe to construct
@@ -254,7 +254,7 @@ class OperatorListConversion[
 ](array.ArrayConversion[M0, B1, DT]):
     @override
     def ok[M_: OperatorListMetadata, DT_: np.generic](
-        self: OperatorListConversion[M_, Basis[M_, ctype[DT_]], np.dtype[DT_]],
+        self: OperatorListConversion[M_, Basis[M_, Ctype[DT_]], np.dtype[DT_]],
     ) -> OperatorList[B1, DT]:
         return cast(
             "OperatorList[B1, DT]",
@@ -418,7 +418,7 @@ class OperatorList[
 
         list_basis = FundamentalBasis.from_size(len(states))
         state_basis = cast(
-            "TupleBasis[tuple[FundamentalBasis, Basis[M_]], None, ctype[np.generic]]",
+            "TupleBasis[tuple[FundamentalBasis, Basis[M_]], None, Ctype[np.generic]]",
             TupleBasis((list_basis, states[0].basis)),
         ).upcast()
         return OperatorList.build(
@@ -496,7 +496,7 @@ type SuperOperatorMetadata[M: BasisMetadata = BasisMetadata] = OperatorMetadata[
 ]
 type SuperOperatorBasis[
     M: BasisMetadata = BasisMetadata,
-    DT: ctype[Never] = ctype[Never],
-] = Basis[SuperOperatorMetadata[M], DT]
+    CT: Ctype[Never] = Ctype[Never],
+] = Basis[SuperOperatorMetadata[M], CT]
 
 type SuperOperator[B: SuperOperatorBasis, DT: np.dtype[np.generic]] = Operator[B, DT]

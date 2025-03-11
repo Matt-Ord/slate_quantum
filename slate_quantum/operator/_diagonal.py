@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any, Never
 
 import numpy as np
-from slate_core import Basis, BasisMetadata, TupleBasis, ctype
+from slate_core import Basis, BasisMetadata, Ctype, TupleBasis
 from slate_core import basis as _basis
 from slate_core.basis import AsUpcast, DiagonalBasis, RecastBasis, TupleBasisLike
 from slate_core.metadata import AxisDirections
@@ -17,13 +17,13 @@ from slate_quantum.operator._operator import (
 type DiagonalOperatorBasis[
     BInner: Basis = Basis,
     BOuter: Basis = Basis,
-    DT: ctype[Never] = ctype[Never],
+    CT: Ctype[Never] = Ctype[Never],
 ] = AsUpcast[
     RecastBasis[
-        DiagonalBasis[TupleBasis[tuple[BInner, BInner], None, DT]], BInner, BOuter, DT
+        DiagonalBasis[TupleBasis[tuple[BInner, BInner], None, CT]], BInner, BOuter, CT
     ],
     OperatorMetadata,
-    DT,
+    CT,
 ]
 
 
@@ -56,11 +56,11 @@ def with_outer_basis[BInner: Basis, B: Basis, DT: np.dtype[np.generic]](
 type PositionOperatorBasis[
     M: BasisMetadata = BasisMetadata,
     E = Any,
-    DT: ctype[Never] = ctype[Never],
+    CT: Ctype[Never] = Ctype[Never],
 ] = DiagonalOperatorBasis[
-    TupleBasis[tuple[Basis[M, ctype[np.generic]], ...], E],
+    TupleBasis[tuple[Basis[M, Ctype[np.generic]], ...], E],
     TupleBasisLike[tuple[M, ...], E],
-    DT,
+    CT,
 ]
 
 type PositionOperator[B: PositionOperatorBasis, DT: np.dtype[np.generic]] = (
@@ -69,14 +69,14 @@ type PositionOperator[B: PositionOperatorBasis, DT: np.dtype[np.generic]] = (
 type Potential[
     M: BasisMetadata,
     E: AxisDirections,
-    CT: ctype[Never],
+    CT: Ctype[Never],
     DT: np.dtype[np.generic],
 ] = PositionOperator[PositionOperatorBasis[M, E, CT], DT]
 
 
-def position_operator_basis[M: BasisMetadata, E, DT: ctype[Never]](
-    basis: TupleBasisLike[tuple[M, ...], E, DT],
-) -> PositionOperatorBasis[M, E, DT]:
+def position_operator_basis[M: BasisMetadata, E, CT: Ctype[Never]](
+    basis: TupleBasisLike[tuple[M, ...], E, CT],
+) -> PositionOperatorBasis[M, E, CT]:
     inner_recast = _basis.from_metadata(basis.metadata(), is_dual=basis.is_dual)
     return recast_diagonal_basis(inner_recast, basis)
 
@@ -84,24 +84,24 @@ def position_operator_basis[M: BasisMetadata, E, DT: ctype[Never]](
 type MomentumOperator[
     M: BasisMetadata,
     E: AxisDirections,
-    CT: ctype[Never],
+    CT: Ctype[Never],
     DT: np.dtype[np.generic],
 ] = DiagonalOperator[
     MomentumOperatorBasis[M, E, CT],
     DT,
 ]
-type MomentumOperatorBasis[M: BasisMetadata, E, DT: ctype[Never] = ctype[Never]] = (
+type MomentumOperatorBasis[M: BasisMetadata, E, CT: Ctype[Never] = Ctype[Never]] = (
     DiagonalOperatorBasis[
-        TupleBasis[tuple[Basis[M, ctype[np.complexfloating]], ...], E],
+        TupleBasis[tuple[Basis[M, Ctype[np.complexfloating]], ...], E],
         TupleBasisLike[tuple[M, ...], E],
-        DT,
+        CT,
     ]
 )
 
 
-def momentum_operator_basis[M: BasisMetadata, E, DT: ctype[Never]](
-    basis: TupleBasisLike[tuple[M, ...], E, DT],
-) -> PositionOperatorBasis[M, E, DT]:
+def momentum_operator_basis[M: BasisMetadata, E, CT: Ctype[Never]](
+    basis: TupleBasisLike[tuple[M, ...], E, CT],
+) -> PositionOperatorBasis[M, E, CT]:
     inner_recast = _basis.transformed_from_metadata(
         basis.metadata(), is_dual=basis.is_dual
     )

@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Never
 
 import numpy as np
-from slate_core import BasisMetadata, TupleMetadata, basis, ctype
+from slate_core import BasisMetadata, Ctype, TupleMetadata, basis
 from slate_core import metadata as _metadata
 from slate_core.basis import (
     CroppedBasis,
@@ -31,7 +31,7 @@ if TYPE_CHECKING:
     from collections.abc import Callable
 
 
-def potential[M: BasisMetadata, E, CT: ctype[Never], DT: np.dtype[np.generic]](
+def potential[M: BasisMetadata, E, CT: Ctype[Never], DT: np.dtype[np.generic]](
     outer_basis: TupleBasisLike[tuple[M, ...], E, CT], data: np.ndarray[Any, DT]
 ) -> OperatorBuilder[PositionOperatorBasis[M, E, CT], DT]:
     """Get the potential operator."""

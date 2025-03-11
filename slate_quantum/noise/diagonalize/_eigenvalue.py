@@ -3,20 +3,25 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import numpy as np
+from slate_core import array
 from slate_core.basis import FundamentalBasis, TupleBasis, as_tuple_basis
 
 from slate_quantum.metadata import EigenvalueMetadata
-from slate_quantum.operator._operator import OperatorList
+from slate_quantum.operator._operator import OperatorList, OperatorMetadata
 
 if TYPE_CHECKING:
+    from slate_core import TupleBasisLike
     from slate_core.metadata import BasisMetadata
 
-    from slate_quantum.noise._kernel import DiagonalNoiseKernel, NoiseKernel
+    from slate_quantum.noise._kernel import DiagonalNoiseKernel, NoiseKernelWithMetadata
 
 
 def get_periodic_noise_operators_eigenvalue[M: BasisMetadata](
-    kernel: NoiseKernel[M, np.complexfloating],
-) -> OperatorList[EigenvalueMetadata, M, np.complexfloating]:
+    kernel: NoiseKernelWithMetadata[M, np.dtype[np.complexfloating]],
+) -> OperatorList[
+    TupleBasisLike[tuple[EigenvalueMetadata, OperatorMetadata[M]], None],
+    np.dtype[np.complexfloating],
+]:
     r"""
     Given a noise kernel, find the noise operator which diagonalizes the kernel.
 
@@ -24,7 +29,7 @@ def get_periodic_noise_operators_eigenvalue[M: BasisMetadata](
 
     Note these are the operators `L`
     """
-    converted = kernel.with_basis(as_tuple_basis(kernel.basis))
+    converted = array.as_tuple_basis(kernel)
     converted_second = converted.with_basis(
         TupleBasis(
             (

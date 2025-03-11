@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any, cast
 
 import numpy as np
 from scipy.constants import hbar  # type: ignore lib
-from slate_core import TupleBasis, array, ctype
+from slate_core import Ctype, TupleBasis, array
 from slate_core.basis import (
     Basis,
 )
@@ -31,9 +31,9 @@ if TYPE_CHECKING:
 
 def _solve_schrodinger_equation_diagonal[
     M: BasisMetadata,
-    TB: Basis[TimeMetadata, ctype[np.complexfloating]],
-    B: Basis[BasisMetadata, ctype[np.complexfloating]] = Basis[
-        M, ctype[np.complexfloating]
+    TB: Basis[TimeMetadata, Ctype[np.complexfloating]],
+    B: Basis[BasisMetadata, Ctype[np.complexfloating]] = Basis[
+        M, Ctype[np.complexfloating]
     ],
 ](
     initial_state: State[Basis],
@@ -59,7 +59,7 @@ def _solve_schrodinger_equation_diagonal[
 
 def solve_schrodinger_equation_decomposition[
     M: BasisMetadata,
-    TB: Basis[TimeMetadata, ctype[np.complexfloating]],
+    TB: Basis[TimeMetadata, Ctype[np.complexfloating]],
 ](
     initial_state: State[Basis],
     times: TB,
@@ -72,9 +72,9 @@ def solve_schrodinger_equation_decomposition[
 
 def solve_schrodinger_equation[
     M: BasisMetadata,
-    TB: Basis[TimeMetadata, ctype[np.complexfloating]],
+    TB: Basis[TimeMetadata, Ctype[np.complexfloating]],
 ](
-    initial_state: State[Basis[M, ctype[np.complexfloating]]],
+    initial_state: State[Basis[M, Ctype[np.complexfloating]]],
     times: TB,
     hamiltonian: Operator[OperatorBasis[M], np.dtype[np.complexfloating]],
 ) -> StateList[TupleBasis2D[tuple[TB, Basis[M]]], np.dtype[np.complexfloating]]:
@@ -99,7 +99,7 @@ def solve_schrodinger_equation[
         hamiltonian_data / hbar,
     )
     state_basis = cast(
-        "Basis[M, ctype[np.complexfloating]]", hamiltonian_as_tuple.basis.children[0]
+        "Basis[M, Ctype[np.complexfloating]]", hamiltonian_as_tuple.basis.children[0]
     )
     initial_state_qobj = qutip.Qobj(initial_state.with_basis(state_basis).ok().raw_data)
     time_values = np.array(list(times.metadata().values))[times.points]

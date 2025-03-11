@@ -5,12 +5,12 @@ from typing import TYPE_CHECKING, Any, Never, cast, overload, override
 import numpy as np
 from slate_core import (
     Array,
+    Ctype,
     FundamentalBasis,
     SimpleMetadata,
     TupleBasis,
     TupleMetadata,
     array,
-    ctype,
     linalg,
 )
 from slate_core import basis as _basis
@@ -28,7 +28,7 @@ class StateBuilder[B: Basis, DT: np.dtype[np.complexfloating]](
 ):
     @override
     def ok[DT_: np.complexfloating](
-        self: StateBuilder[Basis[Any, ctype[DT_]], np.dtype[DT_]],
+        self: StateBuilder[Basis[Any, Ctype[DT_]], np.dtype[DT_]],
     ) -> State[B, DT]:
         return cast("Any", State(self._basis, self._data, 0))  # type: ignore safe to construct
 
@@ -40,7 +40,7 @@ class StateConversion[
 ](array.ArrayConversion[M0, B1, DT]):
     @override
     def ok[M_: BasisMetadata, DT_: np.complexfloating](
-        self: StateConversion[M_, Basis[M_, ctype[DT_]], np.dtype[DT_]],
+        self: StateConversion[M_, Basis[M_, Ctype[DT_]], np.dtype[DT_]],
     ) -> State[B1, DT]:
         return cast(
             "State[B1, DT]",
@@ -137,7 +137,7 @@ class StateListBuilder[B: TupleBasisLike2D, DT: np.dtype[np.complexfloating]](
 ):
     @override
     def ok[DT_: np.complexfloating](
-        self: StateListBuilder[Basis[Any, ctype[DT_]], np.dtype[DT_]],
+        self: StateListBuilder[Basis[Any, Ctype[DT_]], np.dtype[DT_]],
     ) -> StateList[B, DT]:
         return cast("Any", StateList(self._basis, self._data, 0))  # type: ignore safe to construct
 
@@ -152,7 +152,7 @@ class StateListConversion[
         M_: TupleMetadata[tuple[BasisMetadata, BasisMetadata]],
         DT_: np.complexfloating,
     ](
-        self: StateListConversion[M_, Basis[M_, ctype[DT_]], np.dtype[DT_]],
+        self: StateListConversion[M_, Basis[M_, Ctype[DT_]], np.dtype[DT_]],
     ) -> StateList[B1, DT]:
         return cast(
             "StateList[B1, DT]",
@@ -199,11 +199,11 @@ class StateList[
     ) -> StateList[TupleBasisLike2D[tuple[Any, M1_]], DT]: ...
 
     @overload
-    def __getitem__[DT1: ctype[Never], DT_: np.dtype[np.generic]](
+    def __getitem__[DT1: Ctype[Never], DT_: np.dtype[np.generic]](
         self: Array[Any, DT_], index: int
     ) -> DT_: ...
     @overload
-    def __getitem__[DT1: ctype[Never], DT_: np.dtype[np.generic]](
+    def __getitem__[DT1: Ctype[Never], DT_: np.dtype[np.generic]](
         self: Array[Basis[Any, DT1], DT_], index: tuple[array.NestedIndex, ...] | slice
     ) -> Array[Basis[BasisMetadata, DT1], DT_]: ...
 
@@ -216,13 +216,13 @@ class StateList[
             and index[1] == slice(None)
         ):
             out = cast(
-                "Array[Basis[Any, ctype[np.generic]], np.dtype[np.complexfloating]]",
+                "Array[Basis[Any, Ctype[np.generic]], np.dtype[np.complexfloating]]",
                 out,
             )
             return State.build(out.basis, out.raw_data).ok()
         if isinstance(index, tuple) and index[1] == slice(None):
             out = cast(
-                "Array[Basis[Any, ctype[np.generic]], np.dtype[np.complexfloating]]",
+                "Array[Basis[Any, Ctype[np.generic]], np.dtype[np.complexfloating]]",
                 out,
             )
             return StateList.build(out.basis, out.raw_data).ok()
@@ -269,7 +269,7 @@ class StateList[
     @staticmethod
     def from_states[
         M_: BasisMetadata,
-        DT1: ctype[Never],
+        DT1: Ctype[Never],
         DT_: np.dtype[np.complexfloating],
     ](
         iter_: Iterable[State[Basis[M_, DT1], DT_]],
@@ -326,7 +326,7 @@ def normalize_all[
 def get_all_occupations[M0: BasisMetadata, B: Basis[BasisMetadata, Any]](
     states: StateList[M0, Any, TupleBasisLike2D[np.complexfloating, Any, B, None]],
 ) -> Array[
-    TupleBasisLike[tuple[M0, BasisStateMetadata[B]], None, ctype[np.floating]],
+    TupleBasisLike[tuple[M0, BasisStateMetadata[B]], None, Ctype[np.floating]],
     np.dtype[np.floating],
 ]: ...
 

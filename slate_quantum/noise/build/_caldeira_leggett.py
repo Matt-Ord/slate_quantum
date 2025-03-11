@@ -15,8 +15,8 @@ from slate_core.metadata.volume import fundamental_stacked_dk
 
 from slate_quantum.metadata._label import EigenvalueMetadata, eigenvalue_basis
 from slate_quantum.operator import (
+    DiagonalOperatorBasis,
     OperatorList,
-    RecastDiagonalOperatorBasis,
     build,
 )
 
@@ -33,7 +33,7 @@ def periodic_caldeira_leggett_axis_operators[M: SpacedLengthMetadata](
     TupleBasis2D[
         Any,
         FundamentalBasis[EigenvalueMetadata],
-        RecastDiagonalOperatorBasis[M, Any],
+        DiagonalOperatorBasis[M, Any],
         None,
     ],
 ]:

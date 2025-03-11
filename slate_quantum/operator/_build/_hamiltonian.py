@@ -19,7 +19,7 @@ from slate_quantum.operator._build._momentum import momentum
 from slate_quantum.operator._operator import Operator, OperatorMetadata
 
 if TYPE_CHECKING:
-    from slate_core import TupleMetadata, ctype
+    from slate_core import Ctype, TupleMetadata
     from slate_core.metadata import (
         SpacedLengthMetadata,
     )
@@ -45,7 +45,7 @@ def kinetic_energy[M: SpacedLengthMetadata, E: AxisDirections](
     metadata: TupleMetadata[tuple[M, ...], E],
     mass: float,
     bloch_fraction: np.ndarray[Any, np.dtype[np.floating]] | None = None,
-) -> MomentumOperator[M, E, ctype[np.complexfloating], np.dtype[np.complexfloating]]:
+) -> MomentumOperator[M, E, Ctype[np.complexfloating], np.dtype[np.complexfloating]]:
     """
     Given a mass and a basis calculate the kinetic part of the Hamiltonian.
 
@@ -81,18 +81,18 @@ def kinetic_energy[M: SpacedLengthMetadata, E: AxisDirections](
 
 
 def kinetic_hamiltonian[M: SpacedLengthMetadata, E: AxisDirections](
-    potential: Potential[M, E, ctype[np.complexfloating], np.dtype[np.complexfloating]],
+    potential: Potential[M, E, Ctype[np.complexfloating], np.dtype[np.complexfloating]],
     mass: float,
     bloch_fraction: np.ndarray[Any, np.dtype[np.floating]] | None = None,
 ) -> Operator[
     AsUpcast[
         SplitBasis[
-            PositionOperatorBasis[M, E, ctype[np.complexfloating]],
-            MomentumOperatorBasis[M, E, ctype[np.complexfloating]],
-            ctype[np.complexfloating],
+            PositionOperatorBasis[M, E, Ctype[np.complexfloating]],
+            MomentumOperatorBasis[M, E, Ctype[np.complexfloating]],
+            Ctype[np.complexfloating],
         ],
         OperatorMetadata,
-        ctype[np.complexfloating],
+        Ctype[np.complexfloating],
     ],
     np.dtype[np.complexfloating],
 ]:

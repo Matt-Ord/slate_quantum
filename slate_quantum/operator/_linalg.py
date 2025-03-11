@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, cast
 
 import numpy as np
-from slate_core import FundamentalBasis, TupleBasis, array, basis, ctype
+from slate_core import Ctype, FundamentalBasis, TupleBasis, array, basis
 from slate_core.basis import DiagonalBasis
 from slate_core.linalg import einsum
 from slate_core.linalg import into_diagonal as into_diagonal_array
@@ -24,18 +24,18 @@ if TYPE_CHECKING:
     from slate_core.basis import AsUpcast, Basis
 
 
-def into_diagonal[M: BasisMetadata, DT: ctype[np.complexfloating]](
+def into_diagonal[M: BasisMetadata, CT: Ctype[np.complexfloating]](
     operator: Operator[
-        OperatorBasis[M, ctype[np.complexfloating]], np.dtype[np.complexfloating]
+        OperatorBasis[M, Ctype[np.complexfloating]], np.dtype[np.complexfloating]
     ],
 ) -> Operator[
     AsUpcast[
         DiagonalBasis[
-            TupleBasis[tuple[Basis[M, DT], Basis[M, DT]], None],
-            ctype[np.complexfloating[Any, Any]],
+            TupleBasis[tuple[Basis[M, CT], Basis[M, CT]], None],
+            Ctype[np.complexfloating[Any, Any]],
         ],
         OperatorMetadata,
-        ctype[np.complexfloating[Any, Any]],
+        Ctype[np.complexfloating[Any, Any]],
     ],
     np.dtype[np.complexfloating],
 ]:
@@ -50,7 +50,7 @@ def into_diagonal_hermitian[M: BasisMetadata, DT: np.complexfloating](
     AsUpcast[
         DiagonalBasis[TupleBasis[tuple[EigenstateBasis[M], EigenstateBasis[M]], None]],
         OperatorMetadata[M],
-        ctype[np.complexfloating],
+        Ctype[np.complexfloating],
     ],
     np.dtype[np.complexfloating],
 ]:

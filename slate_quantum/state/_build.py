@@ -6,10 +6,10 @@ import numpy as np
 from slate_core import (
     Array,
     Basis,
+    Ctype,
     TupleBasis,
     TupleMetadata,
     basis,
-    ctype,
 )
 from slate_core import metadata as _metadata
 from slate_core.metadata import (
@@ -41,7 +41,7 @@ def _get_displacements_x_along_axis(
     origin: float,
     axis: int,
 ) -> Array[
-    TupleBasis[tuple[Basis[LengthMetadata], ...], AxisDirections, ctype[np.generic]],
+    TupleBasis[tuple[Basis[LengthMetadata], ...], AxisDirections, Ctype[np.generic]],
     np.dtype[np.floating],
 ]:
     distances = _metadata.volume.fundamental_stacked_x_points(metadata)[axis] - np.real(
@@ -61,7 +61,7 @@ def get_displacements_x_stacked(
 ) -> tuple[
     Array[
         TupleBasis[
-            tuple[Basis[LengthMetadata], ...], AxisDirections, ctype[np.generic]
+            tuple[Basis[LengthMetadata], ...], AxisDirections, Ctype[np.generic]
         ],
         np.dtype[np.floating],
     ],

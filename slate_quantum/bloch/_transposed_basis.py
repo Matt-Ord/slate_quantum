@@ -4,7 +4,7 @@ import itertools
 from typing import Any, Never, cast, overload, override
 
 import numpy as np
-from slate_core import Basis, TupleBasis, TupleMetadata, ctype
+from slate_core import Basis, Ctype, TupleBasis, TupleMetadata
 from slate_core.basis import (
     AsUpcast,
     BasisConversion,
@@ -17,9 +17,9 @@ from slate_quantum.metadata._repeat import RepeatedLengthMetadata
 
 class BlochTransposedBasis[
     B: TupleBasis[tuple[Basis[RepeatedLengthMetadata], ...], Any],
-    DT: ctype[Never] = ctype[Never],
+    CT: Ctype[Never] = Ctype[Never],
 ](
-    WrappedBasis[B, DT],
+    WrappedBasis[B, CT],
 ):
     """A basis designed to show the underlying sparsity of the Bloch Hamiltonian.
 
@@ -31,7 +31,7 @@ class BlochTransposedBasis[
     """
 
     def __init__[B_: TupleBasis[tuple[Basis[RepeatedLengthMetadata], ...], Any]](
-        self: BlochTransposedBasis[B_, ctype[Never]], inner: B_
+        self: BlochTransposedBasis[B_, Ctype[Never]], inner: B_
     ) -> None:
         super().__init__(cast("B", inner))
 
@@ -42,7 +42,7 @@ class BlochTransposedBasis[
         return self.inner.metadata()
 
     @override
-    def resolve_ctype[DT_: ctype[Never]](
+    def resolve_ctype[DT_: Ctype[Never]](
         self: BlochTransposedBasis[TupleBasis[Any, Any, DT_], Any],
     ) -> BlochTransposedBasis[B, DT_]:
         """Upcast the wrapped basis to a more specific type."""
@@ -51,11 +51,11 @@ class BlochTransposedBasis[
     @overload
     def upcast[M0: RepeatedLengthMetadata, E](
         self: BlochTransposedBasis[TupleBasis[tuple[Basis[M0]], E], Any],
-    ) -> AsUpcast[BlochTransposedBasis[B, DT], TupleMetadata[tuple[M0], E], DT]: ...
+    ) -> AsUpcast[BlochTransposedBasis[B, CT], TupleMetadata[tuple[M0], E], CT]: ...
     @overload
     def upcast[M0: RepeatedLengthMetadata, M1: RepeatedLengthMetadata, E](
         self: BlochTransposedBasis[TupleBasis[tuple[Basis[M0], Basis[M1]], E], Any],
-    ) -> AsUpcast[BlochTransposedBasis[B, DT], TupleMetadata[tuple[M0, M1], E], DT]: ...
+    ) -> AsUpcast[BlochTransposedBasis[B, CT], TupleMetadata[tuple[M0, M1], E], CT]: ...
     @overload
     def upcast[
         M0: RepeatedLengthMetadata,
@@ -67,19 +67,19 @@ class BlochTransposedBasis[
             TupleBasis[tuple[Basis[M0], Basis[M1], Basis[M2]], E], Any
         ],
     ) -> AsUpcast[
-        BlochTransposedBasis[B, DT], TupleMetadata[tuple[M0, M1, M2], E], DT
+        BlochTransposedBasis[B, CT], TupleMetadata[tuple[M0, M1, M2], E], CT
     ]: ...
     @overload
     def upcast[M: RepeatedLengthMetadata, E](
         self: BlochTransposedBasis[TupleBasis[tuple[Basis[M], ...], E], Any],
-    ) -> AsUpcast[BlochTransposedBasis[B, DT], TupleMetadata[tuple[M, ...], E], DT]: ...
+    ) -> AsUpcast[BlochTransposedBasis[B, CT], TupleMetadata[tuple[M, ...], E], CT]: ...
     @override
     def upcast(
         self,
     ) -> AsUpcast[
-        BlochTransposedBasis[B, DT],
+        BlochTransposedBasis[B, CT],
         TupleMetadata[tuple[RepeatedLengthMetadata, ...], Any],
-        DT,
+        CT,
     ]:
         return cast("Any", AsUpcast(self, self.metadata()))
 
@@ -91,8 +91,8 @@ class BlochTransposedBasis[
     @override
     def __into_inner__[DT1: np.generic, DT2: np.generic, DT3: np.generic](
         self: BlochTransposedBasis[
-            TupleBasis[tuple[Basis[RepeatedLengthMetadata], ...], ctype[DT3]],
-            ctype[DT1],
+            TupleBasis[tuple[Basis[RepeatedLengthMetadata], ...], Ctype[DT3]],
+            Ctype[DT1],
         ],
         vectors: np.ndarray[Any, np.dtype[DT2]],
         axis: int = -1,
@@ -125,8 +125,8 @@ class BlochTransposedBasis[
     @override
     def __from_inner__[DT1: np.generic, DT2: np.generic, DT3: np.generic](
         self: BlochTransposedBasis[
-            TupleBasis[tuple[Basis[RepeatedLengthMetadata], ...], ctype[DT1]],
-            ctype[DT3],
+            TupleBasis[tuple[Basis[RepeatedLengthMetadata], ...], Ctype[DT1]],
+            Ctype[DT3],
         ],
         vectors: np.ndarray[Any, np.dtype[DT2]],
         axis: int = -1,
@@ -220,7 +220,7 @@ class BlochTransposedBasis[
             raise NotImplementedError(msg)
 
         return (
-            cast("WrappedBasis[Any, ctype[np.int_]]", self)
+            cast("WrappedBasis[Any, Ctype[np.int_]]", self)
             .__from_inner__(self.inner.points)
             .ok()
         )

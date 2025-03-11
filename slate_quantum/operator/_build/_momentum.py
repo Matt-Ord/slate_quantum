@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any, Never
 
 import numpy as np
 from scipy.constants import hbar  # type: ignore stubs
-from slate_core import BasisMetadata, TupleMetadata, basis, ctype
+from slate_core import BasisMetadata, Ctype, TupleMetadata, basis
 from slate_core import metadata as _metadata
 from slate_core.metadata import (
     AxisDirections,
@@ -30,7 +30,7 @@ if TYPE_CHECKING:
     from collections.abc import Callable
 
 
-def momentum[M: BasisMetadata, E, CT: ctype[Never], DT: np.dtype[np.generic]](
+def momentum[M: BasisMetadata, E, CT: Ctype[Never], DT: np.dtype[np.generic]](
     outer_basis: basis.TupleBasisLike[tuple[M, ...], E, CT], data: np.ndarray[Any, DT]
 ) -> OperatorBuilder[MomentumOperatorBasis[M, E, CT], DT]:
     """Get the potential operator."""
@@ -39,7 +39,7 @@ def momentum[M: BasisMetadata, E, CT: ctype[Never], DT: np.dtype[np.generic]](
 
 def k[M: SpacedLengthMetadata, E: AxisDirections](
     metadata: TupleMetadata[tuple[M, ...], E], *, axis: int
-) -> MomentumOperator[M, E, ctype[np.complexfloating], np.dtype[np.complexfloating]]:
+) -> MomentumOperator[M, E, Ctype[np.complexfloating], np.dtype[np.complexfloating]]:
     """Get the k operator."""
     points = _metadata.volume.fundamental_stacked_k_points(metadata)[axis].astype(
         np.complex128
@@ -49,7 +49,7 @@ def k[M: SpacedLengthMetadata, E: AxisDirections](
 
 def p[M: SpacedLengthMetadata, E: AxisDirections](
     metadata: TupleMetadata[tuple[M, ...], E], *, axis: int
-) -> MomentumOperator[M, E, ctype[np.complexfloating], np.dtype[np.complexfloating]]:
+) -> MomentumOperator[M, E, Ctype[np.complexfloating], np.dtype[np.complexfloating]]:
     """Get the p operator."""
     points = _metadata.volume.fundamental_stacked_k_points(metadata)[axis].astype(
         np.complex128
@@ -69,7 +69,7 @@ def momentum_from_function[M: SpacedLengthMetadata, E: AxisDirections, DT: np.ge
     *,
     wrapped: bool = False,
     offset: tuple[float, ...] | None = None,
-) -> MomentumOperator[M, E, ctype[np.complexfloating], np.dtype[np.complexfloating]]:
+) -> MomentumOperator[M, E, Ctype[np.complexfloating], np.dtype[np.complexfloating]]:
     """Get the k operator from a function."""
     positions = _metadata.volume.fundamental_stacked_k_points(
         metadata, offset=offset, wrapped=wrapped

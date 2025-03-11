@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Never, cast, override
 
 import numpy as np
-from slate_core import ctype
+from slate_core import Ctype
 from slate_core.basis import AsUpcast, BasisConversion, BasisFeature, WrappedBasis
 
 from slate_quantum.metadata import RepeatedLengthMetadata
@@ -14,8 +14,8 @@ if TYPE_CHECKING:
 
 class BlochShiftedBasis[
     B: Basis[RepeatedLengthMetadata] = Basis[RepeatedLengthMetadata],
-    DT: ctype[Never] = ctype[Never],
-](WrappedBasis[B, DT]):
+    CT: Ctype[Never] = Ctype[Never],
+](WrappedBasis[B, CT]):
     """A basis designed to show the underlying sparsity of the Bloch Hamiltonian.
 
     In the transformed basis, states in total momentum order according to
@@ -32,7 +32,7 @@ class BlochShiftedBasis[
     def __init__[
         B_: Basis[RepeatedLengthMetadata, Any],
     ](
-        self: BlochShiftedBasis[B_, ctype[Never]],
+        self: BlochShiftedBasis[B_, Ctype[Never]],
         inner: B_,
     ) -> None:
         super().__init__(cast("Any", inner))
@@ -43,7 +43,7 @@ class BlochShiftedBasis[
         return self.inner.size
 
     @override
-    def resolve_ctype[DT_: ctype[Never]](
+    def resolve_ctype[DT_: Ctype[Never]](
         self: BlochShiftedBasis[Basis[Any, DT_], Any],
     ) -> BlochShiftedBasis[B, DT_]:
         """Upcast the wrapped basis to a more specific type."""
@@ -52,12 +52,12 @@ class BlochShiftedBasis[
     @override
     def upcast[M: RepeatedLengthMetadata](
         self: BlochShiftedBasis[Basis[M]],
-    ) -> AsUpcast[BlochShiftedBasis[B, DT], M, DT]:
+    ) -> AsUpcast[BlochShiftedBasis[B, CT], M, CT]:
         return cast("Any", AsUpcast(self, self.metadata()))
 
     @override
     def __into_inner__[DT1: np.generic, DT2: np.generic, DT3: np.generic](
-        self: WrappedBasis[Basis[Any, ctype[DT3]], ctype[DT1]],
+        self: WrappedBasis[Basis[Any, Ctype[DT3]], Ctype[DT1]],
         vectors: np.ndarray[Any, np.dtype[DT2]],
         axis: int = -1,
     ) -> BasisConversion[DT1, DT2, DT3]:
@@ -82,7 +82,7 @@ class BlochShiftedBasis[
 
     @override
     def __from_inner__[DT1: np.generic, DT2: np.generic, DT3: np.generic](
-        self: WrappedBasis[Basis[Any, ctype[DT1]], ctype[DT3]],
+        self: WrappedBasis[Basis[Any, Ctype[DT1]], Ctype[DT3]],
         vectors: np.ndarray[Any, np.dtype[DT2]],
         axis: int = -1,
     ) -> BasisConversion[DT1, DT2, DT3]:
@@ -171,7 +171,7 @@ class BlochShiftedBasis[
             raise NotImplementedError(msg)
 
         return (
-            cast("WrappedBasis[Any, ctype[np.int_]]", self)
+            cast("WrappedBasis[Any, Ctype[np.int_]]", self)
             .__from_inner__(self.inner.points)
             .ok()
         )

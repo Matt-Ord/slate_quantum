@@ -4,7 +4,7 @@ from itertools import starmap
 from typing import TYPE_CHECKING, Any, Never, override
 
 import numpy as np
-from slate_core import Basis, TupleBasis, TupleBasisLike, TupleMetadata, basis, ctype
+from slate_core import Basis, Ctype, TupleBasis, TupleBasisLike, TupleMetadata, basis
 from slate_core import metadata as _metadata
 from slate_core.basis import AsUpcast, BlockDiagonalBasis
 from slate_core.metadata import (
@@ -64,7 +64,7 @@ def basis_from_metadata(
     metadata: TupleMetadata[tuple[RepeatedLengthMetadata, ...], AxisDirections],
 ) -> BlochTransposedBasis[
     TupleBasis[tuple[Basis[RepeatedLengthMetadata], ...], AxisDirections],
-    ctype[np.complexfloating],
+    Ctype[np.complexfloating],
 ]:
     """Build the Bloch basis."""
     operator_basis = basis.transformed_from_metadata(metadata)
@@ -85,7 +85,7 @@ def _metadata_from_operator_list(
     ],
 ) -> BlochTransposedBasis[
     TupleBasis[tuple[Basis[RepeatedLengthMetadata], ...], AxisDirections],
-    ctype[np.complexfloating],
+    Ctype[np.complexfloating],
 ]:
     """Get the metadata for the Bloch operator."""
     list_meta = meta.children[0]
@@ -94,11 +94,11 @@ def _metadata_from_operator_list(
     return basis_from_metadata(full_operator_metadata)
 
 
-type TransposedRepeatBasis[CT: ctype[Never] = ctype[Never]] = BlochTransposedBasis[
+type TransposedRepeatBasis[CT: Ctype[Never] = Ctype[Never]] = BlochTransposedBasis[
     TupleBasis[tuple[Basis[RepeatedLengthMetadata], ...], AxisDirections],
-    ctype[np.complexfloating],
+    Ctype[np.complexfloating],
 ]
-type BlochOperatorBasis[CT: ctype[Never] = ctype[Never]] = BlockDiagonalBasis[
+type BlochOperatorBasis[CT: Ctype[Never] = Ctype[Never]] = BlockDiagonalBasis[
     TupleBasis[
         tuple[TransposedRepeatBasis[CT], TransposedRepeatBasis[CT]],
         None,
@@ -117,9 +117,9 @@ def bloch_operator_from_list[
     ],
 ) -> Operator[
     AsUpcast[
-        BlochOperatorBasis[ctype[np.complexfloating]],
+        BlochOperatorBasis[Ctype[np.complexfloating]],
         OperatorMetadata,
-        ctype[np.complexfloating],
+        Ctype[np.complexfloating],
     ],
     np.dtype[np.complexfloating],
 ]:
@@ -150,14 +150,14 @@ def _get_sample_fractions[M: BlochFractionMetadata](
 
 
 def kinetic_hamiltonian[M: SpacedLengthMetadata, E: AxisDirections](
-    potential: Potential[M, E, ctype[np.complexfloating], np.dtype[np.complexfloating]],
+    potential: Potential[M, E, Ctype[np.complexfloating], np.dtype[np.complexfloating]],
     mass: float,
     repeat: tuple[int, ...],
 ) -> Operator[
     AsUpcast[
         BlochOperatorBasis[ctype[np.complexfloating]],
         OperatorMetadata,
-        ctype[np.complexfloating],
+        Ctype[np.complexfloating],
     ],
     np.dtype[np.complexfloating],
 ]:

@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Literal, Never, cast, overload, override
 
 import numpy as np
-from slate_core import Array, Basis, SimpleMetadata, ctype
+from slate_core import Array, Basis, Ctype, SimpleMetadata
 from slate_core.explicit_basis import ExplicitUnitaryBasis
 from slate_core.metadata import BasisMetadata, TupleMetadata
 
@@ -29,7 +29,7 @@ class EigenstateBasis[
         Basis[TupleMetadata[tuple[SimpleMetadata, BasisStateMetadata[Basis]], None]],
         np.dtype[np.complexfloating],
     ],
-](ExplicitUnitaryBasis[Transform, ctype[np.complexfloating]]):
+](ExplicitUnitaryBasis[Transform, Ctype[np.complexfloating]]):
     """A basis with data stored as eigenstates."""
 
     @overload
@@ -52,7 +52,7 @@ class EigenstateBasis[
     @overload
     def __init__[
         M_: TupleMetadata[tuple[SimpleMetadata, BasisStateMetadata[Basis]], None],
-        DT_: ctype[np.complexfloating],
+        DT_: Ctype[np.complexfloating],
     ](
         self: ExplicitUnitaryBasis[Array[Basis[M_, DT_], np.dtype[np.complexfloating]]],
         matrix: Array[Basis[M_, DT_], np.dtype[np.complexfloating]],
@@ -85,7 +85,7 @@ class EigenstateBasis[
         M1_: SimpleMetadata,
         BInner_: Basis,
         DT_: np.dtype[np.complexfloating],
-        DT1_: ctype[Never],
+        DT1_: Ctype[Never],
     ](
         self: EigenstateBasis[
             Array[
@@ -98,9 +98,9 @@ class EigenstateBasis[
     ) -> StateListBuilder[
         AsUpcast[
             RecastBasis[
-                TupleBasis2D[tuple[Basis[M1_, ctype[np.generic]], BInner_], None],
+                TupleBasis2D[tuple[Basis[M1_, Ctype[np.generic]], BInner_], None],
                 TupleBasisLike[
-                    tuple[M1_, BasisStateMetadata[BInner_]], None, ctype[np.generic]
+                    tuple[M1_, BasisStateMetadata[BInner_]], None, Ctype[np.generic]
                 ],
                 TupleBasisLike[tuple[M1_, BasisStateMetadata[BInner_]], None, DT1_],
             ],

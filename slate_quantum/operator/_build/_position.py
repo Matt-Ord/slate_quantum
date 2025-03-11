@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 import numpy as np
-from slate_core import Array, Basis, TupleBasisLike, TupleMetadata, basis, ctype
+from slate_core import Array, Basis, Ctype, TupleBasisLike, TupleMetadata, basis
 from slate_core import metadata as _metadata
 from slate_core.basis import (
     AsUpcast,
@@ -111,7 +111,7 @@ def x_displacement_operator[M: LengthMetadata](
     metadata: M,
     origin: float = 0.0,
 ) -> Operator[
-    Basis[OperatorMetadata[M], ctype[np.generic]],
+    Basis[OperatorMetadata[M], Ctype[np.generic]],
     np.dtype[np.floating],
 ]:
     """Get the displacements from origin.
@@ -143,7 +143,7 @@ def _get_displacements_matrix_x_along_axis[M: SpacedLengthMetadata, E: AxisDirec
     *,
     axis: int,
 ) -> Operator[
-    Basis[OperatorMetadata[TupleMetadata[tuple[M, ...], E]], ctype[np.generic]],
+    Basis[OperatorMetadata[TupleMetadata[tuple[M, ...], E]], Ctype[np.generic]],
     np.dtype[np.floating],
 ]:
     x_points = _metadata.volume.fundamental_stacked_x_points(metadata)[axis]
@@ -200,7 +200,7 @@ def x[M: SpacedLengthMetadata, E: AxisDirections](
     axis: int,
     offset: float = 0,
     wrapped: bool = False,
-) -> Potential[M, E, ctype[np.complexfloating], np.dtype[np.complexfloating]]:
+) -> Potential[M, E, Ctype[np.complexfloating], np.dtype[np.complexfloating]]:
     """Get the x operator."""
     inner_offset = tuple(offset if i == axis else 0 for i in range(metadata.n_dim))
     points = _metadata.volume.fundamental_stacked_x_points(
@@ -299,7 +299,7 @@ def periodic_operator[M: BasisMetadata, E](
 
 def scattering_operator[M: SpacedLengthMetadata, E: AxisDirections](
     metadata: TupleMetadata[tuple[M, ...], E], *, n_k: tuple[int, ...]
-) -> Potential[M, E, ctype[np.complexfloating], np.dtype[np.complexfloating]]:
+) -> Potential[M, E, Ctype[np.complexfloating], np.dtype[np.complexfloating]]:
     """Get the e^(ik.x) operator.
 
     k is chosen such that k = 2 * np.pi * n_k / N
