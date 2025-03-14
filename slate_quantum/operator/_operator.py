@@ -14,7 +14,9 @@ from slate_core import (
     linalg,
 )
 from slate_core.basis import (
+    AsUpcast,
     Basis,
+    TupleBasis2D,
     TupleBasisLike,
     TupleBasisLike2D,
     are_dual_shapes,
@@ -62,6 +64,11 @@ class OperatorBuilder[B: OperatorBasis, DT: np.dtype[np.generic]](
         _assert_operator_basis(self._basis)
         return cast("Any", Operator(self._basis, self._data, 0))  # type: ignore safe to construct
 
+    @override
+    def assert_ok(self) -> Operator[B, DT]:
+        assert self._basis.ctype.supports_dtype(self._data.dtype)
+        return self.ok()  # type: ignore safe to construct
+
 
 class OperatorConversion[
     M0: OperatorMetadata,
@@ -81,6 +88,11 @@ class OperatorConversion[
                 ).ok(),
             ).ok(),
         )
+
+    @override
+    def assert_ok(self) -> Operator[B1, DT]:
+        assert self._new_basis.ctype.supports_dtype(self._data.dtype)
+        return self.ok()  # type: ignore safe to construct
 
 
 class Operator[
@@ -108,61 +120,59 @@ class Operator[
         return OperatorConversion(self.raw_data, self.basis, basis)
 
     @overload
-    def __add__[M1: BasisMetadata, DT1: np.number[Any]](
-        self: Operator[M1, DT1],
-        other: Operator[M1, DT1],
-    ) -> Operator[M1, DT1]: ...
+    def __add__[M1: OperatorMetadata, DT_: np.number](
+        self: Operator[Basis[M1, Ctype[DT_]], np.dtype[DT_]],
+        other: Operator[Basis[M1, Ctype[DT_]], np.dtype[DT_]],
+    ) -> Operator[Basis[M1, Ctype[DT_]], np.dtype[DT_]]: ...
     @overload
-    def __add__[M1: BasisMetadata, DT1: np.number[Any]](
-        self: Array[M1, DT1],
-        other: Array[M1, DT1],
-    ) -> Array[M1, DT1]: ...
+    def __add__[M_: BasisMetadata, DT_: np.number](
+        self: Array[Basis[M_, Ctype[DT_]], np.dtype[DT_]],
+        other: Array[Basis[M_, Ctype[DT_]], np.dtype[DT_]],
+    ) -> Array[Basis[M_, Ctype[DT_]], np.dtype[DT_]]: ...
     @override
-    def __add__[M1: BasisMetadata, DT1: np.number[Any]](
-        self: Array[M1, DT1],
-        other: Array[M1, DT1],
-    ) -> Array[M1, DT1]:
-        array = cast("Array[Any, DT1]", super()).__add__(other)
+    def __add__[M_: BasisMetadata, DT_: np.number](
+        self: Array[Basis[M_, Ctype[DT_]], np.dtype[DT_]],
+        other: Array[Basis[M_, Ctype[DT_]], np.dtype[DT_]],
+    ) -> Array[Basis[M_, Ctype[DT_]], np.dtype[DT_]]:
+        array = cast("Array[Any, np.dtype[DT_]]", super()).__add__(other)
         if isinstance(other, Operator):
-            return cast("Any", Operator(array.basis, array.raw_data))
+            return cast("Any", Operator.build(array.basis, array.raw_data).assert_ok())
         return array
 
     @overload
-    def __sub__[M1: BasisMetadata, DT1: np.number[Any]](
-        self: Operator[M1, DT1],
-        other: Operator[M1, DT1],
-    ) -> Operator[M1, DT1]: ...
-
+    def __sub__[M1: OperatorMetadata, DT_: np.number](
+        self: Operator[Basis[M1, Ctype[DT_]], np.dtype[DT_]],
+        other: Operator[Basis[M1, Ctype[DT_]], np.dtype[DT_]],
+    ) -> Operator[Basis[M1, Ctype[DT_]], np.dtype[DT_]]: ...
     @overload
-    def __sub__[M1: BasisMetadata, DT1: np.number[Any]](
-        self: Array[M1, DT1],
-        other: Array[M1, DT1],
-    ) -> Array[M1, DT1]: ...
-
+    def __sub__[M_: BasisMetadata, DT_: np.number](
+        self: Array[Basis[M_, Ctype[DT_]], np.dtype[DT_]],
+        other: Array[Basis[M_, Ctype[DT_]], np.dtype[DT_]],
+    ) -> Array[Basis[M_, Ctype[DT_]], np.dtype[DT_]]: ...
     @override
-    def __sub__[M1: BasisMetadata, DT1: np.number[Any]](
-        self: Array[M1, DT1],
-        other: Array[M1, DT1],
-    ) -> Array[M1, DT1]:
-        array = cast("Array[Any, DT1]", super()).__sub__(other)
+    def __sub__[M_: BasisMetadata, DT_: np.number](
+        self: Array[Basis[M_, Ctype[DT_]], np.dtype[DT_]],
+        other: Array[Basis[M_, Ctype[DT_]], np.dtype[DT_]],
+    ) -> Array[Basis[M_, Ctype[DT_]], np.dtype[DT_]]:
+        array = cast("Array[Any, np.dtype[DT_]]", super()).__sub__(other)
         if isinstance(other, Operator):
-            return cast("Any", Operator(array.basis, array.raw_data))
+            return cast("Any", Operator.build(array.basis, array.raw_data).assert_ok())
 
         return array
 
     @override
-    def __mul__[M1: BasisMetadata, DT1: np.number[Any]](
-        self: Operator[M1, DT1],
-        other: complex,
-    ) -> Operator[M1, DT1]:
+    def __mul__[M_: OperatorMetadata, DT_: np.number](
+        self: Operator[Basis[M_, Ctype[DT_]], np.dtype[DT_]],
+        other: float,
+    ) -> Operator[Basis[M_, Ctype[DT_]], np.dtype[DT_]]:
         # TODO: always support complex numbers  # noqa: FIX002
-        out = cast("Array[Any, DT1]", super()).__mul__(cast("float", other))
-        return Operator[Any, Any](out.basis, out.raw_data)
+        out = cast("Array[Any, np.dtype[DT_]]", super()).__mul__(other)
+        return Operator.build(out.basis, out.raw_data).assert_ok()
 
-    def as_diagonal(self) -> Array[M, np.generic]:
-        diagonal = into_diagonal(
-            Operator(self.basis, self.raw_data.astype(np.complex128))
-        )
+    def as_diagonal[M_: BasisMetadata, CT: Ctype[Never]](
+        self: Operator[OperatorBasis[M_, CT], DT],
+    ) -> Array[Basis[M_, CT], DT]:
+        diagonal = into_diagonal(self)
         inner = cast("Basis[M, DT]", diagonal.basis.inner[1])
         return Array(inner, diagonal.raw_data)
 
@@ -201,7 +211,7 @@ def expectation_of_each[M0: BasisMetadata, M: BasisMetadata](
     basis = as_tuple_basis(states.basis).children[1]
     return linalg.einsum(
         "(a i'),(i j'),(a j) -> a",
-        states.with_state_basis(basis.dual_basis()).ok(),
+        states.with_state_basis(basis.dual_basis()).assert_ok(),
         operator,
         states,
     )
@@ -246,6 +256,11 @@ class OperatorListBuilder[
         _assert_operator_list_basis(self._basis)
         return cast("Any", OperatorList(self._basis, self._data, 0))  # type: ignore safe to construct
 
+    @override
+    def assert_ok(self) -> OperatorList[B, DT]:
+        assert self._basis.ctype.supports_dtype(self._data.dtype)
+        return self.ok()  # type: ignore safe to construct
+
 
 class OperatorListConversion[
     M0: OperatorListMetadata,
@@ -265,6 +280,11 @@ class OperatorListConversion[
                 ).ok(),
             ).ok(),
         )
+
+    @override
+    def assert_ok(self) -> OperatorList[B1, DT]:
+        assert self._new_basis.ctype.supports_dtype(self._data.dtype)
+        return self.ok()  # type: ignore safe to construct
 
 
 class OperatorList[
@@ -296,45 +316,35 @@ class OperatorList[
     ) -> OperatorListConversion[M0_, B1_, DT_]:
         return OperatorListConversion(self.raw_data, self.basis, basis)
 
-    @overload
-    def with_operator_basis[B0: Basis[Any, Any], B1: Basis[Any, Any]](  # B1: B
-        self: OperatorList[Any, Any, Any, TupleBasis2D[Any, B0, Any, None]], basis: B1
-    ) -> OperatorList[M0, M1, DT, TupleBasis2D[Any, B0, B1, None]]: ...
-
-    @overload
-    def with_operator_basis[B1: Basis[Any, Any]](  # B1: B
-        self, basis: B1
-    ) -> OperatorList[M0, M1, DT, TupleBasis2D[Any, Any, B1, None]]: ...
-
-    def with_operator_basis(  # B1: B
-        self, basis: Basis[OperatorMetadata, Any]
-    ) -> OperatorList[M0, M1, DT, Any]:
+    def with_operator_basis[M: BasisMetadata, B1: OperatorBasis](  # B1: B
+        self: OperatorList[OperatorListBasis[M, Any], DT], basis: B1
+    ) -> OperatorListConversion[
+        Any,
+        AsUpcast[
+            TupleBasis[tuple[Basis[M], B1], None],
+            TupleMetadata[tuple[BasisMetadata, OperatorMetadata], None],
+        ],
+        DT,
+    ]:
         """Get the Operator with the operator basis set to basis."""
-        final_basis = TupleBasis((as_tuple_basis(self.basis)[0], basis))
-        return OperatorList(
-            final_basis, self.basis.__convert_vector_into__(self.raw_data, final_basis)
-        )
+        lhs_basis = as_tuple_basis(self.basis).children[0]
+        out_basis = TupleBasis((lhs_basis, basis)).upcast()
+        return self.with_basis(out_basis)
 
-    @overload
-    def with_list_basis[B0: Basis[Any, Any], B1: Basis[Any, Any]](  # B1: B
-        self: OperatorList[Any, Any, Any, TupleBasis2D[Any, Any, B1, None]], basis: B0
-    ) -> OperatorList[M0, M1, DT, TupleBasis2D[Any, B0, B1, None]]: ...
-
-    @overload
-    def with_list_basis[B0: Basis[Any, Any]](  # B1: B
-        self, basis: B0
-    ) -> OperatorList[
-        M0, M1, DT, TupleBasis2D[Any, B0, Basis[Metadata2D[M1, M1, None], Any], None]
-    ]: ...
-
-    def with_list_basis(  # B1: B
-        self, basis: Basis[Any, Any]
-    ) -> OperatorList[M0, M1, DT, Any]:
+    def with_list_basis[M: OperatorMetadata, B1: Basis](  # B1: B
+        self: OperatorList[OperatorListBasis[Any, M], DT], basis: B1
+    ) -> OperatorListConversion[
+        Any,
+        AsUpcast[
+            TupleBasis[tuple[B1, Basis[M]], None],
+            TupleMetadata[tuple[BasisMetadata, OperatorMetadata], None],
+        ],
+        DT,
+    ]:
         """Get the Operator with the operator basis set to basis."""
-        final_basis = TupleBasis((basis, as_tuple_basis(self.basis)[1]))
-        return OperatorList(
-            final_basis, self.basis.__convert_vector_into__(self.raw_data, final_basis)
-        )
+        rhs_basis = as_tuple_basis(self.basis).children[1]
+        out_basis = TupleBasis((basis, rhs_basis)).upcast()
+        return self.with_basis(out_basis)
 
     @overload
     def __iter__[M1_: BasisMetadata, B_: Basis[Any, Any], DT_: np.generic](
@@ -412,7 +422,13 @@ class OperatorList[
     @staticmethod
     def from_operators[M_: OperatorMetadata, DT_: np.dtype[np.generic]](
         iter_: Iterable[Operator[Basis[M_], DT_]],
-    ) -> OperatorList[TupleBasisLike[tuple[SimpleMetadata, M_], None], DT_]:
+    ) -> OperatorList[
+        AsUpcast[
+            TupleBasis[tuple[Basis[SimpleMetadata], Basis[M_]], None],
+            OperatorListMetadata,
+        ],
+        DT_,
+    ]:
         states = list(iter_)
         assert all(x.basis == states[0].basis for x in states)
 
@@ -427,68 +443,58 @@ class OperatorList[
         ).ok()
 
     @overload
-    def __add__[
-        M0_: BasisMetadata,
-        M1_: BasisMetadata,
-        DT1: np.number[Any],
-    ](
-        self: OperatorList[M0_, M1_, DT1],
-        other: OperatorList[M0_, M1_, DT1],
-    ) -> OperatorList[M0_, M1_, DT1]: ...
+    def __add__[M1: OperatorListMetadata, DT_: np.number](
+        self: OperatorList[Basis[M1, Ctype[DT_]], np.dtype[DT_]],
+        other: OperatorList[Basis[M1, Ctype[DT_]], np.dtype[DT_]],
+    ) -> OperatorList[Basis[M1, Ctype[DT_]], np.dtype[DT_]]: ...
     @overload
-    def __add__[M0_: BasisMetadata, DT1: np.number[Any]](
-        self: Array[M0_, DT1],
-        other: Array[M0_, DT1],
-    ) -> Array[M0_, DT1]: ...
+    def __add__[M_: BasisMetadata, DT_: np.number](
+        self: Array[Basis[M_, Ctype[DT_]], np.dtype[DT_]],
+        other: Array[Basis[M_, Ctype[DT_]], np.dtype[DT_]],
+    ) -> Array[Basis[M_, Ctype[DT_]], np.dtype[DT_]]: ...
     @override
-    def __add__[M0_: BasisMetadata, DT1: np.number[Any]](
-        self: Array[M0_, DT1],
-        other: Array[M0_, DT1],
-    ) -> Array[M0_, DT1]:
-        array = cast("Array[Any, DT1]", super()).__add__(other)
+    def __add__[M_: BasisMetadata, DT_: np.number](
+        self: Array[Basis[M_, Ctype[DT_]], np.dtype[DT_]],
+        other: Array[Basis[M_, Ctype[DT_]], np.dtype[DT_]],
+    ) -> Array[Basis[M_, Ctype[DT_]], np.dtype[DT_]]:
+        array = cast("Array[Any, np.dtype[DT_]]", super()).__add__(other)
         if isinstance(other, OperatorList):
-            return cast("Any", OperatorList(array.basis, array.raw_data))
-
+            return cast(
+                "Any", OperatorList.build(array.basis, array.raw_data).assert_ok()
+            )
         return array
 
     @overload
-    def __sub__[
-        M0_: BasisMetadata,
-        M1_: BasisMetadata,
-        DT1: np.number[Any],
-    ](
-        self: OperatorList[M0_, M1_, DT1],
-        other: OperatorList[M0_, M1_, DT1],
-    ) -> OperatorList[M0_, M1_, DT1]: ...
-
+    def __sub__[M1: OperatorListMetadata, DT_: np.number](
+        self: OperatorList[Basis[M1, Ctype[DT_]], np.dtype[DT_]],
+        other: OperatorList[Basis[M1, Ctype[DT_]], np.dtype[DT_]],
+    ) -> OperatorList[Basis[M1, Ctype[DT_]], np.dtype[DT_]]: ...
     @overload
-    def __sub__[M0_: BasisMetadata, DT1: np.number[Any]](
-        self: Array[M0_, DT1],
-        other: Array[M0_, DT1],
-    ) -> Array[M0_, DT1]: ...
-
+    def __sub__[M_: BasisMetadata, DT_: np.number](
+        self: Array[Basis[M_, Ctype[DT_]], np.dtype[DT_]],
+        other: Array[Basis[M_, Ctype[DT_]], np.dtype[DT_]],
+    ) -> Array[Basis[M_, Ctype[DT_]], np.dtype[DT_]]: ...
     @override
-    def __sub__[M0_: BasisMetadata, DT1: np.number[Any]](
-        self: Array[M0_, DT1],
-        other: Array[M0_, DT1],
-    ) -> Array[M0_, DT1]:
-        array = cast("Array[Any, DT1]", super()).__sub__(other)
+    def __sub__[M_: BasisMetadata, DT_: np.number](
+        self: Array[Basis[M_, Ctype[DT_]], np.dtype[DT_]],
+        other: Array[Basis[M_, Ctype[DT_]], np.dtype[DT_]],
+    ) -> Array[Basis[M_, Ctype[DT_]], np.dtype[DT_]]:
+        array = cast("Array[Any, np.dtype[DT_]]", super()).__sub__(other)
         if isinstance(other, OperatorList):
-            return cast("Any", OperatorList(array.basis, array.raw_data))
+            return cast(
+                "Any", OperatorList.build(array.basis, array.raw_data).assert_ok()
+            )
 
         return array
 
     @override
-    def __mul__[
-        M0_: BasisMetadata,
-        M1_: BasisMetadata,
-        DT1: np.number[Any],
-    ](
-        self: OperatorList[M0_, M1_, DT1],
+    def __mul__[M_: OperatorListMetadata, DT_: np.number](
+        self: OperatorList[Basis[M_, Ctype[DT_]], np.dtype[DT_]],
         other: float,
-    ) -> OperatorList[M0_, M1_, DT1]:
-        out = cast("Array[Any, DT1]", super()).__mul__(other)
-        return OperatorList[Any, Any, Any](out.basis, out.raw_data)
+    ) -> OperatorList[Basis[M_, Ctype[DT_]], np.dtype[DT_]]:
+        # TODO: always support complex numbers  # noqa: FIX002
+        out = cast("Array[Any, np.dtype[DT_]]", super()).__mul__(other)
+        return OperatorList.build(out.basis, out.raw_data).assert_ok()
 
 
 type SuperOperatorMetadata[M: BasisMetadata = BasisMetadata] = OperatorMetadata[

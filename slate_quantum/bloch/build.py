@@ -116,29 +116,25 @@ def bloch_operator_from_list[
         TupleBasisLike[tuple[M0, OperatorMetadata[M1]]], np.dtype[np.complexfloating]
     ],
 ) -> Operator[
-    AsUpcast[
-        BlochOperatorBasis[Ctype[np.complexfloating]],
-        OperatorMetadata,
-        Ctype[np.complexfloating],
-    ],
-    np.dtype[np.complexfloating],
+    AsUpcast[BlochOperatorBasis, OperatorMetadata], np.dtype[np.complexfloating]
 ]:
     """Build the block diagonal Bloch Hamiltonian from a list of operators."""
-    operators = operators.with_list_basis(
-        basis.from_metadata(operators.basis.metadata()[0])
-    )
-    operators = operators.with_operator_basis(
+    operators_as_list = operators.with_list_basis(
+        basis.from_metadata(operators.basis.metadata().children[0])
+    ).assert_ok()
+    operators_transformed = operators_as_list.with_operator_basis(
         basis.transformed_from_metadata(
-            operators.basis[1].metadata(), is_dual=operators.basis[1].is_dual
-        )
-    )
+            operators_as_list.basis.inner.children[1].metadata(),
+            is_dual=operators_as_list.basis.inner.children[1].is_dual,
+        ).upcast()
+    ).assert_ok()
 
     operator_basis = _metadata_from_operator_list(operators.basis.metadata())
     out_basis = BlockDiagonalBasis(
         TupleBasis((operator_basis, operator_basis.dual_basis())),
-        operators.basis.metadata()[1].shape,
-    )
-    return Operator(out_basis, operators.raw_data)
+        operators_transformed.basis.metadata().children[1].shape,
+    ).upcast()
+    return Operator.build(out_basis, operators.raw_data).assert_ok()
 
 
 def _get_sample_fractions[M: BlochFractionMetadata](
@@ -154,17 +150,13 @@ def kinetic_hamiltonian[M: SpacedLengthMetadata, E: AxisDirections](
     mass: float,
     repeat: tuple[int, ...],
 ) -> Operator[
-    AsUpcast[
-        BlochOperatorBasis[ctype[np.complexfloating]],
-        OperatorMetadata,
-        Ctype[np.complexfloating],
-    ],
+    AsUpcast[BlochOperatorBasis, OperatorMetadata],
     np.dtype[np.complexfloating],
 ]:
     """Build a kinetic Hamiltonian in the Bloch basis."""
     list_metadata = BlochFractionMetadata.from_repeats(repeat)
     bloch_fractions = _get_sample_fractions(list_metadata)
-    list_basis = basis.from_metadata(list_metadata)
+    basis.from_metadata(list_metadata)
 
     operators = OperatorList.from_operators(
         [
@@ -172,12 +164,11 @@ def kinetic_hamiltonian[M: SpacedLengthMetadata, E: AxisDirections](
             for fraction in zip(*bloch_fractions, strict=True)
         ]
     )
-    operators = OperatorList.build(
-        TupleBasis((list_basis, operators.basis.children[1]))
-        .resolve_ctype()
-        .upcast()
-        .resolve_ctype(),
+    cast_operators = OperatorList.build(
+        TupleBasis(
+            (basis.from_metadata(list_metadata), operators.basis.inner.children[1])
+        ).upcast(),
         operators.raw_data,
-    ).ok()
+    ).assert_ok()
 
-    return bloch_operator_from_list(operators)
+    return bloch_operator_from_list(cast_operators)

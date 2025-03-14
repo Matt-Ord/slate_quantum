@@ -14,7 +14,14 @@ from slate_core import (
     linalg,
 )
 from slate_core import basis as _basis
-from slate_core.basis import Basis, BasisStateMetadata, TupleBasisLike, TupleBasisLike2D
+from slate_core.basis import (
+    AsUpcast,
+    Basis,
+    BasisStateMetadata,
+    TupleBasis2D,
+    TupleBasisLike,
+    TupleBasisLike2D,
+)
 from slate_core.metadata import BasisMetadata
 
 from slate_quantum.metadata import EigenvalueMetadata
@@ -141,6 +148,11 @@ class StateListBuilder[B: TupleBasisLike2D, DT: np.dtype[np.complexfloating]](
     ) -> StateList[B, DT]:
         return cast("Any", StateList(self._basis, self._data, 0))  # type: ignore safe to construct
 
+    @override
+    def assert_ok(self) -> StateList[B, DT]:
+        assert self._basis.ctype.supports_dtype(self._data.dtype)
+        return self.ok()  # type: ignore safe to construct
+
 
 class StateListConversion[
     M0: BasisMetadata,
@@ -163,6 +175,11 @@ class StateListConversion[
                 ).ok(),
             ).ok(),
         )
+
+    @override
+    def assert_ok(self) -> StateList[B1, DT]:
+        assert self._new_basis.ctype.supports_dtype(self._data.dtype)
+        return self.ok()  # type: ignore safe to construct
 
 
 class StateList[
@@ -228,43 +245,35 @@ class StateList[
             return StateList.build(out.basis, out.raw_data).ok()
         return out
 
-    @overload
-    def with_state_basis[B0: Basis[Any, Any], B1: Basis[Any, Any]](  # B1: B
-        self: StateList[Any, Any, TupleBasisLike2D[Any, B0, Any, None]], basis: B1
-    ) -> StateList[M0, M1, TupleBasisLike2D[Any, B0, B1, None]]: ...
-
-    @overload
-    def with_state_basis[B1: Basis[Any, Any]](  # B1: B
-        self, basis: B1
-    ) -> StateList[M0, M1, TupleBasisLike2D[Any, Any, B1, None]]: ...
-
-    def with_state_basis(  # B1: B
-        self, basis: Basis[BasisMetadata, Any]
-    ) -> StateList[M0, M1, Any]:
-        """Get the Operator with the state basis set to basis."""
-        final_basis = TupleBasis((_basis.as_tuple_basis(self.basis)[0], basis))
-        return StateList(
-            final_basis, self.basis.__convert_vector_into__(self.raw_data, final_basis)
-        )
-
-    @overload
-    def with_list_basis[B0: Basis[Any, Any], B1: Basis[Any, Any]](  # B1: B
-        self: StateList[Any, Any, TupleBasisLike2D[Any, Any, B1, None]], basis: B0
-    ) -> StateList[M0, M1, TupleBasisLike2D[Any, B0, B1, None]]: ...
-
-    @overload
-    def with_list_basis[B0: Basis[Any, Any]](  # B1: B
-        self, basis: B0
-    ) -> StateList[M0, M1, TupleBasisLike2D[Any, B0, Any, None]]: ...
-
-    def with_list_basis(  # B1: B
-        self, basis: Basis[Any, Any]
-    ) -> StateList[M0, M1, Any]:
+    def with_state_basis[M: BasisMetadata, B1: Basis](  # B1: B
+        self: StateList[TupleBasisLike2D[tuple[M, Any]], DT], basis: B1
+    ) -> StateListConversion[
+        Any,
+        AsUpcast[
+            TupleBasis[tuple[Basis[M], B1], None],
+            TupleMetadata[tuple[M, BasisMetadata], None],
+        ],
+        DT,
+    ]:
         """Get the Operator with the operator basis set to basis."""
-        final_basis = TupleBasis((basis, _basis.as_tuple_basis(self.basis)[1]))
-        return StateList(
-            final_basis, self.basis.__convert_vector_into__(self.raw_data, final_basis)
-        )
+        lhs_basis = _basis.as_tuple_basis(self.basis).children[0]
+        out_basis = TupleBasis((lhs_basis, basis)).upcast()
+        return self.with_basis(out_basis)
+
+    def with_list_basis[M: BasisMetadata, B1: Basis](  # B1: B
+        self: StateList[TupleBasisLike2D[tuple[Any, M]], DT], basis: B1
+    ) -> StateListConversion[
+        Any,
+        AsUpcast[
+            TupleBasis[tuple[B1, Basis[M]], None],
+            TupleMetadata[tuple[BasisMetadata, M], None],
+        ],
+        DT,
+    ]:
+        """Get the Operator with the operator basis set to basis."""
+        rhs_basis = _basis.as_tuple_basis(self.basis).children[1]
+        out_basis = TupleBasis((basis, rhs_basis)).upcast()
+        return self.with_basis(out_basis)
 
     @staticmethod
     def from_states[
@@ -310,16 +319,20 @@ def normalize_all[
     DT: np.dtype[np.complexfloating],
 ](
     states: StateList[TupleBasisLike[tuple[M0, M1], None], DT],
-) -> StateList[TupleBasisLike[tuple[M0, M1], None], DT]:
+) -> StateList[TupleBasis2D[tuple[Basis[M0], Basis[M1]], None], DT]:
     norms = all_inner_product(states, states)
     norms = array.as_index_basis(norms)
-    states = states.with_list_basis(norms.basis)
-    states = states.with_state_basis(_basis.as_mul_basis(states.basis[1]))
+    as_index = states.with_list_basis(norms.basis).assert_ok()
+    as_mul = _basis.as_mul_basis(as_index.basis.inner.children[1])
+    states_as_mul = states.with_state_basis(as_mul).assert_ok()
     return StateList.build(
-        states.basis,
-        states.raw_data.reshape(states.basis.shape)
-        / np.sqrt(norms.raw_data)[:, np.newaxis],
-    ).ok()
+        states_as_mul.basis,
+        cast(
+            "np.ndarray[Any, DT]",
+            states_as_mul.raw_data.reshape(states_as_mul.basis.inner.shape)
+            / np.sqrt(norms.raw_data)[:, np.newaxis],
+        ),
+    ).assert_ok()
 
 
 @overload

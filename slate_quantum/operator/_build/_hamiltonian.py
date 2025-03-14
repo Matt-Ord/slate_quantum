@@ -109,7 +109,7 @@ def kinetic_hamiltonian[M: SpacedLengthMetadata, E: AxisDirections](
     -------
     MomentumBasisHamiltonian[_L0, _L1, _L2]
     """
-    metadata = potential.basis.inner.inner.inner.children[0].metadata()
+    metadata = potential.basis.inner.inner.inner.inner.children[0].metadata()
     kinetic_hamiltonian = kinetic_energy(metadata, mass, bloch_fraction)
     basis = SplitBasis(potential.basis, kinetic_hamiltonian.basis).resolve_ctype()
     upcast = AsUpcast(basis, kinetic_hamiltonian.basis.metadata()).resolve_ctype()

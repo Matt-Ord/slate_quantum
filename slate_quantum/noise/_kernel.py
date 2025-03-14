@@ -49,17 +49,27 @@ def from_noise_operators[M: BasisMetadata, DT: np.dtype[np.generic]](
         OperatorListBasis[EigenvalueMetadata, OperatorMetadata[M]], DT
     ],
 ) -> NoiseKernel[SuperOperatorBasis[M], DT]:
-    converted = operators.with_basis(as_tuple_basis(operators.basis).upcast()).ok()
-    converted_inner = converted.with_operator_basis(
-        as_tuple_basis(converted.basis[1])
-    ).with_list_basis(as_index_basis(converted.basis[0]))
+    converted = operators.with_basis(
+        as_tuple_basis(operators.basis).upcast()
+    ).assert_ok()
+    converted_inner = (
+        converted.with_operator_basis(
+            as_tuple_basis(converted.basis.inner.children[1]).upcast()
+        )
+        .assert_ok()
+        .with_list_basis(as_index_basis(converted.basis.inner.children[0]))
+        .assert_ok()
+    )
     operators_data = converted_inner.raw_data.reshape(
-        converted.basis[0].size, *converted_inner.basis[1].shape
+        converted.basis.inner.children[0].size,
+        *converted_inner.basis.inner.children[1].shape,
     )
 
     data = np.einsum(  # type:ignore  unknown
         "a,aji,akl->ij kl",
-        converted.basis[0].metadata().values[converted_inner.basis.points],
+        converted.basis.inner.children[0]
+        .metadata()
+        .values[converted_inner.basis.points],
         np.conj(operators_data),
         operators_data.astype(np.complex128),
     )

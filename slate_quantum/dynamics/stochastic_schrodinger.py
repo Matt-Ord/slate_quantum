@@ -4,12 +4,11 @@ import datetime
 from typing import TYPE_CHECKING, Any, TypedDict, Unpack, cast
 
 import numpy as np
-import slate
-import slate.linalg
+import slate_core.linalg
 from scipy.constants import hbar  # type: ignore lib
-from slate_core import FundamentalBasis, SimpleMetadata, array, basis
-from slate_core.basis import TupleBasis, TupleBasis2D
-from slate_core.metadata import BasisMetadata, Metadata2D
+from slate_core import Ctype, FundamentalBasis, TupleMetadata, array, basis
+from slate_core.basis import TupleBasis, TupleBasis2D, TupleBasisLike2D
+from slate_core.metadata import BasisMetadata
 from slate_core.util import timed
 
 from slate_quantum import operator
@@ -26,7 +25,12 @@ if TYPE_CHECKING:
 
     from slate_quantum.metadata import EigenvalueMetadata, TimeMetadata
     from slate_quantum.operator import OperatorList
-    from slate_quantum.operator._operator import Operator
+    from slate_quantum.operator._operator import (
+        Operator,
+        OperatorBasis,
+        OperatorListBasis,
+        OperatorMetadata,
+    )
 
 
 def _get_operator_diagonals(
@@ -92,35 +96,21 @@ def solve_stochastic_schrodinger_equation_banded[
     M: BasisMetadata,
     MT: TimeMetadata,
 ](
-    initial_state: State[M],
-    times: Basis[MT, np.complexfloating],
-    hamiltonian: Operator[M, np.complexfloating],
+    initial_state: State[Basis[M]],
+    times: Basis[MT, Ctype[np.complexfloating]],
+    hamiltonian: Operator[OperatorBasis[M], np.dtype[np.complexfloating]],
     noise: OperatorList[
-        EigenvalueMetadata,
-        M,
-        np.complexfloating,
-        TupleBasis2D[
-            np.complexfloating,
-            Basis[EigenvalueMetadata, np.complexfloating],
-            Basis[Metadata2D[M, M, Any], np.complexfloating],
-            Any,
-        ],
+        OperatorListBasis[EigenvalueMetadata, OperatorMetadata[M]],
+        np.dtype[np.complexfloating],
     ],
     **kwargs: Unpack[SSEConfig],
 ) -> StateList[
-    Metadata2D[SimpleMetadata, MT, None],
-    M,
     TupleBasis2D[
-        np.complexfloating,
-        TupleBasis2D[
-            np.complexfloating,
-            FundamentalBasis[SimpleMetadata],
-            Basis[MT, np.complexfloating],
-            None,
-        ],
-        Basis[M, np.complexfloating],
+        tuple[TupleBasis[tuple[FundamentalBasis, Basis[MT]], None], Basis[M]],
         None,
+        Ctype[np.complexfloating],
     ],
+    np.dtype[np.complexfloating],
 ]:
     r"""Given an initial state, use the stochastic schrodinger equation to solve the dynamics of the system.
 
@@ -156,18 +146,20 @@ def solve_stochastic_schrodinger_equation_banded[
     target_delta = kwargs.get("target_delta", 1e-3)
 
     hamiltonian_tuple = array.as_tuple_basis(hamiltonian)
-    initial_state_converted = initial_state.with_basis(hamiltonian_tuple.basis[0])
+    initial_state_converted = initial_state.with_basis(
+        hamiltonian_tuple.basis.children[0]
+    ).assert_ok()
     coherent_step = operator.apply(hamiltonian, initial_state_converted)
 
     # The actual coherent step is H / hbar not H, so to get the correct
     # step size we need to multiply by hbar
-    dt = hbar * (target_delta / abs(slate.linalg.norm(coherent_step).item()))
+    dt = hbar * (target_delta / abs(slate_core.linalg.norm(coherent_step).item()))
     times = basis.as_index_basis(times)
 
     operators_data = [
-        o.with_basis(hamiltonian_tuple.basis).raw_data.reshape(
-            hamiltonian_tuple.basis.shape
-        )
+        o.with_basis(hamiltonian_tuple.basis)
+        .assert_ok()
+        .raw_data.reshape(hamiltonian_tuple.basis.shape)
         * (np.sqrt(e))
         for o, e in zip(
             noise, noise.basis[0].metadata().values[noise.basis[0].points], strict=False
@@ -215,19 +207,22 @@ def solve_stochastic_schrodinger_equation_banded[
 
     te = datetime.datetime.now(tz=datetime.UTC)
     print(f"solve rust banded took: {(te - ts).total_seconds()} sec")  # noqa: T201
-    return StateList(
+    return StateList.build(
         TupleBasis(
             (
                 TupleBasis((FundamentalBasis.from_size(n_realizations), times)),
-                hamiltonian_tuple.basis[0],
+                hamiltonian_tuple.basis.children[0],
             )
-        ),
+        ).upcast(),
         np.array(data),
-    )
+    ).assert_ok()
 
 
 def select_realization[MT: BasisMetadata, M: BasisMetadata](
-    states: StateList[Metadata2D[SimpleMetadata, MT, None], M], idx: int = 0
-) -> StateList[MT, M]:
+    states: StateList[
+        TupleBasisLike2D[tuple[TupleMetadata[tuple[Any, MT], None], M], None]
+    ],
+    idx: int = 0,
+) -> StateList[TupleBasisLike2D[tuple[MT, M], None]]:
     """Select a realization from a state list."""
     return states[(idx, slice(None)), :]

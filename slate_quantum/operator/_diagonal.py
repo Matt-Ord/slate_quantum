@@ -20,7 +20,14 @@ type DiagonalOperatorBasis[
     CT: Ctype[Never] = Ctype[Never],
 ] = AsUpcast[
     RecastBasis[
-        DiagonalBasis[TupleBasis[tuple[BInner, BInner], None, CT]], BInner, BOuter, CT
+        AsUpcast[
+            DiagonalBasis[TupleBasis[tuple[BInner, BInner], None, CT]],
+            OperatorMetadata,
+            CT,
+        ],
+        BInner,
+        BOuter,
+        CT,
     ],
     OperatorMetadata,
     CT,
@@ -31,7 +38,9 @@ def recast_diagonal_basis[
     BInner: Basis = Basis,
     BOuter: Basis = Basis,
 ](inner_recast: BInner, outer_recast: BOuter) -> DiagonalOperatorBasis[BInner, BOuter]:
-    inner = DiagonalBasis(TupleBasis((inner_recast, inner_recast.dual_basis())))
+    inner = DiagonalBasis(
+        TupleBasis((inner_recast, inner_recast.dual_basis()))
+    ).upcast()
     recast = RecastBasis(inner, inner_recast.dual_basis(), outer_recast.dual_basis())
     return AsUpcast(recast, inner.metadata())
 

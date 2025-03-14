@@ -4,9 +4,10 @@ from typing import TYPE_CHECKING, Any, cast
 
 import numpy as np
 from scipy.constants import hbar  # type: ignore lib
-from slate_core import Ctype, TupleBasis, array
+from slate_core import Array, Ctype, TupleBasis, array
 from slate_core.basis import (
     Basis,
+    DiagonalBasis,
 )
 from slate_core.metadata import BasisMetadata
 
@@ -21,7 +22,6 @@ except ImportError:
 
 if TYPE_CHECKING:
     from slate_core.basis import (
-        DiagonalBasis,
         TupleBasis2D,
     )
 
@@ -30,31 +30,31 @@ if TYPE_CHECKING:
 
 
 def _solve_schrodinger_equation_diagonal[
-    M: BasisMetadata,
+    B: Basis[BasisMetadata, Ctype[np.complexfloating]],
     TB: Basis[TimeMetadata, Ctype[np.complexfloating]],
-    B: Basis[BasisMetadata, Ctype[np.complexfloating]] = Basis[
-        M, Ctype[np.complexfloating]
-    ],
 ](
     initial_state: State[Basis],
     times: TB,
-    hamiltonian: Operator[
-        M,
-        np.number[Any],
-        DiagonalBasis[np.complexfloating, B, B, Any],
+    hamiltonian: Array[
+        DiagonalBasis[TupleBasis[tuple[B, B], Any], Ctype[np.complexfloating]],
+        np.dtype[np.number],
     ],
 ) -> StateList[
     TupleBasis2D[tuple[TB, B], None],
     np.dtype[np.complexfloating],
 ]:
-    coefficients = initial_state.with_basis(hamiltonian.basis.inner[0]).raw_data
+    coefficients = (
+        initial_state.with_basis(hamiltonian.basis.inner.children[0]).ok().raw_data
+    )
     eigenvalues = hamiltonian.raw_data
 
     time_values = np.array(list(times.metadata().values))[times.points]
     vectors = coefficients[np.newaxis, :] * np.exp(
         -1j * eigenvalues * time_values[:, np.newaxis] / hbar
     )
-    return StateList.build(TupleBasis((times, hamiltonian.basis.inner[0])), vectors)
+    return StateList.build(
+        TupleBasis((times, hamiltonian.basis.inner.children[0])).upcast(), vectors
+    ).assert_ok()
 
 
 def solve_schrodinger_equation_decomposition[
@@ -63,10 +63,13 @@ def solve_schrodinger_equation_decomposition[
 ](
     initial_state: State[Basis],
     times: TB,
-    hamiltonian: Operator[OperatorBasis[M], np.dtype[np.complexfloating]],
+    hamiltonian: Operator[
+        OperatorBasis[M, Ctype[np.complexfloating]], np.dtype[np.complexfloating]
+    ],
 ) -> StateList[TupleBasis2D[tuple[TB, Basis[M]]], np.dtype[np.complexfloating]]:
     """Solve the schrodinger equation by directly finding eigenstates for the given initial state and hamiltonian."""
     diagonal = into_diagonal_hermitian(hamiltonian)
+    diagonal = array.cast_basis(diagonal, diagonal.basis.inner).assert_ok()
     return _solve_schrodinger_equation_diagonal(initial_state, times, diagonal)
 
 

@@ -35,6 +35,11 @@ class BlochTransposedBasis[
     ) -> None:
         super().__init__(cast("B", inner))
 
+    @property
+    @override
+    def ctype(self) -> CT:
+        return cast("CT", self.inner.ctype)
+
     @override
     def metadata[M_: RepeatedLengthMetadata, E](
         self: BlochTransposedBasis[TupleBasis[tuple[Basis[M_], ...], E], Any],
@@ -182,7 +187,7 @@ class BlochTransposedBasis[
         return out
 
     @override
-    def add_data[DT1: np.number[Any]](
+    def add_data[DT1: np.number](
         self,
         lhs: np.ndarray[Any, np.dtype[DT1]],
         rhs: np.ndarray[Any, np.dtype[DT1]],
@@ -193,7 +198,7 @@ class BlochTransposedBasis[
         return (lhs + rhs).astype(lhs.dtype)
 
     @override
-    def mul_data[DT1: np.number[Any]](
+    def mul_data[DT1: np.number](
         self, lhs: np.ndarray[Any, np.dtype[DT1]], rhs: float
     ) -> np.ndarray[Any, np.dtype[DT1]]:
         if "LINEAR_MAP" not in self.features:
@@ -202,7 +207,7 @@ class BlochTransposedBasis[
         return (lhs * rhs).astype(lhs.dtype)
 
     @override
-    def sub_data[DT1: np.number[Any]](
+    def sub_data[DT1: np.number](
         self,
         lhs: np.ndarray[Any, np.dtype[DT1]],
         rhs: np.ndarray[Any, np.dtype[DT1]],

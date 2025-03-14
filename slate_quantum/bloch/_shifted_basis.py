@@ -42,6 +42,11 @@ class BlochShiftedBasis[
     def size(self) -> int:
         return self.inner.size
 
+    @property
+    @override
+    def ctype(self) -> CT:
+        return cast("CT", self.inner.ctype)
+
     @override
     def resolve_ctype[DT_: Ctype[Never]](
         self: BlochShiftedBasis[Basis[Any, DT_], Any],
@@ -133,7 +138,7 @@ class BlochShiftedBasis[
         return out
 
     @override
-    def add_data[DT1: np.number[Any]](
+    def add_data[DT1: np.number](
         self,
         lhs: np.ndarray[Any, np.dtype[DT1]],
         rhs: np.ndarray[Any, np.dtype[DT1]],
@@ -144,7 +149,7 @@ class BlochShiftedBasis[
         return (lhs + rhs).astype(lhs.dtype)
 
     @override
-    def mul_data[DT1: np.number[Any]](
+    def mul_data[DT1: np.number](
         self, lhs: np.ndarray[Any, np.dtype[DT1]], rhs: float
     ) -> np.ndarray[Any, np.dtype[DT1]]:
         if "LINEAR_MAP" not in self.features:
@@ -153,7 +158,7 @@ class BlochShiftedBasis[
         return (lhs * rhs).astype(lhs.dtype)
 
     @override
-    def sub_data[DT1: np.number[Any]](
+    def sub_data[DT1: np.number](
         self,
         lhs: np.ndarray[Any, np.dtype[DT1]],
         rhs: np.ndarray[Any, np.dtype[DT1]],

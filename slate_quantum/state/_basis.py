@@ -27,7 +27,7 @@ type Direction = Literal["forward", "backward"]
 class EigenstateBasis[
     Transform: Array[
         Basis[TupleMetadata[tuple[SimpleMetadata, BasisStateMetadata[Basis]], None]],
-        np.dtype[np.complexfloating],
+        np.dtype[np.number],
     ],
 ](ExplicitUnitaryBasis[Transform, Ctype[np.complexfloating]]):
     """A basis with data stored as eigenstates."""
@@ -38,10 +38,10 @@ class EigenstateBasis[
             Basis[
                 TupleMetadata[tuple[SimpleMetadata, BasisStateMetadata[Basis]], None]
             ],
-            np.dtype[np.complexfloating],
+            np.dtype[np.number],
         ],
     ](
-        self: ExplicitUnitaryBasis[Transform_],
+        self: EigenstateBasis[Transform_],
         matrix: Transform_,
         *,
         direction: Literal["forward"] = "forward",
@@ -54,8 +54,8 @@ class EigenstateBasis[
         M_: TupleMetadata[tuple[SimpleMetadata, BasisStateMetadata[Basis]], None],
         DT_: Ctype[np.complexfloating],
     ](
-        self: ExplicitUnitaryBasis[Array[Basis[M_, DT_], np.dtype[np.complexfloating]]],
-        matrix: Array[Basis[M_, DT_], np.dtype[np.complexfloating]],
+        self: EigenstateBasis[Array[Basis[M_, DT_], np.dtype[np.number]]],
+        matrix: Array[Basis[M_, DT_], np.dtype[np.number]],
         *,
         direction: Literal["backward"],
         data_id: uuid.UUID | None = None,
@@ -111,7 +111,7 @@ class EigenstateBasis[
     ]:
         states = super().eigenvectors()
         # TODO: stricter types in parent
-        return StateList.build(states.basis, states._data)
+        return StateList.build(states.basis, states._data.astype(np.complexfloating))
 
 
 type EigenstateBasisWithInner[Inner: Basis] = EigenstateBasis[

@@ -237,24 +237,24 @@ def axis_scattering_operator[M: BasisMetadata](
 def all_axis_periodic_operators[M: BasisMetadata](
     inner_basis: Basis[M, Any],
 ) -> OperatorList[
-    SimpleMetadata,
-    M,
-    np.dtype[np.complexfloating],
     DiagonalBasis[
         Any,
         FundamentalBasis[SimpleMetadata],
-        RecastDiagonalOperatorBasis[M, Any],
+        DiagonalOperatorBasis[M, Any],
         None,
     ],
+    np.dtype[np.complexfloating],
 ]:
     """Get all generalized e^(ik.x) operator."""
     outer_basis = TransformedBasis(inner_basis)
     operator_basis = recast_diagonal_basis(inner_basis, outer_basis)
 
-    list_basis = diagonal_basis(
-        (FundamentalBasis.from_size(outer_basis.size), operator_basis)
+    list_basis = DiagonalBasis(
+        TupleBasis((FundamentalBasis.from_size(outer_basis.size), operator_basis))
     )
-    return OperatorList(list_basis, np.ones(outer_basis.size, dtype=np.complex128))
+    return OperatorList.build(
+        list_basis, np.ones(outer_basis.size, dtype=np.complex128)
+    )
 
 
 def all_axis_scattering_operators[M: BasisMetadata](
@@ -351,7 +351,7 @@ def all_periodic_operators[M: BasisMetadata, E](
     ).upcast()
     return OperatorList.build(
         list_basis, np.ones(outer_basis.size, dtype=np.complex128)
-    ).ok()
+    ).assert_ok()
 
 
 def all_scattering_operators[M: BasisMetadata, E](

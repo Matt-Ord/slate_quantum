@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING
 
 import numpy as np
 from slate_core import Ctype, FundamentalBasis, TupleBasis, array, basis
-from slate_core.basis import DiagonalBasis
+from slate_core.basis import DiagonalBasis, TupleBasis2D
 from slate_core.linalg import einsum
 from slate_core.linalg import into_diagonal as into_diagonal_array
 from slate_core.linalg import into_diagonal_hermitian as into_diagonal_hermitian_array
@@ -15,6 +15,7 @@ from slate_quantum.operator._operator import (
     Operator,
     OperatorBasis,
     OperatorList,
+    OperatorListBasis,
     OperatorMetadata,
 )
 from slate_quantum.state._basis import EigenstateBasis
@@ -22,33 +23,31 @@ from slate_quantum.state._state import StateList
 
 if TYPE_CHECKING:
     from slate_core.basis import AsUpcast, Basis
+    from slate_core.explicit_basis import ExplicitDiagonalBasis
 
 
-def into_diagonal[M: BasisMetadata, CT: Ctype[np.complexfloating]](
+def into_diagonal[M: BasisMetadata](
     operator: Operator[
         OperatorBasis[M, Ctype[np.complexfloating]], np.dtype[np.complexfloating]
     ],
 ) -> Operator[
     AsUpcast[
-        DiagonalBasis[
-            TupleBasis[tuple[Basis[M, CT], Basis[M, CT]], None],
-            Ctype[np.complexfloating[Any, Any]],
-        ],
+        ExplicitDiagonalBasis[M, M, None, Ctype[np.complexfloating]],
         OperatorMetadata,
-        Ctype[np.complexfloating[Any, Any]],
+        Ctype[np.complexfloating],
     ],
     np.dtype[np.complexfloating],
 ]:
     """Get a list of eigenstates for a given operator, assuming it is hermitian."""
     diagonal = into_diagonal_array(operator)
-    return Operator.build(diagonal.basis.upcast(), diagonal.raw_data).ok()
+    return Operator.build(diagonal.basis.upcast(), diagonal.raw_data).assert_ok()
 
 
-def into_diagonal_hermitian[M: BasisMetadata, DT: np.complexfloating](
-    operator: Operator[M, DT],
+def into_diagonal_hermitian[M: BasisMetadata, DT: np.dtype[np.complexfloating]](
+    operator: Operator[OperatorBasis[M, Ctype[np.complexfloating]], DT],
 ) -> Operator[
     AsUpcast[
-        DiagonalBasis[TupleBasis[tuple[EigenstateBasis[M], EigenstateBasis[M]], None]],
+        ExplicitDiagonalBasis[M, M, None, Ctype[np.complexfloating]],
         OperatorMetadata[M],
         Ctype[np.complexfloating],
     ],
@@ -57,43 +56,42 @@ def into_diagonal_hermitian[M: BasisMetadata, DT: np.complexfloating](
     """Get a list of eigenstates for a given operator, assuming it is hermitian."""
     diagonal = into_diagonal_hermitian_array(operator)
     inner_basis = diagonal.basis.inner
-
     new_basis = DiagonalBasis(
         TupleBasis(
             (
                 EigenstateBasis(
-                    inner_basis[0].matrix,
-                    direction=inner_basis[0].direction,
-                    data_id=inner_basis[0].data_id,
+                    inner_basis.children[0].inner.transform(),
+                    direction="forward",
+                    data_id=inner_basis.children[0].inner.data_id,
                 ),
                 EigenstateBasis(
-                    inner_basis[1].matrix,
-                    direction=inner_basis[1].direction,
-                    data_id=inner_basis[1].data_id,
+                    inner_basis.children[1].inner.transform(),
+                    direction="forward",
+                    data_id=inner_basis.children[1].inner.data_id,
                 ),
             ),
             diagonal.basis.metadata().extra,
         ),
-    )
-    return Operator(new_basis, diagonal.raw_data)
+    ).upcast()
+    return Operator.build(new_basis, diagonal.raw_data).assert_ok()
 
 
-def get_eigenstates_hermitian[M: BasisMetadata, DT: np.complexfloating](
-    operator: Operator[M, DT],
-) -> StateList[EigenvalueMetadata, M]:
+def get_eigenstates_hermitian[M: BasisMetadata, DT: np.dtype[np.complexfloating]](
+    operator: Operator[OperatorBasis[M, Ctype[np.complexfloating]], DT],
+) -> StateList[TupleBasis2D[tuple[Basis[EigenvalueMetadata], Basis[M]]]]:
     diagonal = into_diagonal_hermitian(operator)
-    states = diagonal.basis.inner[0].eigenvectors
+    states = diagonal.basis.inner.inner.children[0].inner.eigenvectors().assert_ok()
     as_tuple = states.with_list_basis(basis.from_metadata(states.basis.metadata()[0]))
     out_basis = basis.TupleBasis(
         (FundamentalBasis(EigenvalueMetadata(diagonal.raw_data)), as_tuple.basis[1]),
     )
-    return StateList(out_basis, as_tuple.raw_data)
+    return StateList.build(out_basis, as_tuple.raw_data).ok()
 
 
 def matmul[M0: BasisMetadata](
-    lhs: Operator[M0, np.complexfloating],
-    rhs: Operator[M0, np.complexfloating],
-) -> Operator[M0, np.complexfloating]:
+    lhs: Operator[OperatorBasis[M0], np.dtype[np.complexfloating]],
+    rhs: Operator[OperatorBasis[M0], np.dtype[np.complexfloating]],
+) -> Operator[OperatorBasis[M0], np.dtype[np.complexfloating]]:
     """
     Multiply each operator in rhs by lhs.
 
@@ -101,21 +99,21 @@ def matmul[M0: BasisMetadata](
 
     Parameters
     ----------
-    lhs : OperatorList[B_3, B_0, B_1]
-    rhs : Operator[B_1, B_2]
+    lhs : Operator[OperatorBasis[M0], np.dtype[np.complexfloating]]
+    rhs : Operator[OperatorBasis[M0], np.dtype[np.complexfloating]]
 
     Returns
     -------
     OperatorList[B_3, B_0, B_2]
     """
     data = einsum("(i k'),(k j) -> (i j)", lhs, rhs)
-    return Operator(cast("Basis[Any, Any]", data.basis), data.raw_data)
+    return Operator.build(data.basis, data.raw_data).ok()
 
 
 def commute[M0: BasisMetadata](
-    lhs: Operator[M0, np.complexfloating],
-    rhs: Operator[M0, np.complexfloating],
-) -> Operator[M0, np.complexfloating]:
+    lhs: Operator[OperatorBasis[M0], np.dtype[np.complexfloating]],
+    rhs: Operator[OperatorBasis[M0], np.dtype[np.complexfloating]],
+) -> Operator[OperatorBasis[M0], np.dtype[np.complexfloating]]:
     """
     Given two operators lhs, rhs, calculate the commutator.
 
@@ -129,17 +127,17 @@ def commute[M0: BasisMetadata](
 
 
 def dagger[M0: BasisMetadata](
-    operator: Operator[M0, np.complexfloating],
-) -> Operator[M0, np.complexfloating]:
+    operator: Operator[OperatorBasis[M0], np.dtype[np.complexfloating]],
+) -> Operator[OperatorBasis[M0], np.dtype[np.complexfloating]]:
     """Get the hermitian conjugate of an operator."""
     res = array.dagger(operator)
     # TODO: what should array.dagger's basis be?  # noqa: FIX002
-    return Operator(res.basis.dual_basis(), res.raw_data)
+    return Operator.build(res.basis.dual_basis(), res.raw_data).assert_ok()
 
 
-def dagger_each[M0: BasisMetadata, M1: BasisMetadata](
-    operators: OperatorList[M0, M1, np.complexfloating],
-) -> OperatorList[M0, M1, np.complexfloating]:
+def dagger_each[M0: BasisMetadata, M1: OperatorMetadata](
+    operators: OperatorList[OperatorListBasis[M0, M1], np.dtype[np.complexfloating]],
+) -> OperatorList[OperatorListBasis[M0, M1], np.dtype[np.complexfloating]]:
     """Get the hermitian conjugate of an operator."""
     daggered = [dagger(operator) for operator in operators]
     if len(daggered) == 0:
@@ -152,10 +150,10 @@ def dagger_each[M0: BasisMetadata, M1: BasisMetadata](
     )
 
 
-def matmul_list_operator[M0: BasisMetadata, M1: BasisMetadata](
-    lhs: OperatorList[M0, M1, np.complexfloating],
-    rhs: Operator[M1, np.complexfloating],
-) -> OperatorList[M0, M1, np.complexfloating]:
+def matmul_list_operator[M0: BasisMetadata, M1: OperatorMetadata](
+    lhs: OperatorList[OperatorListBasis[M0, M1], np.dtype[np.complexfloating]],
+    rhs: Operator[Basis[M1], np.dtype[np.complexfloating]],
+) -> OperatorList[OperatorListBasis[M0, M1], np.dtype[np.complexfloating]]:
     """
     Multiply each operator in rhs by lhs.
 
@@ -171,13 +169,13 @@ def matmul_list_operator[M0: BasisMetadata, M1: BasisMetadata](
     OperatorList[B_3, B_0, B_2]
     """
     data = einsum("(m (i k')),(k j) -> (m (i j))", lhs, rhs)
-    return OperatorList(cast("Basis[Any, Any]", data.basis), data.raw_data)
+    return OperatorList.build(data.basis, data.raw_data).ok()
 
 
-def matmul_operator_list[M0: BasisMetadata, M1: BasisMetadata](
-    lhs: Operator[M1, np.complexfloating],
-    rhs: OperatorList[M0, M1, np.complexfloating],
-) -> OperatorList[M0, M1, np.complexfloating]:
+def matmul_operator_list[M0: BasisMetadata, M1: OperatorMetadata](
+    lhs: Operator[Basis[M1], np.dtype[np.complexfloating]],
+    rhs: OperatorList[OperatorListBasis[M0, M1], np.dtype[np.complexfloating]],
+) -> OperatorList[OperatorListBasis[M0, M1], np.dtype[np.complexfloating]]:
     """
     Multiply each operator in rhs by lhs.
 
@@ -193,13 +191,13 @@ def matmul_operator_list[M0: BasisMetadata, M1: BasisMetadata](
     OperatorList[B_3, B_0, B_2]
     """
     data = einsum("(i k'),(m (k j)) -> (m (i j))", lhs, rhs)
-    return OperatorList(cast("Basis[Any, Any]", data.basis), data.raw_data)
+    return OperatorList.build(data.basis, data.raw_data).ok()
 
 
-def get_commutator_operator_list[M0: BasisMetadata, M1: BasisMetadata](
-    lhs: Operator[M1, np.complexfloating],
-    rhs: OperatorList[M0, M1, np.complexfloating],
-) -> OperatorList[M0, M1, np.complexfloating]:
+def get_commutator_operator_list[M0: BasisMetadata, M1: OperatorMetadata](
+    lhs: Operator[Basis[M1], np.dtype[np.complexfloating]],
+    rhs: OperatorList[OperatorListBasis[M0, M1], np.dtype[np.complexfloating]],
+) -> OperatorList[OperatorListBasis[M0, M1], np.dtype[np.complexfloating]]:
     """
     Given two operators lhs, rhs, calculate the commutator.
 

@@ -23,7 +23,7 @@ if TYPE_CHECKING:
 
 def sample_noise_from_operators[M: BasisMetadata](
     operators: NoiseOperatorList[M], *, n_samples: int
-) -> OperatorList[SimpleMetadata, M, np.complexfloating]:
+) -> OperatorList[SimpleMetadata, M, np.dtype[np.complexfloating]]:
     """Generate noise from a set of noise operators."""
     n_operators = operators.basis[0].size
 
@@ -48,11 +48,11 @@ def sample_noise_from_operators[M: BasisMetadata](
 
 
 def sample_noise_from_diagonal_kernel[M: BasisMetadata](
-    kernel: DiagonalNoiseKernel[M, np.complexfloating],
+    kernel: DiagonalNoiseKernel[M, np.dtype[np.complexfloating]],
     *,
     n_samples: int,
     truncation: Iterable[int] | None,
-) -> OperatorList[SimpleMetadata, M, np.complexfloating]:
+) -> OperatorList[SimpleMetadata, M, np.dtype[np.complexfloating]]:
     """Generate noise for a diagonal kernel."""
     operators = get_periodic_noise_operators_diagonal_eigenvalue(kernel)
     operators = operators.with_list_basis(basis.as_tuple_basis(operators.basis)[0])

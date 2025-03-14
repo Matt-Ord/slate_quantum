@@ -43,15 +43,23 @@ _build_potential = potential
 
 def repeat_potential(
     potential: Potential[
-        SpacedLengthMetadata, AxisDirections, np.dtype[np.complexfloating]
+        SpacedLengthMetadata,
+        AxisDirections,
+        Ctype[np.complexfloating],
+        np.dtype[np.complexfloating],
     ],
     shape: tuple[int, ...],
-) -> Potential[RepeatedLengthMetadata, AxisDirections, np.dtype[np.complexfloating]]:
+) -> Potential[
+    RepeatedLengthMetadata,
+    AxisDirections,
+    Ctype[np.complexfloating],
+    np.dtype[np.complexfloating],
+]:
     """Create a new potential by repeating the original potential in each direction."""
     transformed_basis = basis.transformed_from_metadata(
         potential.basis.inner.outer_recast.metadata()
     )
-    as_transformed = with_outer_basis(potential, transformed_basis).ok()
+    as_transformed = with_outer_basis(potential, transformed_basis).assert_ok()
     converted_basis = basis.transformed_from_metadata(
         repeat_volume_metadata(potential.basis.inner.outer_recast.metadata(), shape)
     )
@@ -73,7 +81,12 @@ def repeat_potential(
 def cos_potential(
     metadata: SpacedVolumeMetadata,
     height: float,
-) -> Potential[SpacedLengthMetadata, AxisDirections, np.dtype[np.complexfloating]]:
+) -> Potential[
+    SpacedLengthMetadata,
+    AxisDirections,
+    Ctype[np.complexfloating],
+    np.dtype[np.complexfloating],
+]:
     """Build a cosine potential."""
     transformed_basis = basis.transformed_from_metadata(metadata)
     # We need only the three lowest fourier components to represent this potential
@@ -91,7 +104,12 @@ def cos_potential(
 def sin_potential(
     metadata: SpacedVolumeMetadata,
     height: float,
-) -> Potential[SpacedLengthMetadata, AxisDirections, np.dtype[np.complexfloating]]:
+) -> Potential[
+    SpacedLengthMetadata,
+    AxisDirections,
+    Ctype[np.complexfloating],
+    np.dtype[np.complexfloating],
+]:
     """Build a cosine potential."""
     transformed_basis = basis.transformed_from_metadata(metadata)
     # We need only the three lowest fourier components to represent this potential
@@ -121,7 +139,12 @@ def square_potential(
     *,
     n_terms: tuple[int, ...] | None = None,
     lanczos_factor: float = 0,
-) -> Potential[SpacedLengthMetadata, AxisDirections, np.dtype[np.complexfloating]]:
+) -> Potential[
+    SpacedLengthMetadata,
+    AxisDirections,
+    Ctype[np.complexfloating],
+    np.dtype[np.complexfloating],
+]:
     """Build a square potential."""
     transformed_basis = basis.transformed_from_metadata(metadata)
     # We need only the three lowest fourier components to represent this potential
@@ -144,7 +167,12 @@ def square_potential(
 def fcc_potential(
     metadata: SpacedVolumeMetadata,
     height: float,
-) -> Potential[SpacedLengthMetadata, AxisDirections, np.dtype[np.complexfloating]]:
+) -> Potential[
+    SpacedLengthMetadata,
+    AxisDirections,
+    Ctype[np.complexfloating],
+    np.dtype[np.complexfloating],
+]:
     """Generate a potential suitable for modelling an fcc surface.
 
     This potential contains the lowest fourier components - however for an fcc surface
@@ -180,7 +208,7 @@ def potential_from_function[
     *,
     wrapped: bool = False,
     offset: tuple[float, ...] | None = None,
-) -> Potential[M, E, DT]:
+) -> Potential[M, E, Ctype[np.generic], DT]:
     """Get the potential operator."""
     positions = _metadata.volume.fundamental_stacked_x_points(
         metadata, offset=offset, wrapped=wrapped
@@ -194,7 +222,12 @@ def harmonic_potential(
     frequency: float,
     *,
     offset: tuple[float, ...] | None = None,
-) -> Potential[SpacedLengthMetadata, AxisDirections, np.dtype[np.complexfloating]]:
+) -> Potential[
+    SpacedLengthMetadata,
+    AxisDirections,
+    Ctype[np.complexfloating],
+    np.dtype[np.complexfloating],
+]:
     """Build a harmonic potential.
 
     V(x) = 0.5 * frequency^2 * ||x||^2
