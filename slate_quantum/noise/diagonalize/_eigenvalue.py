@@ -1,25 +1,31 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Never
 
 import numpy as np
-from slate_core import array
+from slate_core import Ctype, array
 from slate_core.basis import FundamentalBasis, TupleBasis, as_tuple_basis
 
 from slate_quantum.metadata import EigenvalueMetadata
-from slate_quantum.operator._operator import OperatorList, OperatorMetadata
+from slate_quantum.operator._operator import (
+    OperatorList,
+    OperatorListBasis,
+    OperatorMetadata,
+)
 
 if TYPE_CHECKING:
-    from slate_core import TupleBasisLike
     from slate_core.metadata import BasisMetadata
 
-    from slate_quantum.noise._kernel import DiagonalNoiseKernel, NoiseKernelWithMetadata
+    from slate_quantum.noise._kernel import (
+        DiagonalKernelWithMetadata,
+        NoiseKernelWithMetadata,
+    )
 
 
 def get_periodic_noise_operators_eigenvalue[M: BasisMetadata](
     kernel: NoiseKernelWithMetadata[M, np.dtype[np.complexfloating]],
 ) -> OperatorList[
-    TupleBasisLike[tuple[EigenvalueMetadata, OperatorMetadata[M]], None],
+    OperatorListBasis[EigenvalueMetadata, OperatorMetadata[M]],
     np.dtype[np.complexfloating],
 ]:
     r"""
@@ -70,8 +76,11 @@ def get_periodic_noise_operators_eigenvalue[M: BasisMetadata](
 
 
 def get_periodic_noise_operators_diagonal_eigenvalue[M: BasisMetadata](
-    kernel: DiagonalNoiseKernel[M, np.complexfloating],
-) -> OperatorList[EigenvalueMetadata, M, np.complexfloating]:
+    kernel: DiagonalKernelWithMetadata[M, Ctype[Never], np.dtype[np.complexfloating]],
+) -> OperatorList[
+    OperatorListBasis[EigenvalueMetadata, OperatorMetadata[M]],
+    np.dtype[np.complexfloating],
+]:
     r"""
     For a diagonal kernel it is possible to find N independent noise sources, each of which is diagonal.
 

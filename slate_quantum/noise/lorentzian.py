@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, Never, cast
 
 import numpy as np
 from scipy.constants import Boltzmann, hbar  # type: ignore stubs
-from slate_core.basis import DiagonalBasis, TupleBasis2D, as_tuple_basis
+from slate_core.basis import as_tuple_basis
 from slate_core.metadata import (
     AxisDirections,
     SpacedLengthMetadata,
@@ -22,12 +22,16 @@ from slate_quantum.noise.diagonalize._taylor import (
 )
 
 if TYPE_CHECKING:
-    from slate_core import TupleMetadata
-    from slate_core.basis import Basis, FundamentalBasis
+    from slate_core import Ctype, TupleMetadata
+    from slate_core.basis import Basis
 
     from slate_quantum.metadata import EigenvalueMetadata
-    from slate_quantum.noise._kernel import IsotropicNoiseKernel
-    from slate_quantum.operator._operator import OperatorList
+    from slate_quantum.noise._kernel import IsotropicKernelWithMetadata
+    from slate_quantum.operator._operator import (
+        OperatorList,
+        OperatorListBasis,
+        OperatorMetadata,
+    )
 
 
 def get_effective_lorentzian_parameter(
@@ -52,8 +56,8 @@ def get_lorentzian_isotropic_noise_kernel[M: SpacedLengthMetadata, E: AxisDirect
     metadata: TupleMetadata[tuple[M, ...], E],
     a: float,
     lambda_: float,
-) -> IsotropicNoiseKernel[
-    TupleMetadata[tuple[M, ...], E], np.dtype[np.complexfloating]
+) -> IsotropicKernelWithMetadata[
+    TupleMetadata[tuple[M, ...], E], Ctype[Never], np.dtype[np.complexfloating]
 ]:
     """Get an isotropic noise kernel for a lorentzian correlation.
 
@@ -93,20 +97,8 @@ def get_lorentzian_operators_explicit_taylor[M: VolumeMetadata, DT: np.generic](
     *,
     n_terms: int | None = None,
 ) -> OperatorList[
-    EigenvalueMetadata,
-    M,
-    np.complexfloating,
-    TupleBasis2D[
-        np.complexfloating,
-        FundamentalBasis[EigenvalueMetadata],
-        DiagonalBasis[
-            np.complexfloating,
-            Basis[M, np.generic],
-            Basis[M, np.generic],
-            None,
-        ],
-        None,
-    ],
+    OperatorListBasis[EigenvalueMetadata, OperatorMetadata[M]],
+    np.dtype[np.complexfloating],
 ]:
     """Calculate the noise operators for an isotropic lorentzian noise kernel, using an explicit Taylor expansion.
 

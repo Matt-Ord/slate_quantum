@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, Never, cast
 
 import numpy as np
 from scipy.constants import hbar  # type: ignore unknown
-from slate_core import Array, BasisMetadata, SimpleMetadata, basis, linalg
+from slate_core import Array, BasisMetadata, Ctype, SimpleMetadata, basis, linalg
 
 from slate_quantum.noise.build import truncate_noise_operator_list
 from slate_quantum.noise.diagonalize._eigenvalue import (
@@ -16,14 +16,17 @@ if TYPE_CHECKING:
     from collections.abc import Iterable
 
     from slate_quantum.noise._kernel import (
-        DiagonalNoiseKernel,
+        DiagonalKernelWithMetadata,
         NoiseOperatorList,
     )
+    from slate_quantum.operator._operator import OperatorListBasis, OperatorMetadata
 
 
 def sample_noise_from_operators[M: BasisMetadata](
     operators: NoiseOperatorList[M], *, n_samples: int
-) -> OperatorList[SimpleMetadata, M, np.dtype[np.complexfloating]]:
+) -> OperatorList[
+    OperatorListBasis[SimpleMetadata, OperatorMetadata[M]], np.dtype[np.complexfloating]
+]:
     """Generate noise from a set of noise operators."""
     n_operators = operators.basis[0].size
 
@@ -48,11 +51,13 @@ def sample_noise_from_operators[M: BasisMetadata](
 
 
 def sample_noise_from_diagonal_kernel[M: BasisMetadata](
-    kernel: DiagonalNoiseKernel[M, np.dtype[np.complexfloating]],
+    kernel: DiagonalKernelWithMetadata[M, Ctype[Never], np.dtype[np.complexfloating]],
     *,
     n_samples: int,
     truncation: Iterable[int] | None,
-) -> OperatorList[SimpleMetadata, M, np.dtype[np.complexfloating]]:
+) -> OperatorList[
+    OperatorListBasis[SimpleMetadata, OperatorMetadata[M]], np.dtype[np.complexfloating]
+]:
     """Generate noise for a diagonal kernel."""
     operators = get_periodic_noise_operators_diagonal_eigenvalue(kernel)
     operators = operators.with_list_basis(basis.as_tuple_basis(operators.basis)[0])

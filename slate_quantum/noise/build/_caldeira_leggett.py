@@ -3,8 +3,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 import numpy as np
-from slate_core import TupleBasis, basis
-from slate_core.basis import CoordinateBasis, FundamentalBasis, TupleBasis2D
+from slate_core import TupleBasis, TupleMetadata, basis
+from slate_core.basis import CoordinateBasis
 from slate_core.metadata import (
     AxisDirections,
     SpacedLengthMetadata,
@@ -15,7 +15,6 @@ from slate_core.metadata.volume import fundamental_stacked_dk
 
 from slate_quantum.metadata._label import EigenvalueMetadata, eigenvalue_basis
 from slate_quantum.operator import (
-    DiagonalOperatorBasis,
     OperatorList,
     build,
 )
@@ -23,19 +22,14 @@ from slate_quantum.operator import (
 if TYPE_CHECKING:
     from collections.abc import Callable
 
+    from slate_quantum.operator._operator import OperatorListBasis, OperatorMetadata
+
 
 def periodic_caldeira_leggett_axis_operators[M: SpacedLengthMetadata](
     metadata: M,
 ) -> OperatorList[
-    EigenvalueMetadata,
-    M,
-    np.complexfloating,
-    TupleBasis2D[
-        Any,
-        FundamentalBasis[EigenvalueMetadata],
-        DiagonalOperatorBasis[M, Any],
-        None,
-    ],
+    OperatorListBasis[EigenvalueMetadata, OperatorMetadata[M]],
+    np.dtype[np.complexfloating],
 ]:
     k = fundamental_dk(metadata)
     n = metadata.fundamental_size
@@ -61,15 +55,10 @@ def periodic_caldeira_leggett_operators[
 ](
     metadata: TupleMetadata[tuple[M, ...], E],
 ) -> OperatorList[
-    EigenvalueMetadata,
-    TupleMetadata[tuple[M, ...], E],
-    np.complexfloating,
-    TupleBasis2D[
-        Any,
-        FundamentalBasis[EigenvalueMetadata],
-        RecastDiagonalOperatorBasis[TupleMetadata[tuple[M, ...], E], Any],
-        None,
+    OperatorListBasis[
+        EigenvalueMetadata, OperatorMetadata[TupleMetadata[tuple[M, ...], E]]
     ],
+    np.dtype[np.complexfloating],
 ]:
     assert len(metadata.fundamental_shape) == 1
     k = fundamental_stacked_dk(metadata)[0][0]
@@ -96,15 +85,10 @@ def real_periodic_caldeira_leggett_operators[
 ](
     metadata: TupleMetadata[tuple[M, ...], E],
 ) -> OperatorList[
-    EigenvalueMetadata,
-    TupleMetadata[tuple[M, ...], E],
-    np.complexfloating,
-    TupleBasis2D[
-        Any,
-        FundamentalBasis[EigenvalueMetadata],
-        RecastDiagonalOperatorBasis[TupleMetadata[tuple[M, ...], E], Any],
-        None,
+    OperatorListBasis[
+        EigenvalueMetadata, OperatorMetadata[TupleMetadata[tuple[M, ...], E]]
     ],
+    np.dtype[np.complexfloating],
 ]:
     assert len(metadata.fundamental_shape) == 1
     k = fundamental_stacked_dk(metadata)[0][0]
@@ -160,20 +144,15 @@ def caldeira_leggett_correlation_fn(
 def caldeira_leggett_operators[M: SpacedLengthMetadata, E: AxisDirections](
     metadata: TupleMetadata[tuple[M, ...], E],
 ) -> OperatorList[
-    EigenvalueMetadata,
-    TupleMetadata[tuple[M, ...], E],
-    np.complexfloating,
-    TupleBasis2D[
-        Any,
-        FundamentalBasis[EigenvalueMetadata],
-        RecastDiagonalOperatorBasis[TupleMetadata[tuple[M, ...], E], Any],
-        None,
+    OperatorListBasis[
+        EigenvalueMetadata, OperatorMetadata[TupleMetadata[tuple[M, ...], E]]
     ],
+    np.dtype[np.complexfloating],
 ]:
     assert len(metadata.fundamental_shape) == 1
     operators = OperatorList.from_operators([build.x(metadata, axis=0)])
 
-    return OperatorList(
+    return OperatorList.build(
         TupleBasis((eigenvalue_basis(np.array([1])), operators.basis[1])),
         operators.raw_data,
-    )
+    ).assert_ok()

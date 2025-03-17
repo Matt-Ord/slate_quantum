@@ -1,19 +1,22 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Never
 
 import numpy as np
 from scipy.constants import Boltzmann, hbar  # type: ignore stubs
-from slate_core import TupleMetadata, linalg
+from slate_core import Ctype, TupleMetadata, linalg
 from slate_core.basis import CoordinateBasis, as_index_basis, as_tuple_basis
 from slate_core.metadata import AxisDirections
 
 from slate_quantum import operator
 from slate_quantum.metadata import EigenvalueMetadata
 from slate_quantum.noise._kernel import (
+    DiagonalKernelWithMetadata,
     DiagonalNoiseKernel,
+    IsotropicKernelWithMetadata,
     IsotropicNoiseKernel,
     NoiseKernel,
+    NoiseKernelWithMetadata,
 )
 from slate_quantum.noise.diagonalize import (
     get_periodic_noise_operators_diagonal_eigenvalue,
@@ -37,6 +40,11 @@ if TYPE_CHECKING:
     from slate_quantum.operator import (
         OperatorList,
     )
+    from slate_quantum.operator._operator import (
+        OperatorBasis,
+        OperatorListBasis,
+        OperatorMetadata,
+    )
 
 
 def isotropic_kernel_from_function[M: LengthMetadata](
@@ -45,7 +53,7 @@ def isotropic_kernel_from_function[M: LengthMetadata](
         [np.ndarray[Any, np.dtype[np.float64]]],
         np.ndarray[Any, np.dtype[np.complexfloating]],
     ],
-) -> IsotropicNoiseKernel[M, np.complexfloating]:
+) -> IsotropicKernelWithMetadata[M, Ctype[Never], np.dtype[np.complexfloating]]:
     """
     Get an Isotropic Kernel with a correlation beta(x-x').
 
@@ -79,7 +87,9 @@ def isotropic_kernel_from_function_stacked[
         [np.ndarray[Any, np.dtype[np.float64]]],
         np.ndarray[Any, np.dtype[np.complexfloating]],
     ],
-) -> IsotropicNoiseKernel[TupleMetadata[tuple[M, ...], E], np.complexfloating]:
+) -> IsotropicKernelWithMetadata[
+    TupleMetadata[tuple[M, ...], E], Ctype[Never], np.dtype[np.complexfloating]
+]:
     """
     Get an Isotropic Kernel with a correlation beta(x-x').
 
@@ -110,7 +120,7 @@ def axis_kernel_from_function_stacked[M: SpacedLengthMetadata](
         [np.ndarray[Any, np.dtype[np.float64]]],
         np.ndarray[Any, np.dtype[np.complexfloating]],
     ],
-) -> AxisKernel[M, np.complexfloating]:
+) -> AxisKernel[M, Ctype[Never], np.dtype[np.complexfloating]]:
     """
     Get an Isotropic Kernel with a correlation beta(x-x').
 
@@ -185,11 +195,15 @@ def lorentzian_correlation_fn(
 
 
 def temperature_corrected_operators[M0: BasisMetadata, M1: BasisMetadata](
-    hamiltonian: Operator[M1, np.complexfloating],
-    operators: OperatorList[M0, M1, np.complexfloating],
+    hamiltonian: Operator[OperatorBasis[M1], np.dtype[np.complexfloating]],
+    operators: OperatorList[
+        OperatorListBasis[M0, OperatorMetadata[M1]], np.dtype[np.complexfloating]
+    ],
     temperature: float,
     eta: float,
-) -> OperatorList[M0, M1, np.complexfloating]:
+) -> OperatorList[
+    OperatorListBasis[M0, OperatorMetadata[M1]], np.dtype[np.complexfloating]
+]:
     """Get the temperature corrected operators.
 
     Note this returns the operators multiplied by hbar, to avoid numerical issues.
@@ -202,10 +216,13 @@ def temperature_corrected_operators[M0: BasisMetadata, M1: BasisMetadata](
 
 
 def hamiltonian_shift[M1: BasisMetadata](
-    hamiltonian: Operator[M1, np.complexfloating],
-    operators: OperatorList[BasisMetadata, M1, np.complexfloating],
+    hamiltonian: Operator[OperatorBasis[M1], np.dtype[np.complexfloating]],
+    operators: OperatorList[
+        OperatorListBasis[BasisMetadata, OperatorMetadata[M1]],
+        np.dtype[np.complexfloating],
+    ],
     eta: float,
-) -> Operator[M1, np.complexfloating]:
+) -> Operator[OperatorBasis[M1], np.dtype[np.complexfloating]]:
     """Get the temperature corrected Hamiltonian shift."""
     shift_product = linalg.einsum(
         "(i (j k)),(i (k' l))->(k' l)", operator.dagger_each(operators), operators
@@ -217,9 +234,13 @@ def hamiltonian_shift[M1: BasisMetadata](
 
 
 def truncate_noise_operator_list[M0: EigenvalueMetadata, M1: BasisMetadata](
-    operators: OperatorList[M0, M1, np.complexfloating],
+    operators: OperatorList[
+        OperatorListBasis[M0, OperatorMetadata[M1]], np.dtype[np.complexfloating]
+    ],
     truncation: Iterable[int],
-) -> OperatorList[M0, M1, np.complexfloating]:
+) -> OperatorList[
+    OperatorListBasis[M0, OperatorMetadata[M1]], np.dtype[np.complexfloating]
+]:
     """
     Get a truncated list of diagonal operators.
 
@@ -245,20 +266,20 @@ def truncate_noise_operator_list[M0: EigenvalueMetadata, M1: BasisMetadata](
 
 
 def truncate_noise_kernel[M: SuperOperatorMetadata](
-    kernel: NoiseKernel[M, np.complexfloating],
+    kernel: NoiseKernelWithMetadata[M, np.dtype[np.complexfloating]],
     truncation: Iterable[int],
-) -> NoiseKernel[M, np.complexfloating]:
+) -> NoiseKernelWithMetadata[M, np.dtype[np.complexfloating]]:
     """
     Given a noise kernel, retain only the first n noise operators.
 
     Parameters
     ----------
-    kernel : NoiseKernel[B_0, B_1, B_0, B_1]
-    n : int
+    kernel : NoiseKernelWithMetadata[B_0, B_1, B_0, B_1]
+    truncation : Iterable[int]
 
     Returns
     -------
-    NoiseKernel[B_0, B_1, B_0, B_1]
+    NoiseKernelWithMetadata[B_0, B_1, B_0, B_1]
     """
     operators = get_periodic_noise_operators_eigenvalue(kernel)
 
@@ -269,20 +290,20 @@ def truncate_noise_kernel[M: SuperOperatorMetadata](
 def truncate_diagonal_noise_kernel[
     M: BasisMetadata,
 ](
-    kernel: DiagonalNoiseKernel[M, np.complexfloating],
+    kernel: DiagonalKernelWithMetadata[M, Ctype[Never], np.dtype[np.complexfloating]],
     truncation: Iterable[int],
-) -> DiagonalNoiseKernel[M, np.complexfloating]:
+) -> DiagonalKernelWithMetadata[M, Ctype[Never], np.dtype[np.complexfloating]]:
     """
     Given a noise kernel, retain only the first n noise operators.
 
     Parameters
     ----------
-    kernel : NoiseKernel[B_0, B_1, B_0, B_1]
-    n : int
+    kernel : DiagonalKernelWithMetadata[B_0, B_1, B_0, B_1]
+    truncation : Iterable[int]
 
     Returns
     -------
-    NoiseKernel[B_0, B_1, B_0, B_1]
+    DiagonalKernelWithMetadata[B_0, B_1, B_0, B_1]
     """
     operators = get_periodic_noise_operators_diagonal_eigenvalue(kernel)
 

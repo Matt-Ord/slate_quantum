@@ -1,30 +1,32 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Never
 
 import numpy as np
-from slate_core import Basis, TupleBasis
+from slate_core import Basis, Ctype, TupleBasis, TupleMetadata
 from slate_core.basis import (
     FundamentalBasis,
     TupleBasis,
-    TupleBasis2D,
     as_tuple_basis,
 )
 from slate_core.util import pad_ft_points
 
 from slate_quantum import operator
 from slate_quantum.metadata import EigenvalueMetadata
-from slate_quantum.operator import OperatorList, RecastDiagonalOperatorBasis
+from slate_quantum.operator import OperatorList
 
 if TYPE_CHECKING:
-    from slate_core import SimpleMetadata
     from slate_core.metadata import BasisMetadata
 
-    from slate_quantum.noise._kernel import IsotropicNoiseKernel
+    from slate_quantum.noise._kernel import IsotropicKernelWithMetadata
+    from slate_quantum.operator._operator import (
+        OperatorListBasis,
+        OperatorMetadata,
+    )
 
 
 def _get_noise_eigenvalues_isotropic_fft[M: BasisMetadata](
-    kernel: IsotropicNoiseKernel[M, np.complexfloating],
+    kernel: IsotropicKernelWithMetadata[M, np.dtype[np.complexfloating]],
     *,
     fundamental_n: int | None = None,
 ) -> EigenvalueMetadata:
@@ -38,8 +40,11 @@ def _get_noise_eigenvalues_isotropic_fft[M: BasisMetadata](
 
 
 def get_periodic_noise_operators_isotropic_fft[M: BasisMetadata](
-    kernel: IsotropicNoiseKernel[M, np.complexfloating],
-) -> OperatorList[EigenvalueMetadata, M, np.complexfloating]:
+    kernel: IsotropicKernelWithMetadata[M, Ctype[Never], np.dtype[np.complexfloating]],
+) -> OperatorList[
+    OperatorListBasis[EigenvalueMetadata, OperatorMetadata[M]],
+    np.dtype[np.complexfloating],
+]:
     r"""
     For an isotropic noise kernel, the noise operators are independent in k space.
 
@@ -67,7 +72,9 @@ def get_periodic_noise_operators_isotropic_fft[M: BasisMetadata](
 
 
 def _get_noise_eigenvalues_isotropic_stacked_fft[M: BasisMetadata, E](
-    kernel: IsotropicNoiseKernel[TupleMetadata[tuple[M, ...], E], np.complexfloating],
+    kernel: IsotropicKernelWithMetadata[
+        TupleMetadata[tuple[M, ...], E], Ctype[Never], np.dtype[np.complexfloating]
+    ],
     *,
     fundamental_shape: tuple[int, ...] | None = None,
 ) -> EigenvalueMetadata:
@@ -91,19 +98,17 @@ def _get_noise_eigenvalues_isotropic_stacked_fft[M: BasisMetadata, E](
 
 
 def build_periodic_noise_operators[
-    B: Basis[EigenvalueMetadata, np.complexfloating],
-    M1: BasisMetadata,
+    B: Basis[EigenvalueMetadata, Ctype[Never]],
+    M: BasisMetadata,
     E,
 ](
     list_basis: B,
-    inner_basis: TupleBasis[M1, E, Any],
+    inner_basis: TupleBasis[tuple[Basis[M], ...], E, Any],
 ) -> OperatorList[
-    EigenvalueMetadata,
-    TupleMetadata[tuple[M1, ...], E],
-    np.complexfloating,
-    TupleBasis2D[
-        Any, B, RecastDiagonalOperatorBasis[TupleMetadata[tuple[M1, ...], E], Any], None
+    OperatorListBasis[
+        EigenvalueMetadata, OperatorMetadata[TupleMetadata[tuple[M, ...], E]]
     ],
+    np.dtype[np.complexfloating],
 ]:
     r"""
     For an isotropic noise kernel, the noise operators are independent in k space.
@@ -147,19 +152,16 @@ def build_periodic_noise_operators[
 
 
 def get_periodic_noise_operators_isotropic_stacked_fft[M: BasisMetadata, E](
-    kernel: IsotropicNoiseKernel[TupleMetadata[tuple[M, ...], E], np.complexfloating],
+    kernel: IsotropicKernelWithMetadata[
+        TupleMetadata[tuple[M, ...], E], Ctype[Never], np.dtype[np.complexfloating]
+    ],
     *,
     fundamental_shape: tuple[int, ...] | None = None,
 ) -> OperatorList[
-    EigenvalueMetadata,
-    TupleMetadata[tuple[M, ...], E],
-    np.complexfloating,
-    TupleBasis2D[
-        Any,
-        FundamentalBasis[SimpleMetadata],
-        RecastDiagonalOperatorBasis[TupleMetadata[tuple[M, ...], E], Any],
-        None,
+    OperatorListBasis[
+        EigenvalueMetadata, OperatorMetadata[TupleMetadata[tuple[M, ...], E]]
     ],
+    np.dtype[np.complexfloating],
 ]:
     r"""
     For an isotropic noise kernel, the noise operators are independent in k space.
