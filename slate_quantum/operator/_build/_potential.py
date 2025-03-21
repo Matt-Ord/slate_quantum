@@ -17,7 +17,6 @@ from slate_core.metadata import (
     SpacedVolumeMetadata,
 )
 
-from slate_quantum._util import outer_product
 from slate_quantum.metadata import RepeatedLengthMetadata, repeat_volume_metadata
 from slate_quantum.operator._diagonal import (
     PositionOperatorBasis,
@@ -26,6 +25,7 @@ from slate_quantum.operator._diagonal import (
     with_outer_basis,
 )
 from slate_quantum.operator._operator import Operator, OperatorBuilder
+from slate_quantum.util._prod import outer_product
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -33,7 +33,7 @@ if TYPE_CHECKING:
 
 def potential[M: BasisMetadata, E, CT: Ctype[Never], DT: np.dtype[np.generic]](
     outer_basis: TupleBasisLike[tuple[M, ...], E, CT], data: np.ndarray[Any, DT]
-) -> OperatorBuilder[PositionOperatorBasis[M, E, CT], DT]:
+) -> OperatorBuilder[PositionOperatorBasis[M, E], DT]:
     """Get the potential operator."""
     return Operator.build(position_operator_basis(outer_basis), data)
 
@@ -45,14 +45,14 @@ def repeat_potential(
     potential: Potential[
         SpacedLengthMetadata,
         AxisDirections,
-        Ctype[np.complexfloating],
+        Ctype[Never],
         np.dtype[np.complexfloating],
     ],
     shape: tuple[int, ...],
 ) -> Potential[
     RepeatedLengthMetadata,
     AxisDirections,
-    Ctype[np.complexfloating],
+    Ctype[Never],
     np.dtype[np.complexfloating],
 ]:
     """Create a new potential by repeating the original potential in each direction."""
@@ -84,7 +84,7 @@ def cos_potential(
 ) -> Potential[
     SpacedLengthMetadata,
     AxisDirections,
-    Ctype[np.complexfloating],
+    Ctype[Never],
     np.dtype[np.complexfloating],
 ]:
     """Build a cosine potential."""
@@ -107,7 +107,7 @@ def sin_potential(
 ) -> Potential[
     SpacedLengthMetadata,
     AxisDirections,
-    Ctype[np.complexfloating],
+    Ctype[Never],
     np.dtype[np.complexfloating],
 ]:
     """Build a cosine potential."""
@@ -121,7 +121,7 @@ def sin_potential(
     data = outer_product(*(np.array([2, 1j, -1j]),) * n_dim)
     return potential(
         cropped, 0.25**n_dim * height * data * np.sqrt(transformed_basis.size)
-    ).ok()
+    ).assert_ok()
 
 
 def _square_wave_points(
@@ -142,7 +142,7 @@ def square_potential(
 ) -> Potential[
     SpacedLengthMetadata,
     AxisDirections,
-    Ctype[np.complexfloating],
+    Ctype[Never],
     np.dtype[np.complexfloating],
 ]:
     """Build a square potential."""
@@ -170,7 +170,7 @@ def fcc_potential(
 ) -> Potential[
     SpacedLengthMetadata,
     AxisDirections,
-    Ctype[np.complexfloating],
+    Ctype[Never],
     np.dtype[np.complexfloating],
 ]:
     """Generate a potential suitable for modelling an fcc surface.
@@ -208,13 +208,13 @@ def potential_from_function[
     *,
     wrapped: bool = False,
     offset: tuple[float, ...] | None = None,
-) -> Potential[M, E, Ctype[np.generic], DT]:
+) -> Potential[M, E, Ctype[Never], DT]:
     """Get the potential operator."""
     positions = _metadata.volume.fundamental_stacked_x_points(
         metadata, offset=offset, wrapped=wrapped
     )
 
-    return potential(basis.from_metadata(metadata).upcast(), fn(positions)).ok()
+    return potential(basis.from_metadata(metadata).upcast(), fn(positions)).assert_ok()
 
 
 def harmonic_potential(
@@ -225,7 +225,7 @@ def harmonic_potential(
 ) -> Potential[
     SpacedLengthMetadata,
     AxisDirections,
-    Ctype[np.complexfloating],
+    Ctype[Never],
     np.dtype[np.complexfloating],
 ]:
     """Build a harmonic potential.

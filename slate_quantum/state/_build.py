@@ -8,6 +8,7 @@ from slate_core import (
     Basis,
     Ctype,
     TupleBasis,
+    TupleBasisLike,
     TupleMetadata,
     basis,
 )
@@ -79,7 +80,7 @@ def coherent[M: SpacedLengthMetadata, E: AxisDirections](
     x_0: tuple[float, ...],
     k_0: tuple[float, ...],
     sigma_0: tuple[float, ...],
-) -> State[TupleBasis[tuple[Basis[M], ...], E]]:
+) -> State[TupleBasisLike[tuple[M, ...], E]]:
     displacements = get_displacements_x_stacked(metadata, origin=x_0)
     raw_displacements = np.array([d.as_array() for d in displacements])
 
@@ -94,15 +95,15 @@ def coherent[M: SpacedLengthMetadata, E: AxisDirections](
     data = np.exp(1j * phi - np.square(distance) / 2)
     norm = np.sqrt(np.sum(np.square(np.abs(data))))
 
-    return State.build(basis.from_metadata(metadata), data / norm).ok()
+    return State.build(basis.from_metadata(metadata).upcast(), data / norm).ok()
 
 
 def position[M: SpacedLengthMetadata, E: AxisDirections](
     metadata: TupleMetadata[tuple[M, ...], E],
     idx: tuple[int, ...],
-) -> State[TupleBasis[tuple[Basis[M], ...], E]]:
+) -> State[TupleBasisLike[tuple[M, ...], E]]:
     """Get a position eigenstate."""
-    position_basis = basis.from_metadata(metadata)
+    position_basis = basis.from_metadata(metadata).upcast()
     data = np.zeros(metadata.shape, dtype=np.complex128)
     idx = tuple(i % n for (i, n) in zip(idx, metadata.shape, strict=True))
     data[idx] = 1.0
@@ -112,9 +113,9 @@ def position[M: SpacedLengthMetadata, E: AxisDirections](
 def momentum[M: SpacedLengthMetadata, E: AxisDirections](
     metadata: TupleMetadata[tuple[M, ...], E],
     idx: tuple[int, ...],
-) -> State[TupleBasis[tuple[Basis[M], ...], E]]:
+) -> State[TupleBasisLike[tuple[M, ...], E]]:
     """Get a momentum eigenstate."""
-    momentum_basis = basis.transformed_from_metadata(metadata)
+    momentum_basis = basis.transformed_from_metadata(metadata).upcast()
     data = np.zeros(metadata.shape, dtype=np.complex128)
     idx = tuple(i % n for (i, n) in zip(idx, metadata.shape, strict=True))
     data[idx] = 1.0
@@ -131,7 +132,7 @@ def from_function[M: SpacedLengthMetadata, E: AxisDirections](
     normalize: bool = True,
     offset: tuple[float, ...] | None = None,
     wrapped: bool = False,
-) -> State[basis.TupleBasisLike[tuple[M, ...], E]]:
+) -> State[TupleBasisLike[tuple[M, ...], E]]:
     """Get the potential operator."""
     positions = _metadata.volume.fundamental_stacked_x_points(
         metadata, offset=offset, wrapped=wrapped

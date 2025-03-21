@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Never, cast
+from typing import TYPE_CHECKING, Any, Never
 
 import numpy as np
 from scipy.constants import Boltzmann, hbar  # type: ignore stubs
-from slate_core.basis import as_tuple_basis
+from slate_core import basis as _basis
 from slate_core.metadata import (
     AxisDirections,
     SpacedLengthMetadata,
@@ -90,10 +90,10 @@ def _get_explicit_taylor_coefficients_lorentzian(
     return a**2 * ((-1 / (lambda_**2)) ** i)
 
 
-def get_lorentzian_operators_explicit_taylor[M: VolumeMetadata, DT: np.generic](
+def get_lorentzian_operators_explicit_taylor[M: VolumeMetadata, CT: Ctype[np.generic]](
     a: float,
     lambda_: float,
-    basis: Basis[M, DT],
+    basis: Basis[M, CT],
     *,
     n_terms: int | None = None,
 ) -> OperatorList[
@@ -116,8 +116,8 @@ def get_lorentzian_operators_explicit_taylor[M: VolumeMetadata, DT: np.generic](
     """
     # currently only support 1D
     assert len(shallow_shape_from_nested(basis.fundamental_shape)) == 1
-    basis_x = as_tuple_basis(basis)
-    n_terms = (basis_x[0].size // 2) if n_terms is None else n_terms
+    basis_x = _basis.as_tuple(basis)
+    n_terms = (basis_x.children[0].size // 2) if n_terms is None else n_terms
 
     # expand gaussian and define array containing coefficients for each term in the polynomial
     # coefficients for the explicit Taylor expansion of the gaussian noise
@@ -128,9 +128,6 @@ def get_lorentzian_operators_explicit_taylor[M: VolumeMetadata, DT: np.generic](
         a, normalized_lambda.item(), n_terms=n_terms
     )
 
-    return cast(
-        "Any",
-        get_periodic_noise_operators_explicit_taylor_expansion(
-            basis_x, polynomial_coefficients, n_terms=n_terms
-        ),
+    return get_periodic_noise_operators_explicit_taylor_expansion(
+        basis_x.upcast(), polynomial_coefficients, n_terms=n_terms
     )

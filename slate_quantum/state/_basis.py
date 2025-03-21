@@ -107,7 +107,7 @@ class EigenstateBasis[
             TupleMetadata[tuple[M1_, BasisMetadata], None],
             Any,
         ],
-        DT_,
+        np.dtype[np.complexfloating],
     ]:
         states = super().eigenvectors()
         # TODO: stricter types in parent

@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any, Never, cast
 
 import numpy as np
 from scipy.constants import hbar  # type: ignore unknown
-from slate_core import Array, BasisMetadata, Ctype, SimpleMetadata, basis, linalg
+from slate_core import Array, BasisMetadata, Ctype, SimpleMetadata, array, basis, linalg
 
 from slate_quantum.noise.build import truncate_noise_operator_list
 from slate_quantum.noise.diagonalize._eigenvalue import (
@@ -19,7 +19,11 @@ if TYPE_CHECKING:
         DiagonalKernelWithMetadata,
         NoiseOperatorList,
     )
-    from slate_quantum.operator._operator import OperatorListBasis, OperatorMetadata
+    from slate_quantum.operator._operator import (
+        OperatorListBasis,
+        OperatorMetadata,
+        SuperOperatorMetadata,
+    )
 
 
 def sample_noise_from_operators[M: BasisMetadata](
@@ -28,7 +32,8 @@ def sample_noise_from_operators[M: BasisMetadata](
     OperatorListBasis[SimpleMetadata, OperatorMetadata[M]], np.dtype[np.complexfloating]
 ]:
     """Generate noise from a set of noise operators."""
-    n_operators = operators.basis[0].size
+    operators_as_tuple = array.as_tuple_basis(operators)
+    n_operators = operators_as_tuple.basis.children[0].size
 
     rng = np.random.default_rng()
     factors = (
@@ -42,12 +47,14 @@ def sample_noise_from_operators[M: BasisMetadata](
             np.einsum(  # type: ignore lib
                 "ij,j->ij",
                 factors,
-                np.lib.scimath.sqrt(operators.basis[0].metadata().values * hbar),
+                np.lib.scimath.sqrt(
+                    operators_as_tuple.basis.children[0].metadata().values * hbar
+                ),
             ),
         )
     )
-    data = linalg.einsum("(i j),(j k)->(i k)", scaled_factors, operators)
-    return OperatorList(data.basis, data.raw_data)
+    data = linalg.einsum("(i j),(j k)->(i k)", scaled_factors, operators_as_tuple)
+    return OperatorList.build(data.basis, data.raw_data).ok()
 
 
 def sample_noise_from_diagonal_kernel[M: BasisMetadata](
@@ -56,14 +63,23 @@ def sample_noise_from_diagonal_kernel[M: BasisMetadata](
     n_samples: int,
     truncation: Iterable[int] | None,
 ) -> OperatorList[
-    OperatorListBasis[SimpleMetadata, OperatorMetadata[M]], np.dtype[np.complexfloating]
+    OperatorListBasis[SimpleMetadata, SuperOperatorMetadata[M]],
+    np.dtype[np.complexfloating],
 ]:
     """Generate noise for a diagonal kernel."""
     operators = get_periodic_noise_operators_diagonal_eigenvalue(kernel)
-    operators = operators.with_list_basis(basis.as_tuple_basis(operators.basis)[0])
+    operators = operators.with_list_basis(
+        basis.from_metadata(kernel.basis.metadata().children[0])
+    ).assert_ok()
 
-    truncation = range(operators.basis[0].size) if truncation is None else truncation
+    truncation = (
+        range(operators.basis.inner.children[0].size)
+        if truncation is None
+        else truncation
+    )
     truncated = truncate_noise_operator_list(operators, truncation)
-    truncated = truncated.with_list_basis(basis.as_tuple_basis(truncated.basis)[0])
+    truncated = truncated.with_list_basis(
+        basis.as_tuple(truncated.basis).children[0]
+    ).assert_ok()
 
     return sample_noise_from_operators(truncated, n_samples=n_samples)

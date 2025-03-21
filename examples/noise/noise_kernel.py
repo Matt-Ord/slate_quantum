@@ -28,13 +28,13 @@ if __name__ == "__main__":
 
     # We can plot the kernel to see how the correlation decays with distance.
     # The correlation falls by $e^-1$ at a distance of $\pi / 2$.
-    full_data = array.as_outer_array(array.as_outer_array(kernel))
+    full_data = array.as_outer_basis(array.as_outer_basis(kernel))
     fig, ax, _ = plot.array_against_axes_1d(full_data)
     ax.set_title(r"Isotropic Gaussian Kernel with $\sigma = \pi / \sqrt{2}$")
     fig.show()
     # We can also plot the 'full' isotropic kernel, to see the correlation
     # between all points in the system.
-    diagonal_data = array.flatten(array.as_outer_array(kernel))
+    diagonal_data = array.flatten(array.as_outer_basis(kernel))
     fig, ax, _ = plot.array_against_axes_2d_x(diagonal_data)
     ax.set_title(r"Isotropic Gaussian Kernel with $\sigma = \pi / \sqrt{2}$")
     fig.show()
@@ -43,7 +43,7 @@ if __name__ == "__main__":
     # the kernel we are simulating will be slightly different to the 'true' kernel.
     correlation = caldeira_leggett_correlation_fn(1, _lambda)
     kernel_cl = build.isotropic_kernel_from_function_stacked(metadata, correlation)
-    cl_data = array.as_outer_array(array.as_outer_array(kernel_cl))
+    cl_data = array.as_outer_basis(array.as_outer_basis(kernel_cl))
 
     fig, ax = get_figure()
     _, _, line = plot.array_against_axes_1d(full_data, ax=ax)

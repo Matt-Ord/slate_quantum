@@ -68,10 +68,14 @@ def basis_from_metadata(
 ]:
     """Build the Bloch basis."""
     operator_basis = basis.transformed_from_metadata(metadata)
+
+    def wrap(
+        _i: int, b: Basis[RepeatedLengthMetadata, Ctype[np.complexfloating]]
+    ) -> Basis[RepeatedLengthMetadata, Ctype[np.complexfloating]]:
+        return BlochShiftedBasis(b).resolve_ctype().upcast()
+
     return BlochTransposedBasis(
-        basis.with_modified_children(
-            operator_basis, lambda _, i: BlochShiftedBasis(i).resolve_ctype().upcast()
-        )
+        basis.with_modified_children(operator_basis, wrap)
     ).resolve_ctype()
 
 
@@ -146,7 +150,7 @@ def _get_sample_fractions[M: BlochFractionMetadata](
 
 
 def kinetic_hamiltonian[M: SpacedLengthMetadata, E: AxisDirections](
-    potential: Potential[M, E, Ctype[np.complexfloating], np.dtype[np.complexfloating]],
+    potential: Potential[M, E, Ctype[Never], np.dtype[np.complexfloating]],
     mass: float,
     repeat: tuple[int, ...],
 ) -> Operator[
@@ -156,7 +160,6 @@ def kinetic_hamiltonian[M: SpacedLengthMetadata, E: AxisDirections](
     """Build a kinetic Hamiltonian in the Bloch basis."""
     list_metadata = BlochFractionMetadata.from_repeats(repeat)
     bloch_fractions = _get_sample_fractions(list_metadata)
-    basis.from_metadata(list_metadata)
 
     operators = OperatorList.from_operators(
         [
@@ -166,7 +169,10 @@ def kinetic_hamiltonian[M: SpacedLengthMetadata, E: AxisDirections](
     )
     cast_operators = OperatorList.build(
         TupleBasis(
-            (basis.from_metadata(list_metadata), operators.basis.inner.children[1])
+            (
+                basis.from_metadata(list_metadata).upcast(),
+                operators.basis.inner.children[1],
+            )
         ).upcast(),
         operators.raw_data,
     ).assert_ok()

@@ -63,14 +63,12 @@ def solve_schrodinger_equation_decomposition[
 ](
     initial_state: State[Basis],
     times: TB,
-    hamiltonian: Operator[
-        OperatorBasis[M, Ctype[np.complexfloating]], np.dtype[np.complexfloating]
-    ],
+    hamiltonian: Operator[OperatorBasis[M], np.dtype[np.complexfloating]],
 ) -> StateList[TupleBasis2D[tuple[TB, Basis[M]]], np.dtype[np.complexfloating]]:
     """Solve the schrodinger equation by directly finding eigenstates for the given initial state and hamiltonian."""
     diagonal = into_diagonal_hermitian(hamiltonian)
     diagonal = array.cast_basis(diagonal, diagonal.basis.inner).assert_ok()
-    return _solve_schrodinger_equation_diagonal(initial_state, times, diagonal)
+    return _solve_schrodinger_equation_diagonal(initial_state, times, diagonal)  # type: ignore cant infer M type
 
 
 def solve_schrodinger_equation[

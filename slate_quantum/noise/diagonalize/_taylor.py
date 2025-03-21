@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, Any, Never, cast
 
 import numpy as np
 from scipy.special import factorial  # type: ignore library type
+from slate_core import basis as _basis
 from slate_core.basis import (
     Basis,
     DiagonalBasis,
@@ -11,7 +12,6 @@ from slate_core.basis import (
     TruncatedBasis,
     Truncation,
     TupleBasis,
-    as_tuple_basis,
     from_metadata,
     with_modified_child,
 )
@@ -93,14 +93,14 @@ def get_periodic_noise_operators_explicit_taylor_expansion[
 
     operators = operator.build.all_axis_periodic_operators(basis)
     list_basis = with_modified_child(
-        as_tuple_basis(operators.basis),
+        _basis.as_tuple(operators.basis),
         lambda b: TruncatedBasis(
             Truncation(n_terms, 0, 0),
             from_metadata(cast("SimpleMetadata", b.metadata())),
-        ),
+        ).upcast(),
         0,
     )
-    operators = operators.with_basis(list_basis)
+    converted = operators.with_basis(list_basis.upcast()).assert_ok()
 
     # coefficients for the Taylor expansion of the trig terms
     coefficients = _get_periodic_coefficients_for_taylor_series(
@@ -110,9 +110,9 @@ def get_periodic_noise_operators_explicit_taylor_expansion[
 
     eigenvalues = EigenvalueMetadata(coefficients.astype(np.complex128))
 
-    return OperatorList(
-        TupleBasis((FundamentalBasis(eigenvalues), operators.basis.children[1])),
-        operators.raw_data,
+    return OperatorList.build(
+        TupleBasis((FundamentalBasis(eigenvalues), converted.basis.children[1])),
+        converted.raw_data,
     )
 
 
@@ -135,16 +135,15 @@ def _get_linear_operators_for_noise[M: BasisMetadata](
     )
     data = np.array([displacements**n for n in range(n_terms)], dtype=np.complex128)
 
-    return OperatorList(
+    return OperatorList.build(
         TupleBasis(
             (
                 FundamentalBasis.from_size(n_terms),
-                DiagonalBasis(nx_displacements.basis),
-            ),
-            None,
-        ),
+                DiagonalBasis(nx_displacements.basis).upcast(),
+            )
+        ).upcast(),
         data,
-    )
+    ).assert_ok()
 
 
 def get_linear_noise_operators_explicit_taylor_expansion[M: BasisMetadata](

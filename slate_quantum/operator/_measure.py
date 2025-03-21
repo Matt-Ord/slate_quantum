@@ -59,8 +59,8 @@ def all_potential_from_function[
         states.basis.metadata().children[1], fn=fn, wrapped=wrapped, offset=offset
     )
 
-    states = _state.normalize_all(states)
-    return array.real(expectation_of_each(momentum, states))
+    normalized = _state.normalize_all(states)
+    return array.real(expectation_of_each(momentum, normalized))  # type: ignore bad inference
 
 
 def momentum_from_function[
@@ -206,8 +206,8 @@ def all_x[
         states.basis.metadata().children[1], axis=axis, offset=offset, wrapped=wrapped
     )
 
-    states = _state.normalize_all(states)
-    return array.real(expectation_of_each(momentum, states))
+    normalized = _state.normalize_all(states)
+    return array.real(expectation_of_each(momentum, normalized))  # type: ignore bad inference
 
 
 def _get_all_fundamental_scatter[
@@ -233,8 +233,8 @@ def _get_all_fundamental_scatter[
     n_k = tuple(1 if i == axis else 0 for i in range(n_dim))
     scatter = scattering_operator(states.basis.metadata().children[1], n_k=n_k)
 
-    states = _state.normalize_all(states)
-    return expectation_of_each(scatter, states)
+    normalized = _state.normalize_all(states)
+    return expectation_of_each(scatter, normalized)  # type: ignore bad inference
 
 
 def all_periodic_x[
@@ -263,7 +263,10 @@ def all_periodic_x[
     delta_x = metadata.volume.fundamental_stacked_delta_x(
         states.basis.metadata().children[1]
     )
-    return wrapped * (np.linalg.norm(delta_x[axis]).item() / (2 * np.pi))
+    np.array([]).astype(np.complex128)
+    return (wrapped * (np.linalg.norm(delta_x[axis]).item() / (2 * np.pi))).as_type(
+        np.float64
+    )
 
 
 def all_variance_x[
@@ -301,7 +304,7 @@ def all_coherent_width[
 ) -> Array[Basis[M0], np.dtype[np.floating]]:
     """Get the width of a Gaussian wavepacket."""
     variance = all_variance_x(states, axis=axis)
-    return array.sqrt(variance * 2)
+    return array.sqrt((variance * 2).as_type(np.float64))
 
 
 def k[
@@ -331,8 +334,8 @@ def all_k[
     """Get the momentum of all states."""
     momentum = _build.k(states.basis.metadata().children[1], axis=axis)
 
-    states = _state.normalize_all(states)
-    return array.real(expectation_of_each(momentum, states))
+    normalized = _state.normalize_all(states)
+    return array.real(expectation_of_each(momentum, normalized))  # type: ignore bad inference
 
 
 def variance_k[

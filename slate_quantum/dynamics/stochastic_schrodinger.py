@@ -106,9 +106,7 @@ def solve_stochastic_schrodinger_equation_banded[
     **kwargs: Unpack[SSEConfig],
 ) -> StateList[
     TupleBasis2D[
-        tuple[TupleBasis[tuple[FundamentalBasis, Basis[MT]], None], Basis[M]],
-        None,
-        Ctype[np.complexfloating],
+        tuple[TupleBasis[tuple[FundamentalBasis, Basis[MT]], None], Basis[M]], None
     ],
     np.dtype[np.complexfloating],
 ]:
@@ -154,16 +152,14 @@ def solve_stochastic_schrodinger_equation_banded[
     # The actual coherent step is H / hbar not H, so to get the correct
     # step size we need to multiply by hbar
     dt = hbar * (target_delta / abs(slate_core.linalg.norm(coherent_step).item()))
-    times = basis.as_index_basis(times)
+    times = basis.as_index(times)
 
     operators_data = [
-        o.with_basis(hamiltonian_tuple.basis)
+        o.with_basis(hamiltonian_tuple.basis.upcast())
         .assert_ok()
         .raw_data.reshape(hamiltonian_tuple.basis.shape)
         * (np.sqrt(e))
-        for o, e in zip(
-            noise, noise.basis[0].metadata().values[noise.basis[0].points], strict=False
-        )
+        for o, e in zip(noise, noise.basis.metadata().children[0].values, strict=True)
     ]
 
     # We re-scale dt to be equal to 1 when the coherent step is equal to

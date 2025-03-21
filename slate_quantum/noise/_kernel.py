@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any, Never, cast
 
 import numpy as np
-from slate_core import Ctype
+from slate_core import Ctype, TupleMetadata, basis
 from slate_core.basis import (
     AsUpcast,
     Basis,
@@ -12,15 +12,12 @@ from slate_core.basis import (
     IsotropicBasis,
     RecastBasis,
     TupleBasis,
-    as_index_basis,
-    as_tuple_basis,
 )
 from slate_core.metadata import (
     BasisMetadata,
 )
 from slate_core.util import slice_ignoring_axes
 
-from slate_quantum._util import outer_product
 from slate_quantum.metadata import EigenvalueMetadata
 from slate_quantum.operator import (
     OperatorList,
@@ -28,15 +25,17 @@ from slate_quantum.operator import (
     SuperOperatorMetadata,
 )
 from slate_quantum.operator._diagonal import (
-    recast_diagonal_basis,
+    recast_diagonal_basis_with_metadata,
 )
 from slate_quantum.operator._operator import (
     Operator,
     OperatorBasis,
+    OperatorConversion,
     OperatorListBasis,
     SuperOperator,
     SuperOperatorBasis,
 )
+from slate_quantum.util._prod import outer_product
 
 type NoiseKernel[B: Basis[SuperOperatorMetadata], DT: np.dtype[np.generic]] = (
     SuperOperator[B, DT]
@@ -52,14 +51,14 @@ def from_noise_operators[M: BasisMetadata, DT: np.dtype[np.generic]](
     ],
 ) -> NoiseKernel[SuperOperatorBasis[M], DT]:
     converted = operators.with_basis(
-        as_tuple_basis(operators.basis).upcast()
+        basis.as_tuple(operators.basis).upcast()
     ).assert_ok()
     converted_inner = (
         converted.with_operator_basis(
-            as_tuple_basis(converted.basis.inner.children[1]).upcast()
+            basis.as_tuple(converted.basis.inner.children[1]).upcast()
         )
         .assert_ok()
-        .with_list_basis(as_index_basis(converted.basis.inner.children[0]))
+        .with_list_basis(basis.as_index(converted.basis.inner.children[0]))
         .assert_ok()
     )
     operators_data = converted_inner.raw_data.reshape(
@@ -83,7 +82,7 @@ def from_noise_operators[M: BasisMetadata, DT: np.dtype[np.generic]](
 def diagonal_kernel_basis[M: BasisMetadata, CT: Ctype[Never]](
     outer_recast: OperatorBasis[M, CT],
 ) -> DiagonalKernelBasisWithMetadata[M, CT]:
-    inner_recast = as_tuple_basis(outer_recast)
+    inner_recast = basis.as_tuple(outer_recast)
     b0 = inner_recast.children[0]
     b1 = inner_recast.children[1]
     inner = TupleBasis(
@@ -149,10 +148,10 @@ def from_diagonal_operators[M_: BasisMetadata, DT_: np.generic](
     operators: OperatorList[EigenvalueMetadata, M_, DT_],
 ) -> DiagonalKernelWithMetadata[M_, Ctype[np.generic], DT_]:
     """Build a diagonal kernel from operators."""
-    converted = operators.with_basis(as_tuple_basis(operators.basis))
+    converted = operators.with_basis(basis.as_tuple(operators.basis))
     converted_inner = converted.with_operator_basis(
-        DiagonalBasis(as_tuple_basis(converted.basis[1]))
-    ).with_list_basis(as_index_basis(converted.basis[0]))
+        DiagonalBasis(basis.as_tuple(converted.basis[1]))
+    ).with_list_basis(basis.as_index(converted.basis[0]))
 
     operators_data = converted_inner.raw_data.reshape(converted.basis[0].size, -1)
     data = cast(
@@ -167,15 +166,16 @@ def from_diagonal_operators[M_: BasisMetadata, DT_: np.generic](
     return DiagonalNoiseKernel[M_, DT_](converted_inner.basis[1].inner, data)
 
 
-def with_outer_basis[M_: BasisMetadata, DT_: np.generic](
-    self: DiagonalNoiseKernel[M_, DT_],
-    basis: Basis[Metadata2D[M_, M_, Any], Any],
-) -> DiagonalNoiseKernel[M_, DT_]:
+def with_outer_basis[M1: BasisMetadata, M: BasisMetadata, DT: np.dtype[np.generic]](
+    kernel: DiagonalKernelWithMetadata[M1, Ctype[Never], DT],
+    basis: OperatorBasis[M],
+) -> OperatorConversion[
+    SuperOperatorMetadata[M1], DiagonalKernelBasisWithMetadata[M], DT
+]:
     """Get the Potential with the outer recast basis set to basis."""
-    return DiagonalNoiseKernel[M_, DT_](
-        basis,
-        self.basis.outer_recast.__convert_vector_into__(self.raw_data, basis),
-    )
+    final_basis = diagonal_kernel_basis(basis)
+    kernel.with_basis(final_basis)
+    return kernel.with_basis(final_basis)
 
 
 type IsotropicKernelBasisOuter[B: Basis = Basis] = RecastBasis[
@@ -345,7 +345,7 @@ def as_axis_kernel_from_isotropic[
     kernel: IsotropicKernelWithMetadata[M, CT, DT],
 ) -> AxisKernel[M, CT, DT]:
     """Convert an isotropic kernel to an axis kernel."""
-    outer_as_tuple = as_tuple_basis(kernel.basis.inner.outer_recast.outer_recast)
+    outer_as_tuple = basis.as_tuple(kernel.basis.inner.outer_recast.outer_recast)
     converted = kernel.with_isotropic_basis(outer_as_tuple)
     n_axis = len(outer_as_tuple.shape)
 
@@ -372,24 +372,33 @@ def get_diagonal_noise_operators_from_axis[M: BasisMetadata, E](
     ],
     extra: E,
 ) -> OperatorList[
-    OperatorListBasis[EigenvalueMetadata, OperatorMetadata[M]],
+    OperatorListBasis[
+        EigenvalueMetadata, OperatorMetadata[TupleMetadata[tuple[M, ...], E]]
+    ],
     np.dtype[np.complexfloating],
 ]:
     """Convert axis operators into full operators."""
     op_as_tuple = tuple(
-        operators.with_basis(as_tuple_basis(operators.basis))
+        operators.with_basis(basis.as_tuple(operators.basis).upcast()).assert_ok()
         for operators in operators_list
     )
     op_as_tuple_nested = tuple(
-        operators.with_list_basis(
-            as_index_basis(operators.basis[0])
-        ).with_operator_basis(DiagonalBasis(as_tuple_basis(operators.basis[1])))
+        operators.with_list_basis(basis.as_index(operators.basis.inner.children[0]))
+        .assert_ok()
+        .with_operator_basis(
+            DiagonalBasis(basis.as_tuple(operators.basis.inner.children[1])).upcast()
+        )
+        .assert_ok()
         for operators in op_as_tuple
     )
 
     full_basis_1 = TupleBasis(
-        tuple(operators.basis[1].inner[1] for operators in op_as_tuple_nested), extra
-    )
+        tuple(
+            operators.basis.inner.children[1].inner.inner.children[1]
+            for operators in op_as_tuple_nested
+        ),
+        extra,
+    ).upcast()
 
     # for example, in 2d this is ij,kl ->  # cSpell:ignore
     subscripts = tuple(
@@ -403,23 +412,28 @@ def get_diagonal_noise_operators_from_axis[M: BasisMetadata, E](
     einsum_string = f"{input_subscripts}->{output_subscript}"
 
     full_data = tuple(
-        operators.raw_data.reshape(operators.basis[0].size, -1)
+        operators.raw_data.reshape(operators.basis.inner.children[0].size, -1)
         for operators in op_as_tuple
     )
     data = cast("np.ndarray[Any, Any]", np.einsum(einsum_string, *full_data))  # type: ignore unknown
     full_coefficients = tuple(
-        operators.basis[0].metadata().values[operators.basis[0].points]
+        operators.basis.metadata()
+        .children[0]
+        .values[operators.basis.inner.children[0].points]
         for operators in op_as_tuple
     )
     eigenvalues = outer_product(*full_coefficients)
     eigenvalue_basis = FundamentalBasis(EigenvalueMetadata(eigenvalues))
 
-    return OperatorList(
+    return OperatorList.build(
         TupleBasis(
-            (eigenvalue_basis, recast_diagonal_basis(full_basis_1, full_basis_1))
-        ),
+            (
+                eigenvalue_basis,
+                recast_diagonal_basis_with_metadata(full_basis_1, full_basis_1),
+            )
+        ).upcast(),
         data,
-    )
+    ).assert_ok()
 
 
 type NoiseOperatorList[

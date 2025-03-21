@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Never
 
 import numpy as np
 from scipy.constants import Boltzmann, hbar  # type:ignore bad stub file
@@ -31,14 +31,20 @@ from slate_quantum.noise.diagonalize._taylor import (
 if TYPE_CHECKING:
     from collections.abc import Iterable
 
-    from slate_core import TupleMetadata
-    from slate_core.basis import Basis, DiagonalBasis, TupleBasis2D
+    from slate_core import Ctype, TupleMetadata
 
     from slate_quantum.metadata import EigenvalueMetadata
-    from slate_quantum.noise._kernel import IsotropicNoiseKernel
-    from slate_quantum.operator._operator import OperatorList
+    from slate_quantum.noise._kernel import (
+        DiagonalKernelWithMetadata,
+        IsotropicKernelWithMetadata,
+    )
+    from slate_quantum.operator._operator import (
+        OperatorList,
+        OperatorListBasis,
+        OperatorMetadata,
+    )
 
-    from ._kernel import AxisKernel, DiagonalNoiseKernel
+    from ._kernel import AxisKernel
 
 
 def get_gaussian_isotropic_noise_kernel[
@@ -48,7 +54,9 @@ def get_gaussian_isotropic_noise_kernel[
     metadata: TupleMetadata[tuple[M, ...], E],
     a: float,
     lambda_: float,
-) -> IsotropicNoiseKernel[TupleMetadata[tuple[M, ...], E], np.complexfloating]:
+) -> IsotropicKernelWithMetadata[
+    TupleMetadata[tuple[M, ...], E], Ctype[Never], np.dtype[np.complexfloating]
+]:
     """Get the noise kernel for a gaussian correllated surface."""
     return isotropic_kernel_from_function_stacked(
         metadata, gaussian_correlation_fn(a, lambda_)
@@ -59,7 +67,7 @@ def get_gaussian_axis_noise_kernel[M: SpacedLengthMetadata](
     metadata: TupleMetadata[tuple[M, ...], Any],
     a: float,
     lambda_: float,
-) -> AxisKernel[M, np.complexfloating]:
+) -> AxisKernel[M, Ctype[Never], np.dtype[np.complexfloating]]:
     """Get the noise kernel for a gaussian correllated surface."""
     return axis_kernel_from_function_stacked(
         metadata, gaussian_correlation_fn(a, lambda_)
@@ -73,9 +81,11 @@ def get_gaussian_noise_kernel[
     metadata: TupleMetadata[tuple[M, ...], E],
     a: float,
     lambda_: float,
-) -> DiagonalNoiseKernel[TupleMetadata[tuple[M, ...], E], np.complexfloating]:
+) -> DiagonalKernelWithMetadata[
+    TupleMetadata[tuple[M, ...], E], Ctype[Never], np.dtype[np.complexfloating]
+]:
     """Get the noise kernel for a gaussian correllated surface."""
-    return get_gaussian_isotropic_noise_kernel(metadata, a, lambda_).unwrap()
+    return get_gaussian_isotropic_noise_kernel(metadata, a, lambda_)
 
 
 def get_effective_gaussian_parameters(
@@ -114,7 +124,9 @@ def get_effective_gaussian_noise_kernel[
     temperature: float,
     *,
     lambda_factor: float = 2 * np.sqrt(2),
-) -> DiagonalNoiseKernel[TupleMetadata[tuple[M, ...], E], np.complexfloating]:
+) -> DiagonalKernelWithMetadata[
+    TupleMetadata[tuple[M, ...], E], Ctype[Never], np.dtype[np.complexfloating]
+]:
     """
     Get the noise kernel for a gaussian correllated surface, given the Caldeira leggett parameters.
 
@@ -148,7 +160,9 @@ def get_effective_gaussian_isotropic_noise_kernel[
     temperature: float,
     *,
     lambda_factor: float = 2 * np.sqrt(2),
-) -> IsotropicNoiseKernel[TupleMetadata[tuple[M, ...], E], np.complexfloating]:
+) -> IsotropicKernelWithMetadata[
+    TupleMetadata[tuple[M, ...], E], Ctype[Never], np.dtype[np.complexfloating]
+]:
     """
     Get the noise kernel for a gaussian correllated surface, given the Caldeira leggett parameters.
 
@@ -183,9 +197,10 @@ def get_gaussian_noise_operators_periodic[
     *,
     truncation: Iterable[int] | None = None,
 ) -> OperatorList[
-    EigenvalueMetadata,
-    TupleMetadata[tuple[M, ...], E],
-    np.complexfloating,
+    OperatorListBasis[
+        EigenvalueMetadata, OperatorMetadata[TupleMetadata[tuple[M, ...], E]]
+    ],
+    np.dtype[np.complexfloating],
 ]:
     """Get the noise operators for a gausssian kernel in the given basis.
 
@@ -221,9 +236,10 @@ def get_effective_gaussian_noise_operators_periodic[
     *,
     truncation: Iterable[int] | None = None,
 ) -> OperatorList[
-    EigenvalueMetadata,
-    TupleMetadata[tuple[M, ...], E],
-    np.complexfloating,
+    OperatorListBasis[
+        EigenvalueMetadata, OperatorMetadata[TupleMetadata[tuple[M, ...], E]]
+    ],
+    np.dtype[np.complexfloating],
 ]:
     """Get the noise operators for a gausssian kernel in the given basis.
 
@@ -265,9 +281,8 @@ def get_periodic_gaussian_operators_explicit_taylor[M: SpacedLengthMetadata](
     *,
     n_terms: int | None = None,
 ) -> OperatorList[
-    EigenvalueMetadata,
-    M,
-    np.complexfloating,
+    OperatorListBasis[EigenvalueMetadata, OperatorMetadata[M]],
+    np.dtype[np.complexfloating],
 ]:
     """Calculate the noise operators for an isotropic gaussian noise kernel, using an explicit Taylor expansion.
 
@@ -305,15 +320,8 @@ def get_linear_gaussian_noise_operators_explicit_taylor[M: SpacedLengthMetadata]
     *,
     n_terms: int | None = None,
 ) -> OperatorList[
-    EigenvalueMetadata,
-    M,
-    np.complexfloating,
-    TupleBasis2D[
-        np.complexfloating,
-        FundamentalBasis[EigenvalueMetadata],
-        DiagonalBasis[np.complexfloating, Basis[M, Any], Basis[M, Any], None],
-        None,
-    ],
+    OperatorListBasis[EigenvalueMetadata, OperatorMetadata[M]],
+    np.dtype[np.complexfloating],
 ]:
     """Get the noise operators for a gausssian kernel in the given basis.
 
@@ -356,7 +364,10 @@ def get_periodic_gaussian_operators_explicit_taylor_stacked[M: SpacedLengthMetad
     *,
     shape: tuple[int, ...] | None = None,
 ) -> OperatorList[
-    EigenvalueMetadata, TupleMetadata[tuple[M, ...], E], np.complexfloating
+    OperatorListBasis[
+        EigenvalueMetadata, OperatorMetadata[TupleMetadata[tuple[M, ...], E]]
+    ],
+    np.dtype[np.complexfloating],
 ]:
     """Calculate the noise operators for an isotropic gaussian noise kernel, using an explicit Taylor expansion.
 
@@ -386,7 +397,10 @@ def get_linear_gaussian_operators_explicit_taylor_stacked[M: SpacedLengthMetadat
     *,
     shape: tuple[int, ...] | None = None,
 ) -> OperatorList[
-    EigenvalueMetadata, TupleMetadata[tuple[M, ...], E], np.complexfloating
+    OperatorListBasis[
+        EigenvalueMetadata, OperatorMetadata[TupleMetadata[tuple[M, ...], E]]
+    ],
+    np.dtype[np.complexfloating],
 ]:
     """Calculate the noise operators for an isotropic gaussian noise kernel, using an explicit Taylor expansion.
 

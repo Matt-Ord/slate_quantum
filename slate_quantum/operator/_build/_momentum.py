@@ -32,24 +32,26 @@ if TYPE_CHECKING:
 
 def momentum[M: BasisMetadata, E, CT: Ctype[Never], DT: np.dtype[np.generic]](
     outer_basis: basis.TupleBasisLike[tuple[M, ...], E, CT], data: np.ndarray[Any, DT]
-) -> OperatorBuilder[MomentumOperatorBasis[M, E, CT], DT]:
+) -> OperatorBuilder[MomentumOperatorBasis[M, E], DT]:
     """Get the potential operator."""
     return Operator.build(momentum_operator_basis(outer_basis), data)
 
 
 def k[M: SpacedLengthMetadata, E: AxisDirections](
     metadata: TupleMetadata[tuple[M, ...], E], *, axis: int
-) -> MomentumOperator[M, E, Ctype[np.complexfloating], np.dtype[np.complexfloating]]:
+) -> MomentumOperator[M, E, Ctype[Never], np.dtype[np.complexfloating]]:
     """Get the k operator."""
     points = _metadata.volume.fundamental_stacked_k_points(metadata)[axis].astype(
         np.complex128
     )
-    return momentum(basis.transformed_from_metadata(metadata).upcast(), points).ok()
+    return momentum(
+        basis.transformed_from_metadata(metadata).upcast(), points
+    ).assert_ok()
 
 
 def p[M: SpacedLengthMetadata, E: AxisDirections](
     metadata: TupleMetadata[tuple[M, ...], E], *, axis: int
-) -> MomentumOperator[M, E, Ctype[np.complexfloating], np.dtype[np.complexfloating]]:
+) -> MomentumOperator[M, E, Ctype[Never], np.dtype[np.complexfloating]]:
     """Get the p operator."""
     points = _metadata.volume.fundamental_stacked_k_points(metadata)[axis].astype(
         np.complex128
@@ -57,7 +59,7 @@ def p[M: SpacedLengthMetadata, E: AxisDirections](
     return momentum(
         basis.transformed_from_metadata(metadata).upcast(),
         (hbar * points).astype(np.complex128),
-    ).ok()
+    ).assert_ok()
 
 
 def momentum_from_function[M: SpacedLengthMetadata, E: AxisDirections, DT: np.generic](
@@ -69,13 +71,13 @@ def momentum_from_function[M: SpacedLengthMetadata, E: AxisDirections, DT: np.ge
     *,
     wrapped: bool = False,
     offset: tuple[float, ...] | None = None,
-) -> MomentumOperator[M, E, Ctype[np.complexfloating], np.dtype[np.complexfloating]]:
+) -> MomentumOperator[M, E, Ctype[Never], np.dtype[np.complexfloating]]:
     """Get the k operator from a function."""
     positions = _metadata.volume.fundamental_stacked_k_points(
         metadata, offset=offset, wrapped=wrapped
     )
     out_basis = basis.transformed_from_metadata(metadata).upcast()
-    return momentum(out_basis, fn(positions)).ok()
+    return momentum(out_basis, fn(positions)).assert_ok()
 
 
 def filter_scatter(
@@ -111,15 +113,17 @@ def all_filter_scatter[M: BasisMetadata](
     OperatorListBasis[M, OperatorMetadata[SpacedVolumeMetadata]],
     np.dtype[np.complexfloating],
 ]:
-    is_dual = basis.as_tuple_basis(operator.basis).is_dual[1]
+    is_dual = basis.as_tuple(operator.basis).is_dual[1]
     converted = operator.with_operator_basis(
         basis.transformed_from_metadata(
             operator.basis.metadata().children[1], is_dual=is_dual
         ).upcast()
+    ).assert_ok()
+    data = converted.raw_data.reshape(
+        -1, *converted.basis.inner.children[1].inner.shape
     )
-    data = converted.raw_data.reshape(-1, *converted.basis[1].shape)
     nk_points = _metadata.fundamental_stacked_nk_points(
-        operator.basis.metadata()[1][0][0]
+        operator.basis.metadata().children[1].children[0].children[0]
     )
     mask = np.all(
         [
@@ -129,4 +133,4 @@ def all_filter_scatter[M: BasisMetadata](
         axis=0,
     )
     data[:, np.logical_not(mask)] = 0
-    return OperatorList.build(converted.basis, data).ok()
+    return OperatorList.build(converted.basis, data).assert_ok()

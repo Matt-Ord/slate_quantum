@@ -59,6 +59,11 @@ class StateConversion[
             ).ok(),
         )
 
+    @override
+    def assert_ok(self) -> State[B1, DT]:
+        assert self._new_basis.ctype.supports_dtype(self._data.dtype)
+        return self.ok()  # type: ignore safe to construct
+
 
 class State[
     B: Basis = Basis,
@@ -201,8 +206,10 @@ class StateList[
         return StateListConversion(self.raw_data, self.basis, basis)
 
     @override
-    def __iter__(self, /) -> Iterator[State[Basis, DT]]:  # type: ignore bad overload
-        return (State.build(a.basis, a.raw_data).ok() for a in super().__iter__())
+    def __iter__[M1_: BasisMetadata](  # type: ignore bad overload
+        self: StateList[TupleBasisLike2D[tuple[Any, M1_]]], /
+    ) -> Iterator[State[Basis[M1_], DT]]:
+        return (State.build(a.basis, a.raw_data).ok() for a in super().__iter__())  # type: ignore bad overload
 
     @overload
     def __getitem__[M1_: BasisMetadata](
@@ -256,7 +263,7 @@ class StateList[
         DT,
     ]:
         """Get the Operator with the operator basis set to basis."""
-        lhs_basis = _basis.as_tuple_basis(self.basis).children[0]
+        lhs_basis = _basis.as_tuple(self.basis).children[0]
         out_basis = TupleBasis((lhs_basis, basis)).upcast()
         return self.with_basis(out_basis)
 
@@ -271,7 +278,7 @@ class StateList[
         DT,
     ]:
         """Get the Operator with the operator basis set to basis."""
-        rhs_basis = _basis.as_tuple_basis(self.basis).children[1]
+        rhs_basis = _basis.as_tuple(self.basis).children[1]
         out_basis = TupleBasis((basis, rhs_basis)).upcast()
         return self.with_basis(out_basis)
 
@@ -323,7 +330,7 @@ def normalize_all[
     norms = all_inner_product(states, states)
     norms = array.as_index_basis(norms)
     as_index = states.with_list_basis(norms.basis).assert_ok()
-    as_mul = _basis.as_mul_basis(as_index.basis.inner.children[1])
+    as_mul = _basis.as_mul(as_index.basis.inner.children[1])
     states_as_mul = states.with_state_basis(as_mul).assert_ok()
     return StateList.build(
         states_as_mul.basis,
@@ -337,39 +344,36 @@ def normalize_all[
 
 @overload
 def get_all_occupations[M0: BasisMetadata, B: Basis[BasisMetadata, Any]](
-    states: StateList[M0, Any, TupleBasisLike2D[np.complexfloating, Any, B, None]],
+    states: StateList[TupleBasis2D[tuple[Basis[M0], B], Any]],
 ) -> Array[
-    TupleBasisLike[tuple[M0, BasisStateMetadata[B]], None, Ctype[np.floating]],
+    TupleBasis[
+        tuple[Basis[M0], FundamentalBasis[BasisStateMetadata[B]]],
+        None,
+    ],
     np.dtype[np.floating],
 ]: ...
 
 
 @overload
 def get_all_occupations[M0: BasisMetadata, M1: BasisMetadata](
-    states: StateList[M0, M1],
+    states: StateList[TupleBasisLike[tuple[M0, M1], Any]],
 ) -> Array[
-    Metadata2D[M0, BasisStateMetadata[Basis[M1, Any]], None],
-    np.floating,
-    TupleBasisLike2D[
-        np.floating,
-        Basis[M0, Any],
-        FundamentalBasis[BasisStateMetadata[Basis[M1, Any]]],
+    TupleBasis[
+        tuple[Basis[M0], FundamentalBasis[BasisStateMetadata[Basis[M1]]]],
         None,
     ],
+    np.dtype[np.floating],
 ]: ...
 
 
-def get_all_occupations[M0: BasisMetadata, B: Basis[Any, Any]](
-    states: StateList,
+def get_all_occupations[M0: BasisMetadata, M1: BasisMetadata](
+    states: StateList[TupleBasisLike[tuple[M0, M1], Any]],
 ) -> Array[
-    Metadata2D[M0, BasisStateMetadata[Basis[Any, Any]], None],
-    np.floating,
-    TupleBasisLike2D[
-        np.floating,
-        Basis[M0, Any],
-        FundamentalBasis[BasisStateMetadata[Basis[Any, Any]]],
+    TupleBasis[
+        tuple[Basis[M0], FundamentalBasis[BasisStateMetadata[Basis[M1]]]],
         None,
     ],
+    np.dtype[np.floating],
 ]:
     states_as_tuple = array.as_tuple_basis(states)
     basis = TupleBasis(
@@ -379,69 +383,44 @@ def get_all_occupations[M0: BasisMetadata, B: Basis[Any, Any]](
         )
     )
 
-    cast_states = array.cast_basis(states_as_tuple, basis)
+    cast_states = array.cast_basis(states_as_tuple, basis).assert_ok()
     return (
         array.abs(linalg.einsum("(m i'),(m i) -> (m i)", cast_states, cast_states))
         .with_basis(cast_states.basis)
-        .ok()
+        .assert_ok()
     )
 
 
 @overload
 def get_average_occupations[B: Basis[BasisMetadata, Any]](
-    states: StateList[Any, Any, TupleBasisLike2D[np.complexfloating, Any, B, None]],
+    states: StateList[TupleBasis2D[tuple[Any, B], Any]],
 ) -> tuple[
-    Array[
-        BasisStateMetadata[B],
-        np.float64,
-        FundamentalBasis[BasisStateMetadata[B]],
-    ],
-    Array[
-        BasisStateMetadata[B],
-        np.float64,
-        FundamentalBasis[BasisStateMetadata[B]],
-    ],
+    Array[FundamentalBasis[BasisStateMetadata[B]], np.dtype[np.float64]],
+    Array[FundamentalBasis[BasisStateMetadata[B]], np.dtype[np.float64]],
 ]: ...
 
 
 @overload
 def get_average_occupations[M1: BasisMetadata](
-    states: StateList[Any, M1],
+    states: StateList[TupleBasisLike[tuple[Any, M1]]],
 ) -> tuple[
-    Array[
-        BasisStateMetadata[Basis[M1, Any]],
-        np.float64,
-        FundamentalBasis[BasisStateMetadata[Basis[M1, Any]]],
-    ],
-    Array[
-        BasisStateMetadata[Basis[M1, Any]],
-        np.float64,
-        FundamentalBasis[BasisStateMetadata[Basis[M1, Any]]],
-    ],
+    Array[FundamentalBasis[BasisStateMetadata[Basis[M1]]], np.dtype[np.float64]],
+    Array[FundamentalBasis[BasisStateMetadata[Basis[M1]]], np.dtype[np.float64]],
 ]: ...
 
 
-def get_average_occupations(
-    states: StateList[Any, Any, Any],
+def get_average_occupations[M1: BasisMetadata](
+    states: StateList[TupleBasisLike[tuple[Any, M1]]],
 ) -> tuple[
-    Array[
-        BasisStateMetadata[Basis[Any, Any]],
-        np.floating,
-        FundamentalBasis[BasisStateMetadata[Basis[Any, Any]]],
-    ],
-    Array[
-        BasisStateMetadata[Basis[Any, Any]],
-        np.floating,
-        FundamentalBasis[BasisStateMetadata[Basis[Any, Any]]],
-    ],
+    Array[FundamentalBasis[BasisStateMetadata[Basis[M1]]], np.dtype[np.float64]],
+    Array[FundamentalBasis[BasisStateMetadata[Basis[M1]]], np.dtype[np.float64]],
 ]:
     occupations = get_all_occupations(states)
     # Dont include empty entries in average
-    list_basis = _basis.as_state_list(_basis.as_index_basis(occupations.basis[0]))
-    average_basis = TupleBasis((list_basis, occupations.basis[1]))
+    list_basis = _basis.as_state_list(_basis.as_index(occupations.basis.children[0]))
+    average_basis = TupleBasis((list_basis, occupations.basis.children[1]))
     # TODO: this is wrong - must convert first  # noqa: FIX002
-    occupations = array.cast_basis(occupations, average_basis)
-
+    occupations = array.cast_basis(occupations, average_basis).assert_ok()
     average = array.flatten(array.average(occupations, axis=0))
     std = array.flatten(array.standard_deviation(occupations, axis=0))
     std *= np.sqrt(1 / occupations.basis.shape[0])

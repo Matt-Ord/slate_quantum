@@ -4,8 +4,8 @@ from typing import TYPE_CHECKING, Any, Never
 
 import numpy as np
 from scipy.constants import Boltzmann, hbar  # type: ignore stubs
-from slate_core import Ctype, TupleMetadata, linalg
-from slate_core.basis import CoordinateBasis, as_index_basis, as_tuple_basis
+from slate_core import Ctype, TupleMetadata, basis, linalg
+from slate_core.basis import CoordinateBasis
 from slate_core.metadata import AxisDirections
 
 from slate_quantum import operator
@@ -227,10 +227,12 @@ def hamiltonian_shift[M1: BasisMetadata](
     shift_product = linalg.einsum(
         "(i (j k)),(i (k' l))->(k' l)", operator.dagger_each(operators), operators
     )
-    shift_product = Operator(shift_product.basis, shift_product.raw_data)
+    shift_product = Operator.build(
+        shift_product.basis, shift_product.raw_data
+    ).assert_ok()
     commutator = operator.commute(hamiltonian, shift_product)
     pre_factor = 1j * eta / (4 * hbar)
-    return commutator * pre_factor
+    return (commutator * pre_factor).as_type(np.complex64)
 
 
 def truncate_noise_operator_list[M0: EigenvalueMetadata, M1: BasisMetadata](
@@ -253,16 +255,20 @@ def truncate_noise_operator_list[M0: EigenvalueMetadata, M1: BasisMetadata](
     -------
     DiagonalNoiseOperatorList[FundamentalBasis[BasisMetadata], B_0, B_1]
     """
-    converted = operators.with_basis(as_tuple_basis(operators.basis))
-    converted_list = converted.with_list_basis(as_index_basis(converted.basis[0]))
+    converted = operators.with_basis(
+        basis.as_tuple(operators.basis).upcast()
+    ).assert_ok()
+    converted_list = converted.with_list_basis(
+        basis.as_index(converted.basis.inner.children[0])
+    ).assert_ok()
     eigenvalues = (
-        converted_list.basis.metadata()
+        converted_list.basis.inner.metadata()
         .children[0]
-        .values[converted_list.basis[0].points]
+        .values[converted_list.basis.inner.children[0].points]
     )
     args = np.argsort(np.abs(eigenvalues))[::-1][np.array(list(truncation))]
-    list_basis = CoordinateBasis(args, as_tuple_basis(operators.basis)[0])
-    return operators.with_list_basis(list_basis)
+    list_basis = CoordinateBasis(args, basis.as_tuple(operators.basis).children[0])
+    return operators.with_list_basis(list_basis).assert_ok()
 
 
 def truncate_noise_kernel[M: SuperOperatorMetadata](

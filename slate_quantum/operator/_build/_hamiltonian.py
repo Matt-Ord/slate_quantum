@@ -1,9 +1,10 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, Never, cast
 
 import numpy as np
 from scipy.constants import hbar  # type: ignore lib
+from slate_core import TupleMetadata
 from slate_core.basis import (
     AsUpcast,
     SplitBasis,
@@ -19,7 +20,7 @@ from slate_quantum.operator._build._momentum import momentum
 from slate_quantum.operator._operator import Operator, OperatorMetadata
 
 if TYPE_CHECKING:
-    from slate_core import Ctype, TupleMetadata
+    from slate_core import Ctype
     from slate_core.metadata import (
         SpacedLengthMetadata,
     )
@@ -45,7 +46,7 @@ def kinetic_energy[M: SpacedLengthMetadata, E: AxisDirections](
     metadata: TupleMetadata[tuple[M, ...], E],
     mass: float,
     bloch_fraction: np.ndarray[Any, np.dtype[np.floating]] | None = None,
-) -> MomentumOperator[M, E, Ctype[np.complexfloating], np.dtype[np.complexfloating]]:
+) -> MomentumOperator[M, E, Ctype[Never], np.dtype[np.complexfloating]]:
     """
     Given a mass and a basis calculate the kinetic part of the Hamiltonian.
 
@@ -77,22 +78,21 @@ def kinetic_energy[M: SpacedLengthMetadata, E: AxisDirections](
     )
     momentum_basis = transformed_from_metadata(metadata).upcast()
 
-    return momentum(momentum_basis, energy).ok()
+    return momentum(momentum_basis, energy).assert_ok()
 
 
 def kinetic_hamiltonian[M: SpacedLengthMetadata, E: AxisDirections](
-    potential: Potential[M, E, Ctype[np.complexfloating], np.dtype[np.complexfloating]],
+    potential: Potential[M, E, Ctype[Never], np.dtype[np.complexfloating]],
     mass: float,
     bloch_fraction: np.ndarray[Any, np.dtype[np.floating]] | None = None,
 ) -> Operator[
     AsUpcast[
         SplitBasis[
-            PositionOperatorBasis[M, E, Ctype[np.complexfloating]],
-            MomentumOperatorBasis[M, E, Ctype[np.complexfloating]],
-            Ctype[np.complexfloating],
+            PositionOperatorBasis[M, E, Ctype[Never]],
+            MomentumOperatorBasis[M, E, Ctype[Never]],
+            Ctype[Never],
         ],
-        OperatorMetadata,
-        Ctype[np.complexfloating],
+        OperatorMetadata[TupleMetadata[tuple[M, ...], E]],
     ],
     np.dtype[np.complexfloating],
 ]:
@@ -112,9 +112,9 @@ def kinetic_hamiltonian[M: SpacedLengthMetadata, E: AxisDirections](
     metadata = potential.basis.inner.inner.inner.inner.children[0].metadata()
     kinetic_hamiltonian = kinetic_energy(metadata, mass, bloch_fraction)
     basis = SplitBasis(potential.basis, kinetic_hamiltonian.basis).resolve_ctype()
-    upcast = AsUpcast(basis, kinetic_hamiltonian.basis.metadata()).resolve_ctype()
+    upcast = AsUpcast(basis, TupleMetadata((metadata, metadata))).resolve_ctype()
 
     return Operator.build(
         upcast,
         np.concatenate([potential.raw_data, kinetic_hamiltonian.raw_data], axis=None),
-    ).ok()
+    ).assert_ok()

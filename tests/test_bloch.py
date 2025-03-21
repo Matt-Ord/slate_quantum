@@ -38,11 +38,11 @@ def test_build_bloch_operator(shape: tuple[int, ...], repeat: tuple[int, ...]) -
 
     transformed = basis.transformed_from_metadata(
         full.basis.metadata(), is_dual=full.basis.is_dual
-    )
+    ).upcast()
 
     np.testing.assert_allclose(
-        sparse.with_basis(transformed).raw_data.reshape(transformed.shape),
-        full.with_basis(transformed).raw_data.reshape(transformed.shape),
+        sparse.with_basis(transformed).ok().raw_data.reshape(transformed.inner.shape),
+        full.with_basis(transformed).ok().raw_data.reshape(transformed.inner.shape),
         atol=1e-14,
     )
 
@@ -74,11 +74,17 @@ def test_build_momentum_bloch_operator(
 
     transformed = basis.transformed_from_metadata(
         full.basis.metadata(), is_dual=full.basis.is_dual
-    )
+    ).upcast()
 
     np.testing.assert_allclose(
-        np.diag(full.with_basis(transformed).raw_data.reshape(transformed.shape)),
-        np.diag(sparse.with_basis(transformed).raw_data.reshape(transformed.shape)),
+        np.diag(
+            full.with_basis(transformed).ok().raw_data.reshape(transformed.inner.shape)
+        ),
+        np.diag(
+            sparse.with_basis(transformed)
+            .ok()
+            .raw_data.reshape(transformed.inner.shape)
+        ),
         atol=1e-15,
     )
 
@@ -100,12 +106,14 @@ def test_build_potential_bloch_operator_1d(
     )
 
     potential = operator.build.cos_potential(meta, 1)
-    fraction_basis = basis.from_metadata(BlochFractionMetadata.from_repeats(repeat))
+    fraction_basis = basis.from_metadata(
+        BlochFractionMetadata.from_repeats(repeat)
+    ).upcast()
 
-    operator_list = operator.OperatorList(
-        TupleBasis((fraction_basis, potential.basis)),
+    operator_list = operator.OperatorList.build(
+        TupleBasis((fraction_basis, potential.basis)).upcast(),
         np.tile(potential.raw_data, np.prod(repeat).item()),
-    )
+    ).assert_ok()
 
     sparse = bloch.build.bloch_operator_from_list(operator_list)
     full = operator.build.repeat_potential(potential, repeat)
@@ -113,11 +121,11 @@ def test_build_potential_bloch_operator_1d(
     assert sparse.basis.metadata() == full.basis.metadata()
     transformed = basis.transformed_from_metadata(
         full.basis.metadata(), is_dual=full.basis.is_dual
-    )
+    ).upcast()
 
     np.testing.assert_allclose(
-        sparse.with_basis(transformed).raw_data.reshape(transformed.shape),
-        full.with_basis(transformed).raw_data.reshape(transformed.shape),
+        sparse.with_basis(transformed).ok().raw_data.reshape(transformed.inner.shape),
+        full.with_basis(transformed).ok().raw_data.reshape(transformed.inner.shape),
         atol=1e-15,
     )
 
@@ -127,16 +135,20 @@ def test_bloch_operator_from_list() -> None:
         (np.array([2 * np.pi]),), (3,)
     )
 
-    operator_basis = basis.transformed_from_metadata(meta)
-    fraction_basis = basis.from_metadata(BlochFractionMetadata.from_repeats((2,)))
-    operator_basis_tuple = TupleBasis((operator_basis, operator_basis.dual_basis()))
+    operator_basis = basis.transformed_from_metadata(meta).upcast()
+    fraction_basis = basis.from_metadata(
+        BlochFractionMetadata.from_repeats((2,))
+    ).upcast()
+    operator_basis_tuple = TupleBasis(
+        (operator_basis, operator_basis.dual_basis())
+    ).upcast()
 
-    operator_0 = Operator(operator_basis_tuple, np.ones((3, 3)))
-    operator_1 = Operator(operator_basis_tuple, 2 * np.ones((3, 3)))
-    operator_list = operator.OperatorList(
-        TupleBasis((fraction_basis, operator_basis_tuple)),
+    operator_0 = Operator.build(operator_basis_tuple, np.ones((3, 3))).assert_ok()
+    operator_1 = Operator.build(operator_basis_tuple, 2 * np.ones((3, 3))).assert_ok()
+    operator_list = operator.OperatorList.build(
+        TupleBasis((fraction_basis, operator_basis_tuple)).upcast(),
         np.array([operator_0.raw_data, operator_1.raw_data], dtype=complex),
-    )
+    ).assert_ok()
 
     sparse = bloch.build.bloch_operator_from_list(operator_list)
     basis.transformed_from_metadata(

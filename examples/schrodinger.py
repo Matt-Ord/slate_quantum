@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import numpy as np
 from scipy.constants import hbar  # type: ignore stubs
-from slate_core import FundamentalBasis, plot
+from slate_core import FundamentalBasis, array, plot
 from slate_core.metadata import (
     LabelSpacing,
     spaced_volume_metadata_from_stacked_delta_x,
@@ -32,12 +32,14 @@ if __name__ == "__main__":
     evolution = solve_schrodinger_equation_decomposition(
         initial_state, times, hamiltonian
     )
+    as_inner = array.as_inner_basis(evolution)
+    as_upcast = array.as_upcast_basis(as_inner, as_inner.basis.metadata())
     # The state changes in time, but only by a phase difference
-    fig, ax, _anim0 = animate_data_over_list_1d_x(evolution, measure="real")
+    fig, ax, _anim0 = animate_data_over_list_1d_x(as_upcast, measure="real")
     ax.set_title("Real part of the state")
     fig.show()
     # If we plot the absolute value of the state, we see no change
-    fig, ax, _anim1 = animate_data_over_list_1d_x(evolution, measure="abs")
+    fig, ax, _anim1 = animate_data_over_list_1d_x(as_upcast, measure="abs")
     ax.set_title("Abs state, which does not change with time")
     fig.show()
 

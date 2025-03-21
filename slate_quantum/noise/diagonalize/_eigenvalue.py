@@ -4,13 +4,16 @@ from typing import TYPE_CHECKING, Never
 
 import numpy as np
 from slate_core import Ctype, array
-from slate_core.basis import FundamentalBasis, TupleBasis, as_tuple_basis
+from slate_core import basis as _basis
+from slate_core.basis import FundamentalBasis, TupleBasis
 
 from slate_quantum.metadata import EigenvalueMetadata
+from slate_quantum.noise._kernel import with_outer_basis
 from slate_quantum.operator._operator import (
     OperatorList,
     OperatorListBasis,
     OperatorMetadata,
+    SuperOperatorMetadata,
 )
 
 if TYPE_CHECKING:
@@ -39,14 +42,15 @@ def get_periodic_noise_operators_eigenvalue[M: BasisMetadata](
     converted_second = converted.with_basis(
         TupleBasis(
             (
-                as_tuple_basis(converted.basis[0]),
-                as_tuple_basis(converted.basis[0]).dual_basis(),
+                _basis.as_tuple(converted.basis.children[0]),
+                _basis.as_tuple(converted.basis.children[0]).dual_basis(),
             )
         )
-    )
+    ).assert_ok()
     data = (
         converted_second.raw_data.reshape(
-            *converted_second.basis[0].shape, *converted_second.basis[1].shape
+            *converted_second.basis.children[0].shape,
+            *converted_second.basis.children[1].shape,
         )
         .swapaxes(0, 1)
         .reshape(converted_second.basis.shape)
@@ -71,14 +75,16 @@ def get_periodic_noise_operators_eigenvalue[M: BasisMetadata](
     data = np.conj(np.transpose(res.eigenvectors)).reshape(-1)
     eigenvalue = FundamentalBasis(EigenvalueMetadata(res.eigenvalues))
 
-    basis = TupleBasis((eigenvalue, converted_second.basis[0]))
-    return OperatorList(basis, data)
+    basis = TupleBasis(
+        (eigenvalue, converted_second.basis.children[0].upcast())
+    ).upcast()
+    return OperatorList.build(basis, data).assert_ok()
 
 
 def get_periodic_noise_operators_diagonal_eigenvalue[M: BasisMetadata](
     kernel: DiagonalKernelWithMetadata[M, Ctype[Never], np.dtype[np.complexfloating]],
 ) -> OperatorList[
-    OperatorListBasis[EigenvalueMetadata, OperatorMetadata[M]],
+    OperatorListBasis[EigenvalueMetadata, SuperOperatorMetadata[OperatorMetadata[M]]],
     np.dtype[np.complexfloating],
 ]:
     r"""
@@ -92,7 +98,9 @@ def get_periodic_noise_operators_diagonal_eigenvalue[M: BasisMetadata](
     as it is not currently possible to represent a sparse StackedBasis (unless it can
     be represented as a StackedBasis of individual sparse Basis)
     """
-    converted = kernel.with_outer_basis(as_tuple_basis(kernel.basis.outer_recast))
+    converted = with_outer_basis(
+        kernel, _basis.as_tuple(kernel.basis.inner.outer_recast).upcast()
+    ).assert_ok()
 
     data = kernel.raw_data.reshape(converted.basis.outer_recast.shape)  # type: ignore we need to improve the typing of RecastBasis
     # Find the n^2 operators which are independent
@@ -123,5 +131,5 @@ def get_periodic_noise_operators_diagonal_eigenvalue[M: BasisMetadata](
     data = np.conj(np.transpose(res.eigenvectors))
     eigenvalue = FundamentalBasis(EigenvalueMetadata(res.eigenvalues))
 
-    basis = TupleBasis((eigenvalue, converted.basis.outer_recast))
-    return OperatorList(basis, data)
+    basis = TupleBasis((eigenvalue, converted.basis.inner.outer_recast)).upcast()
+    return OperatorList.build(basis, data).assert_ok()
