@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 import numpy as np
-from slate_core import StackedMetadata, basis, tuple_basis
+from slate_core import basis, tuple_basis
 from slate_core.basis import CoordinateBasis, FundamentalBasis
 from slate_core.metadata import (
     AxisDirections,
@@ -23,7 +23,7 @@ from slate_quantum.operator import (
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from slate_quantum._util.legacy import LegacyTupleBasis2D
+    from slate_quantum._util.legacy import LegacyTupleBasis2D, StackedMetadata
 
 
 def periodic_caldeira_leggett_axis_operators[M: SpacedLengthMetadata](

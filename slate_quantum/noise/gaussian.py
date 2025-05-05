@@ -33,6 +33,7 @@ if TYPE_CHECKING:
 
     from slate_core.basis import Basis, DiagonalBasis
 
+    from slate_quantum._util.legacy import StackedMetadata
     from slate_quantum.metadata import EigenvalueMetadata
     from slate_quantum.noise._kernel import IsotropicNoiseKernel
     from slate_quantum.operator._operator import OperatorList

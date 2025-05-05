@@ -20,10 +20,10 @@ from slate_quantum.operator._operator import Operator
 if TYPE_CHECKING:
     from slate_core.metadata import (
         SpacedLengthMetadata,
-        StackedMetadata,
     )
     from slate_core.metadata.volume import AxisDirections
 
+    from slate_quantum._util.legacy import StackedMetadata
     from slate_quantum.operator._diagonal import Potential
 
 

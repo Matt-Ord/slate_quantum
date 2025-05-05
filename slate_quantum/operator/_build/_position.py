@@ -21,6 +21,7 @@ from slate_core.metadata import (
 )
 from slate_core.metadata.util import fundamental_size
 
+from slate_quantum._util.legacy import StackedMetadata
 from slate_quantum.operator._diagonal import (
     DiagonalOperator,
     PositionOperator,
@@ -35,7 +36,6 @@ if TYPE_CHECKING:
     from slate_core.metadata import (
         BasisMetadata,
         SimpleMetadata,
-        StackedMetadata,
     )
     from slate_core.metadata.length import LengthMetadata
 

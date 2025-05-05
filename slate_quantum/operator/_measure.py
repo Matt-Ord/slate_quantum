@@ -15,9 +15,7 @@ from slate_quantum.operator._operator import expectation, expectation_of_each
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from slate_core import StackedMetadata
-
-    from slate_quantum._util.legacy import LegacyArray
+    from slate_quantum._util.legacy import LegacyArray, StackedMetadata
     from slate_quantum.state._state import State, StateList
 
 

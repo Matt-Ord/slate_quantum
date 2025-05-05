@@ -19,7 +19,6 @@ from slate_core.metadata import (
     BasisMetadata,
     Metadata2D,
     SimpleMetadata,
-    StackedMetadata,
 )
 from slate_core.util import pad_ft_points
 

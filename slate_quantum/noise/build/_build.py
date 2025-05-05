@@ -30,10 +30,10 @@ if TYPE_CHECKING:
 
     from slate_core.metadata import (
         BasisMetadata,
-        StackedMetadata,
     )
     from slate_core.metadata.length import LengthMetadata, SpacedLengthMetadata
 
+    from slate_quantum._util.legacy import StackedMetadata
     from slate_quantum.noise._kernel import AxisKernel
     from slate_quantum.operator import (
         OperatorList,

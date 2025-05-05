@@ -15,7 +15,6 @@ from slate_core.metadata import (
     AxisDirections,
     SpacedLengthMetadata,
     SpacedVolumeMetadata,
-    StackedMetadata,
 )
 
 from slate_quantum._util import outer_product
@@ -24,6 +23,8 @@ from slate_quantum.operator._diagonal import Potential
 
 if TYPE_CHECKING:
     from collections.abc import Callable
+
+    from slate_quantum._util.legacy import StackedMetadata
 
 
 def repeat_potential(
