@@ -51,13 +51,14 @@ from slate_quantum.operator._operator import (
     operator_basis,
 )
 from slate_quantum.operator._super_operator import (
-    SuperOperator,
+    LegacySuperOperator,
     SuperOperatorMetadata,
 )
 
 __all__ = [
     "LegacyOperator",
     "LegacyOperatorList",
+    "LegacySuperOperator",
     "MomentumOperator",
     "MomentumOperatorBasis",
     "Operator",
@@ -68,7 +69,6 @@ __all__ = [
     "Potential",
     "RecastBasis",
     "RecastDiagonalOperatorBasis",
-    "SuperOperator",
     "SuperOperatorMetadata",
     "apply",
     "apply_to_each",

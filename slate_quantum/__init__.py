@@ -6,9 +6,9 @@ from slate_quantum import dynamics, metadata, noise, operator, state
 from slate_quantum.operator import (
     LegacyOperator,
     LegacyOperatorList,
+    LegacySuperOperator,
     MomentumOperator,
     PositionOperator,
-    SuperOperator,
 )
 from slate_quantum.state import LegacyState, LegacyStateList
 
@@ -17,9 +17,9 @@ __all__ = [
     "LegacyOperatorList",
     "LegacyState",
     "LegacyStateList",
+    "LegacySuperOperator",
     "MomentumOperator",
     "PositionOperator",
-    "SuperOperator",
     "dynamics",
     "metadata",
     "noise",
