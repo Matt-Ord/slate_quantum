@@ -22,9 +22,9 @@ from slate_quantum.noise.diagonalize._taylor import (
 )
 
 if TYPE_CHECKING:
-    from slate_core import StackedMetadata
     from slate_core.basis import Basis, FundamentalBasis
 
+    from slate_quantum._util.legacy import StackedMetadata
     from slate_quantum.metadata import EigenvalueMetadata
     from slate_quantum.noise._kernel import IsotropicNoiseKernel
     from slate_quantum.operator._operator import OperatorList

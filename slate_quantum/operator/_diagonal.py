@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any, cast
 
 import numpy as np
-from slate_core import Basis, BasisMetadata, StackedMetadata, TupleBasis
+from slate_core import Basis, BasisMetadata, TupleBasis
 from slate_core import basis as _basis
 from slate_core.basis import (
     DiagonalBasis,
@@ -13,6 +13,7 @@ from slate_core.basis import (
 )
 from slate_core.metadata import AxisDirections, Metadata2D
 
+from slate_quantum._util.legacy import StackedMetadata
 from slate_quantum.operator._operator import Operator
 
 type RecastDiagonalOperatorBasis[

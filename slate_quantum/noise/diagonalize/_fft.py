@@ -17,9 +17,9 @@ from slate_quantum.operator import OperatorList, RecastDiagonalOperatorBasis
 
 if TYPE_CHECKING:
     from slate_core import SimpleMetadata
-    from slate_core.metadata import BasisMetadata, StackedMetadata
+    from slate_core.metadata import BasisMetadata
 
-    from slate_quantum._util.legacy import LegacyTupleBasis2D
+    from slate_quantum._util.legacy import LegacyTupleBasis2D, StackedMetadata
     from slate_quantum.noise._kernel import IsotropicNoiseKernel
 
 

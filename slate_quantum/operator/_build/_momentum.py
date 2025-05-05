@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any
 
 import numpy as np
 from scipy.constants import hbar  # type: ignore stubs
-from slate_core import BasisMetadata, StackedMetadata, basis
+from slate_core import BasisMetadata, basis
 from slate_core import metadata as _metadata
 from slate_core.metadata import (
     AxisDirections,
@@ -19,6 +19,8 @@ from slate_quantum.operator._operator import Operator, OperatorList
 
 if TYPE_CHECKING:
     from collections.abc import Callable
+
+    from slate_quantum._util.legacy import StackedMetadata
 
 
 def k[M: SpacedLengthMetadata, E: AxisDirections](
