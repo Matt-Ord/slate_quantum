@@ -84,7 +84,7 @@ def get_periodic_noise_operators_eigenvalue[M: BasisMetadata](
 def get_periodic_noise_operators_diagonal_eigenvalue[M: BasisMetadata](
     kernel: DiagonalKernelWithMetadata[M, Ctype[Never], np.dtype[np.complexfloating]],
 ) -> OperatorList[
-    OperatorListBasis[EigenvalueMetadata, SuperOperatorMetadata[OperatorMetadata[M]]],
+    OperatorListBasis[EigenvalueMetadata, SuperOperatorMetadata[M]],
     np.dtype[np.complexfloating],
 ]:
     r"""
@@ -102,7 +102,7 @@ def get_periodic_noise_operators_diagonal_eigenvalue[M: BasisMetadata](
         kernel, _basis.as_tuple(kernel.basis.inner.outer_recast).upcast()
     ).assert_ok()
 
-    data = kernel.raw_data.reshape(converted.basis.outer_recast.shape)  # type: ignore we need to improve the typing of RecastBasis
+    data = kernel.raw_data.reshape(converted.basis.inner.outer_recast.shape)  # type: ignore we need to improve the typing of RecastBasis
     # Find the n^2 operators which are independent
 
     # This should be true if our operators are hermitian - a requirement

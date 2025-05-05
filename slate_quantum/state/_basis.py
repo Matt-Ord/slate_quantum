@@ -110,8 +110,7 @@ class EigenstateBasis[
         np.dtype[np.complexfloating],
     ]:
         states = super().eigenvectors()
-        # TODO: stricter types in parent
-        return StateList.build(states.basis, states._data.astype(np.complexfloating))
+        return StateList.build(states.basis, states.data.astype(np.complexfloating))  # type: ignore[return-value]
 
 
 type EigenstateBasisWithInner[Inner: Basis] = EigenstateBasis[

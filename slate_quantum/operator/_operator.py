@@ -49,10 +49,10 @@ type OperatorBasis[
 ] = Basis[OperatorMetadata[M], CT]
 
 
-def operator_basis[M: BasisMetadata, CT: Ctype[np.generic]](
-    basis: Basis[M, CT],
-) -> TupleBasisLike2D[tuple[M, M], None, CT]:
-    return TupleBasis((basis, basis.dual_basis())).resolve_ctype().upcast()
+def operator_basis[B: Basis](
+    basis: B,
+) -> TupleBasis[tuple[B, B], None]:
+    return TupleBasis((basis, basis.dual_basis()))
 
 
 class OperatorBuilder[B: OperatorBasis, DT: np.dtype[np.generic]](
@@ -253,11 +253,14 @@ def apply_to_each[M0: BasisMetadata, M: BasisMetadata](
 type OperatorListMetadata[
     M0: BasisMetadata = BasisMetadata,
     M1: OperatorMetadata = OperatorMetadata,
-] = TupleMetadata[tuple[M0, M1], Any]
+] = TupleMetadata[tuple[M0, M1], None]
 type OperatorListBasis[
     M0: BasisMetadata = BasisMetadata,
     M1: OperatorMetadata = OperatorMetadata,
 ] = Basis[OperatorListMetadata[M0, M1]]
+
+
+type AsOperatorListBasis[B: Basis] = AsUpcast[B, OperatorListMetadata]
 
 
 class OperatorListBuilder[
@@ -350,12 +353,43 @@ class OperatorList[
         out_basis = AsUpcast(TupleBasis((lhs_basis, basis)), self.basis.metadata())
         return self.with_basis(out_basis)
 
-    def with_list_basis[M: OperatorMetadata, M1: BasisMetadata, B1: Basis](  # B1: B
+    @overload
+    def with_list_basis[M: OperatorMetadata, M1: BasisMetadata, B1: Basis](
+        self: OperatorList[
+            AsUpcast[
+                TupleBasis[tuple[Basis[M1], B], None],
+                TupleMetadata[tuple[M1, M], None],
+            ],
+            DT,
+        ],
+        basis: B1,
+    ) -> OperatorListConversion[
+        Any,
+        AsUpcast[
+            TupleBasis[tuple[B1, B], None],
+            TupleMetadata[tuple[M1, M], None],
+        ],
+        DT,
+    ]: ...
+
+    @overload
+    def with_list_basis[M: OperatorMetadata, M1: BasisMetadata, B1: Basis](
         self: OperatorList[OperatorListBasis[M1, M], DT], basis: B1
     ) -> OperatorListConversion[
         Any,
         AsUpcast[
             TupleBasis[tuple[B1, Basis[M]], None],
+            TupleMetadata[tuple[M1, M], None],
+        ],
+        DT,
+    ]: ...
+
+    def with_list_basis[M: OperatorMetadata, M1: BasisMetadata, B1: Basis](
+        self: OperatorList[OperatorListBasis[M1, M], DT], basis: B1
+    ) -> OperatorListConversion[
+        Any,
+        AsUpcast[
+            TupleBasis[tuple[B1, Any], None],
             TupleMetadata[tuple[M1, M], None],
         ],
         DT,
@@ -414,12 +448,12 @@ class OperatorList[
         return out
 
     @staticmethod
-    def from_operators[M_: OperatorMetadata, DT_: np.dtype[np.generic]](
-        iter_: Iterable[Operator[Basis[M_], DT_]],
+    def from_operators[B_: OperatorBasis, DT_: np.dtype[np.generic]](
+        iter_: Iterable[Operator[B_, DT_]],
     ) -> OperatorList[
         AsUpcast[
-            TupleBasis[tuple[Basis[SimpleMetadata], Basis[M_]], None],
-            OperatorListMetadata[SimpleMetadata, M_],
+            TupleBasis[tuple[FundamentalBasis[SimpleMetadata], B_], None],
+            OperatorListMetadata[SimpleMetadata, OperatorMetadata],
         ],
         DT_,
     ]:
@@ -427,14 +461,11 @@ class OperatorList[
         assert all(x.basis == states[0].basis for x in states)
 
         list_basis = FundamentalBasis.from_size(len(states))
-        state_basis = cast(
-            "TupleBasis[tuple[FundamentalBasis, Basis[M_]], None, Ctype[np.generic]]",
-            TupleBasis((list_basis, states[0].basis)),
-        ).upcast()
+        state_basis = TupleBasis((list_basis, states[0].basis)).upcast()
         return OperatorList.build(
             state_basis,
             cast("np.ndarray[Any, DT_]", np.array([x.raw_data for x in states])),
-        ).ok()
+        ).assert_ok()
 
     @overload
     def __add__[M1: OperatorListMetadata, DT_: np.number](

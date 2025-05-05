@@ -3,8 +3,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 import numpy as np
-from slate_core import TupleBasis, TupleMetadata, basis
-from slate_core.basis import CoordinateBasis
+from slate_core import FundamentalBasis, TupleBasis, TupleMetadata, basis
+from slate_core.basis import AsUpcast, CoordinateBasis
 from slate_core.metadata import (
     AxisDirections,
     SpacedLengthMetadata,
@@ -22,31 +22,68 @@ from slate_quantum.operator import (
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from slate_quantum.operator._operator import OperatorListBasis, OperatorMetadata
+    from slate_quantum.operator._diagonal import PositionOperatorBasis
+    from slate_quantum.operator._operator import (
+        OperatorBasis,
+        OperatorMetadata,
+    )
+
+type PositionNoiseOperatorList[M: SpacedLengthMetadata, E, DT: np.dtype[np.generic]] = (
+    OperatorList[
+        AsUpcast[
+            TupleBasis[
+                tuple[
+                    FundamentalBasis[EigenvalueMetadata],
+                    PositionOperatorBasis[M, E],
+                ],
+                None,
+            ],
+            TupleMetadata[
+                tuple[
+                    EigenvalueMetadata,
+                    OperatorMetadata[TupleMetadata[tuple[M, ...], E]],
+                ],
+                None,
+            ],
+        ],
+        DT,
+    ]
+)
 
 
 def periodic_caldeira_leggett_axis_operators[M: SpacedLengthMetadata](
     metadata: M,
 ) -> OperatorList[
-    OperatorListBasis[EigenvalueMetadata, OperatorMetadata[M]],
+    AsUpcast[
+        TupleBasis[
+            tuple[FundamentalBasis[EigenvalueMetadata], OperatorBasis[M]],
+            None,
+        ],
+        TupleMetadata[
+            tuple[EigenvalueMetadata, OperatorMetadata[M]],
+            None,
+        ],
+    ],
     np.dtype[np.complexfloating],
 ]:
     k = fundamental_dk(metadata)
     n = metadata.fundamental_size
     eigenvalue = n / (4 * k**2)
     operators = build.all_axis_scattering_operators(metadata)
-    operators = operators.with_basis(operators.basis.inner)
 
     list_basis = CoordinateBasis(
-        [-1, 1], basis.from_metadata(operators.basis.metadata()[0])
+        [-1, 1], basis.from_metadata(operators.basis.metadata().children[0])
     )
-    converted = operators.with_list_basis(list_basis)
-    return OperatorList(
+    converted = operators.with_list_basis(list_basis).assert_ok()
+    return OperatorList.build(
         TupleBasis(
-            (eigenvalue_basis(np.array([eigenvalue, eigenvalue])), converted.basis[1])
-        ),
+            (
+                eigenvalue_basis(np.array([eigenvalue, eigenvalue])),
+                converted.basis.inner.children[1],
+            )
+        ).upcast(),
         converted.raw_data,
-    )
+    ).assert_ok()
 
 
 def periodic_caldeira_leggett_operators[
@@ -54,29 +91,26 @@ def periodic_caldeira_leggett_operators[
     E: AxisDirections,
 ](
     metadata: TupleMetadata[tuple[M, ...], E],
-) -> OperatorList[
-    OperatorListBasis[
-        EigenvalueMetadata, OperatorMetadata[TupleMetadata[tuple[M, ...], E]]
-    ],
-    np.dtype[np.complexfloating],
-]:
+) -> PositionNoiseOperatorList[M, E, np.dtype[np.complexfloating]]:
     assert len(metadata.fundamental_shape) == 1
     k = fundamental_stacked_dk(metadata)[0][0]
     n = size_from_nested_shape(metadata.fundamental_shape)
     eigenvalue = n / (4 * k**2)
     operators = build.all_scattering_operators(metadata)
-    operators = operators.with_basis(operators.basis.inner)
 
     list_basis = CoordinateBasis(
-        [-1, 1], basis.from_metadata(operators.basis.metadata()[0])
+        [-1, 1], basis.from_metadata(operators.basis.metadata().children[0])
     )
-    converted = operators.with_list_basis(list_basis)
-    return OperatorList(
+    converted = operators.with_list_basis(list_basis).assert_ok()
+    return OperatorList.build(
         TupleBasis(
-            (eigenvalue_basis(np.array([eigenvalue, eigenvalue])), converted.basis[1])
-        ),
+            (
+                eigenvalue_basis(np.array([eigenvalue, eigenvalue])),
+                converted.basis.inner.children[1],
+            )
+        ).upcast(),
         converted.raw_data,
-    )
+    ).assert_ok()
 
 
 def real_periodic_caldeira_leggett_operators[
@@ -84,12 +118,7 @@ def real_periodic_caldeira_leggett_operators[
     E: AxisDirections,
 ](
     metadata: TupleMetadata[tuple[M, ...], E],
-) -> OperatorList[
-    OperatorListBasis[
-        EigenvalueMetadata, OperatorMetadata[TupleMetadata[tuple[M, ...], E]]
-    ],
-    np.dtype[np.complexfloating],
-]:
+) -> PositionNoiseOperatorList[M, E, np.dtype[np.complexfloating]]:
     assert len(metadata.fundamental_shape) == 1
     k = fundamental_stacked_dk(metadata)[0][0]
     n = size_from_nested_shape(metadata.fundamental_shape)
@@ -110,12 +139,15 @@ def real_periodic_caldeira_leggett_operators[
         ]
     )
 
-    return OperatorList(
+    return OperatorList.build(
         TupleBasis(
-            (eigenvalue_basis(np.array([eigenvalue, eigenvalue])), operators.basis[1])
-        ),
+            (
+                eigenvalue_basis(np.array([eigenvalue, eigenvalue])),
+                operators.basis.inner.children[1],
+            )
+        ).upcast(),
         operators.raw_data,
-    )
+    ).assert_ok()
 
 
 def caldeira_leggett_correlation_fn(
@@ -143,16 +175,13 @@ def caldeira_leggett_correlation_fn(
 
 def caldeira_leggett_operators[M: SpacedLengthMetadata, E: AxisDirections](
     metadata: TupleMetadata[tuple[M, ...], E],
-) -> OperatorList[
-    OperatorListBasis[
-        EigenvalueMetadata, OperatorMetadata[TupleMetadata[tuple[M, ...], E]]
-    ],
-    np.dtype[np.complexfloating],
-]:
+) -> PositionNoiseOperatorList[M, E, np.dtype[np.complexfloating]]:
     assert len(metadata.fundamental_shape) == 1
     operators = OperatorList.from_operators([build.x(metadata, axis=0)])
 
     return OperatorList.build(
-        TupleBasis((eigenvalue_basis(np.array([1])), operators.basis[1])),
+        TupleBasis(
+            (eigenvalue_basis(np.array([1])), operators.basis.inner.children[1])
+        ).upcast(),
         operators.raw_data,
     ).assert_ok()

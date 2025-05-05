@@ -1,22 +1,26 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Never
+from typing import TYPE_CHECKING, Any, Never, cast
 
 import numpy as np
 from scipy.constants import Boltzmann, hbar  # type: ignore stubs
-from slate_core import Ctype, TupleMetadata, basis, linalg
-from slate_core.basis import CoordinateBasis
+from slate_core import Basis, Ctype, TupleBasis, TupleMetadata, basis, linalg
+from slate_core.basis import CoordinateBasis, DiagonalBasis
 from slate_core.metadata import AxisDirections
+from slate_core.util import slice_ignoring_axes
 
 from slate_quantum import operator
 from slate_quantum.metadata import EigenvalueMetadata
 from slate_quantum.noise._kernel import (
+    DiagonalKernelBasisWithMetadata,
     DiagonalKernelWithMetadata,
-    DiagonalNoiseKernel,
+    IsotropicKernelBasisWithMetadata,
     IsotropicKernelWithMetadata,
-    IsotropicNoiseKernel,
     NoiseKernel,
     NoiseKernelWithMetadata,
+    diagonal_kernel_basis,
+    isotropic_kernel_basis,
+    with_isotropic_basis,
 )
 from slate_quantum.noise.diagonalize import (
     get_periodic_noise_operators_diagonal_eigenvalue,
@@ -27,6 +31,7 @@ from slate_quantum.operator import (
     SuperOperatorMetadata,
     get_commutator_operator_list,
 )
+from slate_quantum.util._prod import outer_product
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterable
@@ -42,9 +47,60 @@ if TYPE_CHECKING:
     )
     from slate_quantum.operator._operator import (
         OperatorBasis,
+        OperatorBuilder,
         OperatorListBasis,
         OperatorMetadata,
+        SuperOperatorBasis,
     )
+
+
+def diagonal_kernel[M: BasisMetadata, CT: Ctype[Never], DT: np.dtype[np.generic]](
+    outer_basis: OperatorBasis[OperatorMetadata[M], CT],
+    data: np.ndarray[Any, DT],
+) -> OperatorBuilder[DiagonalKernelBasisWithMetadata[OperatorMetadata[M], CT], DT]:
+    kernel_basis = diagonal_kernel_basis(outer_basis)
+    return Operator.build(kernel_basis, data)
+
+
+def diagonal_kernel_from_operators[M_: BasisMetadata, DT_: np.dtype[np.generic]](
+    operators: OperatorList[
+        OperatorListBasis[EigenvalueMetadata, OperatorMetadata[OperatorMetadata[M_]]],
+        DT_,
+    ],
+) -> DiagonalKernelWithMetadata[M_, Ctype[Never], DT_]:
+    """Build a diagonal kernel from operators."""
+    as_tuple = basis.as_tuple(operators.basis)
+    final_basis = TupleBasis(
+        (
+            basis.as_index(as_tuple.children[0]),
+            DiagonalBasis(basis.as_tuple(as_tuple.children[1])).upcast(),
+        )
+    )
+    converted = operators.with_basis(final_basis.upcast()).assert_ok()
+
+    operators_data = converted.raw_data.reshape(
+        converted.basis.inner.children[0].size, -1
+    )
+    data = cast(
+        "Any",
+        np.einsum(  # type:ignore  unknown
+            "a,ai,aj->ij",
+            converted.basis.inner.children[0]
+            .metadata()
+            .values[converted.basis.inner.children[0].points],
+            np.conj(operators_data),
+            operators_data,  # type:ignore DT not numeric
+        ),
+    )
+    return diagonal_kernel(converted.basis.inner.children[1], data).assert_ok()
+
+
+def isotropic_kernel[M: BasisMetadata, CT: Ctype[Never], DT: np.dtype[np.generic]](
+    outer_basis: Basis[M, CT],
+    data: np.ndarray[Any, DT],
+) -> OperatorBuilder[IsotropicKernelBasisWithMetadata[M, CT], DT]:
+    kernel_basis = isotropic_kernel_basis(outer_basis)
+    return Operator.build(kernel_basis, data)
 
 
 def isotropic_kernel_from_function[M: LengthMetadata](
@@ -73,9 +129,11 @@ def isotropic_kernel_from_function[M: LengthMetadata](
     ]
     """
     displacements = operator.build.x_displacement_operator(metadata)
-    correlation = fn(displacements.raw_data.reshape(displacements.basis.shape)[0])
+    correlation = fn(displacements.raw_data.reshape(displacements.basis.inner.shape)[0])
 
-    return IsotropicNoiseKernel(displacements.basis[0], correlation)
+    return isotropic_kernel(
+        displacements.basis.inner.children[0], correlation
+    ).assert_ok()
 
 
 def isotropic_kernel_from_function_stacked[
@@ -109,9 +167,50 @@ def isotropic_kernel_from_function_stacked[
     ]
     """
     displacements = operator.build.total_x_displacement_operator(metadata)
-    correlation = fn(displacements.raw_data.reshape(displacements.basis.shape)[0])
+    correlation = fn(displacements.raw_data.reshape(displacements.basis.inner.shape)[0])
 
-    return IsotropicNoiseKernel(displacements.basis[0], correlation)
+    return isotropic_kernel(
+        displacements.basis.inner.children[0], correlation
+    ).assert_ok()
+
+
+def isotropic_kernel_from_axis[
+    M: BasisMetadata,
+    CT: Ctype[Never],
+    DT: np.dtype[np.complexfloating],
+](kernels: AxisKernel[M, CT, DT]) -> IsotropicKernelWithMetadata[M, CT, DT]:
+    """Convert an axis kernel to an isotropic kernel."""
+    full_basis = tuple(kernel_i.basis for kernel_i in kernels)
+    full_data = tuple(kernel_i.raw_data.ravel() for kernel_i in kernels)
+    # TODO: compare to old..
+    return isotropic_kernel(
+        TupleBasis(full_basis, None), outer_product(*full_data).ravel()
+    ).assert_ok()
+
+
+def axis_kernel_from_isotropic[
+    M: BasisMetadata,
+    CT: Ctype[Never],
+    DT: np.dtype[np.complexfloating],
+](
+    kernel: IsotropicKernelWithMetadata[M, CT, DT],
+) -> AxisKernel[M, CT, DT]:
+    """Convert an isotropic kernel to an axis kernel."""
+    outer_as_tuple = basis.as_tuple(kernel.basis.inner.outer_recast.outer_recast)
+    converted = with_isotropic_basis(kernel, outer_as_tuple)
+    n_axis = len(outer_as_tuple.shape)
+
+    data_stacked = converted.raw_data.reshape(outer_as_tuple.shape)
+    slice_without_idx = tuple(0 for _ in range(n_axis - 1))
+
+    prefactor = converted.raw_data[0] ** ((1 - n_axis) / n_axis)
+    return tuple(
+        isotropic_kernel(
+            axis_basis,
+            prefactor * data_stacked[slice_ignoring_axes(slice_without_idx, (i,))],
+        ).assert_ok()
+        for i, axis_basis in enumerate(outer_as_tuple.children)
+    )
 
 
 def axis_kernel_from_function_stacked[M: SpacedLengthMetadata](
@@ -142,6 +241,39 @@ def axis_kernel_from_function_stacked[M: SpacedLengthMetadata](
     return tuple(
         isotropic_kernel_from_function(child, fn) for child in metadata.children
     )
+
+
+def kernel_from_operators[M: BasisMetadata, DT: np.dtype[np.generic]](
+    operators: OperatorList[
+        OperatorListBasis[EigenvalueMetadata, OperatorMetadata[M]], DT
+    ],
+) -> NoiseKernel[SuperOperatorBasis[M], DT]:
+    as_tuple = basis.as_tuple(operators.basis)
+    final_basis = TupleBasis(
+        (
+            basis.as_index(as_tuple.children[0]),
+            basis.as_tuple(as_tuple.children[1]).upcast(),
+        )
+    )
+    converted = operators.with_basis(final_basis.upcast()).assert_ok()
+
+    operators_data = converted.raw_data.reshape(
+        converted.basis.inner.children[0].size,
+        *converted.basis.inner.children[1].inner.shape,
+    )
+
+    data = np.einsum(  # type:ignore  unknown
+        "a,aji,akl->ij kl",
+        converted.basis.inner.children[0].metadata().values[converted.basis.points],
+        np.conj(operators_data),
+        operators_data.astype(np.complex128),
+    )
+    return Operator.build(
+        TupleBasis(
+            (converted.basis.inner.children[1], converted.basis.inner.children[1])
+        ).upcast(),
+        data,
+    ).ok()
 
 
 def gaussian_correlation_fn(
@@ -290,7 +422,7 @@ def truncate_noise_kernel[M: SuperOperatorMetadata](
     operators = get_periodic_noise_operators_eigenvalue(kernel)
 
     truncated = truncate_noise_operator_list(operators, truncation)
-    return NoiseKernel.from_operators(truncated)
+    return kernel_from_operators(truncated)
 
 
 def truncate_diagonal_noise_kernel[
@@ -314,4 +446,5 @@ def truncate_diagonal_noise_kernel[
     operators = get_periodic_noise_operators_diagonal_eigenvalue(kernel)
 
     truncated = truncate_noise_operator_list(operators, truncation)
-    return DiagonalNoiseKernel.from_operators(truncated)
+    diagonal_kernel_from_operators(truncated)
+    return diagonal_kernel_from_operators(truncated)

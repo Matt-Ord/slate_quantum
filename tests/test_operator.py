@@ -392,8 +392,9 @@ def test_build_cl_operators() -> None:
     scaled_periodic = operators[1, :] * float(
         np.sqrt(operators.basis.metadata().children[0].values[0])
     )
-    scaled_periodic = scaled_periodic.with_basis(operators_non_periodic.basis)
-
+    scaled_periodic = scaled_periodic.with_basis(
+        operators_non_periodic.basis
+    ).assert_ok()
     np.testing.assert_allclose(
         array.as_outer_basis(scaled_periodic)[0:2].as_array(),
         array.as_outer_basis(operators_non_periodic)[0:2].as_array(),

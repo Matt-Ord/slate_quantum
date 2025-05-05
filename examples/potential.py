@@ -11,33 +11,35 @@ if __name__ == "__main__":
     metadata = spaced_volume_metadata_from_stacked_delta_x((np.array([14]),), (100,))
 
     potential = operator.build.cos_potential(metadata, 10)
+    as_diagonal = array.as_outer_basis(array.as_inner_basis(potential))
     # A single cos potential in 1D, height 10 with 100 points
     # Here .diagonal() is used to get the potential as an array
     # of points along the diagonal
-    fig, ax, line = plot.array_against_axes_1d(
-        array.as_outer_basis(array.as_inner_basis(potential))
-    )
+    fig, ax, line = plot.array_against_axes_1d(as_diagonal)
     ax.set_title("Cos Potential")
     ax.set_ylabel("V(x)")
     fig.show()
 
     potential = operator.repeat_potential(potential, (3,))
+    as_diagonal = array.as_outer_basis(array.as_inner_basis(potential))
     # A repeated cos potential, with 3 repeats
-    fig, ax, line = plot.array_against_axes_1d(array.as_outer_basis(potential))
+    fig, ax, line = plot.array_against_axes_1d(as_diagonal)
     ax.set_title("Repeated Cos Potential")
     ax.set_ylabel("V(x)")
     fig.show()
 
     # A harmonic potential
     potential = operator.build.harmonic_potential(metadata, 10)
-    fig, ax, line = plot.array_against_axes_1d(array.as_outer_basis(potential))
+    as_diagonal = array.as_outer_basis(array.as_inner_basis(potential))
+    fig, ax, line = plot.array_against_axes_1d(as_diagonal)
     ax.set_title("Harmonic Potential")
     ax.set_ylabel("V(x)")
     fig.show()
 
     # A square potential
     potential = operator.build.square_potential(metadata, 10)
-    fig, ax, line = plot.array_against_axes_1d(array.as_outer_basis(potential))
+    as_diagonal = array.as_outer_basis(array.as_inner_basis(potential))
+    fig, ax, line = plot.array_against_axes_1d(as_diagonal)
     ax.set_title("Square Potential")
     ax.set_ylabel("V(x)")
     fig.show()
@@ -47,18 +49,20 @@ if __name__ == "__main__":
         (np.array([20, 0]), np.array([0, 10])), (100, 100)
     )
     potential = operator.build.cos_potential(metadata, 10)
+    as_diagonal = array.as_outer_basis(array.as_inner_basis(potential))
     # A single cos potential in 2D, height 10
-    fig, ax, line = plot.array_against_axes_1d(array.as_outer_basis(potential))
+    fig, ax, line = plot.array_against_axes_1d(as_diagonal)
     ax.set_title("2D Cos Potential at x1=0")
     ax.set_ylabel("V(x)")
     fig.show()
-    fig, ax, line = plot.array_against_axes_2d_x(array.as_outer_basis(potential))
+    fig, ax, line = plot.array_against_axes_2d_x(as_diagonal)
     ax.set_title("Cos Potential in 2D")
     fig.show()
 
     potential = operator.repeat_potential(potential, (3, 4))
+    as_diagonal = array.as_outer_basis(array.as_inner_basis(potential))
     # A repeated cos potential, with (3, 4) repeats
-    fig, ax, line = plot.array_against_axes_2d_x(array.as_outer_basis(potential))
+    fig, ax, line = plot.array_against_axes_2d_x(as_diagonal)
     ax.set_title("Repeated 2D Cos Potential")
     fig.show()
 
@@ -66,7 +70,8 @@ if __name__ == "__main__":
     potential = operator.build.square_potential(
         metadata, 10, n_terms=(30, 30), lanczos_factor=1
     )
-    fig, ax, line = plot.array_against_axes_2d_x(array.as_outer_basis(potential))
+    as_diagonal = array.as_outer_basis(array.as_inner_basis(potential))
+    fig, ax, line = plot.array_against_axes_2d_x(as_diagonal)
     ax.set_title("2D Square Potential")
     ax.set_ylabel("V(x)")
     fig.show()
@@ -81,21 +86,22 @@ if __name__ == "__main__":
         (100, 100),
     )
     potential = operator.build.cos_potential(metadata, 10)
+    as_diagonal = array.as_outer_basis(array.as_inner_basis(potential))
     # A single cos potential in 2D, height 10
-    fig, ax, line = plot.array_against_axes_1d(array.as_outer_basis(potential))
+    fig, ax, line = plot.array_against_axes_1d(as_diagonal)
     ax.set_title("2D Cos Potential with FCC symmetry at x1=0")
     ax.set_ylabel("V(x)")
     fig.show()
-    fig, ax, line = plot.array_against_axes_2d_x(array.as_outer_basis(potential))
+    fig, ax, line = plot.array_against_axes_2d_x(as_diagonal)
     ax.set_title("Cos Potential in 2D with FCC symmetry")
     fig.show()
 
     potential = operator.build.fcc_potential(metadata, 1)
-    fig, ax, line = plot.array_against_axes_1d(array.as_outer_basis(potential))
+    fig, ax, line = plot.array_against_axes_1d(as_diagonal)
     ax.set_title("FCC Potential at x1=0")
     ax.set_ylabel("V(x)")
     fig.show()
-    fig, ax, line = plot.array_against_axes_2d_x(array.as_outer_basis(potential))
+    fig, ax, line = plot.array_against_axes_2d_x(as_diagonal)
     ax.set_title("FCC Potential in 2D")
     fig.show()
 

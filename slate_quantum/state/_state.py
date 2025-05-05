@@ -412,20 +412,33 @@ def get_average_occupations[M1: BasisMetadata](
 def get_average_occupations[M1: BasisMetadata](
     states: StateList[TupleBasisLike[tuple[Any, M1]]],
 ) -> tuple[
-    Array[FundamentalBasis[BasisStateMetadata[Basis[M1]]], np.dtype[np.float64]],
-    Array[FundamentalBasis[BasisStateMetadata[Basis[M1]]], np.dtype[np.float64]],
+    Array[FundamentalBasis[BasisStateMetadata[Basis[M1]]], np.dtype[np.floating]],
+    Array[FundamentalBasis[BasisStateMetadata[Basis[M1]]], np.dtype[np.floating]],
 ]:
     occupations = get_all_occupations(states)
     # Dont include empty entries in average
     list_basis = _basis.as_state_list(_basis.as_index(occupations.basis.children[0]))
-    average_basis = TupleBasis((list_basis, occupations.basis.children[1]))
+    state_basis = occupations.basis.children[1]
+    average_basis = TupleBasis((list_basis, state_basis))
     # TODO: this is wrong - must convert first  # noqa: FIX002
     occupations = array.cast_basis(occupations, average_basis).assert_ok()
-    average = array.flatten(array.average(occupations, axis=0))
-    std = array.flatten(array.standard_deviation(occupations, axis=0))
+    average = array.flatten(
+        array.average(occupations, axis=0)
+        .with_basis(TupleBasis((state_basis,)))
+        .assert_ok()
+    )
+    std = array.flatten(
+        array.standard_deviation(occupations, axis=0)
+        .with_basis(TupleBasis((state_basis,)))
+        .assert_ok()
+    )
     std *= np.sqrt(1 / occupations.basis.shape[0])
 
     return average, std
 
 
-type EigenstateList[M: BasisMetadata] = StateList[EigenvalueMetadata, M]
+type EigenstateList[
+    M: BasisMetadata,
+    CT: Ctype[Never] = Ctype[Never],
+    DT: np.dtype[np.complexfloating] = np.dtype[np.complexfloating],
+] = StateList[TupleBasisLike[tuple[EigenvalueMetadata, M], CT], DT]

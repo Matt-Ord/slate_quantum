@@ -2,6 +2,7 @@ from __future__ import annotations  # noqa: D104
 
 from slate_quantum.noise.build._build import (
     axis_kernel_from_function_stacked,
+    axis_kernel_from_isotropic,
     gaussian_correlation_fn,
     hamiltonian_shift,
     isotropic_kernel_from_function,
@@ -22,6 +23,7 @@ from slate_quantum.noise.build._caldeira_leggett import (
 
 __all__ = [
     "axis_kernel_from_function_stacked",
+    "axis_kernel_from_isotropic",
     "caldeira_leggett_correlation_fn",
     "caldeira_leggett_operators",
     "gaussian_correlation_fn",

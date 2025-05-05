@@ -35,7 +35,6 @@ if TYPE_CHECKING:
 
     from slate_quantum.metadata import EigenvalueMetadata
     from slate_quantum.noise._kernel import (
-        DiagonalKernelWithMetadata,
         IsotropicKernelWithMetadata,
     )
     from slate_quantum.operator._operator import (
@@ -81,7 +80,7 @@ def get_gaussian_noise_kernel[
     metadata: TupleMetadata[tuple[M, ...], E],
     a: float,
     lambda_: float,
-) -> DiagonalKernelWithMetadata[
+) -> IsotropicKernelWithMetadata[
     TupleMetadata[tuple[M, ...], E], Ctype[Never], np.dtype[np.complexfloating]
 ]:
     """Get the noise kernel for a gaussian correllated surface."""
@@ -124,7 +123,7 @@ def get_effective_gaussian_noise_kernel[
     temperature: float,
     *,
     lambda_factor: float = 2 * np.sqrt(2),
-) -> DiagonalKernelWithMetadata[
+) -> IsotropicKernelWithMetadata[
     TupleMetadata[tuple[M, ...], E], Ctype[Never], np.dtype[np.complexfloating]
 ]:
     """
@@ -222,7 +221,11 @@ def get_gaussian_noise_operators_periodic[
     kernel = get_gaussian_isotropic_noise_kernel(metadata, a, lambda_)
 
     operators = get_periodic_noise_operators_isotropic_stacked_fft(kernel)
-    truncation = range(operators.basis[0].size) if truncation is None else truncation
+    truncation = (
+        range(operators.basis.inner.children[0].size)
+        if truncation is None
+        else truncation
+    )
     return truncate_noise_operator_list(operators, truncation=truncation)
 
 

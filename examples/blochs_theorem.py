@@ -23,9 +23,9 @@ if __name__ == "__main__":
 
     # The hamiltonian is block diagonal, when we use the BlochTransposedBasis
     diag_data = Array.from_array(
-        hamiltonian.with_basis(hamiltonian.basis.inner).raw_data.reshape(
-            hamiltonian.basis.inner.shape
-        )
+        hamiltonian.with_basis(hamiltonian.basis.inner.inner.upcast())
+        .assert_ok()
+        .raw_data.reshape(hamiltonian.basis.inner.inner.shape)
     )
     fig, ax, _ = plot.array_against_axes_2d(diag_data)
     fig.show()
@@ -33,7 +33,6 @@ if __name__ == "__main__":
     # Into-diag is aware the initial matrix is block diagonal - so
     # this 'just works' and is much faster than the naive diag.
     eigenstates = operator.get_eigenstates_hermitian(hamiltonian)
-
     fig, ax = get_figure()
     for state in list(eigenstates)[:3]:
         plot.array_against_axes_1d(state, ax=ax, measure="abs")

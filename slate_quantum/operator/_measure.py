@@ -263,7 +263,6 @@ def all_periodic_x[
     delta_x = metadata.volume.fundamental_stacked_delta_x(
         states.basis.metadata().children[1]
     )
-    np.array([]).astype(np.complex128)
     return (wrapped * (np.linalg.norm(delta_x[axis]).item() / (2 * np.pi))).as_type(
         np.float64
     )

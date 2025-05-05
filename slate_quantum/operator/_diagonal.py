@@ -3,7 +3,15 @@ from __future__ import annotations
 from typing import Any, Never
 
 import numpy as np
-from slate_core import Basis, BasisMetadata, Ctype, TupleBasis, TupleMetadata
+from slate_core import (
+    Basis,
+    BasisMetadata,
+    Ctype,
+    FundamentalBasis,
+    SimpleMetadata,
+    TupleBasis,
+    TupleMetadata,
+)
 from slate_core import basis as _basis
 from slate_core.basis import AsUpcast, DiagonalBasis, RecastBasis, TupleBasisLike
 from slate_core.metadata import (
@@ -13,6 +21,8 @@ from slate_core.metadata import (
 from slate_quantum.operator._operator import (
     Operator,
     OperatorConversion,
+    OperatorList,
+    OperatorListMetadata,
     OperatorMetadata,
 )
 
@@ -40,6 +50,23 @@ type DiagonalOperatorBasisWithMetadata[
     M: BasisMetadata,
     CT: Ctype[Never] = Ctype[Never],
 ] = DiagonalOperatorBasis[Basis[M], Basis[M], CT, OperatorMetadata[M]]
+
+type DiagonalOperatorListBasis[M0: SimpleMetadata, M: BasisMetadata] = _basis.AsUpcast[
+    TupleBasis[
+        tuple[
+            FundamentalBasis[M0],
+            DiagonalOperatorBasisWithMetadata[M],
+        ],
+        None,
+    ],
+    OperatorListMetadata[M0, OperatorMetadata[M]],
+]
+
+type DiagonalOperatorList[
+    M0: SimpleMetadata,
+    M: BasisMetadata,
+    DT: np.dtype[np.generic] = np.dtype[np.generic],
+] = OperatorList[DiagonalOperatorListBasis[M0, M], DT]
 
 
 def recast_diagonal_basis[

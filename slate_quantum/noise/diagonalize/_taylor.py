@@ -4,8 +4,8 @@ from typing import TYPE_CHECKING, Any, Never, cast
 
 import numpy as np
 from scipy.special import factorial  # type: ignore library type
-from slate_core import basis as _basis
 from slate_core.basis import (
+    AsUpcast,
     Basis,
     DiagonalBasis,
     FundamentalBasis,
@@ -13,11 +13,9 @@ from slate_core.basis import (
     Truncation,
     TupleBasis,
     from_metadata,
-    with_modified_child,
 )
 from slate_core.metadata import (
     BasisMetadata,
-    SimpleMetadata,
 )
 from slate_core.util import pad_ft_points
 
@@ -25,9 +23,9 @@ from slate_quantum import operator
 from slate_quantum.metadata import EigenvalueMetadata
 from slate_quantum.noise._kernel import (
     IsotropicKernelWithMetadata,
-    as_axis_kernel_from_isotropic,
     get_diagonal_noise_operators_from_axis,
 )
+from slate_quantum.noise.build._build import axis_kernel_from_isotropic
 from slate_quantum.operator import (
     OperatorList,
 )
@@ -35,7 +33,11 @@ from slate_quantum.operator import (
 if TYPE_CHECKING:
     from slate_core import Ctype, TupleMetadata
 
-    from slate_quantum.operator._operator import OperatorListBasis, OperatorMetadata
+    from slate_quantum.operator._operator import (
+        OperatorListBasis,
+        OperatorListMetadata,
+        OperatorMetadata,
+    )
 
 
 def _get_cos_coefficients_for_taylor_series(
@@ -92,13 +94,14 @@ def get_periodic_noise_operators_explicit_taylor_expansion[
     n_terms = (basis.size // 2) if n_terms is None else n_terms
 
     operators = operator.build.all_axis_periodic_operators(basis)
-    list_basis = with_modified_child(
-        _basis.as_tuple(operators.basis),
-        lambda b: TruncatedBasis(
-            Truncation(n_terms, 0, 0),
-            from_metadata(cast("SimpleMetadata", b.metadata())),
-        ).upcast(),
-        0,
+    list_basis = TupleBasis(
+        (
+            TruncatedBasis(
+                Truncation(n_terms, 0, 0),
+                from_metadata(operators.basis.metadata().children[0]),
+            ).upcast(),
+            operators.basis.inner.children[1],
+        )
     )
     converted = operators.with_basis(list_basis.upcast()).assert_ok()
 
@@ -111,15 +114,29 @@ def get_periodic_noise_operators_explicit_taylor_expansion[
     eigenvalues = EigenvalueMetadata(coefficients.astype(np.complex128))
 
     return OperatorList.build(
-        TupleBasis((FundamentalBasis(eigenvalues), converted.basis.children[1])),
+        TupleBasis(
+            (FundamentalBasis(eigenvalues), converted.basis.inner.children[1])
+        ).upcast(),
         converted.raw_data,
-    )
+    ).assert_ok()
 
 
 def _get_linear_operators_for_noise[M: BasisMetadata](
     metadata: M, *, n_terms: int | None = None
 ) -> OperatorList[
-    OperatorListBasis[EigenvalueMetadata, OperatorMetadata[M]],
+    AsUpcast[
+        TupleBasis[
+            tuple[
+                FundamentalBasis,
+                AsUpcast[
+                    DiagonalBasis[TupleBasis[tuple[Basis[M], Basis[M]], None]],
+                    OperatorMetadata[M],
+                ],
+            ],
+            None,
+        ],
+        OperatorListMetadata,
+    ],
     np.dtype[np.complexfloating],
 ]:
     size = np.prod(metadata.fundamental_shape).item()
@@ -130,7 +147,9 @@ def _get_linear_operators_for_noise[M: BasisMetadata](
     displacements = (
         2
         * np.pi
-        * nx_displacements.raw_data.reshape(nx_displacements.basis.shape)[size // 2]
+        * nx_displacements.raw_data.reshape(nx_displacements.basis.inner.shape)[
+            size // 2
+        ]
         / size
     )
     data = np.array([displacements**n for n in range(n_terms)], dtype=np.complex128)
@@ -139,7 +158,7 @@ def _get_linear_operators_for_noise[M: BasisMetadata](
         TupleBasis(
             (
                 FundamentalBasis.from_size(n_terms),
-                DiagonalBasis(nx_displacements.basis).upcast(),
+                DiagonalBasis(nx_displacements.basis.inner).upcast(),
             )
         ).upcast(),
         data,
@@ -162,10 +181,12 @@ def get_linear_noise_operators_explicit_taylor_expansion[M: BasisMetadata](
     operators = _get_linear_operators_for_noise(metadata, n_terms=n_terms)
     eigenvalues = EigenvalueMetadata(polynomial_coefficients.astype(np.complex128))
 
-    return OperatorList(
-        TupleBasis((FundamentalBasis(eigenvalues), operators.basis.children[1])),
+    return OperatorList.build(
+        TupleBasis(
+            (FundamentalBasis(eigenvalues), operators.basis.inner.children[1])
+        ).upcast(),
         operators.raw_data,
-    )
+    ).assert_ok()
 
 
 def get_periodic_noise_operators_real_isotropic_taylor_expansion[M: BasisMetadata](
@@ -224,17 +245,20 @@ def get_periodic_noise_operators_real_isotropic_taylor_expansion[M: BasisMetadat
 
 
 def get_periodic_noise_operators_real_isotropic_stacked_taylor_expansion[
-    M: BasisMetadata
+    M: BasisMetadata,
+    E,
 ](
     kernel: IsotropicKernelWithMetadata[
-        TupleMetadata[tuple[M, ...], Any],
+        TupleMetadata[tuple[M, ...], E],
         Ctype[Never],
         np.dtype[np.complexfloating],
     ],
     *,
     shape: tuple[int | None, ...] | None = None,
 ) -> OperatorList[
-    OperatorListBasis[EigenvalueMetadata, OperatorMetadata[M]],
+    OperatorListBasis[
+        EigenvalueMetadata, OperatorMetadata[TupleMetadata[tuple[M, ...], E]]
+    ],
     np.dtype[np.complexfloating],
 ]:
     """Calculate the noise operators for a general isotropic noise kernel.
@@ -251,7 +275,7 @@ def get_periodic_noise_operators_real_isotropic_stacked_taylor_expansion[
     The noise operators formed using the 2n+1 lowest fourier terms, and the corresponding coefficients.
 
     """
-    axis_kernels = as_axis_kernel_from_isotropic(kernel)
+    axis_kernels = axis_kernel_from_isotropic(kernel)
 
     operators_list = tuple(
         get_periodic_noise_operators_real_isotropic_taylor_expansion(
@@ -260,6 +284,5 @@ def get_periodic_noise_operators_real_isotropic_stacked_taylor_expansion[
         )
         for (i, kernel) in enumerate(axis_kernels)
     )
-    return get_diagonal_noise_operators_from_axis(
-        operators_list, kernel.basis.inner.outer_recast.metadata().extra
-    )
+    extra = kernel.basis.inner.outer_recast.outer_recast.metadata().extra
+    return get_diagonal_noise_operators_from_axis(operators_list, extra)  # type: ignore bad inference

@@ -116,8 +116,8 @@ def get_lorentzian_operators_explicit_taylor[M: VolumeMetadata, CT: Ctype[np.gen
     """
     # currently only support 1D
     assert len(shallow_shape_from_nested(basis.fundamental_shape)) == 1
-    basis_x = _basis.as_tuple(basis)
-    n_terms = (basis_x.children[0].size // 2) if n_terms is None else n_terms
+    basis_x = _basis.AsUpcast(_basis.as_tuple(basis), basis.metadata())
+    n_terms = (basis_x.inner.children[0].size // 2) if n_terms is None else n_terms
 
     # expand gaussian and define array containing coefficients for each term in the polynomial
     # coefficients for the explicit Taylor expansion of the gaussian noise
@@ -129,5 +129,5 @@ def get_lorentzian_operators_explicit_taylor[M: VolumeMetadata, CT: Ctype[np.gen
     )
 
     return get_periodic_noise_operators_explicit_taylor_expansion(
-        basis_x.upcast(), polynomial_coefficients, n_terms=n_terms
+        basis_x, polynomial_coefficients, n_terms=n_terms
     )

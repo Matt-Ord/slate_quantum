@@ -6,12 +6,9 @@ from slate_quantum.noise import build
 from slate_quantum.noise._kernel import (
     AxisKernel,
     DiagonalNoiseKernel,
-    DiagonalNoiseOperatorList,
     IsotropicNoiseKernel,
     NoiseKernel,
     NoiseOperatorList,
-    as_axis_kernel_from_isotropic,
-    as_isotropic_kernel_from_axis,
     get_diagonal_noise_operators_from_axis,
 )
 from slate_quantum.noise.build import (
@@ -61,12 +58,9 @@ __all__ = [
     "AxisKernel",
     "DiagonalNoiseKernel",
     "DiagonalNoiseKernel",
-    "DiagonalNoiseOperatorList",
     "IsotropicNoiseKernel",
     "NoiseKernel",
     "NoiseOperatorList",
-    "as_axis_kernel_from_isotropic",
-    "as_isotropic_kernel_from_axis",
     "build",
     "build_axis_kernel_from_function_stacked",
     "build_hamiltonian_shift",

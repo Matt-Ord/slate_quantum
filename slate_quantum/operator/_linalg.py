@@ -3,8 +3,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, cast
 
 import numpy as np
-from slate_core import Ctype, FundamentalBasis, TupleBasis, array, basis
-from slate_core.basis import AsUpcast, Basis, DiagonalBasis, TupleBasis2D
+from slate_core import Ctype, FundamentalBasis, TupleBasis, TupleMetadata, array, basis
+from slate_core.basis import AsUpcast, Basis, DiagonalBasis
 from slate_core.linalg import einsum
 from slate_core.linalg import into_diagonal as into_diagonal_array
 from slate_core.linalg import into_diagonal_hermitian as into_diagonal_hermitian_array
@@ -86,7 +86,12 @@ def into_diagonal_hermitian[M: BasisMetadata, DT: np.dtype[np.complexfloating]](
 
 def get_eigenstates_hermitian[M: BasisMetadata, DT: np.dtype[np.complexfloating]](
     operator: Operator[OperatorBasis[M], DT],
-) -> StateList[TupleBasis2D[tuple[Basis[EigenvalueMetadata], Basis[M]]]]:
+) -> StateList[
+    AsUpcast[
+        TupleBasis[tuple[Basis[EigenvalueMetadata], Basis[M]], None],
+        TupleMetadata[tuple[EigenvalueMetadata, M], None],
+    ]
+]:
     diagonal = into_diagonal_hermitian(operator)
     states = diagonal.basis.inner.inner.children[0].inner.eigenvectors().assert_ok()
     as_tuple = with_list_basis(
