@@ -17,13 +17,11 @@ from slate_core.basis import (
 )
 from slate_core.metadata import (
     BasisMetadata,
-    Metadata2D,
-    StackedMetadata,
 )
 from slate_core.util import slice_ignoring_axes
 
 from slate_quantum._util import outer_product
-from slate_quantum._util.legacy import LegacyTupleBasis2D
+from slate_quantum._util.legacy import LegacyTupleBasis2D, Metadata2D
 from slate_quantum.metadata import EigenvalueMetadata
 from slate_quantum.operator import (
     OperatorList,

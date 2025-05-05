@@ -11,9 +11,9 @@ from slate_core.basis import (
     diagonal_basis,
     transformed_from_metadata,
 )
-from slate_core.metadata import AxisDirections, Metadata2D
+from slate_core.metadata import AxisDirections
 
-from slate_quantum._util.legacy import StackedMetadata
+from slate_quantum._util.legacy import Metadata2D, StackedMetadata
 from slate_quantum.operator._operator import Operator
 
 type RecastDiagonalOperatorBasis[

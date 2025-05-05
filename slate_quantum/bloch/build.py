@@ -10,13 +10,12 @@ from slate_core.basis import BlockDiagonalBasis
 from slate_core.metadata import (
     AxisDirections,
     LabeledMetadata,
-    Metadata2D,
     SpacedLengthMetadata,
     SpacedVolumeMetadata,
 )
 
 from slate_quantum import operator
-from slate_quantum._util.legacy import StackedMetadata
+from slate_quantum._util.legacy import Metadata2D, StackedMetadata
 from slate_quantum.bloch._shifted_basis import BlochShiftedBasis
 from slate_quantum.bloch._transposed_basis import BlochTransposedBasis
 from slate_quantum.metadata import RepeatedLengthMetadata

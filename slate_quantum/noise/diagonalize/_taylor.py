@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import numpy as np
 from scipy.special import factorial  # type: ignore library type
@@ -17,7 +17,6 @@ from slate_core.basis import (
 )
 from slate_core.metadata import (
     BasisMetadata,
-    Metadata2D,
     SimpleMetadata,
 )
 from slate_core.util import pad_ft_points
@@ -32,6 +31,9 @@ from slate_quantum.noise._kernel import (
 from slate_quantum.operator import (
     OperatorList,
 )
+
+if TYPE_CHECKING:
+    from slate_quantum._util.legacy import Metadata2D
 
 
 def _get_cos_coefficients_for_taylor_series(
