@@ -3,24 +3,25 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, cast
 
 import numpy as np
-from slate_core import FundamentalBasis, array, basis, tuple_basis
-from slate_core.basis import (
-    Basis,
-    diagonal_basis,
-)
+from slate_core import FundamentalBasis, array, basis
 from slate_core.linalg import einsum
 from slate_core.linalg import into_diagonal as into_diagonal_array
 from slate_core.linalg import into_diagonal_hermitian as into_diagonal_hermitian_array
 from slate_core.metadata import BasisMetadata
 
+from slate_quantum._util.legacy import diagonal_basis, tuple_basis
 from slate_quantum.metadata._label import EigenvalueMetadata
 from slate_quantum.operator._operator import Operator, OperatorList
 from slate_quantum.state._basis import EigenstateBasis
 from slate_quantum.state._state import StateList
 
 if TYPE_CHECKING:
-    from slate_core.basis import DiagonalBasis
+    from slate_core.basis import (
+        Basis,
+    )
     from slate_core.explicit_basis import ExplicitBasis
+
+    from slate_quantum._util.legacy import LegacyDiagonalBasis
 
 
 def into_diagonal[M: BasisMetadata, DT: np.complexfloating](
@@ -28,7 +29,7 @@ def into_diagonal[M: BasisMetadata, DT: np.complexfloating](
 ) -> Operator[
     M,
     np.complexfloating,
-    DiagonalBasis[DT, ExplicitBasis[M, DT], ExplicitBasis[M, DT], None],
+    LegacyDiagonalBasis[DT, ExplicitBasis[M, DT], ExplicitBasis[M, DT], None],
 ]:
     """Get a list of eigenstates for a given operator, assuming it is hermitian."""
     diagonal = into_diagonal_array(operator)
@@ -40,7 +41,7 @@ def into_diagonal_hermitian[M: BasisMetadata, DT: np.complexfloating](
 ) -> Operator[
     M,
     np.complexfloating,
-    DiagonalBasis[DT, EigenstateBasis[M], EigenstateBasis[M], None],
+    LegacyDiagonalBasis[DT, EigenstateBasis[M], EigenstateBasis[M], None],
 ]:
     """Get a list of eigenstates for a given operator, assuming it is hermitian."""
     diagonal = into_diagonal_hermitian_array(operator)
@@ -70,7 +71,7 @@ def get_eigenstates_hermitian[M: BasisMetadata, DT: np.complexfloating](
     diagonal = into_diagonal_hermitian(operator)
     states = diagonal.basis.inner[0].eigenvectors
     as_tuple = states.with_list_basis(basis.from_metadata(states.basis.metadata()[0]))
-    out_basis = basis.tuple_basis(
+    out_basis = tuple_basis(
         (FundamentalBasis(EigenvalueMetadata(diagonal.raw_data)), as_tuple.basis[1]),
     )
     return StateList(out_basis, as_tuple.raw_data)

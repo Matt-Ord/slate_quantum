@@ -1,12 +1,14 @@
 from __future__ import annotations
 
+from slate_core import TupleMetadata
 from slate_core.metadata import (
     AxisDirections,
     LabelSpacing,
     SpacedLengthMetadata,
     SpacedVolumeMetadata,
-    StackedMetadata,
 )
+
+from slate_quantum._util.legacy import StackedMetadata
 
 
 class RepeatedLengthMetadata(SpacedLengthMetadata):
@@ -31,7 +33,7 @@ type RepeatedVolumeMetadata = StackedMetadata[RepeatedLengthMetadata, AxisDirect
 def repeat_volume_metadata(
     metadata: SpacedVolumeMetadata, shape: tuple[int, ...]
 ) -> RepeatedVolumeMetadata:
-    return StackedMetadata(
+    return TupleMetadata(
         tuple(
             RepeatedLengthMetadata(d, s)
             for (s, d) in zip(shape, metadata.children, strict=True)

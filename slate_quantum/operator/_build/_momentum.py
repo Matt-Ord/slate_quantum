@@ -90,7 +90,7 @@ def filter_scatter(
 def all_filter_scatter[M: BasisMetadata](
     operator: OperatorList[M, SpacedVolumeMetadata, np.complexfloating],
 ) -> OperatorList[M, SpacedVolumeMetadata, np.complexfloating]:
-    is_dual = basis.as_tuple_basis(operator.basis).is_dual[1]
+    is_dual = basis.as_tuple(operator.basis).is_dual[1]
     converted = operator.with_operator_basis(
         basis.transformed_from_metadata(operator.basis.metadata()[1], is_dual=is_dual)
     )

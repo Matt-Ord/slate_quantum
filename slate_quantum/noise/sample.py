@@ -55,10 +55,10 @@ def sample_noise_from_diagonal_kernel[M: BasisMetadata](
 ) -> OperatorList[SimpleMetadata, M, np.complexfloating]:
     """Generate noise for a diagonal kernel."""
     operators = get_periodic_noise_operators_diagonal_eigenvalue(kernel)
-    operators = operators.with_list_basis(basis.as_tuple_basis(operators.basis)[0])
+    operators = operators.with_list_basis(basis.as_tuple(operators.basis)[0])
 
     truncation = range(operators.basis[0].size) if truncation is None else truncation
     truncated = truncate_noise_operator_list(operators, truncation)
-    truncated = truncated.with_list_basis(basis.as_tuple_basis(truncated.basis)[0])
+    truncated = truncated.with_list_basis(basis.as_tuple(truncated.basis)[0])
 
     return sample_noise_from_operators(truncated, n_samples=n_samples)

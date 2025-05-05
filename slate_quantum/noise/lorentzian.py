@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any, cast
 
 import numpy as np
 from scipy.constants import Boltzmann, hbar  # type: ignore stubs
-from slate_core.basis import DiagonalBasis, as_tuple_basis
+from slate_core import basis as basis_
 from slate_core.metadata import (
     AxisDirections,
     SpacedLengthMetadata,
@@ -22,9 +22,14 @@ from slate_quantum.noise.diagonalize._taylor import (
 )
 
 if TYPE_CHECKING:
-    from slate_core.basis import Basis, FundamentalBasis
+    from slate_core.basis import FundamentalBasis
 
-    from slate_quantum._util.legacy import StackedMetadata
+    from slate_quantum._util.legacy import (
+        LegacyBasis,
+        LegacyDiagonalBasis,
+        LegacyTupleBasis2D,
+        StackedMetadata,
+    )
     from slate_quantum.metadata import EigenvalueMetadata
     from slate_quantum.noise._kernel import IsotropicNoiseKernel
     from slate_quantum.operator._operator import OperatorList
@@ -87,7 +92,7 @@ def _get_explicit_taylor_coefficients_lorentzian(
 def get_lorentzian_operators_explicit_taylor[M: VolumeMetadata, DT: np.generic](
     a: float,
     lambda_: float,
-    basis: Basis[M, DT],
+    basis: LegacyBasis[M, DT],
     *,
     n_terms: int | None = None,
 ) -> OperatorList[
@@ -97,10 +102,10 @@ def get_lorentzian_operators_explicit_taylor[M: VolumeMetadata, DT: np.generic](
     LegacyTupleBasis2D[
         np.complexfloating,
         FundamentalBasis[EigenvalueMetadata],
-        DiagonalBasis[
+        LegacyDiagonalBasis[
             np.complexfloating,
-            Basis[M, np.generic],
-            Basis[M, np.generic],
+            LegacyBasis[M, np.generic],
+            LegacyBasis[M, np.generic],
             None,
         ],
         None,
@@ -122,7 +127,7 @@ def get_lorentzian_operators_explicit_taylor[M: VolumeMetadata, DT: np.generic](
     """
     # currently only support 1D
     assert len(shallow_shape_from_nested(basis.fundamental_shape)) == 1
-    basis_x = as_tuple_basis(basis)
+    basis_x = basis_.as_tuple(basis)
     n_terms = (basis_x[0].size // 2) if n_terms is None else n_terms
 
     # expand gaussian and define array containing coefficients for each term in the polynomial

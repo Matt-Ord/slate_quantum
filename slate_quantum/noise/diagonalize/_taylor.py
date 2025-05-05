@@ -4,15 +4,14 @@ from typing import TYPE_CHECKING, Any, cast
 
 import numpy as np
 from scipy.special import factorial  # type: ignore library type
+from slate_core import basis as basis_
 from slate_core.basis import (
     Basis,
     DiagonalBasis,
     FundamentalBasis,
     TruncatedBasis,
     Truncation,
-    as_tuple_basis,
     from_metadata,
-    tuple_basis,
     with_modified_child,
 )
 from slate_core.metadata import (
@@ -22,6 +21,7 @@ from slate_core.metadata import (
 from slate_core.util import pad_ft_points
 
 from slate_quantum import operator
+from slate_quantum._util.legacy import tuple_basis
 from slate_quantum.metadata import EigenvalueMetadata
 from slate_quantum.noise._kernel import (
     IsotropicNoiseKernel,
@@ -33,7 +33,13 @@ from slate_quantum.operator import (
 )
 
 if TYPE_CHECKING:
-    from slate_quantum._util.legacy import Metadata2D
+    from slate_quantum._util.legacy import (
+        LegacyBasis,
+        LegacyDiagonalBasis,
+        LegacyTupleBasis2D,
+        Metadata2D,
+        StackedMetadata,
+    )
 
 
 def _get_cos_coefficients_for_taylor_series(
@@ -88,7 +94,7 @@ def get_periodic_noise_operators_explicit_taylor_expansion[
 
     operators = operator.build.all_axis_periodic_operators(basis)
     list_basis = with_modified_child(
-        as_tuple_basis(operators.basis),
+        basis_.as_tuple(operators.basis),
         lambda b: TruncatedBasis(
             Truncation(n_terms, 0, 0),
             from_metadata(cast("SimpleMetadata", b.metadata())),
@@ -120,7 +126,7 @@ def _get_linear_operators_for_noise[M: BasisMetadata](
     LegacyTupleBasis2D[
         np.complexfloating,
         FundamentalBasis[SimpleMetadata],
-        DiagonalBasis[np.complexfloating, Basis[M, Any], Basis[M, Any], None],
+        LegacyDiagonalBasis[np.complexfloating, Basis[M, Any], Basis[M, Any], None],
         None,
     ],
 ]:
@@ -161,7 +167,7 @@ def get_linear_noise_operators_explicit_taylor_expansion[M: BasisMetadata](
     LegacyTupleBasis2D[
         np.complexfloating,
         FundamentalBasis[EigenvalueMetadata],
-        DiagonalBasis[np.complexfloating, Basis[M, Any], Basis[M, Any], None],
+        LegacyDiagonalBasis[np.complexfloating, Basis[M, Any], Basis[M, Any], None],
         None,
     ],
 ]:
@@ -189,7 +195,7 @@ def get_periodic_noise_operators_real_isotropic_taylor_expansion[M: BasisMetadat
     LegacyTupleBasis2D[
         np.complexfloating,
         FundamentalBasis[EigenvalueMetadata],
-        DiagonalBasis[np.complexfloating, Basis[M, Any], Basis[M, Any], None],
+        LegacyDiagonalBasis[np.complexfloating, Basis[M, Any], Basis[M, Any], None],
         None,
     ],
 ]:
@@ -253,7 +259,7 @@ def get_periodic_noise_operators_real_isotropic_stacked_taylor_expansion[
     EigenvalueMetadata,
     StackedMetadata[M, Any],
     np.complexfloating,
-    Basis[
+    LegacyBasis[
         Metadata2D[
             EigenvalueMetadata,
             Metadata2D[

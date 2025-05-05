@@ -5,9 +5,10 @@ import itertools
 import numpy as np
 import pytest
 from scipy.constants import hbar  # type: ignore module
-from slate_core import basis, metadata, tuple_basis
+from slate_core import basis, metadata
 
 from slate_quantum import bloch, operator
+from slate_quantum._util.legacy import tuple_basis
 from slate_quantum.bloch.build import BlochFractionMetadata
 from slate_quantum.operator._operator import Operator
 

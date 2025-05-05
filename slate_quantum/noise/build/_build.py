@@ -4,8 +4,8 @@ from typing import TYPE_CHECKING, Any
 
 import numpy as np
 from scipy.constants import Boltzmann, hbar  # type: ignore stubs
-from slate_core import linalg
-from slate_core.basis import CoordinateBasis, as_index_basis, as_tuple_basis
+from slate_core import basis, linalg
+from slate_core.basis import CoordinateBasis
 from slate_core.metadata import AxisDirections
 
 from slate_quantum import operator
@@ -233,15 +233,15 @@ def truncate_noise_operator_list[M0: EigenvalueMetadata, M1: BasisMetadata](
     -------
     DiagonalNoiseOperatorList[FundamentalBasis[BasisMetadata], B_0, B_1]
     """
-    converted = operators.with_basis(as_tuple_basis(operators.basis))
-    converted_list = converted.with_list_basis(as_index_basis(converted.basis[0]))
+    converted = operators.with_basis(basis.as_tuple(operators.basis))
+    converted_list = converted.with_list_basis(basis.as_index(converted.basis[0]))
     eigenvalues = (
         converted_list.basis.metadata()
         .children[0]
         .values[converted_list.basis[0].points]
     )
     args = np.argsort(np.abs(eigenvalues))[::-1][np.array(list(truncation))]
-    list_basis = CoordinateBasis(args, as_tuple_basis(operators.basis)[0])
+    list_basis = CoordinateBasis(args, basis.as_tuple(operators.basis)[0])
     return operators.with_list_basis(list_basis)
 
 

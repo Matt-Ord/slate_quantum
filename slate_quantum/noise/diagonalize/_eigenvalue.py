@@ -3,8 +3,10 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import numpy as np
-from slate_core.basis import FundamentalBasis, as_tuple_basis, tuple_basis
+from slate_core import basis as basis_
+from slate_core.basis import FundamentalBasis
 
+from slate_quantum._util.legacy import tuple_basis
 from slate_quantum.metadata import EigenvalueMetadata
 from slate_quantum.operator._operator import OperatorList
 
@@ -24,12 +26,12 @@ def get_periodic_noise_operators_eigenvalue[M: BasisMetadata](
 
     Note these are the operators `L`
     """
-    converted = kernel.with_basis(as_tuple_basis(kernel.basis))
+    converted = kernel.with_basis(basis_.as_tuple(kernel.basis))
     converted_second = converted.with_basis(
         tuple_basis(
             (
-                as_tuple_basis(converted.basis[0]),
-                as_tuple_basis(converted.basis[0]).dual_basis(),
+                basis_.as_tuple(converted.basis[0]),
+                basis_.as_tuple(converted.basis[0]).dual_basis(),
             )
         )
     )
@@ -78,7 +80,7 @@ def get_periodic_noise_operators_diagonal_eigenvalue[M: BasisMetadata](
     as it is not currently possible to represent a sparse StackedBasis (unless it can
     be represented as a StackedBasis of individual sparse Basis)
     """
-    converted = kernel.with_outer_basis(as_tuple_basis(kernel.basis.outer_recast))
+    converted = kernel.with_outer_basis(basis_.as_tuple(kernel.basis.outer_recast))
 
     data = kernel.raw_data.reshape(converted.basis.outer_recast.shape)  # type: ignore we need to improve the typing of RecastBasis
     # Find the n^2 operators which are independent

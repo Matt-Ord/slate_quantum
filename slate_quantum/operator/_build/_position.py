@@ -6,14 +6,10 @@ import numpy as np
 from slate_core import Array, Basis, basis
 from slate_core import metadata as _metadata
 from slate_core.basis import (
-    DiagonalBasis,
     FundamentalBasis,
     TransformedBasis,
     TruncatedBasis,
     Truncation,
-    TupleBasis,
-    diagonal_basis,
-    tuple_basis,
 )
 from slate_core.metadata import (
     AxisDirections,
@@ -21,7 +17,13 @@ from slate_core.metadata import (
 )
 from slate_core.metadata.util import fundamental_size
 
-from slate_quantum._util.legacy import StackedMetadata
+from slate_quantum._util.legacy import (
+    LegacyDiagonalBasis,
+    LegacyTupleBasis,
+    StackedMetadata,
+    diagonal_basis,
+    tuple_basis,
+)
 from slate_quantum.operator._diagonal import (
     DiagonalOperator,
     PositionOperator,
@@ -261,7 +263,7 @@ def all_axis_periodic_operators[M: BasisMetadata](
     SimpleMetadata,
     M,
     np.complexfloating,
-    DiagonalBasis[
+    LegacyDiagonalBasis[
         Any,
         FundamentalBasis[SimpleMetadata],
         RecastDiagonalOperatorBasis[M, Any],
@@ -284,7 +286,7 @@ def all_axis_scattering_operators[M: BasisMetadata](
     SimpleMetadata,
     M,
     np.complexfloating,
-    DiagonalBasis[
+    LegacyDiagonalBasis[
         Any,
         FundamentalBasis[SimpleMetadata],
         RecastDiagonalOperatorBasis[M, Any],
@@ -297,7 +299,7 @@ def all_axis_scattering_operators[M: BasisMetadata](
 
 
 def periodic_operator[M: BasisMetadata, E](
-    inner_basis: TupleBasis[M, E, Any], *, n_k: tuple[int, ...]
+    inner_basis: LegacyTupleBasis[M, E, Any], *, n_k: tuple[int, ...]
 ) -> DiagonalOperator[StackedMetadata[M, E], np.complexfloating]:
     """Get the generalized e^(ik.x) operator in some general basis.
 
@@ -329,12 +331,12 @@ def scattering_operator[M: SpacedLengthMetadata, E: AxisDirections](
 
 
 def all_periodic_operators[M: BasisMetadata, E](
-    inner_basis: TupleBasis[M, E, Any],
+    inner_basis: LegacyTupleBasis[M, E, Any],
 ) -> OperatorList[
     SimpleMetadata,
     StackedMetadata[M, E],
     np.complexfloating,
-    DiagonalBasis[
+    LegacyDiagonalBasis[
         Any,
         FundamentalBasis[SimpleMetadata],
         RecastDiagonalOperatorBasis[StackedMetadata[M, E], Any],
@@ -360,7 +362,7 @@ def all_scattering_operators[M: BasisMetadata, E](
     SimpleMetadata,
     StackedMetadata[M, E],
     np.complexfloating,
-    DiagonalBasis[
+    LegacyDiagonalBasis[
         Any,
         FundamentalBasis[SimpleMetadata],
         RecastDiagonalOperatorBasis[StackedMetadata[M, E], Any],

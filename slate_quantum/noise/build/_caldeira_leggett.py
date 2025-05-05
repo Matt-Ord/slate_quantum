@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 import numpy as np
-from slate_core import basis, tuple_basis
+from slate_core import basis
 from slate_core.basis import CoordinateBasis, FundamentalBasis
 from slate_core.metadata import (
     AxisDirections,
@@ -13,6 +13,7 @@ from slate_core.metadata import (
 from slate_core.metadata.length import fundamental_dk
 from slate_core.metadata.volume import fundamental_stacked_dk
 
+from slate_quantum._util.legacy import tuple_basis
 from slate_quantum.metadata._label import EigenvalueMetadata, eigenvalue_basis
 from slate_quantum.operator import (
     OperatorList,
