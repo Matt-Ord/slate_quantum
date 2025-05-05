@@ -15,7 +15,12 @@ from slate_core.metadata import (
 )
 
 from slate_quantum import operator
-from slate_quantum._util.legacy import Metadata2D, StackedMetadata, tuple_basis
+from slate_quantum._util.legacy import (
+    LegacyBlockDiagonalBasis,
+    Metadata2D,
+    StackedMetadata,
+    tuple_basis,
+)
 from slate_quantum.bloch._shifted_basis import BlochShiftedBasis
 from slate_quantum.bloch._transposed_basis import BlochTransposedBasis
 from slate_quantum.metadata import RepeatedLengthMetadata
@@ -88,8 +93,8 @@ def _metadata_from_operator_list(
     AxisDirections,
 ]:
     """Get the metadata for the Bloch operator."""
-    list_meta = meta[0]
-    single_operator_meta = meta[1][0]
+    list_meta = meta.children[0]
+    single_operator_meta = meta.children[1].children[0]
     full_operator_metadata = metadata_from_split(list_meta, single_operator_meta)
     return basis_from_metadata(full_operator_metadata)
 
@@ -102,7 +107,7 @@ def bloch_operator_from_list[
 ) -> Operator[
     StackedMetadata[RepeatedLengthMetadata, AxisDirections],
     np.complexfloating,
-    BlockDiagonalBasis[
+    LegacyBlockDiagonalBasis[
         np.complexfloating,
         RepeatedLengthMetadata,
         AxisDirections,
@@ -155,7 +160,7 @@ def kinetic_hamiltonian[M: SpacedLengthMetadata, E: AxisDirections](
 ) -> Operator[
     StackedMetadata[RepeatedLengthMetadata, AxisDirections],
     np.complexfloating,
-    BlockDiagonalBasis[
+    LegacyBlockDiagonalBasis[
         np.complexfloating,
         RepeatedLengthMetadata,
         AxisDirections,
