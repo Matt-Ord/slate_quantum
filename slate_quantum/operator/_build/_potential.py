@@ -9,7 +9,7 @@ from slate_core.basis import (
     CroppedBasis,
     TruncatedBasis,
     Truncation,
-    fundamental_transformed_tuple_basis_from_metadata,
+    transformed_from_metadata,
 )
 from slate_core.metadata import (
     AxisDirections,
@@ -32,11 +32,11 @@ def repeat_potential(
     shape: tuple[int, ...],
 ) -> Potential[RepeatedLengthMetadata, AxisDirections, np.complexfloating]:
     """Create a new potential by repeating the original potential in each direction."""
-    transformed_basis = fundamental_transformed_tuple_basis_from_metadata(
+    transformed_basis = transformed_from_metadata(
         potential.basis.outer_recast.metadata()
     )
     as_transformed = potential.with_outer_basis(transformed_basis)
-    converted_basis = fundamental_transformed_tuple_basis_from_metadata(
+    converted_basis = transformed_from_metadata(
         repeat_volume_metadata(potential.basis.outer_recast.metadata(), shape)
     )
     repeat_basis = basis.with_modified_children(
@@ -57,7 +57,7 @@ def cos_potential(
     height: float,
 ) -> Potential[SpacedLengthMetadata, AxisDirections, np.complexfloating]:
     """Build a cosine potential."""
-    transformed_basis = fundamental_transformed_tuple_basis_from_metadata(metadata)
+    transformed_basis = transformed_from_metadata(metadata)
     # We need only the three lowest fourier components to represent this potential
     cropped = basis.with_modified_children(
         transformed_basis,
@@ -76,7 +76,7 @@ def sin_potential(
     height: float,
 ) -> Potential[SpacedLengthMetadata, AxisDirections, np.complexfloating]:
     """Build a cosine potential."""
-    transformed_basis = fundamental_transformed_tuple_basis_from_metadata(metadata)
+    transformed_basis = transformed_from_metadata(metadata)
     # We need only the three lowest fourier components to represent this potential
     cropped = basis.with_modified_children(
         transformed_basis,
@@ -107,7 +107,7 @@ def square_potential(
     lanczos_factor: float = 0,
 ) -> Potential[SpacedLengthMetadata, AxisDirections, np.complexfloating]:
     """Build a square potential."""
-    transformed_basis = fundamental_transformed_tuple_basis_from_metadata(metadata)
+    transformed_basis = transformed_from_metadata(metadata)
     # We need only the three lowest fourier components to represent this potential
     cropped = basis.with_modified_children(
         transformed_basis,
@@ -132,7 +132,7 @@ def fcc_potential(
     This potential contains the lowest fourier components - however for an fcc surface
     there are only six degenerate fourier components.
     """
-    transformed_basis = fundamental_transformed_tuple_basis_from_metadata(metadata)
+    transformed_basis = transformed_from_metadata(metadata)
     # We need only the three lowest fourier components to represent this potential
     cropped = basis.with_modified_children(
         transformed_basis,

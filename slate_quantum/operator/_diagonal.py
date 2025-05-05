@@ -9,7 +9,7 @@ from slate_core.basis import (
     DiagonalBasis,
     RecastBasis,
     diagonal_basis,
-    fundamental_transformed_tuple_basis_from_metadata,
+    transformed_from_metadata,
 )
 from slate_core.metadata import AxisDirections, Metadata2D
 
@@ -151,9 +151,7 @@ class MomentumOperator[M: BasisMetadata, E: AxisDirections](
         raw_data: np.ndarray[Any, np.dtype[np.complexfloating]],
     ) -> None:
         super().__init__(
-            fundamental_transformed_tuple_basis_from_metadata(
-                basis.metadata(), is_dual=basis.is_dual
-            ),
+            transformed_from_metadata(basis.metadata(), is_dual=basis.is_dual),
             basis,
             raw_data,
         )
@@ -173,8 +171,6 @@ def momentum_operator_basis[M: BasisMetadata, E: AxisDirections](
     basis: Basis[StackedMetadata[M, E], np.complexfloating],
 ) -> MomentumOperatorBasis[M, E]:
     return recast_diagonal_basis(
-        fundamental_transformed_tuple_basis_from_metadata(
-            basis.metadata(), is_dual=basis.is_dual
-        ),
+        transformed_from_metadata(basis.metadata(), is_dual=basis.is_dual),
         basis,
     )

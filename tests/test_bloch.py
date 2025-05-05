@@ -36,7 +36,7 @@ def test_build_bloch_operator(shape: tuple[int, ...], repeat: tuple[int, ...]) -
 
     assert sparse.basis.metadata() == full.basis.metadata()
 
-    transformed = basis.fundamental_transformed_tuple_basis_from_metadata(
+    transformed = basis.transformed_from_metadata(
         full.basis.metadata(), is_dual=full.basis.is_dual
     )
 
@@ -72,7 +72,7 @@ def test_build_momentum_bloch_operator(
 
     assert sparse.basis.metadata() == full.basis.metadata()
 
-    transformed = basis.fundamental_transformed_tuple_basis_from_metadata(
+    transformed = basis.transformed_from_metadata(
         full.basis.metadata(), is_dual=full.basis.is_dual
     )
 
@@ -111,7 +111,7 @@ def test_build_potential_bloch_operator_1d(
     full = operator.build.repeat_potential(potential, repeat)
 
     assert sparse.basis.metadata() == full.basis.metadata()
-    transformed = basis.fundamental_transformed_tuple_basis_from_metadata(
+    transformed = basis.transformed_from_metadata(
         full.basis.metadata(), is_dual=full.basis.is_dual
     )
 
@@ -127,7 +127,7 @@ def test_bloch_operator_from_list() -> None:
         (np.array([2 * np.pi]),), (3,)
     )
 
-    operator_basis = basis.fundamental_transformed_tuple_basis_from_metadata(meta)
+    operator_basis = basis.transformed_from_metadata(meta)
     fraction_basis = basis.from_metadata(BlochFractionMetadata.from_repeats((2,)))
     operator_basis_tuple = tuple_basis((operator_basis, operator_basis.dual_basis()))
 
@@ -139,6 +139,6 @@ def test_bloch_operator_from_list() -> None:
     )
 
     sparse = bloch.build.bloch_operator_from_list(operator_list)
-    basis.fundamental_transformed_tuple_basis_from_metadata(
+    basis.transformed_from_metadata(
         sparse.basis.inner.metadata(), is_dual=sparse.basis.is_dual
     )

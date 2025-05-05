@@ -31,7 +31,7 @@ def k[M: SpacedLengthMetadata, E: AxisDirections](
         np.complex128
     )
     return MomentumOperator(
-        basis.fundamental_transformed_tuple_basis_from_metadata(metadata),
+        basis.transformed_from_metadata(metadata),
         points,
     )
 
@@ -44,7 +44,7 @@ def p[M: SpacedLengthMetadata, E: AxisDirections](
         np.complex128
     )
     return MomentumOperator(
-        basis.fundamental_transformed_tuple_basis_from_metadata(metadata),
+        basis.transformed_from_metadata(metadata),
         (hbar * points).astype(np.complex128),
     )
 
@@ -63,7 +63,7 @@ def momentum_from_function[M: SpacedLengthMetadata, E: AxisDirections, DT: np.ge
     positions = _metadata.volume.fundamental_stacked_k_points(
         metadata, offset=offset, wrapped=wrapped
     )
-    out_basis = basis.fundamental_transformed_tuple_basis_from_metadata(metadata)
+    out_basis = basis.transformed_from_metadata(metadata)
     return MomentumOperator(out_basis, fn(positions))
 
 
@@ -71,7 +71,7 @@ def filter_scatter(
     operator: Operator[SpacedVolumeMetadata, np.complexfloating],
 ) -> Operator[SpacedVolumeMetadata, np.complexfloating]:
     converted = operator.with_basis(
-        basis.fundamental_transformed_tuple_basis_from_metadata(
+        basis.transformed_from_metadata(
             operator.basis.metadata(), is_dual=operator.basis.is_dual
         )
     )
@@ -92,9 +92,7 @@ def all_filter_scatter[M: BasisMetadata](
 ) -> OperatorList[M, SpacedVolumeMetadata, np.complexfloating]:
     is_dual = basis.as_tuple_basis(operator.basis).is_dual[1]
     converted = operator.with_operator_basis(
-        basis.fundamental_transformed_tuple_basis_from_metadata(
-            operator.basis.metadata()[1], is_dual=is_dual
-        )
+        basis.transformed_from_metadata(operator.basis.metadata()[1], is_dual=is_dual)
     )
     data = converted.raw_data.reshape(-1, *converted.basis[1].shape)
     nk_points = _metadata.fundamental_stacked_nk_points(

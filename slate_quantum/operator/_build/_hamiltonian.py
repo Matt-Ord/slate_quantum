@@ -6,7 +6,7 @@ import numpy as np
 from scipy.constants import hbar  # type: ignore lib
 from slate_core.basis import (
     SplitBasis,
-    fundamental_transformed_tuple_basis_from_metadata,
+    transformed_from_metadata,
 )
 from slate_core.metadata.volume import (
     fundamental_stacked_delta_k,
@@ -69,7 +69,7 @@ def kinetic_energy[M: SpacedLengthMetadata, E: AxisDirections](
         "Any",
         np.sum(np.square(hbar * k_points) / (2 * mass), axis=0, dtype=np.complex128),
     )
-    momentum_basis = fundamental_transformed_tuple_basis_from_metadata(metadata)
+    momentum_basis = transformed_from_metadata(metadata)
 
     return MomentumOperator(momentum_basis, energy)
 
