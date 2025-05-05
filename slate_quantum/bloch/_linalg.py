@@ -17,12 +17,12 @@ from slate_quantum._util.legacy import (
 )
 from slate_quantum.bloch._transposed_basis import BlochTransposedBasis
 from slate_quantum.metadata._repeat import RepeatedLengthMetadata
-from slate_quantum.state._basis import EigenstateBasis
+from slate_quantum.state._basis import LegacyEigenstateBasis
 
 if TYPE_CHECKING:
     from slate_quantum.operator._operator import LegacyOperator
 
-type BlochEigenstateBasis[M: RepeatedLengthMetadata, E] = EigenstateBasis[
+type BlochEigenstateBasis[M: RepeatedLengthMetadata, E] = LegacyEigenstateBasis[
     StackedMetadata[M, E],
     BlochTransposedBasis[np.complexfloating, M, E],
     LegacyBlockDiagonalBasis[

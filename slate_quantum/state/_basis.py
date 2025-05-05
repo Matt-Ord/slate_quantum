@@ -1,38 +1,73 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Literal, cast, override
+from typing import TYPE_CHECKING, Any, Literal, Never, cast, overload, override
 
 import numpy as np
-from slate_core import Basis, SimpleMetadata
+from slate_core import Array, Basis, Ctype, SimpleMetadata
 from slate_core.explicit_basis import ExplicitUnitaryBasis
-from slate_core.metadata import BasisMetadata
+from slate_core.metadata import BasisMetadata, TupleMetadata
 
-from slate_quantum._util.legacy import LegacyArray, LegacyBasis, Metadata2D
-from slate_quantum.state._state import build_legacy_state_list
+from slate_quantum._util.legacy import Metadata2D
+from slate_quantum.state._state import StateList, StateListBuilder
 
 if TYPE_CHECKING:
     import uuid
 
-    from slate_core.basis import BasisStateMetadata
+    from slate_core.basis import (
+        AsUpcast,
+        BasisStateMetadata,
+        RecastBasis,
+        TupleBasis2D,
+        TupleBasisLike,
+    )
 
-    from slate_quantum.state._state import LegacyStateList
 
 type Direction = Literal["forward", "backward"]
 
 
 class EigenstateBasis[
-    M: BasisMetadata,
-    B: LegacyBasis[Any, np.complexfloating] = LegacyBasis[M, np.complexfloating],
-    BTransform: Basis[Any, Any] = Basis[
-        Metadata2D[SimpleMetadata, BasisStateMetadata[B], None], Any
+    Transform: Array[
+        Basis[TupleMetadata[tuple[SimpleMetadata, BasisStateMetadata[Basis]], None]],
+        np.dtype[np.number],
     ],
-](ExplicitUnitaryBasis[Any, Any]):
+](ExplicitUnitaryBasis[Transform, Ctype[np.complexfloating]]):
     """A basis with data stored as eigenstates."""
 
+    @overload
+    def __init__[
+        Transform_: Array[
+            Basis[
+                TupleMetadata[tuple[SimpleMetadata, BasisStateMetadata[Basis]], None]
+            ],
+            np.dtype[np.number],
+        ],
+    ](
+        self: EigenstateBasis[Transform_],
+        matrix: Transform_,
+        *,
+        direction: Literal["forward"] = "forward",
+        data_id: uuid.UUID | None = None,
+        assert_unitary: bool = False,
+    ) -> None: ...
+
+    @overload
+    def __init__[
+        M_: TupleMetadata[tuple[SimpleMetadata, BasisStateMetadata[Basis]], None],
+        DT_: Ctype[np.complexfloating],
+    ](
+        self: EigenstateBasis[Array[Basis[M_, DT_], np.dtype[np.number]]],
+        matrix: Array[Basis[M_, DT_], np.dtype[np.number]],
+        *,
+        direction: Literal["backward"],
+        data_id: uuid.UUID | None = None,
+        assert_unitary: bool = False,
+    ) -> None: ...
+
     def __init__[B1: Basis[Any, Any]](
-        self: EigenstateBasis[Any, B1],
-        matrix: LegacyArray[
-            Metadata2D[BasisMetadata, BasisStateMetadata[B1], Any], np.complexfloating
+        self,
+        matrix: Array[
+            TupleBasisLike[tuple[BasisMetadata, BasisMetadata], None],
+            np.dtype[np.number],
         ],
         *,
         assert_unitary: bool = False,
@@ -46,9 +81,50 @@ class EigenstateBasis[
             data_id=data_id,
         )
 
-    @property
     @override
-    def eigenvectors(self) -> LegacyStateList[BasisMetadata, M]:
-        """Get the eigenstates of the basis."""
-        states = super().eigenvectors
-        return build_legacy_state_list(states.basis, states.raw_data)
+    def eigenvectors[
+        M1_: SimpleMetadata,
+        BInner_: Basis,
+        DT_: np.dtype[np.complexfloating],
+        DT1_: Ctype[Never],
+    ](
+        self: EigenstateBasis[
+            Array[
+                Basis[
+                    TupleMetadata[tuple[M1_, BasisStateMetadata[BInner_]], None], DT1_
+                ],
+                DT_,
+            ]
+        ],
+    ) -> StateListBuilder[
+        AsUpcast[
+            RecastBasis[
+                TupleBasis2D[tuple[Basis[M1_, Ctype[np.generic]], BInner_], None],
+                TupleBasisLike[
+                    tuple[M1_, BasisStateMetadata[BInner_]], None, Ctype[np.generic]
+                ],
+                TupleBasisLike[tuple[M1_, BasisStateMetadata[BInner_]], None, DT1_],
+            ],
+            TupleMetadata[tuple[M1_, BasisMetadata], None],
+            Any,
+        ],
+        np.dtype[np.complexfloating],
+    ]:
+        states = super().eigenvectors()
+        return StateList.build(states.basis, states.data.astype(np.complexfloating))  # type: ignore[return-value]
+
+
+type EigenstateBasisWithInner[Inner: Basis] = EigenstateBasis[
+    Array[
+        Basis[TupleMetadata[tuple[SimpleMetadata, BasisStateMetadata[Inner]], None]],
+        np.dtype[np.complexfloating],
+    ],
+]
+
+type LegacyEigenstateBasis[
+    M: BasisMetadata,
+    B: Basis[Any, Any] = Basis[M, Any],
+    BTransform: Basis[Any, Any] = Basis[
+        Metadata2D[SimpleMetadata, BasisStateMetadata[B], None], Any
+    ],
+] = EigenstateBasis[Any]

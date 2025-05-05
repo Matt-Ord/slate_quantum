@@ -22,7 +22,7 @@ if TYPE_CHECKING:
     from slate_quantum.metadata import TimeMetadata
     from slate_quantum.operator._operator import LegacyOperator
     from slate_quantum.state import LegacyState, LegacyStateList
-    from slate_quantum.state._basis import EigenstateBasis
+    from slate_quantum.state._basis import LegacyEigenstateBasis
 
 
 def _solve_schrodinger_equation_diagonal[
@@ -66,7 +66,7 @@ def solve_schrodinger_equation_decomposition[
 ) -> LegacyStateList[
     TimeMetadata,
     M,
-    LegacyTupleBasis2D[np.complexfloating, TB, EigenstateBasis[M], None],
+    LegacyTupleBasis2D[np.complexfloating, TB, LegacyEigenstateBasis[M], None],
 ]:
     """Solve the schrodinger equation by directly finding eigenstates for the given initial state and hamiltonian."""
     diagonal = into_diagonal_hermitian(hamiltonian)
