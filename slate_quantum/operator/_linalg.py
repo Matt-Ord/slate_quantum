@@ -18,7 +18,7 @@ from slate_quantum.operator._operator import (
     build_legacy_operator,
     build_legacy_operator_list,
 )
-from slate_quantum.state._basis import EigenstateBasis
+from slate_quantum.state._basis import LegacyEigenstateBasis
 from slate_quantum.state._state import LegacyStateList, build_legacy_state_list
 
 if TYPE_CHECKING:
@@ -47,7 +47,7 @@ def into_diagonal_hermitian[M: BasisMetadata, DT: np.complexfloating](
 ) -> LegacyOperator[
     M,
     np.complexfloating,
-    LegacyDiagonalBasis[DT, EigenstateBasis[M], EigenstateBasis[M], None],
+    LegacyDiagonalBasis[DT, LegacyEigenstateBasis[M], LegacyEigenstateBasis[M], None],
 ]:
     """Get a list of eigenstates for a given operator, assuming it is hermitian."""
     diagonal = into_diagonal_hermitian_array(operator)
@@ -55,12 +55,12 @@ def into_diagonal_hermitian[M: BasisMetadata, DT: np.complexfloating](
 
     new_basis = diagonal_basis(
         (
-            EigenstateBasis(
+            LegacyEigenstateBasis(
                 inner_basis[0].matrix,
                 direction=inner_basis[0].direction,
                 data_id=inner_basis[0].data_id,
             ),
-            EigenstateBasis(
+            LegacyEigenstateBasis(
                 inner_basis[1].matrix,
                 direction=inner_basis[1].direction,
                 data_id=inner_basis[1].data_id,
