@@ -9,12 +9,11 @@ from slate_core.array import Array, NestedIndex
 from slate_core.basis import (
     Basis,
     are_dual_shapes,
-    tuple_basis,
 )
 from slate_core.linalg import into_diagonal
 from slate_core.metadata import BasisMetadata, NestedLength
 
-from slate_quantum._util.legacy import LegacyBasis, Metadata2D
+from slate_quantum._util.legacy import LegacyBasis, Metadata2D, tuple_basis
 from slate_quantum.state._state import State, StateList
 
 if TYPE_CHECKING:
@@ -37,7 +36,7 @@ type OperatorMetadata[M: BasisMetadata = BasisMetadata] = Metadata2D[M, M, None]
 def operator_basis[M: BasisMetadata, DT: np.generic](
     basis: LegacyBasis[M, DT],
 ) -> LegacyTupleBasis2D[DT, LegacyBasis[M, DT], LegacyBasis[M, DT], None]:
-    return tuple_basis((basis, basis.dual_basis()))
+    return tuple_basis((basis, basis.dual_basis()))  # type: ignore migration
 
 
 class Operator[

@@ -4,8 +4,8 @@ import datetime
 from typing import TYPE_CHECKING, Any, TypedDict, Unpack, cast
 
 import numpy as np
-import slate
-import slate.linalg
+import slate_core
+import slate_core.linalg
 from scipy.constants import hbar  # type: ignore lib
 from slate_core import FundamentalBasis, SimpleMetadata, array, basis
 from slate_core.metadata import BasisMetadata
@@ -161,7 +161,7 @@ def solve_stochastic_schrodinger_equation_banded[
 
     # The actual coherent step is H / hbar not H, so to get the correct
     # step size we need to multiply by hbar
-    dt = hbar * (target_delta / abs(slate.linalg.norm(coherent_step).item()))
+    dt = hbar * (target_delta / abs(slate_core.linalg.norm(coherent_step).item()))
     times = basis.as_index(times)
 
     operators_data = [

@@ -28,7 +28,7 @@ if __name__ == "__main__":
 
     # We can plot the kernel to see how the correlation decays with distance.
     # The correlation falls by $e^-1$ at a distance of \pi / 2$.
-    full_data = array.as_outer_basis(array.as_outer_array(kernel))
+    full_data = array.as_outer_basis(array.as_outer_basis(kernel))
     fig, ax, _ = plot.array_against_axes_1d(full_data)
     ax.set_title(r"Isotropic Gaussian Kernel with $\sigma = \pi / 2$")
     fig.show()
@@ -55,7 +55,7 @@ if __name__ == "__main__":
     # approximate the kernel.
     truncated = truncate_noise_operator_list(operators, range(3))
     restored = IsotropicNoiseKernel.from_operators(truncated)
-    restored_data = array.as_outer_basis(array.as_outer_array(restored))
+    restored_data = array.as_outer_basis(array.as_outer_basis(restored))
 
     # The restored kernel is an approximation of the original kernel
     # which is good in the region which is smooth.
