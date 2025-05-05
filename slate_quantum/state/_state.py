@@ -348,19 +348,18 @@ def all_inner_product[
 
 
 def normalize_all[
-    M0: BasisMetadata,
-    M1: BasisMetadata,
+    M: TupleMetadata[tuple[BasisMetadata, BasisMetadata], None],
     DT: np.dtype[np.complexfloating],
 ](
-    states: StateList[TupleBasisLike[tuple[M0, M1], None], DT],
-) -> StateList[TupleBasis2D[tuple[Basis[M0], Basis[M1]], None], DT]:
+    states: StateList[Basis[M], DT],
+) -> StateList[Basis[M], DT]:
     norms = all_inner_product(states, states)
     norms = array.as_index_basis(norms)
     as_index = states.with_list_basis(norms.basis).assert_ok()
     as_mul = _basis.as_mul(as_index.basis.inner.children[1])
     states_as_mul = states.with_state_basis(as_mul).assert_ok()
     return StateList.build(
-        states_as_mul.basis,
+        cast("Basis[M]", states_as_mul.basis),
         cast(
             "np.ndarray[Any, DT]",
             states_as_mul.raw_data.reshape(states_as_mul.basis.inner.shape)

@@ -75,7 +75,6 @@ __all__ = [
     "build",
     "build_kinetic_energy_operator",
     "build_kinetic_hamiltonian",
-    "build_legacy_operator_list",
     "commute",
     "dagger",
     "dagger_each",
