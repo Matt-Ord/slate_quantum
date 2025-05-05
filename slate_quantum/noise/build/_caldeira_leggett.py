@@ -16,10 +16,11 @@ from slate_core.metadata.volume import fundamental_stacked_dk
 from slate_quantum._util.legacy import tuple_basis
 from slate_quantum.metadata._label import EigenvalueMetadata, eigenvalue_basis
 from slate_quantum.operator import (
-    OperatorList,
+    LegacyOperatorList,
     RecastDiagonalOperatorBasis,
     build,
 )
+from slate_quantum.operator._operator import OperatorList, build_legacy_operator_list
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -29,7 +30,7 @@ if TYPE_CHECKING:
 
 def periodic_caldeira_leggett_axis_operators[M: SpacedLengthMetadata](
     metadata: M,
-) -> OperatorList[
+) -> LegacyOperatorList[
     EigenvalueMetadata,
     M,
     np.complexfloating,
@@ -50,7 +51,7 @@ def periodic_caldeira_leggett_axis_operators[M: SpacedLengthMetadata](
         [-1, 1], basis.from_metadata(operators.basis.metadata()[0])
     )
     converted = operators.with_list_basis(list_basis)
-    return OperatorList(
+    return build_legacy_operator_list(
         tuple_basis(
             (eigenvalue_basis(np.array([eigenvalue, eigenvalue])), converted.basis[1])
         ),
@@ -63,7 +64,7 @@ def periodic_caldeira_leggett_operators[
     E: AxisDirections,
 ](
     metadata: StackedMetadata[M, E],
-) -> OperatorList[
+) -> LegacyOperatorList[
     EigenvalueMetadata,
     StackedMetadata[M, E],
     np.complexfloating,
@@ -85,7 +86,7 @@ def periodic_caldeira_leggett_operators[
         [-1, 1], basis.from_metadata(operators.basis.metadata()[0])
     )
     converted = operators.with_list_basis(list_basis)
-    return OperatorList(
+    return build_legacy_operator_list(
         tuple_basis(
             (eigenvalue_basis(np.array([eigenvalue, eigenvalue])), converted.basis[1])
         ),
@@ -98,7 +99,7 @@ def real_periodic_caldeira_leggett_operators[
     E: AxisDirections,
 ](
     metadata: StackedMetadata[M, E],
-) -> OperatorList[
+) -> LegacyOperatorList[
     EigenvalueMetadata,
     StackedMetadata[M, E],
     np.complexfloating,
@@ -129,9 +130,12 @@ def real_periodic_caldeira_leggett_operators[
         ]
     )
 
-    return OperatorList(
+    return build_legacy_operator_list(
         tuple_basis(
-            (eigenvalue_basis(np.array([eigenvalue, eigenvalue])), operators.basis[1])
+            (
+                eigenvalue_basis(np.array([eigenvalue, eigenvalue])),
+                operators.basis.inner.children[1],
+            )
         ),
         operators.raw_data,
     )
@@ -162,7 +166,7 @@ def caldeira_leggett_correlation_fn(
 
 def caldeira_leggett_operators[M: SpacedLengthMetadata, E: AxisDirections](
     metadata: StackedMetadata[M, E],
-) -> OperatorList[
+) -> LegacyOperatorList[
     EigenvalueMetadata,
     StackedMetadata[M, E],
     np.complexfloating,
@@ -176,7 +180,9 @@ def caldeira_leggett_operators[M: SpacedLengthMetadata, E: AxisDirections](
     assert len(metadata.fundamental_shape) == 1
     operators = OperatorList.from_operators([build.x(metadata, axis=0)])
 
-    return OperatorList(
-        tuple_basis((eigenvalue_basis(np.array([1])), operators.basis[1])),
+    return build_legacy_operator_list(
+        tuple_basis(
+            (eigenvalue_basis(np.array([1])), operators.basis.inner.children[1])
+        ),
         operators.raw_data,
     )

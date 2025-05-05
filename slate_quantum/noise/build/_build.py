@@ -20,10 +20,11 @@ from slate_quantum.noise.diagonalize import (
     get_periodic_noise_operators_eigenvalue,
 )
 from slate_quantum.operator import (
-    Operator,
+    LegacyOperator,
     SuperOperatorMetadata,
     get_commutator_operator_list,
 )
+from slate_quantum.operator._operator import build_legacy_operator
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterable
@@ -36,7 +37,7 @@ if TYPE_CHECKING:
     from slate_quantum._util.legacy import StackedMetadata
     from slate_quantum.noise._kernel import AxisKernel
     from slate_quantum.operator import (
-        OperatorList,
+        LegacyOperatorList,
     )
 
 
@@ -186,11 +187,11 @@ def lorentzian_correlation_fn(
 
 
 def temperature_corrected_operators[M0: BasisMetadata, M1: BasisMetadata](
-    hamiltonian: Operator[M1, np.complexfloating],
-    operators: OperatorList[M0, M1, np.complexfloating],
+    hamiltonian: LegacyOperator[M1, np.complexfloating],
+    operators: LegacyOperatorList[M0, M1, np.complexfloating],
     temperature: float,
     eta: float,
-) -> OperatorList[M0, M1, np.complexfloating]:
+) -> LegacyOperatorList[M0, M1, np.complexfloating]:
     """Get the temperature corrected operators.
 
     Note this returns the operators multiplied by hbar, to avoid numerical issues.
@@ -203,24 +204,24 @@ def temperature_corrected_operators[M0: BasisMetadata, M1: BasisMetadata](
 
 
 def hamiltonian_shift[M1: BasisMetadata](
-    hamiltonian: Operator[M1, np.complexfloating],
-    operators: OperatorList[BasisMetadata, M1, np.complexfloating],
+    hamiltonian: LegacyOperator[M1, np.complexfloating],
+    operators: LegacyOperatorList[BasisMetadata, M1, np.complexfloating],
     eta: float,
-) -> Operator[M1, np.complexfloating]:
+) -> LegacyOperator[M1, np.complexfloating]:
     """Get the temperature corrected Hamiltonian shift."""
     shift_product = linalg.einsum(
         "(i (j k)),(i (k' l))->(k' l)", operator.dagger_each(operators), operators
     )
-    shift_product = Operator(shift_product.basis, shift_product.raw_data)
+    shift_product = build_legacy_operator(shift_product.basis, shift_product.raw_data)
     commutator = operator.commute(hamiltonian, shift_product)
     pre_factor = 1j * eta / (4 * hbar)
     return commutator * pre_factor
 
 
 def truncate_noise_operator_list[M0: EigenvalueMetadata, M1: BasisMetadata](
-    operators: OperatorList[M0, M1, np.complexfloating],
+    operators: LegacyOperatorList[M0, M1, np.complexfloating],
     truncation: Iterable[int],
-) -> OperatorList[M0, M1, np.complexfloating]:
+) -> LegacyOperatorList[M0, M1, np.complexfloating]:
     """
     Get a truncated list of diagonal operators.
 

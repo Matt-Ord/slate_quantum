@@ -11,7 +11,13 @@ from slate_core.metadata import BasisMetadata
 
 from slate_quantum._util.legacy import diagonal_basis, tuple_basis
 from slate_quantum.metadata._label import EigenvalueMetadata
-from slate_quantum.operator._operator import Operator, OperatorList
+from slate_quantum.operator._operator import (
+    LegacyOperator,
+    LegacyOperatorList,
+    OperatorList,
+    build_legacy_operator,
+    build_legacy_operator_list,
+)
 from slate_quantum.state._basis import EigenstateBasis
 from slate_quantum.state._state import LegacyStateList, build_legacy_state_list
 
@@ -25,20 +31,20 @@ if TYPE_CHECKING:
 
 
 def into_diagonal[M: BasisMetadata, DT: np.complexfloating](
-    operator: Operator[M, DT],
-) -> Operator[
+    operator: LegacyOperator[M, DT],
+) -> LegacyOperator[
     M,
     np.complexfloating,
     LegacyDiagonalBasis[DT, ExplicitBasis[M, DT], ExplicitBasis[M, DT], None],
 ]:
     """Get a list of eigenstates for a given operator, assuming it is hermitian."""
     diagonal = into_diagonal_array(operator)
-    return Operator(diagonal.basis, diagonal.raw_data)
+    return build_legacy_operator(diagonal.basis, diagonal.raw_data)
 
 
 def into_diagonal_hermitian[M: BasisMetadata, DT: np.complexfloating](
-    operator: Operator[M, DT],
-) -> Operator[
+    operator: LegacyOperator[M, DT],
+) -> LegacyOperator[
     M,
     np.complexfloating,
     LegacyDiagonalBasis[DT, EigenstateBasis[M], EigenstateBasis[M], None],
@@ -62,11 +68,11 @@ def into_diagonal_hermitian[M: BasisMetadata, DT: np.complexfloating](
         ),
         diagonal.basis.metadata().extra,
     )
-    return Operator(new_basis, diagonal.raw_data)
+    return build_legacy_operator(new_basis, diagonal.raw_data)
 
 
 def get_eigenstates_hermitian[M: BasisMetadata, DT: np.complexfloating](
-    operator: Operator[M, DT],
+    operator: LegacyOperator[M, DT],
 ) -> LegacyStateList[EigenvalueMetadata, M]:
     diagonal = into_diagonal_hermitian(operator)
     states = diagonal.basis.inner[0].eigenvectors
@@ -78,9 +84,9 @@ def get_eigenstates_hermitian[M: BasisMetadata, DT: np.complexfloating](
 
 
 def matmul[M0: BasisMetadata](
-    lhs: Operator[M0, np.complexfloating],
-    rhs: Operator[M0, np.complexfloating],
-) -> Operator[M0, np.complexfloating]:
+    lhs: LegacyOperator[M0, np.complexfloating],
+    rhs: LegacyOperator[M0, np.complexfloating],
+) -> LegacyOperator[M0, np.complexfloating]:
     """
     Multiply each operator in rhs by lhs.
 
@@ -96,13 +102,13 @@ def matmul[M0: BasisMetadata](
     OperatorList[B_3, B_0, B_2]
     """
     data = einsum("(i k'),(k j) -> (i j)", lhs, rhs)
-    return Operator(cast("Basis[Any, Any]", data.basis), data.raw_data)
+    return build_legacy_operator(cast("Basis[Any, Any]", data.basis), data.raw_data)
 
 
 def commute[M0: BasisMetadata](
-    lhs: Operator[M0, np.complexfloating],
-    rhs: Operator[M0, np.complexfloating],
-) -> Operator[M0, np.complexfloating]:
+    lhs: LegacyOperator[M0, np.complexfloating],
+    rhs: LegacyOperator[M0, np.complexfloating],
+) -> LegacyOperator[M0, np.complexfloating]:
     """
     Given two operators lhs, rhs, calculate the commutator.
 
@@ -116,33 +122,33 @@ def commute[M0: BasisMetadata](
 
 
 def dagger[M0: BasisMetadata](
-    operator: Operator[M0, np.complexfloating],
-) -> Operator[M0, np.complexfloating]:
+    operator: LegacyOperator[M0, np.complexfloating],
+) -> LegacyOperator[M0, np.complexfloating]:
     """Get the hermitian conjugate of an operator."""
     res = array.dagger(operator)
     # TODO: what should array.dagger's basis be?  # noqa: FIX002
-    return Operator(res.basis.dual_basis(), res.raw_data)
+    return build_legacy_operator(res.basis.dual_basis(), res.raw_data)
 
 
 def dagger_each[M0: BasisMetadata, M1: BasisMetadata](
-    operators: OperatorList[M0, M1, np.complexfloating],
-) -> OperatorList[M0, M1, np.complexfloating]:
+    operators: LegacyOperatorList[M0, M1, np.complexfloating],
+) -> LegacyOperatorList[M0, M1, np.complexfloating]:
     """Get the hermitian conjugate of an operator."""
     daggered = [dagger(operator) for operator in operators]
     if len(daggered) == 0:
-        return OperatorList(operators.basis, np.array([]))
+        return build_legacy_operator_list(operators.basis, np.array([]))
 
     out = OperatorList.from_operators(daggered)
-    return OperatorList(
+    return build_legacy_operator_list(
         tuple_basis((basis.from_metadata(operators.basis.metadata()[0]), out.basis[1])),
         out.raw_data,
     )
 
 
 def matmul_list_operator[M0: BasisMetadata, M1: BasisMetadata](
-    lhs: OperatorList[M0, M1, np.complexfloating],
-    rhs: Operator[M1, np.complexfloating],
-) -> OperatorList[M0, M1, np.complexfloating]:
+    lhs: LegacyOperatorList[M0, M1, np.complexfloating],
+    rhs: LegacyOperator[M1, np.complexfloating],
+) -> LegacyOperatorList[M0, M1, np.complexfloating]:
     """
     Multiply each operator in rhs by lhs.
 
@@ -158,13 +164,15 @@ def matmul_list_operator[M0: BasisMetadata, M1: BasisMetadata](
     OperatorList[B_3, B_0, B_2]
     """
     data = einsum("(m (i k')),(k j) -> (m (i j))", lhs, rhs)
-    return OperatorList(cast("Basis[Any, Any]", data.basis), data.raw_data)
+    return build_legacy_operator_list(
+        cast("Basis[Any, Any]", data.basis), data.raw_data
+    )
 
 
 def matmul_operator_list[M0: BasisMetadata, M1: BasisMetadata](
-    lhs: Operator[M1, np.complexfloating],
-    rhs: OperatorList[M0, M1, np.complexfloating],
-) -> OperatorList[M0, M1, np.complexfloating]:
+    lhs: LegacyOperator[M1, np.complexfloating],
+    rhs: LegacyOperatorList[M0, M1, np.complexfloating],
+) -> LegacyOperatorList[M0, M1, np.complexfloating]:
     """
     Multiply each operator in rhs by lhs.
 
@@ -180,13 +188,15 @@ def matmul_operator_list[M0: BasisMetadata, M1: BasisMetadata](
     OperatorList[B_3, B_0, B_2]
     """
     data = einsum("(i k'),(m (k j)) -> (m (i j))", lhs, rhs)
-    return OperatorList(cast("Basis[Any, Any]", data.basis), data.raw_data)
+    return build_legacy_operator_list(
+        cast("Basis[Any, Any]", data.basis), data.raw_data
+    )
 
 
 def get_commutator_operator_list[M0: BasisMetadata, M1: BasisMetadata](
-    lhs: Operator[M1, np.complexfloating],
-    rhs: OperatorList[M0, M1, np.complexfloating],
-) -> OperatorList[M0, M1, np.complexfloating]:
+    lhs: LegacyOperator[M1, np.complexfloating],
+    rhs: LegacyOperatorList[M0, M1, np.complexfloating],
+) -> LegacyOperatorList[M0, M1, np.complexfloating]:
     """
     Given two operators lhs, rhs, calculate the commutator.
 

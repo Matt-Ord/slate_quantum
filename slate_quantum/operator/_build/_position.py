@@ -31,7 +31,13 @@ from slate_quantum.operator._diagonal import (
     RecastDiagonalOperatorBasis,
     recast_diagonal_basis,
 )
-from slate_quantum.operator._operator import Operator, OperatorList
+from slate_quantum.operator._operator import (
+    LegacyOperator,
+    LegacyOperatorList,
+    OperatorList,
+    build_legacy_operator,
+    build_legacy_operator_list,
+)
 from slate_quantum.state._build import wrap_displacements
 
 if TYPE_CHECKING:
@@ -63,12 +69,12 @@ def get_displacements_x[M: LengthMetadata](
     data = wrap_displacements(distances, max_distance)
 
     basis = FundamentalBasis(metadata)
-    return Array(basis, data)
+    return Array.build(basis, data).assert_ok()
 
 
 def nx_displacement_operators_stacked[M: StackedMetadata[BasisMetadata, Any]](
     metadata: M,
-) -> OperatorList[
+) -> LegacyOperatorList[
     SimpleMetadata,
     M,
     np.int64,
@@ -83,7 +89,7 @@ def nx_displacement_operators_stacked[M: StackedMetadata[BasisMetadata, Any]](
     ax = cast("Basis[M, Any]", basis.from_metadata(metadata))
     operator_basis = tuple_basis((ax, ax.dual_basis()))
     return OperatorList.from_operators(
-        Operator(
+        build_legacy_operator(
             operator_basis,
             (n_x_points[:, np.newaxis] - n_x_points[np.newaxis, :] + n // 2) % n
             - (n // 2),
@@ -98,7 +104,7 @@ def nx_displacement_operators_stacked[M: StackedMetadata[BasisMetadata, Any]](
 
 def nx_displacement_operator[M: BasisMetadata](
     metadata: M,
-) -> Operator[
+) -> LegacyOperator[
     M,
     np.int64,
     LegacyTupleBasis2D[np.generic, Basis[M, Any], Basis[M, Any], None],
@@ -110,13 +116,13 @@ def nx_displacement_operator[M: BasisMetadata](
         n // 2
     )
     ax = basis.from_metadata(metadata)
-    return Operator(tuple_basis((ax, ax.dual_basis())), data)
+    return build_legacy_operator(tuple_basis((ax, ax.dual_basis())), data)
 
 
 def x_displacement_operator[M: LengthMetadata](
     metadata: M,
     origin: float = 0.0,
-) -> Operator[
+) -> LegacyOperator[
     M,
     np.floating,
     LegacyTupleBasis2D[np.generic, FundamentalBasis[M], FundamentalBasis[M], None],
@@ -138,7 +144,7 @@ def x_displacement_operator[M: LengthMetadata](
     data = np.remainder((distances + metadata.delta), max_distance) - max_distance
 
     basis = FundamentalBasis(metadata)
-    return Operator(tuple_basis((basis, basis.dual_basis())), data)
+    return build_legacy_operator(tuple_basis((basis, basis.dual_basis())), data)
 
 
 def _get_displacements_matrix_x_along_axis[M: SpacedLengthMetadata, E: AxisDirections](
@@ -146,7 +152,7 @@ def _get_displacements_matrix_x_along_axis[M: SpacedLengthMetadata, E: AxisDirec
     origin: float = 0,
     *,
     axis: int,
-) -> Operator[
+) -> LegacyOperator[
     StackedMetadata[M, E],
     np.floating,
     LegacyTupleBasis2D[
@@ -165,12 +171,12 @@ def _get_displacements_matrix_x_along_axis[M: SpacedLengthMetadata, E: AxisDirec
     data = wrap_displacements(distances, max_distance)
 
     ax = basis.from_metadata(metadata)
-    return Operator(tuple_basis((ax, ax.dual_basis())), data)
+    return build_legacy_operator(tuple_basis((ax, ax.dual_basis())), data)
 
 
 def x_displacement_operators_stacked[M: SpacedLengthMetadata, E: AxisDirections](
     metadata: StackedMetadata[M, E], origin: tuple[float, ...] | None
-) -> OperatorList[
+) -> LegacyOperatorList[
     SimpleMetadata,
     StackedMetadata[M, E],
     np.floating,
@@ -199,7 +205,7 @@ def x_displacement_operators_stacked[M: SpacedLengthMetadata, E: AxisDirections]
 def total_x_displacement_operator[M: SpacedLengthMetadata, E: AxisDirections](
     metadata: StackedMetadata[M, E],
     origin: tuple[float, ...] | None = None,
-) -> Operator[
+) -> LegacyOperator[
     StackedMetadata[M, E],
     np.float64,
     LegacyTupleBasis2D[
@@ -211,7 +217,7 @@ def total_x_displacement_operator[M: SpacedLengthMetadata, E: AxisDirections](
 ]:
     """Get a matrix of displacements in x, taken in a periodic fashion."""
     displacements = x_displacement_operators_stacked(metadata, origin)
-    return Operator(
+    return build_legacy_operator(
         displacements.basis[1],
         np.linalg.norm(
             displacements.raw_data.reshape(displacements.basis.shape), axis=0
@@ -259,7 +265,7 @@ def axis_scattering_operator[M: BasisMetadata](
 
 def all_axis_periodic_operators[M: BasisMetadata](
     inner_basis: Basis[M, Any],
-) -> OperatorList[
+) -> LegacyOperatorList[
     SimpleMetadata,
     M,
     np.complexfloating,
@@ -277,12 +283,14 @@ def all_axis_periodic_operators[M: BasisMetadata](
     list_basis = diagonal_basis(
         (FundamentalBasis.from_size(outer_basis.size), operator_basis)
     )
-    return OperatorList(list_basis, np.ones(outer_basis.size, dtype=np.complex128))
+    return build_legacy_operator_list(
+        list_basis, np.ones(outer_basis.size, dtype=np.complex128)
+    )
 
 
 def all_axis_scattering_operators[M: BasisMetadata](
     metadata: M,
-) -> OperatorList[
+) -> LegacyOperatorList[
     SimpleMetadata,
     M,
     np.complexfloating,
@@ -332,7 +340,7 @@ def scattering_operator[M: SpacedLengthMetadata, E: AxisDirections](
 
 def all_periodic_operators[M: BasisMetadata, E](
     inner_basis: LegacyTupleBasis[M, E, Any],
-) -> OperatorList[
+) -> LegacyOperatorList[
     SimpleMetadata,
     StackedMetadata[M, E],
     np.complexfloating,
@@ -353,12 +361,14 @@ def all_periodic_operators[M: BasisMetadata, E](
     list_basis = diagonal_basis(
         (FundamentalBasis.from_size(outer_basis.size), operator_basis)
     )
-    return OperatorList(list_basis, np.ones(outer_basis.size, dtype=np.complex128))
+    return build_legacy_operator_list(
+        list_basis, np.ones(outer_basis.size, dtype=np.complex128)
+    )
 
 
 def all_scattering_operators[M: BasisMetadata, E](
     metadata: StackedMetadata[M, E],
-) -> OperatorList[
+) -> LegacyOperatorList[
     SimpleMetadata,
     StackedMetadata[M, E],
     np.complexfloating,

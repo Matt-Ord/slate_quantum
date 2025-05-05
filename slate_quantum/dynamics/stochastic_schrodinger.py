@@ -25,8 +25,8 @@ if TYPE_CHECKING:
 
     from slate_quantum._util.legacy import LegacyBasis, LegacyTupleBasis2D, Metadata2D
     from slate_quantum.metadata import EigenvalueMetadata, TimeMetadata
-    from slate_quantum.operator import OperatorList
-    from slate_quantum.operator._operator import Operator
+    from slate_quantum.operator import LegacyOperatorList
+    from slate_quantum.operator._operator import LegacyOperator
     from slate_quantum.state import LegacyState, LegacyStateList
 
 
@@ -95,8 +95,8 @@ def solve_stochastic_schrodinger_equation_banded[
 ](
     initial_state: LegacyState[M],
     times: LegacyBasis[MT, np.complexfloating],
-    hamiltonian: Operator[M, np.complexfloating],
-    noise: OperatorList[
+    hamiltonian: LegacyOperator[M, np.complexfloating],
+    noise: LegacyOperatorList[
         EigenvalueMetadata,
         M,
         np.complexfloating,

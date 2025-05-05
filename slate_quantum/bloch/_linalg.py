@@ -20,7 +20,7 @@ from slate_quantum.metadata._repeat import RepeatedLengthMetadata
 from slate_quantum.state._basis import EigenstateBasis
 
 if TYPE_CHECKING:
-    from slate_quantum.operator._operator import Operator
+    from slate_quantum.operator._operator import LegacyOperator
 
 type BlochEigenstateBasis[M: RepeatedLengthMetadata, E] = EigenstateBasis[
     StackedMetadata[M, E],
@@ -50,7 +50,7 @@ type DiagonalBlochBasis[M: RepeatedLengthMetadata, E] = LegacyDiagonalBasis[
 
 
 def into_diagonal[M: RepeatedLengthMetadata, E](
-    operator: Operator[
+    operator: LegacyOperator[
         StackedMetadata[M, E],
         np.complexfloating,
         LegacyBlockDiagonalBasis[
@@ -65,13 +65,13 @@ def into_diagonal[M: RepeatedLengthMetadata, E](
             ],
         ],
     ],
-) -> Operator[
+) -> LegacyOperator[
     StackedMetadata[M, E],
     np.complexfloating,
     DiagonalBlochBasis[M, E],
 ]:
     diagonal = _operator.into_diagonal_hermitian(operator)
     return cast(
-        "Operator[StackedMetadata[M, E], np.complexfloating, DiagonalBlochBasis[M, E]]",
+        "LegacyOperator[StackedMetadata[M, E], np.complexfloating, DiagonalBlochBasis[M, E]]",
         diagonal,
     )

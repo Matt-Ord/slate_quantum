@@ -36,7 +36,7 @@ if TYPE_CHECKING:
     from slate_quantum._util.legacy import StackedMetadata
     from slate_quantum.metadata import EigenvalueMetadata
     from slate_quantum.noise._kernel import IsotropicNoiseKernel
-    from slate_quantum.operator._operator import OperatorList
+    from slate_quantum.operator._operator import LegacyOperatorList
 
     from ._kernel import AxisKernel, DiagonalNoiseKernel
 
@@ -182,7 +182,7 @@ def get_gaussian_noise_operators_periodic[
     lambda_: float,
     *,
     truncation: Iterable[int] | None = None,
-) -> OperatorList[
+) -> LegacyOperatorList[
     EigenvalueMetadata,
     StackedMetadata[M, E],
     np.complexfloating,
@@ -220,7 +220,7 @@ def get_effective_gaussian_noise_operators_periodic[
     temperature: float,
     *,
     truncation: Iterable[int] | None = None,
-) -> OperatorList[
+) -> LegacyOperatorList[
     EigenvalueMetadata,
     StackedMetadata[M, E],
     np.complexfloating,
@@ -264,7 +264,7 @@ def get_periodic_gaussian_operators_explicit_taylor[M: SpacedLengthMetadata](
     lambda_: float,
     *,
     n_terms: int | None = None,
-) -> OperatorList[
+) -> LegacyOperatorList[
     EigenvalueMetadata,
     M,
     np.complexfloating,
@@ -304,7 +304,7 @@ def get_linear_gaussian_noise_operators_explicit_taylor[M: SpacedLengthMetadata]
     lambda_: float,
     *,
     n_terms: int | None = None,
-) -> OperatorList[
+) -> LegacyOperatorList[
     EigenvalueMetadata,
     M,
     np.complexfloating,
@@ -355,7 +355,7 @@ def get_periodic_gaussian_operators_explicit_taylor_stacked[M: SpacedLengthMetad
     lambda_: float,
     *,
     shape: tuple[int, ...] | None = None,
-) -> OperatorList[EigenvalueMetadata, StackedMetadata[M, E], np.complexfloating]:
+) -> LegacyOperatorList[EigenvalueMetadata, StackedMetadata[M, E], np.complexfloating]:
     """Calculate the noise operators for an isotropic gaussian noise kernel, using an explicit Taylor expansion.
 
     This function makes use of the analytical expression for the Taylor expansion of gaussian
@@ -383,7 +383,7 @@ def get_linear_gaussian_operators_explicit_taylor_stacked[M: SpacedLengthMetadat
     lambda_: float,
     *,
     shape: tuple[int, ...] | None = None,
-) -> OperatorList[EigenvalueMetadata, StackedMetadata[M, E], np.complexfloating]:
+) -> LegacyOperatorList[EigenvalueMetadata, StackedMetadata[M, E], np.complexfloating]:
     """Calculate the noise operators for an isotropic gaussian noise kernel, using an explicit Taylor expansion.
 
     This function makes use of the analytical expression for the Taylor expansion of gaussian

@@ -31,13 +31,14 @@ from slate_quantum._util.legacy import (
 )
 from slate_quantum.metadata import EigenvalueMetadata
 from slate_quantum.operator import (
-    OperatorList,
+    LegacyOperatorList,
     OperatorMetadata,
     RecastDiagonalOperatorBasis,
     SuperOperator,
     SuperOperatorMetadata,
 )
 from slate_quantum.operator._diagonal import recast_diagonal_basis
+from slate_quantum.operator._operator import build_legacy_operator_list
 
 
 class NoiseKernel[
@@ -49,7 +50,7 @@ class NoiseKernel[
 
     @staticmethod
     def from_operators[M_: BasisMetadata, DT_: np.generic](
-        operators: OperatorList[EigenvalueMetadata, M_, DT_],
+        operators: LegacyOperatorList[EigenvalueMetadata, M_, DT_],
     ) -> NoiseKernel[M_, DT_]:
         converted = operators.with_basis(basis_.as_tuple(operators.basis))
         converted_inner = converted.with_operator_basis(
@@ -137,7 +138,7 @@ class DiagonalNoiseKernel[
     @staticmethod
     @override
     def from_operators[M_: BasisMetadata, DT_: np.generic](
-        operators: OperatorList[EigenvalueMetadata, M_, DT_],
+        operators: LegacyOperatorList[EigenvalueMetadata, M_, DT_],
     ) -> DiagonalNoiseKernel[M_, DT_]:
         """Build a diagonal kernel from operators."""
         converted = operators.with_basis(basis_.as_tuple(operators.basis))
@@ -238,7 +239,7 @@ class IsotropicNoiseKernel[
     @staticmethod
     @override
     def from_operators[M_: BasisMetadata, DT_: np.generic](
-        operators: OperatorList[EigenvalueMetadata, M_, DT_],
+        operators: LegacyOperatorList[EigenvalueMetadata, M_, DT_],
     ) -> IsotropicNoiseKernel[M_, DT_]:
         """Build a diagonal kernel from operators."""
         diagonal_kernel = DiagonalNoiseKernel.from_operators(operators)
@@ -304,7 +305,7 @@ def as_axis_kernel_from_isotropic[
 
 def get_diagonal_noise_operators_from_axis[M: BasisMetadata, E](
     operators_list: tuple[
-        OperatorList[
+        LegacyOperatorList[
             EigenvalueMetadata,
             M,
             np.complexfloating,
@@ -312,7 +313,7 @@ def get_diagonal_noise_operators_from_axis[M: BasisMetadata, E](
         ...,
     ],
     extra: E,
-) -> OperatorList[
+) -> LegacyOperatorList[
     EigenvalueMetadata,
     StackedMetadata[M, E],
     np.complex128,
@@ -365,7 +366,7 @@ def get_diagonal_noise_operators_from_axis[M: BasisMetadata, E](
     eigenvalues = outer_product(*full_coefficients)
     eigenvalue_basis = FundamentalBasis(EigenvalueMetadata(eigenvalues))
 
-    return OperatorList(
+    return build_legacy_operator_list(
         tuple_basis(
             (eigenvalue_basis, recast_diagonal_basis(full_basis_1, full_basis_1))
         ),
@@ -376,7 +377,7 @@ def get_diagonal_noise_operators_from_axis[M: BasisMetadata, E](
 type NoiseOperatorList[
     M: BasisMetadata,
     B: Basis[Any, Any] = LegacyBasis[Metadata2D[M, M, None], np.complexfloating],
-] = OperatorList[
+] = LegacyOperatorList[
     EigenvalueMetadata,
     M,
     np.complexfloating,

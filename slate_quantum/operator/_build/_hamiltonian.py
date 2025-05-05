@@ -15,7 +15,7 @@ from slate_core.metadata.volume import (
 )
 
 from slate_quantum.operator._diagonal import MomentumOperator
-from slate_quantum.operator._operator import Operator
+from slate_quantum.operator._operator import build_legacy_operator
 
 if TYPE_CHECKING:
     from slate_core.metadata import (
@@ -25,6 +25,7 @@ if TYPE_CHECKING:
 
     from slate_quantum._util.legacy import StackedMetadata
     from slate_quantum.operator._diagonal import Potential
+    from slate_quantum.operator._operator import LegacyOperator
 
 
 def _wrap_k_points(
@@ -78,7 +79,7 @@ def kinetic_hamiltonian[M: SpacedLengthMetadata, E: AxisDirections](
     potential: Potential[M, E, np.complexfloating],
     mass: float,
     bloch_fraction: np.ndarray[Any, np.dtype[np.floating]] | None = None,
-) -> Operator[StackedMetadata[M, E], np.complexfloating]:
+) -> LegacyOperator[StackedMetadata[M, E], np.complexfloating]:
     """
     Calculate the total hamiltonian in momentum basis for a given potential and mass.
 
@@ -96,7 +97,7 @@ def kinetic_hamiltonian[M: SpacedLengthMetadata, E: AxisDirections](
         potential.basis.metadata().children[0], mass, bloch_fraction
     )
 
-    return Operator(
+    return build_legacy_operator(
         SplitBasis(potential.basis, kinetic_hamiltonian.basis),
         np.concatenate([potential.raw_data, kinetic_hamiltonian.raw_data], axis=None),
     )

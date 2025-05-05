@@ -10,7 +10,7 @@ from slate_core import basis, metadata
 from slate_quantum import bloch, operator
 from slate_quantum._util.legacy import tuple_basis
 from slate_quantum.bloch.build import BlochFractionMetadata
-from slate_quantum.operator._operator import Operator
+from slate_quantum.operator._operator import build_legacy_operator
 
 TEST_LENGTHS = [1, 2, 3, 5]
 SHAPES_1D = [(x,) for x in [1, 2, 3, 5]]
@@ -103,10 +103,10 @@ def test_build_potential_bloch_operator_1d(
     potential = operator.build.cos_potential(meta, 1)
     fraction_basis = basis.from_metadata(BlochFractionMetadata.from_repeats(repeat))
 
-    operator_list = operator.OperatorList(
+    operator_list = operator.OperatorList.build(
         tuple_basis((fraction_basis, potential.basis)),
         np.tile(potential.raw_data, np.prod(repeat).item()),
-    )
+    ).assert_ok()
 
     sparse = bloch.build.bloch_operator_from_list(operator_list)
     full = operator.build.repeat_potential(potential, repeat)
@@ -132,12 +132,12 @@ def test_bloch_operator_from_list() -> None:
     fraction_basis = basis.from_metadata(BlochFractionMetadata.from_repeats((2,)))
     operator_basis_tuple = tuple_basis((operator_basis, operator_basis.dual_basis()))
 
-    operator_0 = Operator(operator_basis_tuple, np.ones((3, 3)))
-    operator_1 = Operator(operator_basis_tuple, 2 * np.ones((3, 3)))
-    operator_list = operator.OperatorList(
+    operator_0 = build_legacy_operator(operator_basis_tuple, np.ones((3, 3)))
+    operator_1 = build_legacy_operator(operator_basis_tuple, 2 * np.ones((3, 3)))
+    operator_list = operator.OperatorList.build(
         tuple_basis((fraction_basis, operator_basis_tuple)),
         np.array([operator_0.raw_data, operator_1.raw_data], dtype=complex),
-    )
+    ).assert_ok()
 
     sparse = bloch.build.bloch_operator_from_list(operator_list)
     basis.transformed_from_metadata(

@@ -12,7 +12,10 @@ from slate_core.metadata.volume import spaced_volume_metadata_from_stacked_delta
 from slate_quantum import noise, operator
 from slate_quantum._util.legacy import tuple_basis
 from slate_quantum.operator._linalg import into_diagonal_hermitian
-from slate_quantum.operator._operator import Operator, OperatorList
+from slate_quantum.operator._operator import (
+    OperatorList,
+    build_legacy_operator,
+)
 
 
 def test_build_kinetic_operator() -> None:
@@ -254,7 +257,7 @@ def test_filter_scatter_operator() -> None:
         (np.array([2 * np.pi, 0]),), (5,)
     )
     basis_k = basis.transformed_from_metadata(metadata)
-    test_operator = Operator(
+    test_operator = build_legacy_operator(
         tuple_basis((basis_k, basis_k.dual_basis())),
         np.ones(25, dtype=np.complex128),
     )

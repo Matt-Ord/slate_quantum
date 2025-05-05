@@ -10,7 +10,6 @@ from slate_core.util import pad_ft_points
 from slate_quantum import operator
 from slate_quantum._util.legacy import LegacyBasis, LegacyTupleBasis, tuple_basis
 from slate_quantum.metadata import EigenvalueMetadata
-from slate_quantum.operator import OperatorList, RecastDiagonalOperatorBasis
 
 if TYPE_CHECKING:
     from slate_core import SimpleMetadata
@@ -18,6 +17,7 @@ if TYPE_CHECKING:
 
     from slate_quantum._util.legacy import LegacyTupleBasis2D, StackedMetadata
     from slate_quantum.noise._kernel import IsotropicNoiseKernel
+    from slate_quantum.operator import LegacyOperatorList, RecastDiagonalOperatorBasis
 
 
 def _get_noise_eigenvalues_isotropic_fft[M: BasisMetadata](
@@ -36,7 +36,7 @@ def _get_noise_eigenvalues_isotropic_fft[M: BasisMetadata](
 
 def get_periodic_noise_operators_isotropic_fft[M: BasisMetadata](
     kernel: IsotropicNoiseKernel[M, np.complexfloating],
-) -> OperatorList[EigenvalueMetadata, M, np.complexfloating]:
+) -> LegacyOperatorList[EigenvalueMetadata, M, np.complexfloating]:
     r"""
     For an isotropic noise kernel, the noise operators are independent in k space.
 
@@ -57,7 +57,7 @@ def get_periodic_noise_operators_isotropic_fft[M: BasisMetadata](
     )
     operators = operators.with_basis(basis.as_tuple(operators.basis))
     eigenvalues = _get_noise_eigenvalues_isotropic_fft(kernel)
-    return OperatorList(
+    return build_legacy_operator_list(
         tuple_basis((FundamentalBasis(eigenvalues), operators.basis.children[1])),
         operators.raw_data,
     )
@@ -94,7 +94,7 @@ def build_periodic_noise_operators[
 ](
     list_basis: B,
     inner_basis: LegacyTupleBasis[M1, E, Any],
-) -> OperatorList[
+) -> LegacyOperatorList[
     EigenvalueMetadata,
     StackedMetadata[M1, E],
     np.complexfloating,
@@ -135,7 +135,7 @@ def build_periodic_noise_operators[
     operators = operator.build.all_periodic_operators(inner_basis)
     operators = operators.with_basis(operators.basis.inner)
 
-    return OperatorList(
+    return build_legacy_operator_list(
         tuple_basis(
             (FundamentalBasis(list_basis.metadata()), operators.basis.children[1])
         ),
@@ -147,7 +147,7 @@ def get_periodic_noise_operators_isotropic_stacked_fft[M: BasisMetadata, E](
     kernel: IsotropicNoiseKernel[StackedMetadata[M, E], np.complexfloating],
     *,
     fundamental_shape: tuple[int, ...] | None = None,
-) -> OperatorList[
+) -> LegacyOperatorList[
     EigenvalueMetadata,
     StackedMetadata[M, E],
     np.complexfloating,

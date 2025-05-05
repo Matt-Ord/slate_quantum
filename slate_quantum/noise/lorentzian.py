@@ -32,7 +32,7 @@ if TYPE_CHECKING:
     )
     from slate_quantum.metadata import EigenvalueMetadata
     from slate_quantum.noise._kernel import IsotropicNoiseKernel
-    from slate_quantum.operator._operator import OperatorList
+    from slate_quantum.operator._operator import LegacyOperatorList
 
 
 def get_effective_lorentzian_parameter(
@@ -95,7 +95,7 @@ def get_lorentzian_operators_explicit_taylor[M: VolumeMetadata, DT: np.generic](
     basis: LegacyBasis[M, DT],
     *,
     n_terms: int | None = None,
-) -> OperatorList[
+) -> LegacyOperatorList[
     EigenvalueMetadata,
     M,
     np.complexfloating,
@@ -128,7 +128,7 @@ def get_lorentzian_operators_explicit_taylor[M: VolumeMetadata, DT: np.generic](
     # currently only support 1D
     assert len(shallow_shape_from_nested(basis.fundamental_shape)) == 1
     basis_x = basis_.as_tuple(basis)
-    n_terms = (basis_x[0].size // 2) if n_terms is None else n_terms
+    n_terms = (basis_x.children[0].size // 2) if n_terms is None else n_terms
 
     # expand gaussian and define array containing coefficients for each term in the polynomial
     # coefficients for the explicit Taylor expansion of the gaussian noise
