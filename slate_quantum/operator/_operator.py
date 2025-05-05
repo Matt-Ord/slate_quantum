@@ -12,8 +12,9 @@ from slate_core.basis import (
     tuple_basis,
 )
 from slate_core.linalg import into_diagonal
-from slate_core.metadata import BasisMetadata, Metadata2D, NestedLength
+from slate_core.metadata import BasisMetadata, NestedLength
 
+from slate_quantum._util.legacy import Metadata2D
 from slate_quantum.state._state import State, StateList
 
 if TYPE_CHECKING:

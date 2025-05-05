@@ -6,8 +6,9 @@ import numpy as np
 from slate_core.basis import (
     Basis,
 )
-from slate_core.metadata import BasisMetadata, Metadata2D
+from slate_core.metadata import BasisMetadata
 
+from slate_quantum._util.legacy import Metadata2D
 from slate_quantum.operator._operator import Operator, OperatorMetadata
 
 if TYPE_CHECKING:

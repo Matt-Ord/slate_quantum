@@ -9,7 +9,7 @@ import slate.linalg
 from scipy.constants import hbar  # type: ignore lib
 from slate_core import FundamentalBasis, SimpleMetadata, array, basis
 from slate_core.basis import tuple_basis
-from slate_core.metadata import BasisMetadata, Metadata2D
+from slate_core.metadata import BasisMetadata
 from slate_core.util import timed
 
 from slate_quantum import operator
@@ -24,7 +24,7 @@ if TYPE_CHECKING:
     from slate_core.basis import Basis
     from sse_solver_py import BandedData, SSEMethod
 
-    from slate_quantum._util.legacy import LegacyTupleBasis2D
+    from slate_quantum._util.legacy import LegacyTupleBasis2D, Metadata2D
     from slate_quantum.metadata import EigenvalueMetadata, TimeMetadata
     from slate_quantum.operator import OperatorList
     from slate_quantum.operator._operator import Operator
