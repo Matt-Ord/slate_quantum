@@ -15,7 +15,12 @@ from slate_core.metadata import (
 from slate_quantum.operator._diagonal import (
     MomentumOperator,
 )
-from slate_quantum.operator._operator import Operator, OperatorList
+from slate_quantum.operator._operator import (
+    LegacyOperator,
+    LegacyOperatorList,
+    build_legacy_operator,
+    build_legacy_operator_list,
+)
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -68,8 +73,8 @@ def momentum_from_function[M: SpacedLengthMetadata, E: AxisDirections, DT: np.ge
 
 
 def filter_scatter(
-    operator: Operator[SpacedVolumeMetadata, np.complexfloating],
-) -> Operator[SpacedVolumeMetadata, np.complexfloating]:
+    operator: LegacyOperator[SpacedVolumeMetadata, np.complexfloating],
+) -> LegacyOperator[SpacedVolumeMetadata, np.complexfloating]:
     converted = operator.with_basis(
         basis.transformed_from_metadata(
             operator.basis.metadata(), is_dual=operator.basis.is_dual
@@ -84,12 +89,12 @@ def filter_scatter(
         ],
         axis=0,
     )
-    return Operator(converted.basis, np.where(mask, data, 0))
+    return build_legacy_operator(converted.basis, np.where(mask, data, 0))
 
 
 def all_filter_scatter[M: BasisMetadata](
-    operator: OperatorList[M, SpacedVolumeMetadata, np.complexfloating],
-) -> OperatorList[M, SpacedVolumeMetadata, np.complexfloating]:
+    operator: LegacyOperatorList[M, SpacedVolumeMetadata, np.complexfloating],
+) -> LegacyOperatorList[M, SpacedVolumeMetadata, np.complexfloating]:
     is_dual = basis.as_tuple(operator.basis).is_dual[1]
     converted = operator.with_operator_basis(
         basis.transformed_from_metadata(operator.basis.metadata()[1], is_dual=is_dual)
@@ -106,4 +111,4 @@ def all_filter_scatter[M: BasisMetadata](
         axis=0,
     )
     data[:, np.logical_not(mask)] = 0
-    return OperatorList(converted.basis, data)
+    return build_legacy_operator_list(converted.basis, data)

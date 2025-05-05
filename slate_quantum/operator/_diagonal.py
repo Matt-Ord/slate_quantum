@@ -20,7 +20,7 @@ from slate_quantum._util.legacy import (
     StackedMetadata,
     diagonal_basis,
 )
-from slate_quantum.operator._operator import Operator
+from slate_quantum.operator._operator import LegacyOperator
 
 type RecastDiagonalOperatorBasis[
     M: BasisMetadata,
@@ -59,7 +59,7 @@ class DiagonalOperator[
     DT: np.generic,
     BInner: LegacyBasis[BasisMetadata, Any] = LegacyBasis[M, Any],
     BOuter: LegacyBasis[BasisMetadata, Any] = LegacyBasis[M, Any],
-](Operator[M, DT, RecastDiagonalOperatorBasis[M, Any, BInner, BOuter]]):
+](LegacyOperator[M, DT, RecastDiagonalOperatorBasis[M, Any, BInner, BOuter]]):
     def __init__[
         M_: BasisMetadata,
         DT_: np.generic,

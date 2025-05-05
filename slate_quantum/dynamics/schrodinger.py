@@ -20,7 +20,7 @@ except ImportError:
 if TYPE_CHECKING:
     from slate_quantum._util.legacy import LegacyTupleBasis2D
     from slate_quantum.metadata import TimeMetadata
-    from slate_quantum.operator._operator import Operator
+    from slate_quantum.operator._operator import LegacyOperator
     from slate_quantum.state import LegacyState, LegacyStateList
     from slate_quantum.state._basis import EigenstateBasis
 
@@ -34,7 +34,7 @@ def _solve_schrodinger_equation_diagonal[
 ](
     initial_state: LegacyState[BasisMetadata],
     times: TB,
-    hamiltonian: Operator[
+    hamiltonian: LegacyOperator[
         M,
         np.number[Any],
         LegacyDiagonalBasis[np.complexfloating, B, B, Any],
@@ -62,7 +62,7 @@ def solve_schrodinger_equation_decomposition[
 ](
     initial_state: LegacyState[BasisMetadata],
     times: TB,
-    hamiltonian: Operator[M, np.complexfloating],
+    hamiltonian: LegacyOperator[M, np.complexfloating],
 ) -> LegacyStateList[
     TimeMetadata,
     M,
@@ -79,7 +79,7 @@ def solve_schrodinger_equation[
 ](
     initial_state: LegacyState[BasisMetadata],
     times: TB,
-    hamiltonian: Operator[M, np.complexfloating],
+    hamiltonian: LegacyOperator[M, np.complexfloating],
 ) -> LegacyStateList[
     TimeMetadata,
     M,

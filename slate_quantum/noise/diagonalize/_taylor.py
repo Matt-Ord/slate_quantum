@@ -28,9 +28,7 @@ from slate_quantum.noise._kernel import (
     as_axis_kernel_from_isotropic,
     get_diagonal_noise_operators_from_axis,
 )
-from slate_quantum.operator import (
-    OperatorList,
-)
+from slate_quantum.operator._operator import build_legacy_operator_list
 
 if TYPE_CHECKING:
     from slate_quantum._util.legacy import (
@@ -39,6 +37,9 @@ if TYPE_CHECKING:
         LegacyTupleBasis2D,
         Metadata2D,
         StackedMetadata,
+    )
+    from slate_quantum.operator import (
+        LegacyOperatorList,
     )
 
 
@@ -88,7 +89,7 @@ def get_periodic_noise_operators_explicit_taylor_expansion[
     polynomial_coefficients: np.ndarray[tuple[int], np.dtype[np.floating]],
     *,
     n_terms: int | None = None,
-) -> OperatorList[EigenvalueMetadata, M, np.complexfloating]:
+) -> LegacyOperatorList[EigenvalueMetadata, M, np.complexfloating]:
     """Note polynomial_coefficients should be properly normalized."""
     n_terms = (basis.size // 2) if n_terms is None else n_terms
 
@@ -111,7 +112,7 @@ def get_periodic_noise_operators_explicit_taylor_expansion[
 
     eigenvalues = EigenvalueMetadata(coefficients.astype(np.complex128))
 
-    return OperatorList(
+    return build_legacy_operator_list(
         tuple_basis((FundamentalBasis(eigenvalues), operators.basis.children[1])),
         operators.raw_data,
     )
@@ -119,7 +120,7 @@ def get_periodic_noise_operators_explicit_taylor_expansion[
 
 def _get_linear_operators_for_noise[M: BasisMetadata](
     metadata: M, *, n_terms: int | None = None
-) -> OperatorList[
+) -> LegacyOperatorList[
     BasisMetadata,
     M,
     np.complexfloating,
@@ -143,7 +144,7 @@ def _get_linear_operators_for_noise[M: BasisMetadata](
     )
     data = np.array([displacements**n for n in range(n_terms)], dtype=np.complex128)
 
-    return OperatorList(
+    return build_legacy_operator_list(
         tuple_basis(
             (
                 FundamentalBasis.from_size(n_terms),
@@ -160,7 +161,7 @@ def get_linear_noise_operators_explicit_taylor_expansion[M: BasisMetadata](
     polynomial_coefficients: np.ndarray[tuple[int], np.dtype[np.floating]],
     *,
     n_terms: int | None = None,
-) -> OperatorList[
+) -> LegacyOperatorList[
     EigenvalueMetadata,
     M,
     np.complexfloating,
@@ -178,7 +179,7 @@ def get_linear_noise_operators_explicit_taylor_expansion[M: BasisMetadata](
     operators = _get_linear_operators_for_noise(metadata, n_terms=n_terms)
     eigenvalues = EigenvalueMetadata(polynomial_coefficients.astype(np.complex128))
 
-    return OperatorList(
+    return build_legacy_operator_list(
         tuple_basis((FundamentalBasis(eigenvalues), operators.basis.children[1])),
         operators.raw_data,
     )
@@ -188,7 +189,7 @@ def get_periodic_noise_operators_real_isotropic_taylor_expansion[M: BasisMetadat
     kernel: IsotropicNoiseKernel[M, np.complexfloating],
     *,
     n: int | None = None,
-) -> OperatorList[
+) -> LegacyOperatorList[
     EigenvalueMetadata,
     M,
     np.complexfloating,
@@ -240,7 +241,7 @@ def get_periodic_noise_operators_real_isotropic_taylor_expansion[M: BasisMetadat
     operators = None
     msg = "Need to implement for e^ikx operators."
     raise NotImplementedError(msg)
-    return OperatorList(
+    return build_legacy_operator_list(
         tuple_basis((FundamentalBasis(eigenvalues), operators.basis[1])),
         operators.raw_data,
     )
@@ -255,7 +256,7 @@ def get_periodic_noise_operators_real_isotropic_stacked_taylor_expansion[
     ],
     *,
     shape: tuple[int | None, ...] | None = None,
-) -> OperatorList[
+) -> LegacyOperatorList[
     EigenvalueMetadata,
     StackedMetadata[M, Any],
     np.complexfloating,

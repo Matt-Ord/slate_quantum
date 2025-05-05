@@ -15,10 +15,9 @@ from slate_core.basis import (
 type LegacyBasis[M: BasisMetadata, DT: np.generic] = Basis[M, Any]
 
 
-class LegacyArray[M: BasisMetadata, DT: np.generic, B: Basis = Basis](
-    Array[B, np.dtype[DT]]
-):
-    pass
+type LegacyArray[M: BasisMetadata, DT: np.generic, B: Basis = Basis] = Array[
+    B, np.dtype[DT]
+]
 
 
 type Metadata2D[M0: BasisMetadata, M1: BasisMetadata, E] = TupleMetadata[

@@ -24,7 +24,13 @@ from slate_quantum._util.legacy import (
 from slate_quantum.bloch._shifted_basis import BlochShiftedBasis
 from slate_quantum.bloch._transposed_basis import BlochTransposedBasis
 from slate_quantum.metadata import RepeatedLengthMetadata
-from slate_quantum.operator._operator import Operator, OperatorList
+from slate_quantum.operator._operator import (
+    LegacyOperator,
+    LegacyOperatorList,
+    OperatorList,
+    build_legacy_operator,
+    build_legacy_operator_list,
+)
 
 if TYPE_CHECKING:
     from slate_quantum._util.legacy import LegacyTupleBasis2D
@@ -103,8 +109,8 @@ def bloch_operator_from_list[
     M0: StackedMetadata[BlochFractionMetadata, None],
     M1: SpacedVolumeMetadata,
 ](
-    operators: OperatorList[M0, M1, np.complexfloating],
-) -> Operator[
+    operators: LegacyOperatorList[M0, M1, np.complexfloating],
+) -> LegacyOperator[
     StackedMetadata[RepeatedLengthMetadata, AxisDirections],
     np.complexfloating,
     LegacyBlockDiagonalBasis[
@@ -142,7 +148,7 @@ def bloch_operator_from_list[
         tuple_basis((operator_basis, operator_basis.dual_basis())),
         operators.basis.metadata()[1].shape,
     )
-    return Operator(out_basis, operators.raw_data)
+    return build_legacy_operator(out_basis, operators.raw_data)
 
 
 def _get_sample_fractions[M: BlochFractionMetadata](
@@ -157,7 +163,7 @@ def kinetic_hamiltonian[M: SpacedLengthMetadata, E: AxisDirections](
     potential: Potential[M, E, np.complexfloating],
     mass: float,
     repeat: tuple[int, ...],
-) -> Operator[
+) -> LegacyOperator[
     StackedMetadata[RepeatedLengthMetadata, AxisDirections],
     np.complexfloating,
     LegacyBlockDiagonalBasis[
@@ -187,8 +193,8 @@ def kinetic_hamiltonian[M: SpacedLengthMetadata, E: AxisDirections](
             for fraction in zip(*bloch_fractions, strict=True)
         ]
     )
-    operators = OperatorList(
-        tuple_basis((list_basis, operators.basis[1])), operators.raw_data
+    operators = build_legacy_operator_list(
+        tuple_basis((list_basis, operators.basis.inner.children[1])), operators.raw_data
     )
 
     return bloch_operator_from_list(operators)

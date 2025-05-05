@@ -1,152 +1,227 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, cast, overload, override
+from typing import TYPE_CHECKING, Any, Never, cast, overload, override
 
 import numpy as np
-from slate_core import FundamentalBasis, SimpleMetadata, linalg
-from slate_core import basis as basis_
-from slate_core.array import Array, NestedIndex
+from slate_core import (
+    Array,
+    Ctype,
+    FundamentalBasis,
+    SimpleMetadata,
+    TupleBasis,
+    TupleMetadata,
+    array,
+    linalg,
+)
+from slate_core import (
+    basis as _basis,
+)
 from slate_core.basis import (
+    AsUpcast,
     Basis,
+    TupleBasisLike,
+    TupleBasisLike2D,
     are_dual_shapes,
 )
 from slate_core.linalg import into_diagonal
 from slate_core.metadata import BasisMetadata, NestedLength
 
-from slate_quantum._util.legacy import LegacyBasis, Metadata2D, tuple_basis
-from slate_quantum.state._state import (
-    LegacyState,
-    LegacyStateList,
-    build_legacy_state,
-    build_legacy_state_list,
-)
+from slate_quantum.state._state import State, StateList
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Iterator
 
-    from slate_quantum._util.legacy import LegacyArray, LegacyTupleBasis2D
-
 
 def _assert_operator_basis(basis: Basis[BasisMetadata, Any]) -> None:
     is_dual = basis.is_dual
-    if isinstance(is_dual, bool):
+    if isinstance(is_dual, bool) or len(is_dual) != 2:  # noqa: PLR2004
         msg = "Basis is not 2d"
         raise TypeError(msg)
     assert are_dual_shapes(is_dual[0], is_dual[1])
 
 
-type OperatorMetadata[M: BasisMetadata = BasisMetadata] = Metadata2D[M, M, None]
+type OperatorMetadata[M: BasisMetadata = BasisMetadata] = TupleMetadata[
+    tuple[M, M], None
+]
+type OperatorBasis[
+    M: BasisMetadata = BasisMetadata,
+    CT: Ctype[Never] = Ctype[Never],
+] = Basis[OperatorMetadata[M], CT]
 
 
-def operator_basis[M: BasisMetadata, DT: np.generic](
-    basis: LegacyBasis[M, DT],
-) -> LegacyTupleBasis2D[DT, LegacyBasis[M, DT], LegacyBasis[M, DT], None]:
-    return tuple_basis((basis, basis.dual_basis()))  # type: ignore migration
+def operator_basis[B: Basis](
+    basis: B,
+) -> TupleBasis[tuple[B, B], None]:
+    return TupleBasis((basis, basis.dual_basis()))
+
+
+class OperatorBuilder[B: OperatorBasis, DT: np.dtype[np.generic]](
+    array.ArrayBuilder[B, DT]
+):
+    @override
+    def ok[DT_: np.generic](
+        self: OperatorBuilder[Basis[Any, Ctype[DT_]], np.dtype[DT_]],
+    ) -> Operator[B, DT]:
+        _assert_operator_basis(self._basis)
+        return cast("Any", Operator(self._basis, self._data, 0))  # type: ignore safe to construct
+
+    @override
+    def assert_ok(self) -> Operator[B, DT]:
+        assert self._basis.ctype.supports_dtype(self._data.dtype)
+        return self.ok()  # type: ignore safe to construct
+
+
+class OperatorConversion[
+    M0: OperatorMetadata,
+    B1: OperatorBasis,
+    DT: np.dtype[np.generic],
+](array.ArrayConversion[M0, B1, DT]):
+    @override
+    def ok[M_: OperatorMetadata, DT_: np.generic](
+        self: OperatorConversion[M_, Basis[M_, Ctype[DT_]], np.dtype[DT_]],
+    ) -> Operator[B1, DT]:
+        return cast(
+            "Operator[B1, DT]",
+            Operator.build(
+                self._new_basis,
+                self._old_basis.__convert_vector_into__(
+                    self._data, self._new_basis
+                ).ok(),
+            ).ok(),
+        )
+
+    @override
+    def assert_ok(self) -> Operator[B1, DT]:
+        assert self._new_basis.ctype.supports_dtype(self._data.dtype)
+        return self.ok()  # type: ignore safe to construct
 
 
 class Operator[
-    M: BasisMetadata,
-    DT: np.generic,
-    B: LegacyBasis[Any, Any] = LegacyBasis[Metadata2D[M, M, None], DT],
-](Array[Any, Any]):
+    B: OperatorBasis,
+    DT: np.dtype[np.generic],
+](Array[B, DT]):
     """Represents an operator in a quantum system."""
 
-    def __init__[
-        DT1: np.generic,
-        B1: Basis[Metadata2D[BasisMetadata, BasisMetadata, Any], Any],
+    @override
+    @staticmethod
+    def build[B_: OperatorBasis, DT_: np.dtype[np.generic]](
+        basis: B_, data: np.ndarray[Any, DT_]
+    ) -> OperatorBuilder[B_, DT_]:
+        return OperatorBuilder(basis, data)
+
+    @override
+    def with_basis[
+        DT_: np.dtype[np.generic],
+        M0_: OperatorMetadata,
+        B1_: OperatorBasis,
     ](
-        self: Operator[Any, DT1, B1],
-        basis: B1,
-        data: np.ndarray[Any, np.dtype[DT]],
-    ) -> None:
-        super().__init__(cast("Any", basis), cast("Any", data))
-        _assert_operator_basis(self.basis)
-
-    @override
-    def with_basis[B1: Basis[Any, Any]](  # B1: B
-        self, basis: B1
-    ) -> Operator[M, DT, B1]:
-        """Get the Operator with the basis set to basis."""
-        array_with_basis = super().with_basis(basis)
-        return Operator(basis, array_with_basis.raw_data)
+        self: Operator[Basis[M0_, Any], DT_],
+        basis: B1_,
+    ) -> OperatorConversion[M0_, B1_, DT_]:
+        return OperatorConversion(self.raw_data, self.basis, basis)
 
     @overload
-    def __add__[M1: BasisMetadata, DT1: np.number[Any]](
-        self: Operator[M1, DT1],
-        other: Operator[M1, DT1],
-    ) -> Operator[M1, DT1]: ...
+    def __add__[M1: OperatorMetadata, DT_: np.number](
+        self: Operator[Basis[M1], np.dtype[DT_]],
+        other: Operator[Basis[M1], np.dtype[DT_]],
+    ) -> Operator[Basis[M1, Ctype[DT_]], np.dtype[DT_]]: ...
     @overload
-    def __add__[M1: BasisMetadata, DT1: np.number[Any]](
-        self: LegacyArray[M1, DT1],
-        other: LegacyArray[M1, DT1],
-    ) -> LegacyArray[M1, DT1]: ...
+    def __add__[M_: BasisMetadata, DT_: np.number](
+        self: Array[Basis[M_], np.dtype[DT_]],
+        other: Array[Basis[M_], np.dtype[DT_]],
+    ) -> Array[Basis[M_, Ctype[DT_]], np.dtype[DT_]]: ...
     @override
-    def __add__[M1: BasisMetadata, DT1: np.number[Any]](
-        self: LegacyArray[M1, DT1],
-        other: LegacyArray[M1, DT1],
-    ) -> LegacyArray[M1, DT1]:
-        array = cast("Array[Any, DT1]", super()).__add__(other)
+    def __add__[M_: BasisMetadata, DT_: np.number](
+        self: Array[Basis[M_], np.dtype[DT_]],
+        other: Array[Basis[M_], np.dtype[DT_]],
+    ) -> Array[Basis[M_, Ctype[DT_]], np.dtype[DT_]]:
+        array = cast("Array[Any, np.dtype[DT_]]", super()).__add__(other)
         if isinstance(other, Operator):
-            return cast("Any", Operator(array.basis, array.raw_data))
+            return cast("Any", Operator.build(array.basis, array.raw_data).assert_ok())
         return array
 
     @overload
-    def __sub__[M1: BasisMetadata, DT1: np.number[Any]](
-        self: Operator[M1, DT1],
-        other: Operator[M1, DT1],
-    ) -> Operator[M1, DT1]: ...
-
+    def __sub__[M1: OperatorMetadata, DT_: np.number](
+        self: Operator[Basis[M1], np.dtype[DT_]],
+        other: Operator[Basis[M1], np.dtype[DT_]],
+    ) -> Operator[Basis[M1, Ctype[DT_]], np.dtype[DT_]]: ...
     @overload
-    def __sub__[M1: BasisMetadata, DT1: np.number[Any]](
-        self: LegacyArray[M1, DT1],
-        other: LegacyArray[M1, DT1],
-    ) -> LegacyArray[M1, DT1]: ...
-
+    def __sub__[M_: BasisMetadata, DT_: np.number](
+        self: Array[Basis[M_], np.dtype[DT_]],
+        other: Array[Basis[M_], np.dtype[DT_]],
+    ) -> Array[Basis[M_, Ctype[DT_]], np.dtype[DT_]]: ...
     @override
-    def __sub__[M1: BasisMetadata, DT1: np.number[Any]](
-        self: LegacyArray[M1, DT1],
-        other: LegacyArray[M1, DT1],
-    ) -> LegacyArray[M1, DT1]:
-        array = cast("Array[Any, DT1]", super()).__sub__(other)
+    def __sub__[M_: BasisMetadata, DT_: np.number](
+        self: Array[Basis[M_], np.dtype[DT_]],
+        other: Array[Basis[M_], np.dtype[DT_]],
+    ) -> Array[Basis[M_, Ctype[DT_]], np.dtype[DT_]]:
+        array = cast("Array[Any, np.dtype[DT_]]", super()).__sub__(other)
         if isinstance(other, Operator):
-            return cast("Any", Operator(array.basis, array.raw_data))
+            return cast("Any", Operator.build(array.basis, array.raw_data).assert_ok())
 
         return array
 
     @override
-    def __mul__[M1: BasisMetadata, DT1: np.number[Any]](
-        self: Operator[M1, DT1],
+    def __mul__[M_: OperatorMetadata, DT_: np.number](
+        self: Operator[Basis[M_], np.dtype[DT_]],
         other: complex,
-    ) -> Operator[M1, DT1]:
-        # TODO: always support complex numbers  # noqa: FIX002
-        out = cast("Array[Any, DT1]", super()).__mul__(cast("float", other))
-        return Operator[Any, Any](out.basis, out.raw_data)
+    ) -> Operator[Basis[M_], np.dtype[np.number]]:
+        out = cast("Array[Any, np.dtype[DT_]]", super()).__mul__(other)
+        return Operator.build(out.basis, out.raw_data).assert_ok()
 
-    def as_diagonal(self) -> LegacyArray[M, np.complexfloating]:
-        diagonal = into_diagonal(
-            Operator(self.basis, self.raw_data.astype(np.complex128))
+    def as_diagonal[M_: BasisMetadata](
+        self: Operator[OperatorBasis[M_], np.dtype[np.complexfloating]],
+    ) -> Array[Basis[M_, Ctype[np.complexfloating]], np.dtype[np.complexfloating]]:
+        diagonal = into_diagonal(self)
+        inner = AsUpcast(
+            diagonal.basis.inner.children[1], self.basis.metadata().children[1]
+        ).resolve_ctype()
+        return Array.build(inner, diagonal.raw_data).assert_ok()
+
+    @override
+    def as_type[
+        M_: BasisMetadata,
+        DT_: np.number,
+    ](
+        self: Operator[OperatorBasis[M_], np.dtype[np.generic]],
+        ty: type[DT_],
+    ) -> Operator[OperatorBasis[M_, Ctype[DT_]], np.dtype[DT_]]:
+        return cast(
+            "Operator[OperatorBasis[M_, Ctype[DT_]], np.dtype[DT_]]",
+            super().as_type(ty),
         )
-        inner = cast("Basis[M, DT]", diagonal.basis.inner[1])
-        return Array(inner, diagonal.raw_data)
 
 
-def _assert_operator_list_basis(basis: Basis[BasisMetadata, Any]) -> None:
+type LegacyOperator[M0: BasisMetadata, DT: np.generic, B: Basis = Basis] = Operator[
+    Any, Any
+]
+
+
+def build_legacy_operator(
+    basis: Basis,
+    data: np.ndarray[Any, Any],
+) -> LegacyOperator[Any, Any, Any]:
+    return Operator.build(basis, data).assert_ok()  # type: ignore legacy
+
+
+def _assert_operator_list_basis(basis: Basis) -> None:
     is_dual = basis.is_dual
     if isinstance(is_dual, bool):
         msg = "Basis is not 2d"
         raise TypeError(msg)
-    _assert_operator_basis(basis_.as_tuple(basis)[1])
+
+    _assert_operator_basis(_basis.as_tuple(basis).children[1])
 
 
 def expectation[M: BasisMetadata](
-    operator: Operator[M, np.complexfloating],
-    state: LegacyState[M],
+    operator: Operator[OperatorBasis[M], np.dtype[np.complexfloating]],
+    state: State[Basis[M]],
 ) -> complex:
     """Calculate the expectation value of an operator."""
     return (
         linalg.einsum(
             "i' ,(i j'),j -> ",
-            state.with_basis(state.basis.dual_basis()),
+            array.dual_basis(state),
             operator,
             state,
         )
@@ -156,60 +231,97 @@ def expectation[M: BasisMetadata](
 
 
 def expectation_of_each[M0: BasisMetadata, M: BasisMetadata](
-    operator: Operator[M, np.complexfloating],
-    states: LegacyStateList[M0, M],
-) -> LegacyArray[M0, np.complexfloating]:
+    operator: Operator[Basis[OperatorMetadata[M]], np.dtype[np.complexfloating]],
+    states: StateList[TupleBasisLike[tuple[M0, M], None]],
+) -> Array[Basis[M0], np.dtype[np.complexfloating]]:
     """Calculate the expectation value of an operator."""
-    basis = basis_.as_tuple(states.basis)[1]
+    basis = _basis.as_tuple(states.basis).children[1]
     return linalg.einsum(
         "(a i'),(i j'),(a j) -> a",
-        states.with_state_basis(basis.dual_basis()),
+        states.with_state_basis(basis.dual_basis()).assert_ok(),
         operator,
         states,
     )
 
 
 def apply[M: BasisMetadata](
-    operator: Operator[M, np.complexfloating],
-    state: LegacyState[M],
-) -> LegacyState[M]:
+    operator: Operator[Basis[OperatorMetadata[M]], np.dtype[np.complexfloating]],
+    state: State[Basis[M]],
+) -> State[Basis[M]]:
     """Apply an operator to a state."""
     out = linalg.einsum("(i j'),j -> i", operator, state)
-    return build_legacy_state(out.basis, out.raw_data)
+    return State.build(out.basis, out.raw_data).ok()
 
 
 def apply_to_each[M0: BasisMetadata, M: BasisMetadata](
-    operator: Operator[M, np.complexfloating],
-    states: LegacyStateList[M0, M],
-) -> LegacyStateList[M0, M]:
+    operator: Operator[Basis[OperatorMetadata[M]], np.dtype[np.complexfloating]],
+    states: StateList[TupleBasisLike[tuple[M0, M], None]],
+) -> StateList[TupleBasisLike[tuple[M0, M], None]]:
     """Apply an operator to a state."""
     out = linalg.einsum("(i j'),(k j) -> (k i)", operator, states)
-    return build_legacy_state_list(out.basis, out.raw_data)
+    return StateList.build(out.basis, out.raw_data).ok()
 
 
-OperatorListMetadata = Metadata2D[BasisMetadata, OperatorMetadata, Any]
+type OperatorListMetadata[
+    M0: BasisMetadata = BasisMetadata,
+    M1: OperatorMetadata = OperatorMetadata,
+] = TupleMetadata[tuple[M0, M1], None]
+type OperatorListBasis[
+    M0: BasisMetadata = BasisMetadata,
+    M1: OperatorMetadata = OperatorMetadata,
+] = Basis[OperatorListMetadata[M0, M1]]
+
+
+type AsOperatorListBasis[B: Basis] = AsUpcast[B, OperatorListMetadata]
+
+
+class OperatorListBuilder[
+    B: OperatorListBasis,
+    DT: np.dtype[np.generic],
+](array.ArrayBuilder[B, DT]):
+    @override
+    def ok[DT_: np.generic](
+        self: OperatorListBuilder[Basis[Any, Ctype[DT_]], np.dtype[DT_]],
+    ) -> OperatorList[B, DT]:
+        _assert_operator_list_basis(self._basis)
+        return cast("Any", OperatorList(self._basis, self._data, 0))  # type: ignore safe to construct
+
+    @override
+    def assert_ok(self) -> OperatorList[B, DT]:
+        assert self._basis.ctype.supports_dtype(self._data.dtype)
+        return self.ok()  # type: ignore safe to construct
+
+
+class OperatorListConversion[
+    M0: OperatorListMetadata,
+    B1: OperatorListBasis,
+    DT: np.dtype[np.generic],
+](array.ArrayConversion[M0, B1, DT]):
+    @override
+    def ok[M_: OperatorListMetadata, DT_: np.generic](
+        self: OperatorListConversion[M_, Basis[M_, Ctype[DT_]], np.dtype[DT_]],
+    ) -> OperatorList[B1, DT]:
+        return cast(
+            "OperatorList[B1, DT]",
+            OperatorList.build(
+                self._new_basis,
+                self._old_basis.__convert_vector_into__(
+                    self._data, self._new_basis
+                ).ok(),
+            ).ok(),
+        )
+
+    @override
+    def assert_ok(self) -> OperatorList[B1, DT]:
+        assert self._new_basis.ctype.supports_dtype(self._data.dtype)
+        return self.ok()  # type: ignore safe to construct
 
 
 class OperatorList[
-    M0: BasisMetadata,
-    M1: BasisMetadata,
-    DT: np.generic,
-    B: Basis[Any, Any] = LegacyBasis[
-        Metadata2D[M0, Metadata2D[M1, M1, None], None], DT
-    ],
-](Array[Any, Any]):
+    B: OperatorListBasis = OperatorListBasis,
+    DT: np.dtype[np.generic] = np.dtype[np.generic],
+](Array[B, DT]):
     """Represents an operator in a quantum system."""
-
-    def __init__[
-        DT1: np.generic,
-        B1: Basis[OperatorListMetadata, Any],
-    ](
-        self: OperatorList[Any, Any, DT1, B1],
-        basis: B1,
-        data: np.ndarray[Any, np.dtype[DT1]],
-    ) -> None:
-        super().__init__(cast("Any", basis), cast("Any", data))
-        _assert_operator_list_basis(self.basis)
 
     @property
     @override
@@ -217,218 +329,244 @@ class OperatorList[
         return cast("tuple[NestedLength, NestedLength]", super().fundamental_shape)
 
     @override
-    def with_basis[B1: Basis[Any, Any]](  # B1: B
-        self, basis: B1
-    ) -> OperatorList[M0, M1, DT, B1]:
-        """Get the Operator with the basis set to basis."""
-        return OperatorList(
-            basis, self.basis.__convert_vector_into__(self.raw_data, basis)
-        )
+    @staticmethod
+    def build[B_: OperatorListBasis, DT_: np.dtype[np.generic]](
+        basis: B_, data: np.ndarray[Any, DT_]
+    ) -> OperatorListBuilder[B_, DT_]:
+        return OperatorListBuilder(basis, data)
 
-    @overload
-    def with_operator_basis[B0: Basis[Any, Any], B1: Basis[Any, Any]](  # B1: B
-        self: OperatorList[Any, Any, Any, LegacyTupleBasis2D[Any, B0, Any, None]],
-        basis: B1,
-    ) -> OperatorList[M0, M1, DT, LegacyTupleBasis2D[Any, B0, B1, None]]: ...
+    @override
+    def with_basis[
+        DT_: np.dtype[np.generic],
+        M0_: OperatorListMetadata,
+        B1_: OperatorListBasis,
+    ](
+        self: OperatorList[Basis[M0_, Any], DT_],
+        basis: B1_,
+    ) -> OperatorListConversion[M0_, B1_, DT_]:
+        return OperatorListConversion(self.raw_data, self.basis, basis)
 
-    @overload
-    def with_operator_basis[B1: Basis[Any, Any]](  # B1: B
-        self, basis: B1
-    ) -> OperatorList[M0, M1, DT, LegacyTupleBasis2D[Any, Any, B1, None]]: ...
-
-    def with_operator_basis(  # B1: B
-        self, basis: Basis[OperatorMetadata, Any]
-    ) -> OperatorList[M0, M1, DT, Any]:
-        """Get the Operator with the operator basis set to basis."""
-        final_basis = tuple_basis((basis_.as_tuple(self.basis)[0], basis))
-        return OperatorList(
-            final_basis, self.basis.__convert_vector_into__(self.raw_data, final_basis)
-        )
-
-    @overload
-    def with_list_basis[B0: Basis[Any, Any], B1: Basis[Any, Any]](  # B1: B
-        self: OperatorList[Any, Any, Any, LegacyTupleBasis2D[Any, Any, B1, None]],
-        basis: B0,
-    ) -> OperatorList[M0, M1, DT, LegacyTupleBasis2D[Any, B0, B1, None]]: ...
-
-    @overload
-    def with_list_basis[B0: Basis[Any, Any]](  # B1: B
-        self, basis: B0
-    ) -> OperatorList[
-        M0,
-        M1,
+    def with_operator_basis[
+        M: BasisMetadata,
+        M1: OperatorMetadata,
+        B1: OperatorBasis,
+    ](  # B1: B
+        self: OperatorList[OperatorListBasis[M, M1], DT], basis: B1
+    ) -> OperatorListConversion[
+        Any,
+        AsUpcast[
+            TupleBasis[tuple[Basis[M], B1], None],
+            TupleMetadata[tuple[M, M1], None],
+        ],
         DT,
-        LegacyTupleBasis2D[Any, B0, Basis[Metadata2D[M1, M1, None], Any], None],
+    ]:
+        """Get the Operator with the operator basis set to basis."""
+        lhs_basis = _basis.as_tuple(self.basis).children[0]
+        out_basis = AsUpcast(TupleBasis((lhs_basis, basis)), self.basis.metadata())
+        return self.with_basis(out_basis)
+
+    @overload
+    def with_list_basis[M: OperatorMetadata, M1: BasisMetadata, B1: Basis](
+        self: OperatorList[
+            AsUpcast[
+                TupleBasis[tuple[Basis[M1], B], None],
+                TupleMetadata[tuple[M1, M], None],
+            ],
+            DT,
+        ],
+        basis: B1,
+    ) -> OperatorListConversion[
+        Any,
+        AsUpcast[
+            TupleBasis[tuple[B1, B], None],
+            TupleMetadata[tuple[M1, M], None],
+        ],
+        DT,
     ]: ...
 
-    def with_list_basis(  # B1: B
-        self, basis: Basis[Any, Any]
-    ) -> OperatorList[M0, M1, DT, Any]:
+    @overload
+    def with_list_basis[M: OperatorMetadata, M1: BasisMetadata, B1: Basis](
+        self: OperatorList[OperatorListBasis[M1, M], DT], basis: B1
+    ) -> OperatorListConversion[
+        Any,
+        AsUpcast[
+            TupleBasis[tuple[B1, Basis[M]], None],
+            TupleMetadata[tuple[M1, M], None],
+        ],
+        DT,
+    ]: ...
+
+    def with_list_basis[M: OperatorMetadata, M1: BasisMetadata, B1: Basis](
+        self: OperatorList[OperatorListBasis[M1, M], DT], basis: B1
+    ) -> OperatorListConversion[
+        Any,
+        AsUpcast[
+            TupleBasis[tuple[B1, Any], None],
+            TupleMetadata[tuple[M1, M], None],
+        ],
+        DT,
+    ]:
         """Get the Operator with the operator basis set to basis."""
-        final_basis = tuple_basis((basis, basis_.as_tuple(self.basis)[1]))
-        return OperatorList(
-            final_basis, self.basis.__convert_vector_into__(self.raw_data, final_basis)
-        )
-
-    @overload
-    def __iter__[M1_: BasisMetadata, B_: Basis[Any, Any], DT_: np.generic](
-        self: OperatorList[Any, M1_, DT_, LegacyTupleBasis2D[Any, Any, B_, None]], /
-    ) -> Iterator[Operator[M1_, DT_, B_]]: ...
-
-    @overload
-    def __iter__(self, /) -> Iterator[Operator[M1, Any]]: ...
+        rhs_basis = _basis.as_tuple(self.basis).children[1]
+        out_basis = AsUpcast(TupleBasis((basis, rhs_basis)), self.basis.metadata())
+        return self.with_basis(out_basis)
 
     @override
-    def __iter__(self, /) -> Iterator[Operator[M1, Any]]:  # type: ignore bad overload
-        return (
-            Operator[M1, DT](
-                cast("Basis[Metadata2D[M1, M1, None], Any]", row.basis),
-                cast("Any", row.raw_data),
-            )
-            for row in super().__iter__()
-        )
+    def __iter__[M1_: OperatorMetadata](  # type: ignore bad overload
+        self: OperatorList[OperatorListBasis[Any, M1_]], /
+    ) -> Iterator[Operator[Basis[M1_], DT]]:
+        return (Operator.build(a.basis, a.raw_data).ok() for a in super().__iter__())  # type: ignore cant infer
 
     @overload
-    def __getitem__[
-        M1_: BasisMetadata,
-        DT1: np.generic,
-        B1: Basis[OperatorMetadata, Any] = Basis[Metadata2D[M1_, M1_, None], DT1],
-    ](
-        self: OperatorList[Any, M1_, DT1, LegacyTupleBasis2D[Any, Any, B1, None]],
-        /,
+    def __getitem__[M1_: OperatorMetadata](
+        self: OperatorList[TupleBasisLike2D[tuple[Any, M1_]]],
         index: tuple[int, slice[None]],
-    ) -> Operator[M1_, DT1, B1]: ...
+    ) -> Operator[Basis[M1_], DT]: ...
 
     @overload
-    def __getitem__[
-        M1_: BasisMetadata,
-        DT1: np.generic,
-    ](
-        self: OperatorList[Any, M1_, DT1, Any],
-        /,
-        index: tuple[int, slice[None, None, None]],
-    ) -> Operator[M1_, DT1]: ...
+    def __getitem__[M1_: OperatorMetadata, I: slice | tuple[array.NestedIndex, ...]](
+        self: OperatorList[TupleBasisLike2D[tuple[Any, M1_]], DT],
+        index: tuple[I, slice[None]],
+    ) -> OperatorList[TupleBasisLike2D[tuple[Any, M1_]], DT]: ...
 
     @overload
-    def __getitem__[
-        M1_: BasisMetadata,
-        DT1: np.generic,
-        I: slice | tuple[NestedIndex, ...],
-    ](
-        self: OperatorList[Any, M1_, DT1], index: tuple[I, slice[None]]
-    ) -> OperatorList[Any, M1_, DT1]: ...
-
-    @overload
-    def __getitem__[DT_: np.generic](
-        self: LegacyArray[Any, DT_], index: int
+    def __getitem__[DT1: Ctype[Never], DT_: np.dtype[np.generic]](
+        self: Array[Any, DT_], index: int
     ) -> DT_: ...
-
     @overload
-    def __getitem__[DT_: np.generic](
-        self: LegacyArray[Any, DT_], index: tuple[NestedIndex, ...] | slice
-    ) -> LegacyArray[Any, DT_]: ...
+    def __getitem__[DT1: Ctype[Never], DT_: np.dtype[np.generic]](
+        self: Array[Basis[Any, DT1], DT_], index: tuple[array.NestedIndex, ...] | slice
+    ) -> Array[Basis[BasisMetadata, DT1], DT_]: ...
 
     @override
-    def __getitem__[M1_: BasisMetadata, DT_: np.generic](  # type: ignore override
-        self: LegacyArray[Any, DT_], index: NestedIndex
-    ) -> LegacyArray[Any, DT_] | DT_ | Operator[Any, DT_]:
-        out = cast("Array[Any, DT_]", super()).__getitem__(index)
-        out = cast("Array[Any, DT_]", out)
+    def __getitem__(self, index: array.NestedIndex) -> Any:  # type: ignore overload bad
+        out = cast("Array[Any, Any]", super()).__getitem__(index)
         if (
             isinstance(index, tuple)
             and isinstance(index[0], int)
             and index[1] == slice(None)
         ):
-            return Operator(out.basis, out.raw_data)
-
+            out = cast(
+                "Array[Basis[Any, Ctype[np.generic]], np.dtype[np.complexfloating]]",
+                out,
+            )
+            return Operator.build(out.basis, out.raw_data).ok()
         if isinstance(index, tuple) and index[1] == slice(None):
-            return OperatorList(out.basis, out.raw_data)
+            out = cast(
+                "Array[Basis[Any, Ctype[np.generic]], np.dtype[np.complexfloating]]",
+                out,
+            )
+            return OperatorList.build(out.basis, out.raw_data).ok()
         return out
 
     @staticmethod
-    def from_operators[
-        DT1: np.generic,
-        M1_: BasisMetadata,
-        B1: Basis[Metadata2D[BasisMetadata, BasisMetadata, None], Any] = Basis[
-            Metadata2D[M1_, M1_, None], DT1
-        ],
-    ](
-        iter_: Iterable[Operator[M1_, DT1, B1]],
+    def from_operators[B_: OperatorBasis, DT_: np.dtype[np.generic]](
+        iter_: Iterable[Operator[B_, DT_]],
     ) -> OperatorList[
-        SimpleMetadata,
-        M1_,
-        DT1,
-        LegacyTupleBasis2D[Any, FundamentalBasis[SimpleMetadata], B1, None],
+        AsUpcast[
+            TupleBasis[tuple[FundamentalBasis[SimpleMetadata], B_], None],
+            OperatorListMetadata[SimpleMetadata, OperatorMetadata],
+        ],
+        DT_,
     ]:
-        operators = list(iter_)
-        assert all(x.basis == operators[0].basis for x in operators)
+        states = list(iter_)
+        assert all(x.basis == states[0].basis for x in states)
 
-        list_basis = FundamentalBasis.from_size(len(operators))
-        return OperatorList(
-            tuple_basis((list_basis, operators[0].basis)),
-            np.array([x.raw_data for x in operators]),
+        list_basis = FundamentalBasis.from_size(len(states))
+        state_basis = TupleBasis((list_basis, states[0].basis)).upcast()
+        return OperatorList.build(
+            state_basis,
+            cast("np.ndarray[Any, DT_]", np.array([x.raw_data for x in states])),
+        ).assert_ok()
+
+    @overload
+    def __add__[M1: OperatorListMetadata, DT_: np.number](
+        self: OperatorList[Basis[M1], np.dtype[DT_]],
+        other: OperatorList[Basis[M1], np.dtype[DT_]],
+    ) -> OperatorList[Basis[M1, Ctype[DT_]], np.dtype[DT_]]: ...
+    @overload
+    def __add__[M_: BasisMetadata, DT_: np.number](
+        self: Array[Basis[M_], np.dtype[DT_]],
+        other: Array[Basis[M_], np.dtype[DT_]],
+    ) -> Array[Basis[M_, Ctype[DT_]], np.dtype[DT_]]: ...
+    @override
+    def __add__[M_: BasisMetadata, DT_: np.number](
+        self: Array[Basis[M_], np.dtype[DT_]],
+        other: Array[Basis[M_], np.dtype[DT_]],
+    ) -> Array[Basis[M_, Ctype[DT_]], np.dtype[DT_]]:
+        array = cast("Array[Any, np.dtype[DT_]]", super()).__add__(other)
+        if isinstance(other, OperatorList):
+            return cast(
+                "Any", OperatorList.build(array.basis, array.raw_data).assert_ok()
+            )
+        return array
+
+    @overload
+    def __sub__[M1: OperatorListMetadata, DT_: np.number](
+        self: OperatorList[Basis[M1], np.dtype[DT_]],
+        other: OperatorList[Basis[M1], np.dtype[DT_]],
+    ) -> OperatorList[Basis[M1, Ctype[DT_]], np.dtype[DT_]]: ...
+    @overload
+    def __sub__[M_: BasisMetadata, DT_: np.number](
+        self: Array[Basis[M_], np.dtype[DT_]],
+        other: Array[Basis[M_], np.dtype[DT_]],
+    ) -> Array[Basis[M_, Ctype[DT_]], np.dtype[DT_]]: ...
+    @override
+    def __sub__[M_: BasisMetadata, DT_: np.number](
+        self: Array[Basis[M_], np.dtype[DT_]],
+        other: Array[Basis[M_], np.dtype[DT_]],
+    ) -> Array[Basis[M_, Ctype[DT_]], np.dtype[DT_]]:
+        array = cast("Array[Any, np.dtype[DT_]]", super()).__sub__(other)
+        if isinstance(other, OperatorList):
+            return cast(
+                "Any", OperatorList.build(array.basis, array.raw_data).assert_ok()
+            )
+
+        return array
+
+    @override
+    def __mul__[M_: OperatorListMetadata, DT_: np.number](
+        self: OperatorList[Basis[M_], np.dtype[DT_]],
+        other: complex,
+    ) -> OperatorList[Basis[M_], np.dtype[np.number]]:
+        out = cast("Array[Any, np.dtype[DT_]]", super()).__mul__(other)
+        return OperatorList.build(out.basis, out.raw_data).assert_ok()
+
+    @override
+    def as_type[
+        M_: OperatorListMetadata,
+        DT_: np.number,
+    ](
+        self: OperatorList[Basis[M_], np.dtype[np.generic]],
+        ty: type[DT_],
+    ) -> OperatorList[Basis[M_, Ctype[DT_]], np.dtype[DT_]]:
+        return cast(
+            "OperatorList[Basis[M_, Ctype[DT_]], np.dtype[DT_]]",
+            super().as_type(ty),
         )
 
-    @overload
-    def __add__[
-        M0_: BasisMetadata,
-        M1_: BasisMetadata,
-        DT1: np.number[Any],
-    ](
-        self: OperatorList[M0_, M1_, DT1],
-        other: OperatorList[M0_, M1_, DT1],
-    ) -> OperatorList[M0_, M1_, DT1]: ...
-    @overload
-    def __add__[M0_: BasisMetadata, DT1: np.number[Any]](
-        self: LegacyArray[M0_, DT1],
-        other: LegacyArray[M0_, DT1],
-    ) -> LegacyArray[M0_, DT1]: ...
-    @override
-    def __add__[M0_: BasisMetadata, DT1: np.number[Any]](
-        self: LegacyArray[M0_, DT1],
-        other: LegacyArray[M0_, DT1],
-    ) -> LegacyArray[M0_, DT1]:
-        array = cast("Array[Any, DT1]", super()).__add__(other)
-        if isinstance(other, OperatorList):
-            return cast("Any", OperatorList(array.basis, array.raw_data))
 
-        return array
+type LegacyOperatorList[
+    M0: BasisMetadata,
+    M1: BasisMetadata,
+    DT: np.generic,
+    B: Basis = Basis,
+] = OperatorList[Any, Any]
 
-    @overload
-    def __sub__[
-        M0_: BasisMetadata,
-        M1_: BasisMetadata,
-        DT1: np.number[Any],
-    ](
-        self: OperatorList[M0_, M1_, DT1],
-        other: OperatorList[M0_, M1_, DT1],
-    ) -> OperatorList[M0_, M1_, DT1]: ...
 
-    @overload
-    def __sub__[M0_: BasisMetadata, DT1: np.number[Any]](
-        self: LegacyArray[M0_, DT1],
-        other: LegacyArray[M0_, DT1],
-    ) -> LegacyArray[M0_, DT1]: ...
+def build_legacy_operator_list(
+    basis: Basis,
+    data: np.ndarray[Any, Any],
+) -> LegacyOperatorList[Any, Any, Any, Any]:
+    return OperatorList.build(basis, data).assert_ok()  # type: ignore legacy
 
-    @override
-    def __sub__[M0_: BasisMetadata, DT1: np.number[Any]](
-        self: LegacyArray[M0_, DT1],
-        other: LegacyArray[M0_, DT1],
-    ) -> LegacyArray[M0_, DT1]:
-        array = cast("Array[Any, DT1]", super()).__sub__(other)
-        if isinstance(other, OperatorList):
-            return cast("Any", OperatorList(array.basis, array.raw_data))
 
-        return array
+type SuperOperatorMetadata[M: BasisMetadata = BasisMetadata] = OperatorMetadata[
+    OperatorMetadata[M],
+]
+type SuperOperatorBasis[
+    M: BasisMetadata = BasisMetadata,
+    CT: Ctype[Never] = Ctype[Never],
+] = Basis[SuperOperatorMetadata[M], CT]
 
-    @override
-    def __mul__[
-        M0_: BasisMetadata,
-        M1_: BasisMetadata,
-        DT1: np.number[Any],
-    ](
-        self: OperatorList[M0_, M1_, DT1],
-        other: float,
-    ) -> OperatorList[M0_, M1_, DT1]:
-        out = cast("Array[Any, DT1]", super()).__mul__(other)
-        return OperatorList[Any, Any, Any](out.basis, out.raw_data)
+type SuperOperator[B: SuperOperatorBasis, DT: np.dtype[np.generic]] = Operator[B, DT]

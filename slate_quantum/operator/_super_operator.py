@@ -9,7 +9,7 @@ from slate_core.basis import (
 from slate_core.metadata import BasisMetadata
 
 from slate_quantum._util.legacy import Metadata2D
-from slate_quantum.operator._operator import Operator, OperatorMetadata
+from slate_quantum.operator._operator import LegacyOperator, OperatorMetadata
 
 if TYPE_CHECKING:
     from slate_quantum._util.legacy import LegacyArray
@@ -26,7 +26,7 @@ class SuperOperator[
         SuperOperatorMetadata,
         Any,
     ] = Basis[SuperOperatorMetadata[M], DT],
-](Operator[Metadata2D[M, M, None], DT, B]):
+](LegacyOperator[Metadata2D[M, M, None], DT, B]):
     """Represents an operator in a quantum system."""
 
     def __init__[
@@ -54,9 +54,9 @@ class SuperOperator[
     ) -> SuperOperator[M1, DT1]: ...
     @overload
     def __add__[M1: BasisMetadata, DT1: np.number[Any]](
-        self: Operator[M1, DT1],
-        other: Operator[M1, DT1],
-    ) -> Operator[M1, DT1]: ...
+        self: LegacyOperator[M1, DT1],
+        other: LegacyOperator[M1, DT1],
+    ) -> LegacyOperator[M1, DT1]: ...
     @overload
     def __add__[M1: BasisMetadata, DT1: np.number[Any]](
         self: LegacyArray[M1, DT1],
@@ -67,7 +67,7 @@ class SuperOperator[
         self: Any,
         other: Any,
     ) -> Any:
-        array = Operator[Any, np.number[Any]].__add__(self, other)
+        array = LegacyOperator[Any, np.number[Any]].__add__(self, other)
         if isinstance(other, SuperOperator):
             return cast("Any", SuperOperator(array.basis, array.raw_data))
 
@@ -80,9 +80,9 @@ class SuperOperator[
     ) -> SuperOperator[M1, DT1]: ...
     @overload
     def __sub__[M1: BasisMetadata, DT1: np.number[Any]](
-        self: Operator[M1, DT1],
-        other: Operator[M1, DT1],
-    ) -> Operator[M1, DT1]: ...
+        self: LegacyOperator[M1, DT1],
+        other: LegacyOperator[M1, DT1],
+    ) -> LegacyOperator[M1, DT1]: ...
     @overload
     def __sub__[M1: BasisMetadata, DT1: np.number[Any]](
         self: LegacyArray[M1, DT1],
@@ -94,7 +94,7 @@ class SuperOperator[
         self: Any,
         other: Any,
     ) -> Any:
-        array = Operator[Any, DT1].__sub__(self, other)
+        array = LegacyOperator[Any, DT1].__sub__(self, other)
         if isinstance(other, SuperOperator):
             return cast("Any", SuperOperator(array.basis, array.raw_data))
 
@@ -105,5 +105,5 @@ class SuperOperator[
         self: SuperOperator[M1, DT1],
         other: complex,
     ) -> SuperOperator[M1, DT1]:
-        out = Operator[Any, Any].__mul__(self, other)
+        out = LegacyOperator[Any, Any].__mul__(self, other)
         return SuperOperator[Any, Any](out.basis, out.raw_data)

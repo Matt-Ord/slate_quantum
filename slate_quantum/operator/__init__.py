@@ -39,6 +39,8 @@ from slate_quantum.operator._linalg import (
     matmul_operator_list,
 )
 from slate_quantum.operator._operator import (
+    LegacyOperator,
+    LegacyOperatorList,
     Operator,
     OperatorList,
     OperatorMetadata,
@@ -54,6 +56,8 @@ from slate_quantum.operator._super_operator import (
 )
 
 __all__ = [
+    "LegacyOperator",
+    "LegacyOperatorList",
     "MomentumOperator",
     "MomentumOperatorBasis",
     "Operator",
@@ -71,6 +75,7 @@ __all__ = [
     "build",
     "build_kinetic_energy_operator",
     "build_kinetic_hamiltonian",
+    "build_legacy_operator_list",
     "commute",
     "dagger",
     "dagger_each",
