@@ -14,7 +14,12 @@ from slate_core.linalg import into_diagonal
 from slate_core.metadata import BasisMetadata, NestedLength
 
 from slate_quantum._util.legacy import LegacyBasis, Metadata2D, tuple_basis
-from slate_quantum.state._state import State, StateList
+from slate_quantum.state._state import (
+    LegacyState,
+    LegacyStateList,
+    build_legacy_state,
+    build_legacy_state_list,
+)
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Iterator
@@ -135,7 +140,7 @@ def _assert_operator_list_basis(basis: Basis[BasisMetadata, Any]) -> None:
 
 def expectation[M: BasisMetadata](
     operator: Operator[M, np.complexfloating],
-    state: State[M],
+    state: LegacyState[M],
 ) -> complex:
     """Calculate the expectation value of an operator."""
     return (
@@ -152,7 +157,7 @@ def expectation[M: BasisMetadata](
 
 def expectation_of_each[M0: BasisMetadata, M: BasisMetadata](
     operator: Operator[M, np.complexfloating],
-    states: StateList[M0, M],
+    states: LegacyStateList[M0, M],
 ) -> LegacyArray[M0, np.complexfloating]:
     """Calculate the expectation value of an operator."""
     basis = basis_.as_tuple(states.basis)[1]
@@ -166,20 +171,20 @@ def expectation_of_each[M0: BasisMetadata, M: BasisMetadata](
 
 def apply[M: BasisMetadata](
     operator: Operator[M, np.complexfloating],
-    state: State[M],
-) -> State[M]:
+    state: LegacyState[M],
+) -> LegacyState[M]:
     """Apply an operator to a state."""
     out = linalg.einsum("(i j'),j -> i", operator, state)
-    return State(out.basis, out.raw_data)
+    return build_legacy_state(out.basis, out.raw_data)
 
 
 def apply_to_each[M0: BasisMetadata, M: BasisMetadata](
     operator: Operator[M, np.complexfloating],
-    states: StateList[M0, M],
-) -> StateList[M0, M]:
+    states: LegacyStateList[M0, M],
+) -> LegacyStateList[M0, M]:
     """Apply an operator to a state."""
     out = linalg.einsum("(i j'),(k j) -> (k i)", operator, states)
-    return StateList(out.basis, out.raw_data)
+    return build_legacy_state_list(out.basis, out.raw_data)
 
 
 OperatorListMetadata = Metadata2D[BasisMetadata, OperatorMetadata, Any]

@@ -13,7 +13,7 @@ from slate_core.util import timed
 
 from slate_quantum import operator
 from slate_quantum._util.legacy import tuple_basis
-from slate_quantum.state import State, StateList
+from slate_quantum.state._state import build_legacy_state_list
 
 try:
     import sse_solver_py
@@ -27,6 +27,7 @@ if TYPE_CHECKING:
     from slate_quantum.metadata import EigenvalueMetadata, TimeMetadata
     from slate_quantum.operator import OperatorList
     from slate_quantum.operator._operator import Operator
+    from slate_quantum.state import LegacyState, LegacyStateList
 
 
 def _get_operator_diagonals(
@@ -92,7 +93,7 @@ def solve_stochastic_schrodinger_equation_banded[
     M: BasisMetadata,
     MT: TimeMetadata,
 ](
-    initial_state: State[M],
+    initial_state: LegacyState[M],
     times: LegacyBasis[MT, np.complexfloating],
     hamiltonian: Operator[M, np.complexfloating],
     noise: OperatorList[
@@ -107,7 +108,7 @@ def solve_stochastic_schrodinger_equation_banded[
         ],
     ],
     **kwargs: Unpack[SSEConfig],
-) -> StateList[
+) -> LegacyStateList[
     Metadata2D[SimpleMetadata, MT, None],
     M,
     LegacyTupleBasis2D[
@@ -156,7 +157,9 @@ def solve_stochastic_schrodinger_equation_banded[
     target_delta = kwargs.get("target_delta", 1e-3)
 
     hamiltonian_tuple = array.as_tuple_basis(hamiltonian)
-    initial_state_converted = initial_state.with_basis(hamiltonian_tuple.basis[0])
+    initial_state_converted = initial_state.with_basis(
+        hamiltonian_tuple.basis.children[0]
+    )
     coherent_step = operator.apply(hamiltonian, initial_state_converted)
 
     # The actual coherent step is H / hbar not H, so to get the correct
@@ -215,11 +218,11 @@ def solve_stochastic_schrodinger_equation_banded[
 
     te = datetime.datetime.now(tz=datetime.UTC)
     print(f"solve rust banded took: {(te - ts).total_seconds()} sec")  # noqa: T201
-    return StateList(
+    return build_legacy_state_list(
         tuple_basis(
             (
                 tuple_basis((FundamentalBasis.from_size(n_realizations), times)),
-                hamiltonian_tuple.basis[0],
+                hamiltonian_tuple.basis.children[0],
             )
         ),
         np.array(data),
@@ -227,7 +230,7 @@ def solve_stochastic_schrodinger_equation_banded[
 
 
 def select_realization[MT: BasisMetadata, M: BasisMetadata](
-    states: StateList[Metadata2D[SimpleMetadata, MT, None], M], idx: int = 0
-) -> StateList[MT, M]:
+    states: LegacyStateList[Metadata2D[SimpleMetadata, MT, None], M], idx: int = 0
+) -> LegacyStateList[MT, M]:
     """Select a realization from a state list."""
     return states[(idx, slice(None)), :]

@@ -9,7 +9,7 @@ from slate_core.metadata import BasisMetadata
 
 from slate_quantum._util.legacy import LegacyBasis, LegacyDiagonalBasis, tuple_basis
 from slate_quantum.operator import into_diagonal_hermitian
-from slate_quantum.state import State, StateList
+from slate_quantum.state._state import build_legacy_state_list
 
 try:
     import qutip  # type: ignore lib
@@ -21,6 +21,7 @@ if TYPE_CHECKING:
     from slate_quantum._util.legacy import LegacyTupleBasis2D
     from slate_quantum.metadata import TimeMetadata
     from slate_quantum.operator._operator import Operator
+    from slate_quantum.state import LegacyState, LegacyStateList
     from slate_quantum.state._basis import EigenstateBasis
 
 
@@ -31,14 +32,14 @@ def _solve_schrodinger_equation_diagonal[
         M, np.complexfloating
     ],
 ](
-    initial_state: State[BasisMetadata],
+    initial_state: LegacyState[BasisMetadata],
     times: TB,
     hamiltonian: Operator[
         M,
         np.number[Any],
         LegacyDiagonalBasis[np.complexfloating, B, B, Any],
     ],
-) -> StateList[
+) -> LegacyStateList[
     TimeMetadata,
     M,
     LegacyTupleBasis2D[np.complexfloating, TB, B, None],
@@ -50,17 +51,19 @@ def _solve_schrodinger_equation_diagonal[
     vectors = coefficients[np.newaxis, :] * np.exp(
         -1j * eigenvalues * time_values[:, np.newaxis] / hbar
     )
-    return StateList(tuple_basis((times, hamiltonian.basis.inner[0])), vectors)
+    return build_legacy_state_list(
+        tuple_basis((times, hamiltonian.basis.inner[0])), vectors
+    )
 
 
 def solve_schrodinger_equation_decomposition[
     M: BasisMetadata,
     TB: LegacyBasis[TimeMetadata, np.complexfloating],
 ](
-    initial_state: State[BasisMetadata],
+    initial_state: LegacyState[BasisMetadata],
     times: TB,
     hamiltonian: Operator[M, np.complexfloating],
-) -> StateList[
+) -> LegacyStateList[
     TimeMetadata,
     M,
     LegacyTupleBasis2D[np.complexfloating, TB, EigenstateBasis[M], None],
@@ -74,10 +77,10 @@ def solve_schrodinger_equation[
     M: BasisMetadata,
     TB: LegacyBasis[TimeMetadata, np.complexfloating],
 ](
-    initial_state: State[BasisMetadata],
+    initial_state: LegacyState[BasisMetadata],
     times: TB,
     hamiltonian: Operator[M, np.complexfloating],
-) -> StateList[
+) -> LegacyStateList[
     TimeMetadata,
     M,
     LegacyTupleBasis2D[
@@ -118,7 +121,7 @@ def solve_schrodinger_equation[
             "store_states": True,
         },
     )
-    return StateList(
+    return build_legacy_state_list(
         tuple_basis((times, hamiltonian_as_tuple.basis[0])),
         np.array(
             np.asarray([state.full().reshape(-1) for state in result.states]),  # type: ignore lib
