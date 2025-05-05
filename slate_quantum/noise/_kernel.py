@@ -32,9 +32,9 @@ from slate_quantum._util.legacy import (
 from slate_quantum.metadata import EigenvalueMetadata
 from slate_quantum.operator import (
     LegacyOperatorList,
+    LegacySuperOperator,
     OperatorMetadata,
     RecastDiagonalOperatorBasis,
-    SuperOperator,
     SuperOperatorMetadata,
 )
 from slate_quantum.operator._diagonal import recast_diagonal_basis
@@ -45,7 +45,7 @@ class NoiseKernel[
     M: BasisMetadata,
     DT: np.generic,
     B: Basis[SuperOperatorMetadata, Any] = Basis[SuperOperatorMetadata[M], DT],
-](SuperOperator[M, DT, B]):
+](LegacySuperOperator[M, DT, B]):
     r"""Represents a noise kernel which is diagonal."""
 
     @staticmethod
