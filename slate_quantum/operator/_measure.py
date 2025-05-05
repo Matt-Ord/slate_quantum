@@ -3,9 +3,9 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 import numpy as np
-from slate import Array, BasisMetadata, array, metadata
-from slate.basis import from_metadata
-from slate.metadata import AxisDirections, SpacedLengthMetadata
+from slate_core import Array, BasisMetadata, array, metadata
+from slate_core.basis import from_metadata
+from slate_core.metadata import AxisDirections, SpacedLengthMetadata
 
 from slate_quantum import state as _state
 from slate_quantum.operator import _build
@@ -15,8 +15,9 @@ from slate_quantum.operator._operator import expectation, expectation_of_each
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from slate import StackedMetadata
+    from slate_core import StackedMetadata
 
+    from slate_quantum._util.legacy import LegacyArray
     from slate_quantum.state._state import State, StateList
 
 
@@ -55,7 +56,7 @@ def all_potential_from_function[
     *,
     wrapped: bool = False,
     offset: tuple[float, ...] | None = None,
-) -> Array[M0, np.floating]:
+) -> LegacyArray[M0, np.floating]:
     """Get the expectation of a generic potential of all states."""
     momentum = _build.potential_from_function(
         states.basis.metadata()[1], fn=fn, wrapped=wrapped, offset=offset
@@ -200,7 +201,7 @@ def all_x[
     states: StateList[M0, StackedMetadata[M1, E]],
     *,
     axis: int,
-) -> Array[M0, np.floating]:
+) -> LegacyArray[M0, np.floating]:
     """Get the position of all states."""
     momentum = _build.x(states.basis.metadata()[1], axis=axis)
 
@@ -216,7 +217,7 @@ def _get_all_fundamental_scatter[
     states: StateList[M0, StackedMetadata[M1, E]],
     *,
     axis: int,
-) -> Array[M0, np.complexfloating]:
+) -> LegacyArray[M0, np.complexfloating]:
     r"""Get the scattering operator for a wavepacket.
 
     For a gaussian wavepacket
@@ -243,7 +244,7 @@ def all_periodic_x[
     states: StateList[M0, StackedMetadata[M1, E]],
     *,
     axis: int,
-) -> Array[M0, np.floating]:
+) -> LegacyArray[M0, np.floating]:
     r"""Get the periodic position coordinate of a wavepacket.
 
     For a gaussian wavepacket
@@ -270,7 +271,7 @@ def all_variance_x[
     states: StateList[M0, StackedMetadata[M1, E]],
     *,
     axis: int,
-) -> Array[M0, np.floating]:
+) -> LegacyArray[M0, np.floating]:
     r"""Get the width of a Gaussian wavepacket.
 
     For a gaussian wavepacket
@@ -294,7 +295,7 @@ def all_coherent_width[
     states: StateList[M0, StackedMetadata[M1, E]],
     *,
     axis: int,
-) -> Array[M0, np.floating]:
+) -> LegacyArray[M0, np.floating]:
     """Get the width of a Gaussian wavepacket."""
     variance = all_variance_x(states, axis=axis)
     return array.sqrt(variance * 2)
@@ -323,7 +324,7 @@ def all_k[
     states: StateList[M0, StackedMetadata[M1, E]],
     *,
     axis: int,
-) -> Array[M0, np.floating]:
+) -> LegacyArray[M0, np.floating]:
     """Get the momentum of a all states."""
     momentum = _build.k(states.basis.metadata()[1], axis=axis)
 
@@ -361,7 +362,7 @@ def all_variance_k[
     states: StateList[M0, StackedMetadata[M1, E]],
     *,
     axis: int,
-) -> Array[M0, np.floating]:
+) -> LegacyArray[M0, np.floating]:
     r"""Get the variance of the momentum of all states.
 
     The variance in momentum is given by
@@ -395,7 +396,7 @@ def all_uncertainty[
     states: StateList[M0, StackedMetadata[M1, E]],
     *,
     axis: int,
-) -> Array[M0, np.floating]:
+) -> LegacyArray[M0, np.floating]:
     r"""Get the uncertainty in position of all states."""
     basis = from_metadata(states.basis.metadata()[0])
     data = np.array([uncertainty(state, axis=axis) for state in states])

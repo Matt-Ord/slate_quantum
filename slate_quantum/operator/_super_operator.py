@@ -3,15 +3,15 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, cast, overload, override
 
 import numpy as np
-from slate.basis import (
+from slate_core.basis import (
     Basis,
 )
-from slate.metadata import BasisMetadata, Metadata2D
+from slate_core.metadata import BasisMetadata, Metadata2D
 
 from slate_quantum.operator._operator import Operator, OperatorMetadata
 
 if TYPE_CHECKING:
-    from slate.array import Array
+    from slate_quantum._util.legacy import LegacyArray
 
 type SuperOperatorMetadata[M: BasisMetadata = BasisMetadata] = OperatorMetadata[
     OperatorMetadata[M],
@@ -58,9 +58,9 @@ class SuperOperator[
     ) -> Operator[M1, DT1]: ...
     @overload
     def __add__[M1: BasisMetadata, DT1: np.number[Any]](
-        self: Array[M1, DT1],
-        other: Array[M1, DT1],
-    ) -> Array[M1, DT1]: ...
+        self: LegacyArray[M1, DT1],
+        other: LegacyArray[M1, DT1],
+    ) -> LegacyArray[M1, DT1]: ...
     @override
     def __add__[M1: BasisMetadata, DT1: np.number[Any]](  # type: ignore overload
         self: Any,
@@ -84,9 +84,9 @@ class SuperOperator[
     ) -> Operator[M1, DT1]: ...
     @overload
     def __sub__[M1: BasisMetadata, DT1: np.number[Any]](
-        self: Array[M1, DT1],
-        other: Array[M1, DT1],
-    ) -> Array[M1, DT1]: ...
+        self: LegacyArray[M1, DT1],
+        other: LegacyArray[M1, DT1],
+    ) -> LegacyArray[M1, DT1]: ...
 
     @override
     def __sub__[M1: BasisMetadata, DT1: np.number[Any]](  # type: ignore overload

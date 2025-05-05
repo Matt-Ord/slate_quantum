@@ -4,11 +4,11 @@ from typing import TYPE_CHECKING, Any, cast
 
 import numpy as np
 from scipy.constants import hbar  # type: ignore lib
-from slate.basis import (
+from slate_core.basis import (
     SplitBasis,
     fundamental_transformed_tuple_basis_from_metadata,
 )
-from slate.metadata.volume import (
+from slate_core.metadata.volume import (
     fundamental_stacked_delta_k,
     fundamental_stacked_dk,
     fundamental_stacked_k_points,
@@ -18,11 +18,11 @@ from slate_quantum.operator._diagonal import MomentumOperator
 from slate_quantum.operator._operator import Operator
 
 if TYPE_CHECKING:
-    from slate.metadata import (
+    from slate_core.metadata import (
         SpacedLengthMetadata,
         StackedMetadata,
     )
-    from slate.metadata.volume import AxisDirections
+    from slate_core.metadata.volume import AxisDirections
 
     from slate_quantum.operator._diagonal import Potential
 

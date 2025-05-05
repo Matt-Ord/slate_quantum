@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import numpy as np
 from scipy.constants import hbar  # type: ignore stubs
-from slate import Array, plot
-from slate.metadata import spaced_volume_metadata_from_stacked_delta_x
-from slate.plot import get_figure
+from slate_core import Array, plot
+from slate_core.metadata import spaced_volume_metadata_from_stacked_delta_x
+from slate_core.plot import get_figure
 
 from slate_quantum import bloch, operator
 

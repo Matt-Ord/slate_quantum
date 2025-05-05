@@ -3,9 +3,9 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 import numpy as np
-from slate import Array, StackedMetadata, TupleBasis, basis
-from slate import metadata as _metadata
-from slate.metadata import (
+from slate_core import Array, TupleBasis, basis
+from slate_core import metadata as _metadata
+from slate_core.metadata import (
     AxisDirections,
     LengthMetadata,
     SpacedLengthMetadata,
@@ -17,6 +17,8 @@ from slate_quantum.state._state import normalize as normalize_state
 
 if TYPE_CHECKING:
     from collections.abc import Callable
+
+    from slate_quantum._util.legacy import LegacyArray, StackedMetadata
 
 
 def wrap_displacements(
@@ -33,7 +35,7 @@ def _get_displacements_x_along_axis(
     metadata: SpacedVolumeMetadata,
     origin: float,
     axis: int,
-) -> Array[
+) -> LegacyArray[
     SpacedVolumeMetadata,
     np.floating,
     TupleBasis[LengthMetadata, AxisDirections, np.generic],
@@ -53,7 +55,7 @@ def _get_displacements_x_along_axis(
 def get_displacements_x_stacked(
     metadata: SpacedVolumeMetadata, origin: tuple[float, ...]
 ) -> tuple[
-    Array[
+    LegacyArray[
         SpacedVolumeMetadata,
         np.floating,
         TupleBasis[LengthMetadata, AxisDirections, np.generic],

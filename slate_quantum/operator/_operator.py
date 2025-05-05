@@ -3,22 +3,23 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, cast, overload, override
 
 import numpy as np
-from slate import FundamentalBasis, SimpleMetadata, linalg
-from slate.array import Array, NestedIndex
-from slate.basis import (
+from slate_core import FundamentalBasis, SimpleMetadata, linalg
+from slate_core.array import Array, NestedIndex
+from slate_core.basis import (
     Basis,
-    TupleBasis2D,
     are_dual_shapes,
     as_tuple_basis,
     tuple_basis,
 )
-from slate.linalg import into_diagonal
-from slate.metadata import BasisMetadata, Metadata2D, NestedLength
+from slate_core.linalg import into_diagonal
+from slate_core.metadata import BasisMetadata, Metadata2D, NestedLength
 
 from slate_quantum.state._state import State, StateList
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Iterator
+
+    from slate_quantum._util.legacy import LegacyArray, LegacyTupleBasis2D
 
 
 def _assert_operator_basis(basis: Basis[BasisMetadata, Any]) -> None:
@@ -34,7 +35,7 @@ type OperatorMetadata[M: BasisMetadata = BasisMetadata] = Metadata2D[M, M, None]
 
 def operator_basis[M: BasisMetadata, DT: np.generic](
     basis: Basis[M, DT],
-) -> TupleBasis2D[DT, Basis[M, DT], Basis[M, DT], None]:
+) -> LegacyTupleBasis2D[DT, Basis[M, DT], Basis[M, DT], None]:
     return tuple_basis((basis, basis.dual_basis()))
 
 
@@ -73,14 +74,14 @@ class Operator[
     ) -> Operator[M1, DT1]: ...
     @overload
     def __add__[M1: BasisMetadata, DT1: np.number[Any]](
-        self: Array[M1, DT1],
-        other: Array[M1, DT1],
-    ) -> Array[M1, DT1]: ...
+        self: LegacyArray[M1, DT1],
+        other: LegacyArray[M1, DT1],
+    ) -> LegacyArray[M1, DT1]: ...
     @override
     def __add__[M1: BasisMetadata, DT1: np.number[Any]](
-        self: Array[M1, DT1],
-        other: Array[M1, DT1],
-    ) -> Array[M1, DT1]:
+        self: LegacyArray[M1, DT1],
+        other: LegacyArray[M1, DT1],
+    ) -> LegacyArray[M1, DT1]:
         array = cast("Array[Any, DT1]", super()).__add__(other)
         if isinstance(other, Operator):
             return cast("Any", Operator(array.basis, array.raw_data))
@@ -94,15 +95,15 @@ class Operator[
 
     @overload
     def __sub__[M1: BasisMetadata, DT1: np.number[Any]](
-        self: Array[M1, DT1],
-        other: Array[M1, DT1],
-    ) -> Array[M1, DT1]: ...
+        self: LegacyArray[M1, DT1],
+        other: LegacyArray[M1, DT1],
+    ) -> LegacyArray[M1, DT1]: ...
 
     @override
     def __sub__[M1: BasisMetadata, DT1: np.number[Any]](
-        self: Array[M1, DT1],
-        other: Array[M1, DT1],
-    ) -> Array[M1, DT1]:
+        self: LegacyArray[M1, DT1],
+        other: LegacyArray[M1, DT1],
+    ) -> LegacyArray[M1, DT1]:
         array = cast("Array[Any, DT1]", super()).__sub__(other)
         if isinstance(other, Operator):
             return cast("Any", Operator(array.basis, array.raw_data))
@@ -118,7 +119,7 @@ class Operator[
         out = cast("Array[Any, DT1]", super()).__mul__(cast("float", other))
         return Operator[Any, Any](out.basis, out.raw_data)
 
-    def as_diagonal(self) -> Array[M, np.complexfloating]:
+    def as_diagonal(self) -> LegacyArray[M, np.complexfloating]:
         diagonal = into_diagonal(
             Operator(self.basis, self.raw_data.astype(np.complex128))
         )
@@ -154,7 +155,7 @@ def expectation[M: BasisMetadata](
 def expectation_of_each[M0: BasisMetadata, M: BasisMetadata](
     operator: Operator[M, np.complexfloating],
     states: StateList[M0, M],
-) -> Array[M0, np.complexfloating]:
+) -> LegacyArray[M0, np.complexfloating]:
     """Calculate the expectation value of an operator."""
     basis = as_tuple_basis(states.basis)[1]
     return linalg.einsum(
@@ -223,13 +224,14 @@ class OperatorList[
 
     @overload
     def with_operator_basis[B0: Basis[Any, Any], B1: Basis[Any, Any]](  # B1: B
-        self: OperatorList[Any, Any, Any, TupleBasis2D[Any, B0, Any, None]], basis: B1
-    ) -> OperatorList[M0, M1, DT, TupleBasis2D[Any, B0, B1, None]]: ...
+        self: OperatorList[Any, Any, Any, LegacyTupleBasis2D[Any, B0, Any, None]],
+        basis: B1,
+    ) -> OperatorList[M0, M1, DT, LegacyTupleBasis2D[Any, B0, B1, None]]: ...
 
     @overload
     def with_operator_basis[B1: Basis[Any, Any]](  # B1: B
         self, basis: B1
-    ) -> OperatorList[M0, M1, DT, TupleBasis2D[Any, Any, B1, None]]: ...
+    ) -> OperatorList[M0, M1, DT, LegacyTupleBasis2D[Any, Any, B1, None]]: ...
 
     def with_operator_basis(  # B1: B
         self, basis: Basis[OperatorMetadata, Any]
@@ -242,14 +244,18 @@ class OperatorList[
 
     @overload
     def with_list_basis[B0: Basis[Any, Any], B1: Basis[Any, Any]](  # B1: B
-        self: OperatorList[Any, Any, Any, TupleBasis2D[Any, Any, B1, None]], basis: B0
-    ) -> OperatorList[M0, M1, DT, TupleBasis2D[Any, B0, B1, None]]: ...
+        self: OperatorList[Any, Any, Any, LegacyTupleBasis2D[Any, Any, B1, None]],
+        basis: B0,
+    ) -> OperatorList[M0, M1, DT, LegacyTupleBasis2D[Any, B0, B1, None]]: ...
 
     @overload
     def with_list_basis[B0: Basis[Any, Any]](  # B1: B
         self, basis: B0
     ) -> OperatorList[
-        M0, M1, DT, TupleBasis2D[Any, B0, Basis[Metadata2D[M1, M1, None], Any], None]
+        M0,
+        M1,
+        DT,
+        LegacyTupleBasis2D[Any, B0, Basis[Metadata2D[M1, M1, None], Any], None],
     ]: ...
 
     def with_list_basis(  # B1: B
@@ -263,7 +269,7 @@ class OperatorList[
 
     @overload
     def __iter__[M1_: BasisMetadata, B_: Basis[Any, Any], DT_: np.generic](
-        self: OperatorList[Any, M1_, DT_, TupleBasis2D[Any, Any, B_, None]], /
+        self: OperatorList[Any, M1_, DT_, LegacyTupleBasis2D[Any, Any, B_, None]], /
     ) -> Iterator[Operator[M1_, DT_, B_]]: ...
 
     @overload
@@ -285,7 +291,7 @@ class OperatorList[
         DT1: np.generic,
         B1: Basis[OperatorMetadata, Any] = Basis[Metadata2D[M1_, M1_, None], DT1],
     ](
-        self: OperatorList[Any, M1_, DT1, TupleBasis2D[Any, Any, B1, None]],
+        self: OperatorList[Any, M1_, DT1, LegacyTupleBasis2D[Any, Any, B1, None]],
         /,
         index: tuple[int, slice[None]],
     ) -> Operator[M1_, DT1, B1]: ...
@@ -310,17 +316,19 @@ class OperatorList[
     ) -> OperatorList[Any, M1_, DT1]: ...
 
     @overload
-    def __getitem__[DT_: np.generic](self: Array[Any, DT_], index: int) -> DT_: ...
+    def __getitem__[DT_: np.generic](
+        self: LegacyArray[Any, DT_], index: int
+    ) -> DT_: ...
 
     @overload
     def __getitem__[DT_: np.generic](
-        self: Array[Any, DT_], index: tuple[NestedIndex, ...] | slice
-    ) -> Array[Any, DT_]: ...
+        self: LegacyArray[Any, DT_], index: tuple[NestedIndex, ...] | slice
+    ) -> LegacyArray[Any, DT_]: ...
 
     @override
     def __getitem__[M1_: BasisMetadata, DT_: np.generic](  # type: ignore override
-        self: Array[Any, DT_], index: NestedIndex
-    ) -> Array[Any, DT_] | DT_ | Operator[Any, DT_]:
+        self: LegacyArray[Any, DT_], index: NestedIndex
+    ) -> LegacyArray[Any, DT_] | DT_ | Operator[Any, DT_]:
         out = cast("Array[Any, DT_]", super()).__getitem__(index)
         out = cast("Array[Any, DT_]", out)
         if (
@@ -347,7 +355,7 @@ class OperatorList[
         SimpleMetadata,
         M1_,
         DT1,
-        TupleBasis2D[Any, FundamentalBasis[SimpleMetadata], B1, None],
+        LegacyTupleBasis2D[Any, FundamentalBasis[SimpleMetadata], B1, None],
     ]:
         operators = list(iter_)
         assert all(x.basis == operators[0].basis for x in operators)
@@ -369,14 +377,14 @@ class OperatorList[
     ) -> OperatorList[M0_, M1_, DT1]: ...
     @overload
     def __add__[M0_: BasisMetadata, DT1: np.number[Any]](
-        self: Array[M0_, DT1],
-        other: Array[M0_, DT1],
-    ) -> Array[M0_, DT1]: ...
+        self: LegacyArray[M0_, DT1],
+        other: LegacyArray[M0_, DT1],
+    ) -> LegacyArray[M0_, DT1]: ...
     @override
     def __add__[M0_: BasisMetadata, DT1: np.number[Any]](
-        self: Array[M0_, DT1],
-        other: Array[M0_, DT1],
-    ) -> Array[M0_, DT1]:
+        self: LegacyArray[M0_, DT1],
+        other: LegacyArray[M0_, DT1],
+    ) -> LegacyArray[M0_, DT1]:
         array = cast("Array[Any, DT1]", super()).__add__(other)
         if isinstance(other, OperatorList):
             return cast("Any", OperatorList(array.basis, array.raw_data))
@@ -395,15 +403,15 @@ class OperatorList[
 
     @overload
     def __sub__[M0_: BasisMetadata, DT1: np.number[Any]](
-        self: Array[M0_, DT1],
-        other: Array[M0_, DT1],
-    ) -> Array[M0_, DT1]: ...
+        self: LegacyArray[M0_, DT1],
+        other: LegacyArray[M0_, DT1],
+    ) -> LegacyArray[M0_, DT1]: ...
 
     @override
     def __sub__[M0_: BasisMetadata, DT1: np.number[Any]](
-        self: Array[M0_, DT1],
-        other: Array[M0_, DT1],
-    ) -> Array[M0_, DT1]:
+        self: LegacyArray[M0_, DT1],
+        other: LegacyArray[M0_, DT1],
+    ) -> LegacyArray[M0_, DT1]:
         array = cast("Array[Any, DT1]", super()).__sub__(other)
         if isinstance(other, OperatorList):
             return cast("Any", OperatorList(array.basis, array.raw_data))

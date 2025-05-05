@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from slate.metadata import (
+from slate_core.metadata import (
     AxisDirections,
     LabelSpacing,
     SpacedLengthMetadata,

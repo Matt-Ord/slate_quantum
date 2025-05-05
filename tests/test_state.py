@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import numpy as np
-from slate import basis
-from slate.metadata.volume import spaced_volume_metadata_from_stacked_delta_x
+from slate_core import basis
+from slate_core.metadata.volume import spaced_volume_metadata_from_stacked_delta_x
 
 from slate_quantum import state
 from slate_quantum.state._state import State

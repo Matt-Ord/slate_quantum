@@ -3,14 +3,14 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, cast, override
 
 import numpy as np
-from slate.basis import BasisFeature, WrappedBasis
+from slate_core.basis import BasisFeature, WrappedBasis
 
 from slate_quantum.metadata import RepeatedLengthMetadata
 
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from slate.basis import Basis
+    from slate_core.basis import Basis
 
 
 class BlochShiftedBasis[

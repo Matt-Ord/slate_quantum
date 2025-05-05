@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any, cast
 
 import numpy as np
 from scipy.constants import hbar  # type: ignore unknown
-from slate import Array, BasisMetadata, SimpleMetadata, basis, linalg
+from slate_core import Array, BasisMetadata, SimpleMetadata, basis, linalg
 
 from slate_quantum.noise.build import truncate_noise_operator_list
 from slate_quantum.noise.diagonalize._eigenvalue import (

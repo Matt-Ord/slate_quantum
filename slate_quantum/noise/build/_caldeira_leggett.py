@@ -3,11 +3,15 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 import numpy as np
-from slate import StackedMetadata, basis, tuple_basis
-from slate.basis import CoordinateBasis, FundamentalBasis, TupleBasis2D
-from slate.metadata import AxisDirections, SpacedLengthMetadata, size_from_nested_shape
-from slate.metadata.length import fundamental_dk
-from slate.metadata.volume import fundamental_stacked_dk
+from slate_core import StackedMetadata, basis, tuple_basis
+from slate_core.basis import CoordinateBasis, FundamentalBasis
+from slate_core.metadata import (
+    AxisDirections,
+    SpacedLengthMetadata,
+    size_from_nested_shape,
+)
+from slate_core.metadata.length import fundamental_dk
+from slate_core.metadata.volume import fundamental_stacked_dk
 
 from slate_quantum.metadata._label import EigenvalueMetadata, eigenvalue_basis
 from slate_quantum.operator import (
@@ -19,6 +23,8 @@ from slate_quantum.operator import (
 if TYPE_CHECKING:
     from collections.abc import Callable
 
+    from slate_quantum._util.legacy import LegacyTupleBasis2D
+
 
 def periodic_caldeira_leggett_axis_operators[M: SpacedLengthMetadata](
     metadata: M,
@@ -26,7 +32,7 @@ def periodic_caldeira_leggett_axis_operators[M: SpacedLengthMetadata](
     EigenvalueMetadata,
     M,
     np.complexfloating,
-    TupleBasis2D[
+    LegacyTupleBasis2D[
         Any,
         FundamentalBasis[EigenvalueMetadata],
         RecastDiagonalOperatorBasis[M, Any],
@@ -60,7 +66,7 @@ def periodic_caldeira_leggett_operators[
     EigenvalueMetadata,
     StackedMetadata[M, E],
     np.complexfloating,
-    TupleBasis2D[
+    LegacyTupleBasis2D[
         Any,
         FundamentalBasis[EigenvalueMetadata],
         RecastDiagonalOperatorBasis[StackedMetadata[M, E], Any],
@@ -95,7 +101,7 @@ def real_periodic_caldeira_leggett_operators[
     EigenvalueMetadata,
     StackedMetadata[M, E],
     np.complexfloating,
-    TupleBasis2D[
+    LegacyTupleBasis2D[
         Any,
         FundamentalBasis[EigenvalueMetadata],
         RecastDiagonalOperatorBasis[StackedMetadata[M, E], Any],
@@ -159,7 +165,7 @@ def caldeira_leggett_operators[M: SpacedLengthMetadata, E: AxisDirections](
     EigenvalueMetadata,
     StackedMetadata[M, E],
     np.complexfloating,
-    TupleBasis2D[
+    LegacyTupleBasis2D[
         Any,
         FundamentalBasis[EigenvalueMetadata],
         RecastDiagonalOperatorBasis[StackedMetadata[M, E], Any],

@@ -4,13 +4,12 @@ from typing import TYPE_CHECKING, Any
 
 import numpy as np
 from scipy.constants import hbar  # type: ignore lib
-from slate.basis import (
+from slate_core.basis import (
     DiagonalBasis,
-    TupleBasis2D,
     as_tuple_basis,
     tuple_basis,
 )
-from slate.metadata import BasisMetadata
+from slate_core.metadata import BasisMetadata
 
 from slate_quantum.operator import into_diagonal_hermitian
 from slate_quantum.state import State, StateList
@@ -22,8 +21,9 @@ except ImportError:
     qutip = None
 
 if TYPE_CHECKING:
-    from slate.basis import Basis
+    from slate_core.basis import Basis
 
+    from slate_quantum._util.legacy import LegacyTupleBasis2D
     from slate_quantum.metadata import TimeMetadata
     from slate_quantum.operator._operator import Operator
     from slate_quantum.state._basis import EigenstateBasis
@@ -44,7 +44,7 @@ def _solve_schrodinger_equation_diagonal[
 ) -> StateList[
     TimeMetadata,
     M,
-    TupleBasis2D[np.complexfloating, TB, B, None],
+    LegacyTupleBasis2D[np.complexfloating, TB, B, None],
 ]:
     coefficients = initial_state.with_basis(hamiltonian.basis.inner[0]).raw_data
     eigenvalues = hamiltonian.raw_data
@@ -66,7 +66,7 @@ def solve_schrodinger_equation_decomposition[
 ) -> StateList[
     TimeMetadata,
     M,
-    TupleBasis2D[np.complexfloating, TB, EigenstateBasis[M], None],
+    LegacyTupleBasis2D[np.complexfloating, TB, EigenstateBasis[M], None],
 ]:
     """Solve the schrodinger equation by directly finding eigenstates for the given initial state and hamiltonian."""
     diagonal = into_diagonal_hermitian(hamiltonian)
@@ -83,7 +83,7 @@ def solve_schrodinger_equation[
 ) -> StateList[
     TimeMetadata,
     M,
-    TupleBasis2D[np.complexfloating, TB, Basis[M, np.complexfloating], None],
+    LegacyTupleBasis2D[np.complexfloating, TB, Basis[M, np.complexfloating], None],
 ]:
     """Solve the schrodinger equation iteratively for the given initial state and hamiltonian.
 

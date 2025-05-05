@@ -3,24 +3,23 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, cast
 
 import numpy as np
-from slate import Array, Basis, basis
-from slate import metadata as _metadata
-from slate.basis import (
+from slate_core import Array, Basis, basis
+from slate_core import metadata as _metadata
+from slate_core.basis import (
     DiagonalBasis,
     FundamentalBasis,
     TransformedBasis,
     TruncatedBasis,
     Truncation,
     TupleBasis,
-    TupleBasis2D,
     diagonal_basis,
     tuple_basis,
 )
-from slate.metadata import (
+from slate_core.metadata import (
     AxisDirections,
     SpacedLengthMetadata,
 )
-from slate.metadata.util import fundamental_size
+from slate_core.metadata.util import fundamental_size
 
 from slate_quantum.operator._diagonal import (
     DiagonalOperator,
@@ -33,17 +32,19 @@ from slate_quantum.operator._operator import Operator, OperatorList
 from slate_quantum.state._build import wrap_displacements
 
 if TYPE_CHECKING:
-    from slate.metadata import (
+    from slate_core.metadata import (
         BasisMetadata,
         SimpleMetadata,
         StackedMetadata,
     )
-    from slate.metadata.length import LengthMetadata
+    from slate_core.metadata.length import LengthMetadata
+
+    from slate_quantum._util.legacy import LegacyArray, LegacyTupleBasis2D
 
 
 def get_displacements_x[M: LengthMetadata](
     metadata: M, origin: float
-) -> Array[M, np.floating, FundamentalBasis[M]]:
+) -> LegacyArray[M, np.floating, FundamentalBasis[M]]:
     """Get the displacements from origin.
 
     Parameters
@@ -69,10 +70,10 @@ def nx_displacement_operators_stacked[M: StackedMetadata[BasisMetadata, Any]](
     SimpleMetadata,
     M,
     np.int64,
-    TupleBasis2D[
+    LegacyTupleBasis2D[
         np.generic,
         FundamentalBasis[SimpleMetadata],
-        TupleBasis2D[np.generic, Basis[M, Any], Basis[M, Any], None],
+        LegacyTupleBasis2D[np.generic, Basis[M, Any], Basis[M, Any], None],
         None,
     ],
 ]:
@@ -98,7 +99,7 @@ def nx_displacement_operator[M: BasisMetadata](
 ) -> Operator[
     M,
     np.int64,
-    TupleBasis2D[np.generic, Basis[M, Any], Basis[M, Any], None],
+    LegacyTupleBasis2D[np.generic, Basis[M, Any], Basis[M, Any], None],
 ]:
     """Get a matrix of displacements in nx, taken in a periodic fashion."""
     n_x_points = np.asarray(_metadata.fundamental_stacked_nx_points(metadata))
@@ -116,7 +117,7 @@ def x_displacement_operator[M: LengthMetadata](
 ) -> Operator[
     M,
     np.floating,
-    TupleBasis2D[np.generic, FundamentalBasis[M], FundamentalBasis[M], None],
+    LegacyTupleBasis2D[np.generic, FundamentalBasis[M], FundamentalBasis[M], None],
 ]:
     """Get the displacements from origin.
 
@@ -146,7 +147,7 @@ def _get_displacements_matrix_x_along_axis[M: SpacedLengthMetadata, E: AxisDirec
 ) -> Operator[
     StackedMetadata[M, E],
     np.floating,
-    TupleBasis2D[
+    LegacyTupleBasis2D[
         np.generic,
         Basis[StackedMetadata[M, E], Any],
         Basis[StackedMetadata[M, E], Any],
@@ -171,10 +172,10 @@ def x_displacement_operators_stacked[M: SpacedLengthMetadata, E: AxisDirections]
     SimpleMetadata,
     StackedMetadata[M, E],
     np.floating,
-    TupleBasis2D[
+    LegacyTupleBasis2D[
         np.generic,
         FundamentalBasis[SimpleMetadata],
-        TupleBasis2D[
+        LegacyTupleBasis2D[
             np.generic,
             Basis[StackedMetadata[M, E], Any],
             Basis[StackedMetadata[M, E], Any],
@@ -199,7 +200,7 @@ def total_x_displacement_operator[M: SpacedLengthMetadata, E: AxisDirections](
 ) -> Operator[
     StackedMetadata[M, E],
     np.float64,
-    TupleBasis2D[
+    LegacyTupleBasis2D[
         np.generic,
         Basis[StackedMetadata[M, E], Any],
         Basis[StackedMetadata[M, E], Any],
