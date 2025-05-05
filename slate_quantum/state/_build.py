@@ -18,7 +18,11 @@ from slate_quantum.state._state import normalize as normalize_state
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from slate_quantum._util.legacy import LegacyArray, StackedMetadata
+    from slate_quantum._util.legacy import (
+        LegacyArray,
+        LegacyTupleBasis,
+        StackedMetadata,
+    )
 
 
 def wrap_displacements(
@@ -58,7 +62,7 @@ def get_displacements_x_stacked(
     LegacyArray[
         SpacedVolumeMetadata,
         np.floating,
-        TupleBasis[LengthMetadata, AxisDirections, np.generic],
+        LegacyTupleBasis[LengthMetadata, AxisDirections, np.generic],
     ],
     ...,
 ]:

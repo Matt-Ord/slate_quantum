@@ -4,9 +4,10 @@ import itertools
 from typing import Any, cast, override
 
 import numpy as np
-from slate_core import StackedMetadata, TupleBasis
+from slate_core import TupleBasis
 from slate_core.basis import BasisFeature, WrappedBasis
 
+from slate_quantum._util.legacy import LegacyTupleBasis, StackedMetadata
 from slate_quantum.metadata import RepeatedLengthMetadata
 
 
@@ -14,9 +15,9 @@ class BlochTransposedBasis[
     DT: np.generic,
     M: RepeatedLengthMetadata,
     E,
-    B: TupleBasis[Any, Any, Any] = TupleBasis[M, E, DT],
+    B: LegacyTupleBasis[Any, Any, Any] = LegacyTupleBasis[M, E, DT],
 ](
-    WrappedBasis[Any, DT, B],
+    WrappedBasis[Any, Any],
 ):
     """A basis designed to show the underlying sparsity of the Bloch Hamiltonian.
 

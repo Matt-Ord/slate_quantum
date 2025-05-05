@@ -4,13 +4,10 @@ from typing import TYPE_CHECKING, Any
 
 import numpy as np
 from scipy.constants import hbar  # type: ignore lib
-from slate_core.basis import (
-    DiagonalBasis,
-    as_tuple_basis,
-    tuple_basis,
-)
+from slate_core import basis
 from slate_core.metadata import BasisMetadata
 
+from slate_quantum._util.legacy import LegacyBasis, LegacyDiagonalBasis, tuple_basis
 from slate_quantum.operator import into_diagonal_hermitian
 from slate_quantum.state import State, StateList
 
@@ -21,8 +18,6 @@ except ImportError:
     qutip = None
 
 if TYPE_CHECKING:
-    from slate_core.basis import Basis
-
     from slate_quantum._util.legacy import LegacyTupleBasis2D
     from slate_quantum.metadata import TimeMetadata
     from slate_quantum.operator._operator import Operator
@@ -31,15 +26,17 @@ if TYPE_CHECKING:
 
 def _solve_schrodinger_equation_diagonal[
     M: BasisMetadata,
-    TB: Basis[TimeMetadata, np.complexfloating],
-    B: Basis[BasisMetadata, np.complexfloating] = Basis[M, np.complexfloating],
+    TB: LegacyBasis[TimeMetadata, np.complexfloating],
+    B: LegacyBasis[BasisMetadata, np.complexfloating] = LegacyBasis[
+        M, np.complexfloating
+    ],
 ](
     initial_state: State[BasisMetadata],
     times: TB,
     hamiltonian: Operator[
         M,
         np.number[Any],
-        DiagonalBasis[np.complexfloating, B, B, Any],
+        LegacyDiagonalBasis[np.complexfloating, B, B, Any],
     ],
 ) -> StateList[
     TimeMetadata,
@@ -58,7 +55,7 @@ def _solve_schrodinger_equation_diagonal[
 
 def solve_schrodinger_equation_decomposition[
     M: BasisMetadata,
-    TB: Basis[TimeMetadata, np.complexfloating],
+    TB: LegacyBasis[TimeMetadata, np.complexfloating],
 ](
     initial_state: State[BasisMetadata],
     times: TB,
@@ -75,7 +72,7 @@ def solve_schrodinger_equation_decomposition[
 
 def solve_schrodinger_equation[
     M: BasisMetadata,
-    TB: Basis[TimeMetadata, np.complexfloating],
+    TB: LegacyBasis[TimeMetadata, np.complexfloating],
 ](
     initial_state: State[BasisMetadata],
     times: TB,
@@ -83,7 +80,9 @@ def solve_schrodinger_equation[
 ) -> StateList[
     TimeMetadata,
     M,
-    LegacyTupleBasis2D[np.complexfloating, TB, Basis[M, np.complexfloating], None],
+    LegacyTupleBasis2D[
+        np.complexfloating, TB, LegacyBasis[M, np.complexfloating], None
+    ],
 ]:
     """Solve the schrodinger equation iteratively for the given initial state and hamiltonian.
 
@@ -98,7 +97,7 @@ def solve_schrodinger_equation[
         msg = "The qutip package is required to use this function. Please install it with `pip install qutip`."
         raise ImportError(msg)
 
-    hamiltonian_as_tuple = hamiltonian.with_basis(as_tuple_basis(hamiltonian.basis))
+    hamiltonian_as_tuple = hamiltonian.with_basis(basis.as_tuple(hamiltonian.basis))
     hamiltonian_data = hamiltonian_as_tuple.raw_data.reshape(
         hamiltonian_as_tuple.basis.shape
     )

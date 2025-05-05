@@ -5,12 +5,12 @@ from scipy.constants import hbar  # type: ignore stubs
 from slate_core import array, basis
 from slate_core.basis import (
     transformed_from_metadata,
-    tuple_basis,
 )
 from slate_core.metadata import size_from_nested_shape
 from slate_core.metadata.volume import spaced_volume_metadata_from_stacked_delta_x
 
 from slate_quantum import noise, operator
+from slate_quantum._util.legacy import tuple_basis
 from slate_quantum.operator._linalg import into_diagonal_hermitian
 from slate_quantum.operator._operator import Operator, OperatorList
 
@@ -78,28 +78,28 @@ def test_build_axis_scattering_operator() -> None:
 
     scatter_operator = operator.build.axis_scattering_operator(metadata, n_k=0)
     np.testing.assert_allclose(
-        array.as_outer_array(scatter_operator).as_array(),
+        array.as_outer_basis(scatter_operator).as_array(),
         np.ones(5) / np.sqrt(metadata.fundamental_size),
         atol=1e-15,
     )
 
     scatter_operator = operator.build.axis_scattering_operator(metadata, n_k=1)
     np.testing.assert_allclose(
-        array.as_outer_array(scatter_operator).as_array(),
+        array.as_outer_basis(scatter_operator).as_array(),
         np.exp(1j * 2 * np.pi * np.arange(5) / 5) / np.sqrt(metadata.fundamental_size),
         atol=1e-15,
     )
 
     scatter_operator = operator.build.axis_scattering_operator(metadata, n_k=-1)
     np.testing.assert_allclose(
-        array.as_outer_array(scatter_operator).as_array(),
+        array.as_outer_basis(scatter_operator).as_array(),
         np.exp(-1j * 2 * np.pi * np.arange(5) / 5) / np.sqrt(metadata.fundamental_size),
         atol=1e-15,
     )
 
     scatter_operator = operator.build.axis_scattering_operator(metadata, n_k=4)
     np.testing.assert_allclose(
-        array.as_outer_array(scatter_operator).as_array(),
+        array.as_outer_basis(scatter_operator).as_array(),
         np.exp(-1j * 2 * np.pi * np.arange(5) / 5) / np.sqrt(metadata.fundamental_size),
         atol=1e-15,
     )
@@ -113,35 +113,35 @@ def test_build_scattering_operator() -> None:
 
     scatter_operator = operator.build.scattering_operator(metadata, n_k=(0,))
     np.testing.assert_allclose(
-        array.as_outer_array(scatter_operator).as_array(),
+        array.as_outer_basis(scatter_operator).as_array(),
         np.ones(5) / np.sqrt(size),
         atol=1e-15,
     )
 
     scatter_operator = operator.build.scattering_operator(metadata, n_k=(1,))
     np.testing.assert_allclose(
-        array.as_outer_array(scatter_operator).as_array(),
+        array.as_outer_basis(scatter_operator).as_array(),
         np.exp(1j * 2 * np.pi * np.arange(5) / 5) / np.sqrt(size),
         atol=1e-15,
     )
 
     scatter_operator = operator.build.scattering_operator(metadata, n_k=(2,))
     np.testing.assert_allclose(
-        array.as_outer_array(scatter_operator).as_array(),
+        array.as_outer_basis(scatter_operator).as_array(),
         np.exp(2j * 2 * np.pi * np.arange(5) / 5) / np.sqrt(size),
         atol=1e-15,
     )
 
     scatter_operator = operator.build.scattering_operator(metadata, n_k=(-1,))
     np.testing.assert_allclose(
-        array.as_outer_array(scatter_operator).as_array(),
+        array.as_outer_basis(scatter_operator).as_array(),
         np.exp(-1j * 2 * np.pi * np.arange(5) / 5) / np.sqrt(size),
         atol=1e-15,
     )
 
     scatter_operator = operator.build.scattering_operator(metadata, n_k=(4,))
     np.testing.assert_allclose(
-        array.as_outer_array(scatter_operator).as_array(),
+        array.as_outer_basis(scatter_operator).as_array(),
         np.exp(-1j * 2 * np.pi * np.arange(5) / 5) / np.sqrt(size),
         atol=1e-15,
     )
@@ -393,8 +393,8 @@ def test_build_cl_operators() -> None:
     scaled_periodic = scaled_periodic.with_basis(operators_non_periodic.basis)
 
     np.testing.assert_allclose(
-        array.as_outer_array(scaled_periodic)[0:2].as_array(),
-        array.as_outer_array(operators_non_periodic)[0:2].as_array(),
+        array.as_outer_basis(scaled_periodic)[0:2].as_array(),
+        array.as_outer_basis(operators_non_periodic)[0:2].as_array(),
         atol=1e-4,
     )
 

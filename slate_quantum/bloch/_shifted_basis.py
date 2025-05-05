@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Any, cast, override
 import numpy as np
 from slate_core.basis import BasisFeature, WrappedBasis
 
+from slate_quantum._util.legacy import LegacyBasis
 from slate_quantum.metadata import RepeatedLengthMetadata
 
 if TYPE_CHECKING:
@@ -16,9 +17,9 @@ if TYPE_CHECKING:
 class BlochShiftedBasis[
     DT: np.generic,
     M: RepeatedLengthMetadata,
-    B: Basis[Any, Any] = Basis[M, DT],
+    B: Basis[Any, Any] = LegacyBasis[M, DT],
 ](
-    WrappedBasis[Any, DT, B],
+    WrappedBasis[Any, Any],
 ):
     """A basis designed to show the underlying sparsity of the Bloch Hamiltonian.
 

@@ -4,17 +4,17 @@ from typing import TYPE_CHECKING, Any, cast, overload, override
 
 import numpy as np
 from slate_core import FundamentalBasis, SimpleMetadata, linalg
+from slate_core import basis as basis_
 from slate_core.array import Array, NestedIndex
 from slate_core.basis import (
     Basis,
     are_dual_shapes,
-    as_tuple_basis,
     tuple_basis,
 )
 from slate_core.linalg import into_diagonal
 from slate_core.metadata import BasisMetadata, NestedLength
 
-from slate_quantum._util.legacy import Metadata2D
+from slate_quantum._util.legacy import LegacyBasis, Metadata2D
 from slate_quantum.state._state import State, StateList
 
 if TYPE_CHECKING:
@@ -35,18 +35,16 @@ type OperatorMetadata[M: BasisMetadata = BasisMetadata] = Metadata2D[M, M, None]
 
 
 def operator_basis[M: BasisMetadata, DT: np.generic](
-    basis: Basis[M, DT],
-) -> LegacyTupleBasis2D[DT, Basis[M, DT], Basis[M, DT], None]:
+    basis: LegacyBasis[M, DT],
+) -> LegacyTupleBasis2D[DT, LegacyBasis[M, DT], LegacyBasis[M, DT], None]:
     return tuple_basis((basis, basis.dual_basis()))
 
 
 class Operator[
     M: BasisMetadata,
     DT: np.generic,
-    B: Basis[Metadata2D[BasisMetadata, BasisMetadata, Any], Any] = Basis[
-        Metadata2D[M, M, None], DT
-    ],
-](Array[Metadata2D[M, M, None], DT, B]):
+    B: LegacyBasis[Any, Any] = LegacyBasis[Metadata2D[M, M, None], DT],
+](Array[Any, Any]):
     """Represents an operator in a quantum system."""
 
     def __init__[
@@ -133,7 +131,7 @@ def _assert_operator_list_basis(basis: Basis[BasisMetadata, Any]) -> None:
     if isinstance(is_dual, bool):
         msg = "Basis is not 2d"
         raise TypeError(msg)
-    _assert_operator_basis(as_tuple_basis(basis)[1])
+    _assert_operator_basis(basis_.as_tuple(basis)[1])
 
 
 def expectation[M: BasisMetadata](
@@ -158,7 +156,7 @@ def expectation_of_each[M0: BasisMetadata, M: BasisMetadata](
     states: StateList[M0, M],
 ) -> LegacyArray[M0, np.complexfloating]:
     """Calculate the expectation value of an operator."""
-    basis = as_tuple_basis(states.basis)[1]
+    basis = basis_.as_tuple(states.basis)[1]
     return linalg.einsum(
         "(a i'),(i j'),(a j) -> a",
         states.with_state_basis(basis.dual_basis()),
@@ -192,10 +190,10 @@ class OperatorList[
     M0: BasisMetadata,
     M1: BasisMetadata,
     DT: np.generic,
-    B: Basis[OperatorListMetadata, Any] = Basis[
+    B: Basis[Any, Any] = LegacyBasis[
         Metadata2D[M0, Metadata2D[M1, M1, None], None], DT
     ],
-](Array[Metadata2D[M0, Metadata2D[M1, M1, None], None], DT, B]):
+](Array[Any, Any]):
     """Represents an operator in a quantum system."""
 
     def __init__[
@@ -238,7 +236,7 @@ class OperatorList[
         self, basis: Basis[OperatorMetadata, Any]
     ) -> OperatorList[M0, M1, DT, Any]:
         """Get the Operator with the operator basis set to basis."""
-        final_basis = tuple_basis((as_tuple_basis(self.basis)[0], basis))
+        final_basis = tuple_basis((basis_.as_tuple(self.basis)[0], basis))
         return OperatorList(
             final_basis, self.basis.__convert_vector_into__(self.raw_data, final_basis)
         )
@@ -263,7 +261,7 @@ class OperatorList[
         self, basis: Basis[Any, Any]
     ) -> OperatorList[M0, M1, DT, Any]:
         """Get the Operator with the operator basis set to basis."""
-        final_basis = tuple_basis((basis, as_tuple_basis(self.basis)[1]))
+        final_basis = tuple_basis((basis, basis_.as_tuple(self.basis)[1]))
         return OperatorList(
             final_basis, self.basis.__convert_vector_into__(self.raw_data, final_basis)
         )

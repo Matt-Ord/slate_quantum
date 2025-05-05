@@ -3,15 +3,18 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, cast
 
 import numpy as np
-from slate_core import BasisMetadata, FundamentalBasis, SimpleMetadata, StackedMetadata
+from slate_core import BasisMetadata, FundamentalBasis, SimpleMetadata
 from slate_core.basis import (
     BasisStateMetadata,
-    BlockDiagonalBasis,
-    DiagonalBasis,
 )
 
 from slate_quantum import operator as _operator
-from slate_quantum._util.legacy import LegacyTupleBasis2D
+from slate_quantum._util.legacy import (
+    LegacyBlockDiagonalBasis,
+    LegacyDiagonalBasis,
+    LegacyTupleBasis2D,
+    StackedMetadata,
+)
 from slate_quantum.bloch._transposed_basis import BlochTransposedBasis
 from slate_quantum.metadata._repeat import RepeatedLengthMetadata
 from slate_quantum.state._basis import EigenstateBasis
@@ -22,7 +25,7 @@ if TYPE_CHECKING:
 type BlochEigenstateBasis[M: RepeatedLengthMetadata, E] = EigenstateBasis[
     StackedMetadata[M, E],
     BlochTransposedBasis[np.complexfloating, M, E],
-    BlockDiagonalBasis[
+    LegacyBlockDiagonalBasis[
         np.generic,
         BasisMetadata,
         None,
@@ -38,7 +41,7 @@ type BlochEigenstateBasis[M: RepeatedLengthMetadata, E] = EigenstateBasis[
 ]
 
 
-type DiagonalBlochBasis[M: RepeatedLengthMetadata, E] = DiagonalBasis[
+type DiagonalBlochBasis[M: RepeatedLengthMetadata, E] = LegacyDiagonalBasis[
     np.complexfloating,
     BlochEigenstateBasis[M, E],
     BlochEigenstateBasis[M, E],
@@ -50,7 +53,7 @@ def into_diagonal[M: RepeatedLengthMetadata, E](
     operator: Operator[
         StackedMetadata[M, E],
         np.complexfloating,
-        BlockDiagonalBasis[
+        LegacyBlockDiagonalBasis[
             np.complexfloating,
             M,
             E,

@@ -4,7 +4,7 @@ from itertools import starmap
 from typing import TYPE_CHECKING, Any, override
 
 import numpy as np
-from slate_core import basis, tuple_basis
+from slate_core import TupleMetadata, basis
 from slate_core import metadata as _metadata
 from slate_core.basis import BlockDiagonalBasis
 from slate_core.metadata import (
@@ -15,7 +15,7 @@ from slate_core.metadata import (
 )
 
 from slate_quantum import operator
-from slate_quantum._util.legacy import Metadata2D, StackedMetadata
+from slate_quantum._util.legacy import Metadata2D, StackedMetadata, tuple_basis
 from slate_quantum.bloch._shifted_basis import BlochShiftedBasis
 from slate_quantum.bloch._transposed_basis import BlochTransposedBasis
 from slate_quantum.metadata import RepeatedLengthMetadata
@@ -26,7 +26,7 @@ if TYPE_CHECKING:
     from slate_quantum.operator._diagonal import Potential
 
 
-class BlochFractionMetadata(LabeledMetadata[np.floating]):
+class BlochFractionMetadata(LabeledMetadata[np.dtype[np.floating]]):
     """Metadata for the Bloch fraction."""
 
     def __init__(self, size: int) -> None:
@@ -43,7 +43,7 @@ class BlochFractionMetadata(LabeledMetadata[np.floating]):
         repeat: tuple[int, ...],
     ) -> StackedMetadata[BlochFractionMetadata, None]:
         """Build a stacked metadata from a tuple of repeats."""
-        return StackedMetadata(tuple(BlochFractionMetadata(n) for n in repeat), None)
+        return TupleMetadata(tuple(BlochFractionMetadata(n) for n in repeat), None)
 
 
 def metadata_from_split(
@@ -51,7 +51,7 @@ def metadata_from_split(
     state_meta: SpacedVolumeMetadata,
 ) -> StackedMetadata[RepeatedLengthMetadata, AxisDirections]:
     """Get the metadata for the Bloch operator."""
-    return StackedMetadata(
+    return TupleMetadata(
         tuple(
             starmap(
                 RepeatedLengthMetadata,

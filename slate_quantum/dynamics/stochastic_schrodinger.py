@@ -8,11 +8,11 @@ import slate
 import slate.linalg
 from scipy.constants import hbar  # type: ignore lib
 from slate_core import FundamentalBasis, SimpleMetadata, array, basis
-from slate_core.basis import tuple_basis
 from slate_core.metadata import BasisMetadata
 from slate_core.util import timed
 
 from slate_quantum import operator
+from slate_quantum._util.legacy import tuple_basis
 from slate_quantum.state import State, StateList
 
 try:
@@ -21,10 +21,9 @@ except ImportError:
     sse_solver_py = None
 
 if TYPE_CHECKING:
-    from slate_core.basis import Basis
     from sse_solver_py import BandedData, SSEMethod
 
-    from slate_quantum._util.legacy import LegacyTupleBasis2D, Metadata2D
+    from slate_quantum._util.legacy import LegacyBasis, LegacyTupleBasis2D, Metadata2D
     from slate_quantum.metadata import EigenvalueMetadata, TimeMetadata
     from slate_quantum.operator import OperatorList
     from slate_quantum.operator._operator import Operator
@@ -94,7 +93,7 @@ def solve_stochastic_schrodinger_equation_banded[
     MT: TimeMetadata,
 ](
     initial_state: State[M],
-    times: Basis[MT, np.complexfloating],
+    times: LegacyBasis[MT, np.complexfloating],
     hamiltonian: Operator[M, np.complexfloating],
     noise: OperatorList[
         EigenvalueMetadata,
@@ -102,8 +101,8 @@ def solve_stochastic_schrodinger_equation_banded[
         np.complexfloating,
         LegacyTupleBasis2D[
             np.complexfloating,
-            Basis[EigenvalueMetadata, np.complexfloating],
-            Basis[Metadata2D[M, M, Any], np.complexfloating],
+            LegacyBasis[EigenvalueMetadata, np.complexfloating],
+            LegacyBasis[Metadata2D[M, M, Any], np.complexfloating],
             Any,
         ],
     ],
@@ -116,10 +115,10 @@ def solve_stochastic_schrodinger_equation_banded[
         LegacyTupleBasis2D[
             np.complexfloating,
             FundamentalBasis[SimpleMetadata],
-            Basis[MT, np.complexfloating],
+            LegacyBasis[MT, np.complexfloating],
             None,
         ],
-        Basis[M, np.complexfloating],
+        LegacyBasis[M, np.complexfloating],
         None,
     ],
 ]:
@@ -163,7 +162,7 @@ def solve_stochastic_schrodinger_equation_banded[
     # The actual coherent step is H / hbar not H, so to get the correct
     # step size we need to multiply by hbar
     dt = hbar * (target_delta / abs(slate.linalg.norm(coherent_step).item()))
-    times = basis.as_index_basis(times)
+    times = basis.as_index(times)
 
     operators_data = [
         o.with_basis(hamiltonian_tuple.basis).raw_data.reshape(

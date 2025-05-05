@@ -11,7 +11,7 @@ from slate_core.metadata import (
 )
 
 
-class TimeMetadata(DeltaMetadata[np.floating]):
+class TimeMetadata(DeltaMetadata[np.dtype[np.floating]]):
     """Metadata with the addition of length."""
 
 
@@ -19,7 +19,7 @@ class SpacedTimeMetadata(SpacedLabeledMetadata, TimeMetadata):
     """Metadata with the addition of length."""
 
 
-class MomentumMetadata(DeltaMetadata[np.floating]):
+class MomentumMetadata(DeltaMetadata[np.dtype[np.floating]]):
     """Metadata with the addition of momentum."""
 
 
@@ -27,7 +27,7 @@ class SpacedMomentumMetadata(SpacedLabeledMetadata, MomentumMetadata):
     """Metadata with the addition of momentum."""
 
 
-class EigenvalueMetadata(ExplicitLabeledMetadata[np.complexfloating]):
+class EigenvalueMetadata(ExplicitLabeledMetadata[np.dtype[np.complexfloating]]):
     """Metadata with the addition of eigenvalues."""
 
 

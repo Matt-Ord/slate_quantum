@@ -5,8 +5,9 @@ from typing import TYPE_CHECKING, Any, Literal, cast, override
 import numpy as np
 from slate_core import Basis, SimpleMetadata
 from slate_core.explicit_basis import ExplicitUnitaryBasis
-from slate_core.metadata import BasisMetadata, Metadata2D
+from slate_core.metadata import BasisMetadata
 
+from slate_quantum._util.legacy import LegacyArray, LegacyBasis, Metadata2D
 from slate_quantum.state._state import StateList
 
 if TYPE_CHECKING:
@@ -19,11 +20,11 @@ type Direction = Literal["forward", "backward"]
 
 class EigenstateBasis[
     M: BasisMetadata,
-    B: Basis[Any, np.complexfloating] = Basis[M, np.complexfloating],
+    B: LegacyBasis[Any, np.complexfloating] = LegacyBasis[M, np.complexfloating],
     BTransform: Basis[Any, Any] = Basis[
         Metadata2D[SimpleMetadata, BasisStateMetadata[B], None], Any
     ],
-](ExplicitUnitaryBasis[M, np.complexfloating, B, BTransform]):
+](ExplicitUnitaryBasis[Any, Any]):
     """A basis with data stored as eigenstates."""
 
     def __init__[B1: Basis[Any, Any]](
