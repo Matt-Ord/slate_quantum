@@ -8,12 +8,14 @@ from slate_core.explicit_basis import ExplicitUnitaryBasis
 from slate_core.metadata import BasisMetadata
 
 from slate_quantum._util.legacy import LegacyArray, LegacyBasis, Metadata2D
-from slate_quantum.state._state import StateList
+from slate_quantum.state._state import build_legacy_state_list
 
 if TYPE_CHECKING:
     import uuid
 
     from slate_core.basis import BasisStateMetadata
+
+    from slate_quantum.state._state import LegacyStateList
 
 type Direction = Literal["forward", "backward"]
 
@@ -46,7 +48,7 @@ class EigenstateBasis[
 
     @property
     @override
-    def eigenvectors(self) -> StateList[BasisMetadata, M]:
+    def eigenvectors(self) -> LegacyStateList[BasisMetadata, M]:
         """Get the eigenstates of the basis."""
         states = super().eigenvectors
-        return StateList(states.basis, states.raw_data)
+        return build_legacy_state_list(states.basis, states.raw_data)

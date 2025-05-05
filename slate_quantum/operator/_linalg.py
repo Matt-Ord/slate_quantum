@@ -13,7 +13,7 @@ from slate_quantum._util.legacy import diagonal_basis, tuple_basis
 from slate_quantum.metadata._label import EigenvalueMetadata
 from slate_quantum.operator._operator import Operator, OperatorList
 from slate_quantum.state._basis import EigenstateBasis
-from slate_quantum.state._state import StateList
+from slate_quantum.state._state import LegacyStateList, build_legacy_state_list
 
 if TYPE_CHECKING:
     from slate_core.basis import (
@@ -67,14 +67,14 @@ def into_diagonal_hermitian[M: BasisMetadata, DT: np.complexfloating](
 
 def get_eigenstates_hermitian[M: BasisMetadata, DT: np.complexfloating](
     operator: Operator[M, DT],
-) -> StateList[EigenvalueMetadata, M]:
+) -> LegacyStateList[EigenvalueMetadata, M]:
     diagonal = into_diagonal_hermitian(operator)
     states = diagonal.basis.inner[0].eigenvectors
     as_tuple = states.with_list_basis(basis.from_metadata(states.basis.metadata()[0]))
     out_basis = tuple_basis(
         (FundamentalBasis(EigenvalueMetadata(diagonal.raw_data)), as_tuple.basis[1]),
     )
-    return StateList(out_basis, as_tuple.raw_data)
+    return build_legacy_state_list(out_basis, as_tuple.raw_data)
 
 
 def matmul[M0: BasisMetadata](

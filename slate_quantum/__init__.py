@@ -10,15 +10,15 @@ from slate_quantum.operator import (
     PositionOperator,
     SuperOperator,
 )
-from slate_quantum.state import State, StateList
+from slate_quantum.state import LegacyState, LegacyStateList
 
 __all__ = [
+    "LegacyState",
+    "LegacyStateList",
     "MomentumOperator",
     "Operator",
     "OperatorList",
     "PositionOperator",
-    "State",
-    "StateList",
     "SuperOperator",
     "dynamics",
     "metadata",

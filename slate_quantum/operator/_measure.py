@@ -16,14 +16,14 @@ if TYPE_CHECKING:
     from collections.abc import Callable
 
     from slate_quantum._util.legacy import LegacyArray, StackedMetadata
-    from slate_quantum.state._state import State, StateList
+    from slate_quantum.state._state import LegacyState, LegacyStateList
 
 
 def potential_from_function[
     M1: SpacedLengthMetadata,
     E: AxisDirections,
 ](
-    state: State[StackedMetadata[M1, E]],
+    state: LegacyState[StackedMetadata[M1, E]],
     fn: Callable[
         [tuple[np.ndarray[Any, np.dtype[np.floating]], ...]],
         np.ndarray[Any, np.dtype[np.complex128]],
@@ -46,7 +46,7 @@ def all_potential_from_function[
     M1: SpacedLengthMetadata,
     E: AxisDirections,
 ](
-    states: StateList[M0, StackedMetadata[M1, E]],
+    states: LegacyStateList[M0, StackedMetadata[M1, E]],
     fn: Callable[
         [tuple[np.ndarray[Any, np.dtype[np.floating]], ...]],
         np.ndarray[Any, np.dtype[np.complex128]],
@@ -57,7 +57,7 @@ def all_potential_from_function[
 ) -> LegacyArray[M0, np.floating]:
     """Get the expectation of a generic potential of all states."""
     momentum = _build.potential_from_function(
-        states.basis.metadata()[1], fn=fn, wrapped=wrapped, offset=offset
+        states.basis.metadata().children[1], fn=fn, wrapped=wrapped, offset=offset
     )
 
     states = _state.normalize_all(states)
@@ -68,7 +68,7 @@ def momentum_from_function[
     M1: SpacedLengthMetadata,
     E: AxisDirections,
 ](
-    state: State[StackedMetadata[M1, E]],
+    state: LegacyState[StackedMetadata[M1, E]],
     fn: Callable[
         [tuple[np.ndarray[Any, np.dtype[np.floating]], ...]],
         np.ndarray[Any, np.dtype[np.complex128]],
@@ -90,7 +90,7 @@ def x[
     M1: SpacedLengthMetadata,
     E: AxisDirections,
 ](
-    state: State[StackedMetadata[M1, E]],
+    state: LegacyState[StackedMetadata[M1, E]],
     *,
     axis: int,
     offset: float = 0,
@@ -108,7 +108,7 @@ def x[
 def _get_fundamental_scatter[
     M1: SpacedLengthMetadata,
     E: AxisDirections,
-](states: State[StackedMetadata[M1, E]], *, axis: int) -> complex:
+](states: LegacyState[StackedMetadata[M1, E]], *, axis: int) -> complex:
     r"""Get the scattering operator for a wavepacket.
 
     For a gaussian wavepacket
@@ -130,7 +130,7 @@ def _get_fundamental_scatter[
 def periodic_x[
     M1: SpacedLengthMetadata,
     E: AxisDirections,
-](state: State[StackedMetadata[M1, E]], *, axis: int) -> float:
+](state: LegacyState[StackedMetadata[M1, E]], *, axis: int) -> float:
     r"""Get the periodic position coordinate of a wavepacket.
 
     For a gaussian wavepacket
@@ -153,7 +153,7 @@ def variance_x[
     M1: SpacedLengthMetadata,
     E: AxisDirections,
 ](
-    state: State[StackedMetadata[M1, E]],
+    state: LegacyState[StackedMetadata[M1, E]],
     *,
     axis: int,
 ) -> float:
@@ -182,7 +182,7 @@ def coherent_width[
     M1: SpacedLengthMetadata,
     E: AxisDirections,
 ](
-    state: State[StackedMetadata[M1, E]],
+    state: LegacyState[StackedMetadata[M1, E]],
     *,
     axis: int,
 ) -> float:
@@ -196,7 +196,7 @@ def all_x[
     M1: SpacedLengthMetadata,
     E: AxisDirections,
 ](
-    states: StateList[M0, StackedMetadata[M1, E]],
+    states: LegacyStateList[M0, StackedMetadata[M1, E]],
     *,
     axis: int,
 ) -> LegacyArray[M0, np.floating]:
@@ -212,7 +212,7 @@ def _get_all_fundamental_scatter[
     M1: SpacedLengthMetadata,
     E: AxisDirections,
 ](
-    states: StateList[M0, StackedMetadata[M1, E]],
+    states: LegacyStateList[M0, StackedMetadata[M1, E]],
     *,
     axis: int,
 ) -> LegacyArray[M0, np.complexfloating]:
@@ -239,7 +239,7 @@ def all_periodic_x[
     M1: SpacedLengthMetadata,
     E: AxisDirections,
 ](
-    states: StateList[M0, StackedMetadata[M1, E]],
+    states: LegacyStateList[M0, StackedMetadata[M1, E]],
     *,
     axis: int,
 ) -> LegacyArray[M0, np.floating]:
@@ -266,7 +266,7 @@ def all_variance_x[
     M1: SpacedLengthMetadata,
     E: AxisDirections,
 ](
-    states: StateList[M0, StackedMetadata[M1, E]],
+    states: LegacyStateList[M0, StackedMetadata[M1, E]],
     *,
     axis: int,
 ) -> LegacyArray[M0, np.floating]:
@@ -290,7 +290,7 @@ def all_coherent_width[
     M1: SpacedLengthMetadata,
     E: AxisDirections,
 ](
-    states: StateList[M0, StackedMetadata[M1, E]],
+    states: LegacyStateList[M0, StackedMetadata[M1, E]],
     *,
     axis: int,
 ) -> LegacyArray[M0, np.floating]:
@@ -303,7 +303,7 @@ def k[
     M1: SpacedLengthMetadata,
     E: AxisDirections,
 ](
-    state: State[StackedMetadata[M1, E]],
+    state: LegacyState[StackedMetadata[M1, E]],
     *,
     axis: int,
 ) -> float:
@@ -319,7 +319,7 @@ def all_k[
     M1: SpacedLengthMetadata,
     E: AxisDirections,
 ](
-    states: StateList[M0, StackedMetadata[M1, E]],
+    states: LegacyStateList[M0, StackedMetadata[M1, E]],
     *,
     axis: int,
 ) -> LegacyArray[M0, np.floating]:
@@ -334,7 +334,7 @@ def variance_k[
     M1: SpacedLengthMetadata,
     E: AxisDirections,
 ](
-    state: State[StackedMetadata[M1, E]],
+    state: LegacyState[StackedMetadata[M1, E]],
     *,
     axis: int,
 ) -> float:
@@ -357,7 +357,7 @@ def all_variance_k[
     M1: SpacedLengthMetadata,
     E: AxisDirections,
 ](
-    states: StateList[M0, StackedMetadata[M1, E]],
+    states: LegacyStateList[M0, StackedMetadata[M1, E]],
     *,
     axis: int,
 ) -> LegacyArray[M0, np.floating]:
@@ -376,7 +376,7 @@ def uncertainty[
     M1: SpacedLengthMetadata,
     E: AxisDirections,
 ](
-    state: State[StackedMetadata[M1, E]],
+    state: LegacyState[StackedMetadata[M1, E]],
     *,
     axis: int,
 ) -> float:
@@ -391,7 +391,7 @@ def all_uncertainty[
     M1: SpacedLengthMetadata,
     E: AxisDirections,
 ](
-    states: StateList[M0, StackedMetadata[M1, E]],
+    states: LegacyStateList[M0, StackedMetadata[M1, E]],
     *,
     axis: int,
 ) -> LegacyArray[M0, np.floating]:
