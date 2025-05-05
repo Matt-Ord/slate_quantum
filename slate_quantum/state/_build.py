@@ -109,7 +109,7 @@ def momentum[M: SpacedLengthMetadata, E: AxisDirections](
     idx: tuple[int, ...],
 ) -> State[StackedMetadata[M, E]]:
     """Get a momentum eigenstate."""
-    momentum_basis = basis.fundamental_transformed_tuple_basis_from_metadata(metadata)
+    momentum_basis = basis.transformed_from_metadata(metadata)
     data = np.zeros(metadata.shape, dtype=np.complex128)
     idx = tuple(i % n for (i, n) in zip(idx, metadata.shape, strict=True))
     data[idx] = 1.0

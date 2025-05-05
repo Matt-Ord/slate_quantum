@@ -4,7 +4,7 @@ from itertools import starmap
 from typing import TYPE_CHECKING, Any, override
 
 import numpy as np
-from slate_core import StackedMetadata, basis, tuple_basis
+from slate_core import basis, tuple_basis
 from slate_core import metadata as _metadata
 from slate_core.basis import BlockDiagonalBasis
 from slate_core.metadata import (
@@ -16,6 +16,7 @@ from slate_core.metadata import (
 )
 
 from slate_quantum import operator
+from slate_quantum._util.legacy import StackedMetadata
 from slate_quantum.bloch._shifted_basis import BlochShiftedBasis
 from slate_quantum.bloch._transposed_basis import BlochTransposedBasis
 from slate_quantum.metadata import RepeatedLengthMetadata
@@ -70,7 +71,7 @@ def basis_from_metadata(
     AxisDirections,
 ]:
     """Build the Bloch basis."""
-    operator_basis = basis.fundamental_transformed_tuple_basis_from_metadata(metadata)
+    operator_basis = basis.transformed_from_metadata(metadata)
     return BlochTransposedBasis(
         basis.with_modified_children(operator_basis, lambda _, i: BlochShiftedBasis(i))
     )
@@ -127,7 +128,7 @@ def bloch_operator_from_list[
         basis.from_metadata(operators.basis.metadata()[0])
     )
     operators = operators.with_operator_basis(
-        basis.fundamental_transformed_tuple_basis_from_metadata(
+        basis.transformed_from_metadata(
             operators.basis[1].metadata(), is_dual=operators.basis[1].is_dual
         )
     )
