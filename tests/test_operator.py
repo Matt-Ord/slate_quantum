@@ -2,13 +2,13 @@ from __future__ import annotations
 
 import numpy as np
 from scipy.constants import hbar  # type: ignore stubs
-from slate import array, basis
-from slate.basis import (
+from slate_core import array, basis
+from slate_core.basis import (
     fundamental_transformed_tuple_basis_from_metadata,
     tuple_basis,
 )
-from slate.metadata import size_from_nested_shape
-from slate.metadata.volume import spaced_volume_metadata_from_stacked_delta_x
+from slate_core.metadata import size_from_nested_shape
+from slate_core.metadata.volume import spaced_volume_metadata_from_stacked_delta_x
 
 from slate_quantum import noise, operator
 from slate_quantum.operator._linalg import into_diagonal_hermitian

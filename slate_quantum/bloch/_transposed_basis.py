@@ -4,8 +4,8 @@ import itertools
 from typing import Any, cast, override
 
 import numpy as np
-from slate import StackedMetadata, TupleBasis
-from slate.basis import BasisFeature, WrappedBasis
+from slate_core import StackedMetadata, TupleBasis
+from slate_core.basis import BasisFeature, WrappedBasis
 
 from slate_quantum.metadata import RepeatedLengthMetadata
 

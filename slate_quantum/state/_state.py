@@ -3,15 +3,25 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, cast, overload, override
 
 import numpy as np
-from slate import Array, FundamentalBasis, SimpleMetadata, array, linalg, tuple_basis
-from slate import basis as _basis
-from slate.basis import (
+from slate_core import (
+    FundamentalBasis,
+    SimpleMetadata,
+    array,
+    linalg,
+)
+from slate_core import basis as _basis
+from slate_core.basis import (
     Basis,
     BasisStateMetadata,
-    TupleBasis2D,
 )
-from slate.metadata import BasisMetadata, Metadata2D
+from slate_core.metadata import BasisMetadata
 
+from slate_quantum._util.legacy import (
+    LegacyArray,
+    LegacyBasis,
+    LegacyTupleBasis2D,
+    Metadata2D,
+)
 from slate_quantum.metadata import EigenvalueMetadata
 
 if TYPE_CHECKING:
@@ -20,12 +30,12 @@ if TYPE_CHECKING:
 
 class State[
     M: BasisMetadata,
-    B: Basis[Any, np.complexfloating] = Basis[M, np.complexfloating],
-](Array[M, np.complexfloating, B]):
+    B: LegacyBasis[Any, np.complexfloating] = LegacyBasis[M, np.complexfloating],
+](LegacyArray[M, np.complexfloating, B]):
     """represents a state vector in a basis."""
 
     def __init__[
-        B1: Basis[BasisMetadata, Any],
+        B1: LegacyBasis[BasisMetadata, Any],
     ](
         self: State[Any, B1],
         basis: B1,
@@ -34,7 +44,7 @@ class State[
         super().__init__(cast("Any", basis), cast("Any", data))
 
     @override
-    def with_basis[B1: Basis[Any, Any]](  # B1: B
+    def with_basis[B1: LegacyBasis[Any, Any]](  # B1: B
         self, basis: B1
     ) -> State[M, B1]:
         """Get the Operator with the basis set to basis."""
@@ -79,9 +89,11 @@ def normalize[M1: BasisMetadata](
     return State(state_as_index.basis, state_as_index.raw_data / np.sqrt(norm))
 
 
-def get_occupations[B: Basis[BasisMetadata, Any]](
+def get_occupations[B: LegacyBasis[BasisMetadata, Any]](
     state: State[Any, B],
-) -> Array[BasisStateMetadata[B], np.floating, FundamentalBasis[BasisStateMetadata[B]]]:
+) -> LegacyArray[
+    BasisStateMetadata[B], np.floating, FundamentalBasis[BasisStateMetadata[B]]
+]:
     state_cast = array.cast_basis(
         state, FundamentalBasis(BasisStateMetadata(state.basis))
     )
@@ -93,14 +105,16 @@ def get_occupations[B: Basis[BasisMetadata, Any]](
 class StateList[
     M0: BasisMetadata,
     M1: BasisMetadata,
-    B: Basis[
+    B: LegacyBasis[
         Metadata2D[BasisMetadata, BasisMetadata, None], np.complexfloating
-    ] = Basis[Metadata2D[M0, M1, None], np.complexfloating],
-](Array[Metadata2D[M0, M1, None], np.complexfloating, B]):
+    ] = LegacyBasis[Metadata2D[M0, M1, None], np.complexfloating],
+](LegacyArray[Metadata2D[M0, M1, None], np.complexfloating, B]):
     """represents a state vector in a basis."""
 
     def __init__[
-        B1: Basis[Metadata2D[BasisMetadata, BasisMetadata, None], np.complexfloating],
+        B1: LegacyBasis[
+            Metadata2D[BasisMetadata, BasisMetadata, None], np.complexfloating
+        ],
     ](
         self: StateList[Any, Any, B1],
         basis: B1,
@@ -132,22 +146,22 @@ class StateList[
     ) -> StateList[Any, M1_]: ...
 
     @overload
-    def __getitem__[DT: np.generic](self: Array[Any, DT], index: int) -> DT: ...
+    def __getitem__[DT: np.generic](self: LegacyArray[Any, DT], index: int) -> DT: ...
 
     @overload
     def __getitem__[DT: np.generic](
-        self: Array[Any, DT], index: tuple[array.NestedIndex, ...] | slice
-    ) -> Array[Any, DT]: ...
+        self: LegacyArray[Any, DT], index: tuple[array.NestedIndex, ...] | slice
+    ) -> LegacyArray[Any, DT]: ...
 
     @override
     def __getitem__(self, index: array.NestedIndex) -> Any:  # type: ignore overload bad
-        out = cast("Array[Any, Any]", super()).__getitem__(index)
+        out = cast("LegacyArray[Any, Any]", super()).__getitem__(index)
         if (
             isinstance(index, tuple)
             and isinstance(index[0], int)
             and index[1] == slice(None)
         ):
-            out = cast("Array[Any, Any]", out)
+            out = cast("LegacyArray[Any, Any]", out)
             return State(out.basis, out.raw_data)
         if isinstance(index, tuple) and index[1] == slice(None):
             return StateList(out.basis, out.raw_data)
@@ -155,13 +169,14 @@ class StateList[
 
     @overload
     def with_state_basis[B0: Basis[Any, Any], B1: Basis[Any, Any]](  # B1: B
-        self: StateList[Any, Any, TupleBasis2D[Any, B0, Any, None]], basis: B1
-    ) -> StateList[M0, M1, TupleBasis2D[Any, B0, B1, None]]: ...
+        self: StateList[Any, Any, LegacyTupleBasis2D[Any, B0, Any, None]],
+        basis: B1,
+    ) -> StateList[M0, M1, LegacyTupleBasis2D[Any, B0, B1, None]]: ...
 
     @overload
     def with_state_basis[B1: Basis[Any, Any]](  # B1: B
         self, basis: B1
-    ) -> StateList[M0, M1, TupleBasis2D[Any, Any, B1, None]]: ...
+    ) -> StateList[M0, M1, LegacyTupleBasis2D[Any, Any, B1, None]]: ...
 
     def with_state_basis(  # B1: B
         self, basis: Basis[BasisMetadata, Any]
@@ -174,13 +189,14 @@ class StateList[
 
     @overload
     def with_list_basis[B0: Basis[Any, Any], B1: Basis[Any, Any]](  # B1: B
-        self: StateList[Any, Any, TupleBasis2D[Any, Any, B1, None]], basis: B0
-    ) -> StateList[M0, M1, TupleBasis2D[Any, B0, B1, None]]: ...
+        self: StateList[Any, Any, LegacyTupleBasis2D[Any, Any, B1, None]],
+        basis: B0,
+    ) -> StateList[M0, M1, LegacyTupleBasis2D[Any, B0, B1, None]]: ...
 
     @overload
     def with_list_basis[B0: Basis[Any, Any]](  # B1: B
         self, basis: B0
-    ) -> StateList[M0, M1, TupleBasis2D[Any, B0, Any, None]]: ...
+    ) -> StateList[M0, M1, LegacyTupleBasis2D[Any, B0, Any, None]]: ...
 
     def with_list_basis(  # B1: B
         self, basis: Basis[Any, Any]
@@ -194,13 +210,13 @@ class StateList[
     @staticmethod
     def from_states[
         M1_: BasisMetadata,
-        B1: Basis[Any, np.complexfloating] = Basis[M1_, np.complexfloating],
+        B1: LegacyBasis[Any, np.complexfloating] = LegacyBasis[M1_, np.complexfloating],
     ](
         iter_: Iterable[State[M1_, B1]],
     ) -> StateList[
         SimpleMetadata,
         M1_,
-        TupleBasis2D[Any, FundamentalBasis[SimpleMetadata], B1, None],
+        LegacyTupleBasis2D[Any, FundamentalBasis[SimpleMetadata], B1, None],
     ]:
         states = list(iter_)
         assert all(x.basis == states[0].basis for x in states)
@@ -217,7 +233,7 @@ def normalize_all[M0: BasisMetadata, M1: BasisMetadata](
 ) -> StateList[
     M0,
     M1,
-    TupleBasis2D[np.complexfloating, Basis[M0, Any], Basis[M1, Any], None],
+    LegacyTupleBasis2D[np.complexfloating, Basis[M0, Any], Basis[M1, Any], None],
 ]:
     norms = all_inner_product(states, states)
     norms = array.as_index_basis(norms)
@@ -232,11 +248,11 @@ def normalize_all[M0: BasisMetadata, M1: BasisMetadata](
 
 @overload
 def get_all_occupations[M0: BasisMetadata, B: Basis[BasisMetadata, Any]](
-    states: StateList[M0, Any, TupleBasis2D[np.complexfloating, Any, B, None]],
-) -> Array[
+    states: StateList[M0, Any, LegacyTupleBasis2D[np.complexfloating, Any, B, None]],
+) -> LegacyArray[
     Metadata2D[M0, BasisStateMetadata[B], None],
     np.floating,
-    TupleBasis2D[
+    LegacyTupleBasis2D[
         np.floating,
         Basis[M0, Any],
         FundamentalBasis[BasisStateMetadata[B]],
@@ -248,10 +264,10 @@ def get_all_occupations[M0: BasisMetadata, B: Basis[BasisMetadata, Any]](
 @overload
 def get_all_occupations[M0: BasisMetadata, M1: BasisMetadata](
     states: StateList[M0, M1],
-) -> Array[
+) -> LegacyArray[
     Metadata2D[M0, BasisStateMetadata[Basis[M1, Any]], None],
     np.floating,
-    TupleBasis2D[
+    LegacyTupleBasis2D[
         np.floating,
         Basis[M0, Any],
         FundamentalBasis[BasisStateMetadata[Basis[M1, Any]]],
@@ -262,10 +278,10 @@ def get_all_occupations[M0: BasisMetadata, M1: BasisMetadata](
 
 def get_all_occupations[M0: BasisMetadata, B: Basis[Any, Any]](
     states: StateList[M0, Any],
-) -> Array[
+) -> LegacyArray[
     Metadata2D[M0, BasisStateMetadata[Basis[Any, Any]], None],
     np.floating,
-    TupleBasis2D[
+    LegacyTupleBasis2D[
         np.floating,
         Basis[M0, Any],
         FundamentalBasis[BasisStateMetadata[Basis[Any, Any]]],
@@ -288,14 +304,14 @@ def get_all_occupations[M0: BasisMetadata, B: Basis[Any, Any]](
 
 @overload
 def get_average_occupations[B: Basis[BasisMetadata, Any]](
-    states: StateList[Any, Any, TupleBasis2D[np.complexfloating, Any, B, None]],
+    states: StateList[Any, Any, LegacyTupleBasis2D[np.complexfloating, Any, B, None]],
 ) -> tuple[
-    Array[
+    LegacyArray[
         BasisStateMetadata[B],
         np.float64,
         FundamentalBasis[BasisStateMetadata[B]],
     ],
-    Array[
+    LegacyArray[
         BasisStateMetadata[B],
         np.float64,
         FundamentalBasis[BasisStateMetadata[B]],
@@ -307,12 +323,12 @@ def get_average_occupations[B: Basis[BasisMetadata, Any]](
 def get_average_occupations[M1: BasisMetadata](
     states: StateList[Any, M1],
 ) -> tuple[
-    Array[
+    LegacyArray[
         BasisStateMetadata[Basis[M1, Any]],
         np.float64,
         FundamentalBasis[BasisStateMetadata[Basis[M1, Any]]],
     ],
-    Array[
+    LegacyArray[
         BasisStateMetadata[Basis[M1, Any]],
         np.float64,
         FundamentalBasis[BasisStateMetadata[Basis[M1, Any]]],
@@ -323,12 +339,12 @@ def get_average_occupations[M1: BasisMetadata](
 def get_average_occupations(
     states: StateList[Any, Any, Any],
 ) -> tuple[
-    Array[
+    LegacyArray[
         BasisStateMetadata[Basis[Any, Any]],
         np.floating,
         FundamentalBasis[BasisStateMetadata[Basis[Any, Any]]],
     ],
-    Array[
+    LegacyArray[
         BasisStateMetadata[Basis[Any, Any]],
         np.floating,
         FundamentalBasis[BasisStateMetadata[Basis[Any, Any]]],
@@ -351,7 +367,7 @@ def get_average_occupations(
 def all_inner_product[M: BasisMetadata, M1: BasisMetadata](
     state_0: StateList[M, M1],
     state_1: StateList[M, M1],
-) -> Array[M, np.complexfloating]:
+) -> LegacyArray[M, np.complexfloating]:
     """Calculate the inner product of two states."""
     return linalg.einsum("(j i'),(j i) ->j", state_0, state_1)
 

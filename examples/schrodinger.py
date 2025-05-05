@@ -2,9 +2,12 @@ from __future__ import annotations
 
 import numpy as np
 from scipy.constants import hbar  # type: ignore stubs
-from slate import FundamentalBasis, plot
-from slate.metadata import LabelSpacing, spaced_volume_metadata_from_stacked_delta_x
-from slate.plot import animate_data_over_list_1d_x
+from slate_core import FundamentalBasis, plot
+from slate_core.metadata import (
+    LabelSpacing,
+    spaced_volume_metadata_from_stacked_delta_x,
+)
+from slate_core.plot import animate_data_over_list_1d_x
 
 from slate_quantum import operator
 from slate_quantum.dynamics import solve_schrodinger_equation_decomposition

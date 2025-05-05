@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import numpy as np
 import slate
-from slate.metadata import spaced_volume_metadata_from_stacked_delta_x
-from slate.plot import get_figure
+from slate_core.metadata import spaced_volume_metadata_from_stacked_delta_x
+from slate_core.plot import get_figure
 
 from slate_quantum import state
 

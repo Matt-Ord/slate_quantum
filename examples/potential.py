@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import numpy as np
-from slate import array, plot
-from slate.metadata.volume import spaced_volume_metadata_from_stacked_delta_x
+from slate_core import array, plot
+from slate_core.metadata.volume import spaced_volume_metadata_from_stacked_delta_x
 
 from slate_quantum import operator
 

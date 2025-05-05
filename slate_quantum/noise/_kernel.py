@@ -3,27 +3,27 @@ from __future__ import annotations
 from typing import Any, cast, override
 
 import numpy as np
-from slate.basis import (
+from slate_core.basis import (
     Basis,
     DiagonalBasis,
     FundamentalBasis,
     IsotropicBasis,
     RecastBasis,
-    TupleBasis2D,
     as_index_basis,
     as_tuple_basis,
     diagonal_basis,
     isotropic_basis,
     tuple_basis,
 )
-from slate.metadata import (
+from slate_core.metadata import (
     BasisMetadata,
     Metadata2D,
     StackedMetadata,
 )
-from slate.util import slice_ignoring_axes
+from slate_core.util import slice_ignoring_axes
 
 from slate_quantum._util import outer_product
+from slate_quantum._util.legacy import LegacyTupleBasis2D
 from slate_quantum.metadata import EigenvalueMetadata
 from slate_quantum.operator import (
     OperatorList,
@@ -73,7 +73,7 @@ type DiagonalKernelBasis[
     SuperOperatorMetadata[M],
     Metadata2D[M, M, None],
     DT,
-    TupleBasis2D[
+    LegacyTupleBasis2D[
         np.generic,
         DiagonalBasis[Any, Basis[M, Any], Basis[M, Any], None],
         DiagonalBasis[Any, Basis[M, Any], Basis[M, Any], None],
@@ -311,7 +311,7 @@ def get_diagonal_noise_operators_from_axis[M: BasisMetadata, E](
     EigenvalueMetadata,
     StackedMetadata[M, E],
     np.complex128,
-    TupleBasis2D[
+    LegacyTupleBasis2D[
         np.complexfloating,
         FundamentalBasis[EigenvalueMetadata],
         RecastDiagonalOperatorBasis[
@@ -377,7 +377,7 @@ type NoiseOperatorList[
     EigenvalueMetadata,
     M,
     np.complexfloating,
-    TupleBasis2D[np.complexfloating, Basis[EigenvalueMetadata, Any], B, None],
+    LegacyTupleBasis2D[np.complexfloating, Basis[EigenvalueMetadata, Any], B, None],
 ]
 
 type DiagonalNoiseOperatorList[

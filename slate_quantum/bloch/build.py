@@ -4,10 +4,10 @@ from itertools import starmap
 from typing import TYPE_CHECKING, Any, override
 
 import numpy as np
-from slate import StackedMetadata, basis, tuple_basis
-from slate import metadata as _metadata
-from slate.basis import BlockDiagonalBasis
-from slate.metadata import (
+from slate_core import StackedMetadata, basis, tuple_basis
+from slate_core import metadata as _metadata
+from slate_core.basis import BlockDiagonalBasis
+from slate_core.metadata import (
     AxisDirections,
     LabeledMetadata,
     Metadata2D,
@@ -22,8 +22,7 @@ from slate_quantum.metadata import RepeatedLengthMetadata
 from slate_quantum.operator._operator import Operator, OperatorList
 
 if TYPE_CHECKING:
-    from slate.basis import TupleBasis2D
-
+    from slate_quantum._util.legacy import LegacyTupleBasis2D
     from slate_quantum.operator._diagonal import Potential
 
 
@@ -107,7 +106,7 @@ def bloch_operator_from_list[
         np.complexfloating,
         RepeatedLengthMetadata,
         AxisDirections,
-        TupleBasis2D[
+        LegacyTupleBasis2D[
             np.complexfloating,
             BlochTransposedBasis[
                 np.complexfloating,
@@ -160,7 +159,7 @@ def kinetic_hamiltonian[M: SpacedLengthMetadata, E: AxisDirections](
         np.complexfloating,
         RepeatedLengthMetadata,
         AxisDirections,
-        TupleBasis2D[
+        LegacyTupleBasis2D[
             np.complexfloating,
             BlochTransposedBasis[
                 np.complexfloating, RepeatedLengthMetadata, AxisDirections

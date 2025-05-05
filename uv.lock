@@ -1,4 +1,5 @@
 version = 1
+revision = 1
 requires-python = "==3.13.*"
 
 [[package]]
@@ -547,9 +548,9 @@ wheels = [
 ]
 
 [[package]]
-name = "slate"
-version = "0.0.1"
-source = { git = "https://github.com/Matt-Ord/slate.git?rev=f5af344#f5af344cb99abec3e09dab837df3cb67f3e7eb09" }
+name = "slate-core"
+version = "0.0.2"
+source = { git = "https://github.com/Matt-Ord/slate.git?rev=a3dcda3#a3dcda3bcdf02bf7dac56762981c020d7791e6de" }
 dependencies = [
     { name = "numpy" },
 ]
@@ -566,13 +567,13 @@ source = { editable = "." }
 dependencies = [
     { name = "numpy" },
     { name = "scipy" },
-    { name = "slate" },
+    { name = "slate-core" },
 ]
 
 [package.optional-dependencies]
 plot = [
     { name = "matplotlib" },
-    { name = "slate", extra = ["plot"] },
+    { name = "slate-core", extra = ["plot"] },
 ]
 qutip = [
     { name = "qutip" },
@@ -596,10 +597,11 @@ requires-dist = [
     { name = "numpy", specifier = ">=2.0.0,<3.0.0" },
     { name = "qutip", marker = "extra == 'qutip'", specifier = ">=5.0.0,<6.0.0" },
     { name = "scipy", specifier = ">=1.14.1,<2.0.0" },
-    { name = "slate", git = "https://github.com/Matt-Ord/slate.git?rev=f5af344" },
-    { name = "slate", extras = ["plot"], marker = "extra == 'plot'" },
+    { name = "slate-core", git = "https://github.com/Matt-Ord/slate.git?rev=a3dcda3" },
+    { name = "slate-core", extras = ["plot"], marker = "extra == 'plot'" },
     { name = "sse-solver-py", marker = "extra == 'sse-solver-py'", git = "https://github.com/Matt-Ord/sse_solver.git?subdirectory=sse_solver_py&rev=4dfda95" },
 ]
+provides-extras = ["plot", "qutip", "sse-solver-py"]
 
 [package.metadata.requires-dev]
 dev = [

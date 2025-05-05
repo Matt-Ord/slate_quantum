@@ -3,16 +3,16 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Literal, cast, override
 
 import numpy as np
-from slate import Array, Basis, SimpleMetadata
-from slate.explicit_basis import ExplicitUnitaryBasis
-from slate.metadata import BasisMetadata, Metadata2D
+from slate_core import Basis, SimpleMetadata
+from slate_core.explicit_basis import ExplicitUnitaryBasis
+from slate_core.metadata import BasisMetadata, Metadata2D
 
 from slate_quantum.state._state import StateList
 
 if TYPE_CHECKING:
     import uuid
 
-    from slate.basis import BasisStateMetadata
+    from slate_core.basis import BasisStateMetadata
 
 type Direction = Literal["forward", "backward"]
 
@@ -28,7 +28,7 @@ class EigenstateBasis[
 
     def __init__[B1: Basis[Any, Any]](
         self: EigenstateBasis[Any, B1],
-        matrix: Array[
+        matrix: LegacyArray[
             Metadata2D[BasisMetadata, BasisStateMetadata[B1], Any], np.complexfloating
         ],
         *,
