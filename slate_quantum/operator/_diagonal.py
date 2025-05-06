@@ -1,186 +1,170 @@
 from __future__ import annotations
 
-from typing import Any, cast
+from typing import Any, Never
 
 import numpy as np
-from slate_core import Basis, BasisMetadata
+from slate_core import (
+    Basis,
+    BasisMetadata,
+    Ctype,
+    FundamentalBasis,
+    SimpleMetadata,
+    TupleBasis,
+    TupleMetadata,
+)
 from slate_core import basis as _basis
-from slate_core.basis import (
-    RecastBasis,
-    transformed_from_metadata,
+from slate_core.basis import AsUpcast, DiagonalBasis, RecastBasis, TupleBasisLike
+from slate_core.metadata import (
+    AxisDirections,
 )
-from slate_core.metadata import AxisDirections
 
-from slate_quantum._util.legacy import (
-    LegacyBasis,
-    LegacyDiagonalBasis,
-    LegacyRecastBasis,
-    LegacyTupleBasis,
-    Metadata2D,
-    StackedMetadata,
-    diagonal_basis,
+from slate_quantum.operator._operator import (
+    Operator,
+    OperatorConversion,
+    OperatorList,
+    OperatorListMetadata,
+    OperatorMetadata,
 )
-from slate_quantum.operator._operator import LegacyOperator
 
-type RecastDiagonalOperatorBasis[
-    M: BasisMetadata,
-    DT: np.generic,
-    BInner: Basis[Any, Any] = Basis[M, Any],
-    BOuter: Basis[Any, Any] = Basis[M, Any],
-] = LegacyRecastBasis[
-    Metadata2D[M, M, None],
+type DiagonalOperatorBasis[
+    BInner: Basis = Basis,
+    BOuter: Basis = Basis,
+    CT: Ctype[Never] = Ctype[Never],
+    M: OperatorMetadata = OperatorMetadata,
+] = AsUpcast[
+    RecastBasis[
+        AsUpcast[
+            DiagonalBasis[TupleBasis[tuple[BInner, BInner], None, CT]],
+            OperatorMetadata,
+            CT,
+        ],
+        BInner,
+        BOuter,
+        CT,
+    ],
     M,
-    DT,
-    LegacyDiagonalBasis[Any, BInner, BInner, None],
-    BOuter,
+    CT,
 ]
+
+type DiagonalOperatorBasisWithMetadata[
+    M: BasisMetadata,
+    CT: Ctype[Never] = Ctype[Never],
+] = DiagonalOperatorBasis[Basis[M], Basis[M], CT, OperatorMetadata[M]]
+
+type DiagonalOperatorListBasis[M0: SimpleMetadata, M: BasisMetadata] = _basis.AsUpcast[
+    TupleBasis[
+        tuple[
+            FundamentalBasis[M0],
+            DiagonalOperatorBasisWithMetadata[M],
+        ],
+        None,
+    ],
+    OperatorListMetadata[M0, OperatorMetadata[M]],
+]
+
+type DiagonalOperatorList[
+    M0: SimpleMetadata,
+    M: BasisMetadata,
+    DT: np.dtype[np.generic] = np.dtype[np.generic],
+] = OperatorList[DiagonalOperatorListBasis[M0, M], DT]
 
 
 def recast_diagonal_basis[
+    BInner: Basis,
+    BOuter: Basis,
+](inner_recast: BInner, outer_recast: BOuter) -> DiagonalOperatorBasis[BInner, BOuter]:
+    inner = DiagonalBasis(
+        TupleBasis((inner_recast, inner_recast.dual_basis()))
+    ).upcast()
+    recast = RecastBasis(inner, inner_recast.dual_basis(), outer_recast.dual_basis())
+    return AsUpcast(recast, inner.metadata())
+
+
+def recast_diagonal_basis_with_metadata[
     M: BasisMetadata,
-    DT: np.generic,
-    BInner: Basis[BasisMetadata, Any] = LegacyBasis[M, DT],
-    BOuter: Basis[BasisMetadata, Any] = LegacyBasis[M, DT],
+    CT: Ctype[Never],
 ](
-    inner_basis: BInner, outer_basis: BOuter
-) -> RecastDiagonalOperatorBasis[Any, Any, BInner, BOuter]:
-    return cast(
-        "RecastDiagonalOperatorBasis[M, DT, BInner, BOuter]",
-        RecastBasis(
-            diagonal_basis((inner_basis, inner_basis.dual_basis())),
-            inner_basis.dual_basis(),
-            outer_basis.dual_basis(),
-        ),
-    )
+    inner_recast: Basis[M], outer_recast: Basis[M]
+) -> DiagonalOperatorBasisWithMetadata[M]:
+    inner = DiagonalBasis(
+        TupleBasis((inner_recast, inner_recast.dual_basis()))
+    ).upcast()
+    recast = RecastBasis(inner, inner_recast.dual_basis(), outer_recast.dual_basis())
+    return AsUpcast(recast, inner.metadata())
 
 
-class DiagonalOperator[
+type DiagonalOperator[B: DiagonalOperatorBasis, DT: np.dtype[np.generic]] = Operator[
+    B, DT
+]
+type DiagonalOperatorWithMetadata[M: BasisMetadata, DT: np.dtype[np.generic]] = (
+    DiagonalOperator[DiagonalOperatorBasisWithMetadata[M], DT]
+)
+
+
+def with_outer_basis[BInner: Basis, B: Basis, DT: np.dtype[np.generic]](
+    operator: DiagonalOperator[DiagonalOperatorBasis[BInner, Any], DT], outer_basis: B
+) -> OperatorConversion[OperatorMetadata, DiagonalOperatorBasis[BInner, B], DT]:
+    """Create a new operator with the specified outer basis."""
+    basis = recast_diagonal_basis(operator.basis.inner.inner_recast, outer_basis)
+    return operator.with_basis(basis)
+
+
+type PositionOperatorBasis[
+    M: BasisMetadata = BasisMetadata,
+    E = Any,
+    CT: Ctype[Never] = Ctype[Never],
+] = DiagonalOperatorBasis[
+    TupleBasis[tuple[Basis[M, Ctype[np.generic]], ...], E],
+    TupleBasisLike[tuple[M, ...], E],
+    CT,
+    OperatorMetadata[TupleMetadata[tuple[M, ...], E]],
+]
+
+type PositionOperator[B: PositionOperatorBasis, DT: np.dtype[np.generic]] = (
+    DiagonalOperator[B, DT]
+)
+type Potential[
     M: BasisMetadata,
-    DT: np.generic,
-    BInner: LegacyBasis[BasisMetadata, Any] = LegacyBasis[M, Any],
-    BOuter: LegacyBasis[BasisMetadata, Any] = LegacyBasis[M, Any],
-](LegacyOperator[M, DT, RecastDiagonalOperatorBasis[M, Any, BInner, BOuter]]):
-    def __init__[
-        M_: BasisMetadata,
-        DT_: np.generic,
-        BInner_: LegacyBasis[BasisMetadata, Any] = LegacyBasis[M_, DT_],
-        BOuter_: LegacyBasis[BasisMetadata, Any] = LegacyBasis[M_, DT_],
-    ](
-        self: DiagonalOperator[Any, Any, BInner_, BOuter_],
-        inner_basis: BInner_,
-        outer_basis: BOuter_,
-        raw_data: np.ndarray[Any, np.dtype[DT_]],
-    ) -> None:
-        basis = cast(
-            "RecastDiagonalOperatorBasis[M, DT, BInner, BOuter]",
-            recast_diagonal_basis(inner_basis, outer_basis),
-        )
-        super().__init__(basis, raw_data)
-
-    @property
-    def inner_recast_basis(self) -> BInner:
-        return cast("BInner", self.basis.inner_recast)
-
-    @property
-    def outer_recast_basis(self) -> BOuter:
-        return self.basis.outer_recast
-
-    def with_outer_basis[
-        M_: BasisMetadata,
-        DT_: np.generic,
-        BInner_: Basis[BasisMetadata, Any] = Basis[M_, Any],
-        BOuter_: Basis[BasisMetadata, Any] = Basis[M_, Any],
-    ](
-        self: DiagonalOperator[M_, DT_, BInner_, Basis[M_, Any]], basis: BOuter_
-    ) -> DiagonalOperator[M_, DT_, BInner_, BOuter_]:
-        """Get the Potential with the outer recast basis set to basis."""
-        return DiagonalOperator(
-            self.inner_recast_basis,
-            basis,
-            self.outer_recast_basis.__convert_vector_into__(self.raw_data, basis),
-        )
+    E: AxisDirections,
+    CT: Ctype[Never],
+    DT: np.dtype[np.generic],
+] = PositionOperator[PositionOperatorBasis[M, E, CT], DT]
 
 
-# TODO: DiagonalOperatorList # noqa: FIX002
+def position_operator_basis[M: BasisMetadata, E, CT: Ctype[Never]](
+    basis: TupleBasisLike[tuple[M, ...], E, CT],
+) -> PositionOperatorBasis[M, E]:
+    inner_recast = _basis.from_metadata(basis.metadata(), is_dual=basis.is_dual)
+    recast = recast_diagonal_basis(inner_recast, basis).inner
+    return AsUpcast(recast, TupleMetadata((basis.metadata(), basis.metadata())))
 
 
-class PositionOperator[M: BasisMetadata, E: AxisDirections, DT: np.generic](
-    DiagonalOperator[
-        StackedMetadata[M, E],
-        DT,
-        LegacyTupleBasis[M, E, Any, StackedMetadata[M, E]],
-        Basis[StackedMetadata[M, E], Any],
-    ]
-):
-    def __init__(
-        self,
-        basis: Basis[StackedMetadata[M, E], Any],
-        raw_data: np.ndarray[Any, np.dtype[DT]],
-    ) -> None:
-        super().__init__(
-            _basis.from_metadata(basis.metadata()),
-            basis,
-            raw_data,
-        )
+type MomentumOperator[
+    M: BasisMetadata,
+    E: AxisDirections,
+    CT: Ctype[Never],
+    DT: np.dtype[np.generic],
+] = DiagonalOperator[
+    MomentumOperatorBasis[M, E, CT],
+    DT,
+]
+type MomentumOperatorBasis[
+    M: BasisMetadata,
+    E,
+    CT: Ctype[Never] = Ctype[Never],
+] = DiagonalOperatorBasis[
+    TupleBasis[tuple[Basis[M, Ctype[np.complexfloating]], ...], E],
+    TupleBasisLike[tuple[M, ...], E],
+    CT,
+    OperatorMetadata[TupleMetadata[tuple[M, ...], E]],
+]
 
 
-type PositionOperatorBasis[M: BasisMetadata, E, DT: np.generic] = (
-    RecastDiagonalOperatorBasis[
-        StackedMetadata[M, E],
-        DT,
-        LegacyTupleBasis[M, E, DT, StackedMetadata[M, E]],
-        LegacyBasis[StackedMetadata[M, E], Any],
-    ]
-)
-
-
-def position_operator_basis[M: BasisMetadata, E, DT: np.generic](
-    basis: LegacyBasis[StackedMetadata[M, E], DT],
-) -> PositionOperatorBasis[M, E, DT]:
-    return recast_diagonal_basis(
-        _basis.from_metadata(basis.metadata(), is_dual=basis.is_dual), basis
-    )
-
-
-class Potential[M: BasisMetadata, E: AxisDirections, DT: np.generic](
-    PositionOperator[M, E, DT]
-): ...
-
-
-class MomentumOperator[M: BasisMetadata, E: AxisDirections](
-    DiagonalOperator[
-        StackedMetadata[M, E],
-        np.complexfloating,
-        LegacyTupleBasis[M, E, np.complexfloating, StackedMetadata[M, E]],
-        LegacyBasis[StackedMetadata[M, E], np.complexfloating],
-    ]
-):
-    def __init__(
-        self,
-        basis: Basis[StackedMetadata[M, E], Any],
-        raw_data: np.ndarray[Any, np.dtype[np.complexfloating]],
-    ) -> None:
-        super().__init__(
-            transformed_from_metadata(basis.metadata(), is_dual=basis.is_dual),
-            basis,
-            raw_data,
-        )
-
-
-type MomentumOperatorBasis[M: BasisMetadata, E: AxisDirections] = (
-    RecastDiagonalOperatorBasis[
-        StackedMetadata[M, E],
-        np.complexfloating,
-        LegacyTupleBasis[M, E, np.complexfloating, StackedMetadata[M, E]],
-        LegacyBasis[StackedMetadata[M, E], np.complexfloating],
-    ]
-)
-
-
-def momentum_operator_basis[M: BasisMetadata, E: AxisDirections](
-    basis: LegacyBasis[StackedMetadata[M, E], np.complexfloating],
+def momentum_operator_basis[M: BasisMetadata, E, CT: Ctype[Never]](
+    basis: TupleBasisLike[tuple[M, ...], E, CT],
 ) -> MomentumOperatorBasis[M, E]:
-    return recast_diagonal_basis(
-        transformed_from_metadata(basis.metadata(), is_dual=basis.is_dual),
-        basis,
+    inner_recast = _basis.transformed_from_metadata(
+        basis.metadata(), is_dual=basis.is_dual
     )
+    recast = recast_diagonal_basis(inner_recast, basis).inner
+    return AsUpcast(recast, TupleMetadata((basis.metadata(), basis.metadata())))

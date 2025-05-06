@@ -460,12 +460,12 @@ class OperatorList[
         return out
 
     @staticmethod
-    def from_operators[B_: OperatorBasis, DT_: np.dtype[np.generic]](
-        iter_: Iterable[Operator[B_, DT_]],
+    def from_operators[M: OperatorMetadata, DT_: np.dtype[np.generic]](
+        iter_: Iterable[Operator[Basis[M], DT_]],
     ) -> OperatorList[
         AsUpcast[
-            TupleBasis[tuple[FundamentalBasis[SimpleMetadata], B_], None],
-            OperatorListMetadata[SimpleMetadata, OperatorMetadata],
+            TupleBasis[tuple[FundamentalBasis[SimpleMetadata], Basis[M]], None],
+            OperatorListMetadata[SimpleMetadata, M],
         ],
         DT_,
     ]:
@@ -551,7 +551,7 @@ type LegacyOperatorList[
     M1: BasisMetadata,
     DT: np.generic,
     B: Basis = Basis,
-] = OperatorList[Any, Any]
+] = OperatorList[Basis[OperatorListMetadata[M0, OperatorMetadata[M1]]], np.dtype[DT]]
 
 
 def build_legacy_operator_list(

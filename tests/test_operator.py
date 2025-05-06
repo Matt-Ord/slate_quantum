@@ -4,18 +4,15 @@ import numpy as np
 from scipy.constants import hbar  # type: ignore stubs
 from slate_core import array, basis
 from slate_core.basis import (
+    TupleBasis,
     transformed_from_metadata,
 )
 from slate_core.metadata import size_from_nested_shape
 from slate_core.metadata.volume import spaced_volume_metadata_from_stacked_delta_x
 
 from slate_quantum import noise, operator
-from slate_quantum._util.legacy import tuple_basis
 from slate_quantum.operator._linalg import into_diagonal_hermitian
-from slate_quantum.operator._operator import (
-    OperatorList,
-    build_legacy_operator,
-)
+from slate_quantum.operator._operator import Operator, OperatorList
 
 
 def test_build_kinetic_operator() -> None:
@@ -38,8 +35,8 @@ def test_build_hamiltonian() -> None:
     )
     transformed_basis = transformed_from_metadata(metadata)
     transformed_operator = hamiltonian.with_basis(
-        tuple_basis((transformed_basis, transformed_basis.dual_basis()))
-    )
+        TupleBasis((transformed_basis, transformed_basis.dual_basis())).upcast()
+    ).assert_ok()
 
     expected = [
         [0.0, 0.0, 0.0, 0.0, 0.0],
@@ -77,32 +74,32 @@ def test_hamiltonian_eigenstates() -> None:
 def test_build_axis_scattering_operator() -> None:
     metadata = spaced_volume_metadata_from_stacked_delta_x(
         (np.array([2 * np.pi]),), (5,)
-    )[0]
+    ).children[0]
 
     scatter_operator = operator.build.axis_scattering_operator(metadata, n_k=0)
     np.testing.assert_allclose(
-        array.as_outer_basis(scatter_operator).as_array(),
+        array.as_outer_basis(array.as_inner_basis(scatter_operator)).as_array(),
         np.ones(5) / np.sqrt(metadata.fundamental_size),
         atol=1e-15,
     )
 
     scatter_operator = operator.build.axis_scattering_operator(metadata, n_k=1)
     np.testing.assert_allclose(
-        array.as_outer_basis(scatter_operator).as_array(),
+        array.as_outer_basis(array.as_inner_basis(scatter_operator)).as_array(),
         np.exp(1j * 2 * np.pi * np.arange(5) / 5) / np.sqrt(metadata.fundamental_size),
         atol=1e-15,
     )
 
     scatter_operator = operator.build.axis_scattering_operator(metadata, n_k=-1)
     np.testing.assert_allclose(
-        array.as_outer_basis(scatter_operator).as_array(),
+        array.as_outer_basis(array.as_inner_basis(scatter_operator)).as_array(),
         np.exp(-1j * 2 * np.pi * np.arange(5) / 5) / np.sqrt(metadata.fundamental_size),
         atol=1e-15,
     )
 
     scatter_operator = operator.build.axis_scattering_operator(metadata, n_k=4)
     np.testing.assert_allclose(
-        array.as_outer_basis(scatter_operator).as_array(),
+        array.as_outer_basis(array.as_inner_basis(scatter_operator)).as_array(),
         np.exp(-1j * 2 * np.pi * np.arange(5) / 5) / np.sqrt(metadata.fundamental_size),
         atol=1e-15,
     )
@@ -116,35 +113,35 @@ def test_build_scattering_operator() -> None:
 
     scatter_operator = operator.build.scattering_operator(metadata, n_k=(0,))
     np.testing.assert_allclose(
-        array.as_outer_basis(scatter_operator).as_array(),
+        array.as_outer_basis(array.as_inner_basis(scatter_operator)).as_array(),
         np.ones(5) / np.sqrt(size),
         atol=1e-15,
     )
 
     scatter_operator = operator.build.scattering_operator(metadata, n_k=(1,))
     np.testing.assert_allclose(
-        array.as_outer_basis(scatter_operator).as_array(),
+        array.as_outer_basis(array.as_inner_basis(scatter_operator)).as_array(),
         np.exp(1j * 2 * np.pi * np.arange(5) / 5) / np.sqrt(size),
         atol=1e-15,
     )
 
     scatter_operator = operator.build.scattering_operator(metadata, n_k=(2,))
     np.testing.assert_allclose(
-        array.as_outer_basis(scatter_operator).as_array(),
+        array.as_outer_basis(array.as_inner_basis(scatter_operator)).as_array(),
         np.exp(2j * 2 * np.pi * np.arange(5) / 5) / np.sqrt(size),
         atol=1e-15,
     )
 
     scatter_operator = operator.build.scattering_operator(metadata, n_k=(-1,))
     np.testing.assert_allclose(
-        array.as_outer_basis(scatter_operator).as_array(),
+        array.as_outer_basis(array.as_inner_basis(scatter_operator)).as_array(),
         np.exp(-1j * 2 * np.pi * np.arange(5) / 5) / np.sqrt(size),
         atol=1e-15,
     )
 
     scatter_operator = operator.build.scattering_operator(metadata, n_k=(4,))
     np.testing.assert_allclose(
-        array.as_outer_basis(scatter_operator).as_array(),
+        array.as_outer_basis(array.as_inner_basis(scatter_operator)).as_array(),
         np.exp(-1j * 2 * np.pi * np.arange(5) / 5) / np.sqrt(size),
         atol=1e-15,
     )
@@ -189,8 +186,10 @@ def test_k_operator() -> None:
     basis_k = basis.transformed_from_metadata(metadata)
     np.testing.assert_array_equal(
         momentum_operator.with_basis(
-            tuple_basis((basis_k, basis_k.dual_basis()))
-        ).raw_data.reshape(5, 5),
+            TupleBasis((basis_k, basis_k.dual_basis())).upcast()
+        )
+        .assert_ok()
+        .raw_data.reshape(5, 5),
         np.diag([0, 1, 2, -2, -1]),
     )
     np.testing.assert_array_equal(
@@ -256,11 +255,11 @@ def test_filter_scatter_operator() -> None:
     metadata = spaced_volume_metadata_from_stacked_delta_x(
         (np.array([2 * np.pi, 0]),), (5,)
     )
-    basis_k = basis.transformed_from_metadata(metadata)
-    test_operator = build_legacy_operator(
-        tuple_basis((basis_k, basis_k.dual_basis())),
+    basis_k = basis.transformed_from_metadata(metadata).upcast()
+    test_operator = Operator.build(
+        TupleBasis((basis_k, basis_k.dual_basis())).upcast(),
         np.ones(25, dtype=np.complex128),
-    )
+    ).assert_ok()
     filtered = operator.build.filter_scatter(test_operator)
     np.testing.assert_array_equal(
         filtered.raw_data,
@@ -342,18 +341,18 @@ def test_build_cl_operators() -> None:
         (np.array([2 * np.pi]),), (160,)
     )
 
-    delta_x = metadata[0].spacing.delta
+    delta_x = metadata.children[0].spacing.delta
     expected = OperatorList.from_operators(
         [
             operator.build.potential_from_function(
                 metadata,
                 lambda x: np.cos(2 * np.pi * x[0] / delta_x)
-                / np.sqrt(metadata[0].fundamental_size),
+                / np.sqrt(metadata.children[0].fundamental_size),
             ),
             operator.build.potential_from_function(
                 metadata,
                 lambda x: np.sin(2 * np.pi * x[0] / delta_x)
-                / np.sqrt(metadata[0].fundamental_size),
+                / np.sqrt(metadata.children[0].fundamental_size),
             ),
         ]
     )
@@ -365,12 +364,12 @@ def test_build_cl_operators() -> None:
             operator.build.potential_from_function(
                 metadata,
                 lambda x: np.exp(-1j * 2 * np.pi * x[0] / delta_x)
-                / np.sqrt(metadata[0].fundamental_size),
+                / np.sqrt(metadata.children[0].fundamental_size),
             ),
             operator.build.potential_from_function(
                 metadata,
                 lambda x: np.exp(1j * 2 * np.pi * x[0] / delta_x)
-                / np.sqrt(metadata[0].fundamental_size),
+                / np.sqrt(metadata.children[0].fundamental_size),
             ),
         ]
     )
@@ -382,8 +381,8 @@ def test_build_cl_operators() -> None:
     np.testing.assert_allclose(
         # Scaled by a factor of 4
         # NOTE: the operators are scales by sqrt(eigenvalue)
-        operators_complex.basis[0].metadata().values * 4,
-        operators.basis[0].metadata().values,
+        operators_complex.basis.metadata().children[0].values * 4,
+        operators.basis.metadata().children[0].values,
     )
 
     # The gradient of the non-periodic operator should match that of the periodic operator
@@ -391,10 +390,11 @@ def test_build_cl_operators() -> None:
     # and the sin(x) operator is roughly linear
     operators_non_periodic = noise.build.caldeira_leggett_operators(metadata)[0, :]
     scaled_periodic = operators[1, :] * float(
-        np.sqrt(operators.basis[0].metadata().values[0])
+        np.sqrt(operators.basis.metadata().children[0].values[0])
     )
-    scaled_periodic = scaled_periodic.with_basis(operators_non_periodic.basis)
-
+    scaled_periodic = scaled_periodic.with_basis(
+        operators_non_periodic.basis
+    ).assert_ok()
     np.testing.assert_allclose(
         array.as_outer_basis(scaled_periodic)[0:2].as_array(),
         array.as_outer_basis(operators_non_periodic)[0:2].as_array(),

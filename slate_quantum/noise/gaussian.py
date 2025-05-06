@@ -13,7 +13,10 @@ from slate_core.metadata import (
 from slate_core.metadata.length import SpacedLengthMetadata
 from slate_core.metadata.volume import fundamental_stacked_delta_x
 
-from slate_quantum.noise._kernel import get_diagonal_noise_operators_from_axis
+from slate_quantum.noise._kernel import (
+    diagonal_kernel_from_isotropic_kernel,
+    get_diagonal_noise_operators_from_axis,
+)
 from slate_quantum.noise.build import (
     axis_kernel_from_function_stacked,
     gaussian_correlation_fn,
@@ -75,7 +78,9 @@ def get_gaussian_noise_kernel[
     lambda_: float,
 ) -> DiagonalNoiseKernel[StackedMetadata[M, E], np.complexfloating]:
     """Get the noise kernel for a gaussian correllated surface."""
-    return get_gaussian_isotropic_noise_kernel(metadata, a, lambda_).unwrap()
+    return diagonal_kernel_from_isotropic_kernel(
+        get_gaussian_isotropic_noise_kernel(metadata, a, lambda_)
+    )
 
 
 def get_effective_gaussian_parameters(

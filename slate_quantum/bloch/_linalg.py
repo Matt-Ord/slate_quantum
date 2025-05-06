@@ -15,7 +15,7 @@ from slate_quantum._util.legacy import (
     LegacyTupleBasis2D,
     StackedMetadata,
 )
-from slate_quantum.bloch._transposed_basis import BlochTransposedBasis
+from slate_quantum.bloch._transposed_basis import LegacyBlochTransposedBasis
 from slate_quantum.metadata._repeat import RepeatedLengthMetadata
 from slate_quantum.state._basis import LegacyEigenstateBasis
 
@@ -24,7 +24,7 @@ if TYPE_CHECKING:
 
 type BlochEigenstateBasis[M: RepeatedLengthMetadata, E] = LegacyEigenstateBasis[
     StackedMetadata[M, E],
-    BlochTransposedBasis[np.complexfloating, M, E],
+    LegacyBlochTransposedBasis[np.complexfloating, M, E],
     LegacyBlockDiagonalBasis[
         np.generic,
         BasisMetadata,
@@ -33,7 +33,7 @@ type BlochEigenstateBasis[M: RepeatedLengthMetadata, E] = LegacyEigenstateBasis[
             np.generic,
             FundamentalBasis[SimpleMetadata],
             FundamentalBasis[
-                BasisStateMetadata[BlochTransposedBasis[np.complexfloating, M, E]]
+                BasisStateMetadata[LegacyBlochTransposedBasis[np.complexfloating, M, E]]
             ],
             None,
         ],
@@ -59,8 +59,8 @@ def into_diagonal[M: RepeatedLengthMetadata, E](
             E,
             LegacyTupleBasis2D[
                 np.complexfloating,
-                BlochTransposedBasis[np.complexfloating, M, E],
-                BlochTransposedBasis[np.complexfloating, M, E],
+                LegacyBlochTransposedBasis[np.complexfloating, M, E],
+                LegacyBlochTransposedBasis[np.complexfloating, M, E],
                 None,
             ],
         ],

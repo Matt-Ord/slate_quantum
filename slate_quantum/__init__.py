@@ -4,22 +4,22 @@ from __future__ import annotations
 
 from slate_quantum import dynamics, metadata, noise, operator, state
 from slate_quantum.operator import (
-    LegacyOperator,
-    LegacyOperatorList,
-    LegacySuperOperator,
     MomentumOperator,
+    Operator,
+    OperatorList,
     PositionOperator,
+    SuperOperator,
 )
-from slate_quantum.state import LegacyState, LegacyStateList
+from slate_quantum.state import State, StateList
 
 __all__ = [
-    "LegacyOperator",
-    "LegacyOperatorList",
-    "LegacyState",
-    "LegacyStateList",
-    "LegacySuperOperator",
     "MomentumOperator",
+    "Operator",
+    "OperatorList",
     "PositionOperator",
+    "State",
+    "StateList",
+    "SuperOperator",
     "dynamics",
     "metadata",
     "noise",

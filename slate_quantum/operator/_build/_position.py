@@ -1,15 +1,19 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, Never
 
 import numpy as np
-from slate_core import Array, Basis, basis
+from slate_core import Array, Basis, Ctype, TupleBasisLike, TupleMetadata, basis
 from slate_core import metadata as _metadata
 from slate_core.basis import (
+    AsUpcast,
+    DiagonalBasis,
     FundamentalBasis,
     TransformedBasis,
     TruncatedBasis,
     Truncation,
+    TupleBasis,
+    TupleBasis2D,
 )
 from slate_core.metadata import (
     AxisDirections,
@@ -17,26 +21,23 @@ from slate_core.metadata import (
 )
 from slate_core.metadata.util import fundamental_size
 
-from slate_quantum._util.legacy import (
-    LegacyDiagonalBasis,
-    LegacyTupleBasis,
-    StackedMetadata,
-    diagonal_basis,
-    tuple_basis,
-)
+from slate_quantum.operator._build._potential import potential
 from slate_quantum.operator._diagonal import (
-    DiagonalOperator,
-    PositionOperator,
+    DiagonalOperatorBasisWithMetadata,
+    DiagonalOperatorList,
+    DiagonalOperatorWithMetadata,
+    PositionOperatorBasis,
     Potential,
-    RecastDiagonalOperatorBasis,
-    recast_diagonal_basis,
+    position_operator_basis,
+    recast_diagonal_basis_with_metadata,
 )
 from slate_quantum.operator._operator import (
-    LegacyOperator,
-    LegacyOperatorList,
+    Operator,
+    OperatorBuilder,
     OperatorList,
-    build_legacy_operator,
-    build_legacy_operator_list,
+    OperatorListMetadata,
+    OperatorMetadata,
+    operator_basis,
 )
 from slate_quantum.state._build import wrap_displacements
 
@@ -47,12 +48,19 @@ if TYPE_CHECKING:
     )
     from slate_core.metadata.length import LengthMetadata
 
-    from slate_quantum._util.legacy import LegacyArray, LegacyTupleBasis2D
+    from slate_quantum.operator._diagonal import DiagonalOperatorBasis
+
+
+def position[M: BasisMetadata, E, CT: Ctype[Never], DT: np.dtype[np.generic]](
+    outer_basis: TupleBasisLike[tuple[M, ...], E, CT], data: np.ndarray[Any, DT]
+) -> OperatorBuilder[PositionOperatorBasis[M, E], DT]:
+    """Get the potential operator."""
+    return Operator.build(position_operator_basis(outer_basis), data)
 
 
 def get_displacements_x[M: LengthMetadata](
     metadata: M, origin: float
-) -> LegacyArray[M, np.floating, FundamentalBasis[M]]:
+) -> Array[FundamentalBasis[M], np.dtype[np.floating]]:
     """Get the displacements from origin.
 
     Parameters
@@ -69,46 +77,74 @@ def get_displacements_x[M: LengthMetadata](
     data = wrap_displacements(distances, max_distance)
 
     basis = FundamentalBasis(metadata)
-    return Array.build(basis, data).assert_ok()
+    return Array.build(basis, data).ok()
 
 
-def nx_displacement_operators_stacked[M: StackedMetadata[BasisMetadata, Any]](
-    metadata: M,
-) -> LegacyOperatorList[
-    SimpleMetadata,
-    M,
-    np.int64,
-    LegacyTupleBasis2D[
-        np.generic,
-        FundamentalBasis[SimpleMetadata],
-        LegacyTupleBasis2D[np.generic, Basis[M, Any], Basis[M, Any], None],
+type FundamentalPositionOperatorBasis[M: SpacedLengthMetadata, E: AxisDirections] = (
+    AsUpcast[
+        TupleBasis[
+            tuple[
+                Basis[TupleMetadata[tuple[M, ...], E]],
+                Basis[TupleMetadata[tuple[M, ...], E]],
+            ],
+            None,
+        ],
+        OperatorMetadata[TupleMetadata[tuple[M, ...], E]],
+        Ctype[np.generic],
+    ]
+)
+type FundamentalPositionOperatorListBasis[
+    M: SpacedLengthMetadata,
+    E: AxisDirections,
+] = AsUpcast[
+    TupleBasis[
+        tuple[
+            FundamentalBasis,
+            Basis[OperatorMetadata[TupleMetadata[tuple[M, ...], E]]],
+        ],
         None,
     ],
+    OperatorListMetadata[
+        SimpleMetadata, OperatorMetadata[TupleMetadata[tuple[M, ...], E]]
+    ],
+]
+
+
+def nx_displacement_operators_stacked[M: BasisMetadata](
+    metadata: M,
+) -> OperatorList[
+    AsUpcast[
+        TupleBasis[
+            tuple[
+                FundamentalBasis[SimpleMetadata],
+                Basis[TupleMetadata[tuple[M, M], None]],
+            ],
+            None,
+        ],
+        OperatorListMetadata[SimpleMetadata, TupleMetadata[tuple[M, M], None]],
+    ],
+    np.dtype[np.signedinteger],
 ]:
     """Get a matrix of displacements in nx, taken in a periodic fashion."""
-    ax = cast("Basis[M, Any]", basis.from_metadata(metadata))
-    operator_basis = tuple_basis((ax, ax.dual_basis()))
-    return OperatorList.from_operators(
-        build_legacy_operator(
-            operator_basis,
+    out_basis = operator_basis(basis.from_metadata(metadata)).upcast()
+    operators = (
+        Operator.build(
+            out_basis,
             (n_x_points[:, np.newaxis] - n_x_points[np.newaxis, :] + n // 2) % n
             - (n // 2),
-        )
+        ).assert_ok()
         for (n_x_points, n) in zip(
             _metadata.fundamental_stacked_nx_points(metadata),
             _metadata.shallow_shape_from_nested(metadata.fundamental_shape),
             strict=True,
         )
     )
+    return OperatorList.from_operators(operators)
 
 
 def nx_displacement_operator[M: BasisMetadata](
     metadata: M,
-) -> LegacyOperator[
-    M,
-    np.int64,
-    LegacyTupleBasis2D[np.generic, Basis[M, Any], Basis[M, Any], None],
-]:
+) -> Operator[TupleBasis2D[tuple[Basis[M], Basis[M]]], np.dtype[np.int64]]:
     """Get a matrix of displacements in nx, taken in a periodic fashion."""
     n_x_points = np.asarray(_metadata.fundamental_stacked_nx_points(metadata))
     n = fundamental_size(metadata)
@@ -116,16 +152,17 @@ def nx_displacement_operator[M: BasisMetadata](
         n // 2
     )
     ax = basis.from_metadata(metadata)
-    return build_legacy_operator(tuple_basis((ax, ax.dual_basis())), data)
+    return Operator.build(TupleBasis((ax, ax.dual_basis())).upcast(), data).assert_ok()
 
 
 def x_displacement_operator[M: LengthMetadata](
     metadata: M,
     origin: float = 0.0,
-) -> LegacyOperator[
-    M,
-    np.floating,
-    LegacyTupleBasis2D[np.generic, FundamentalBasis[M], FundamentalBasis[M], None],
+) -> Operator[
+    TupleBasis2D[
+        tuple[FundamentalBasis[M], FundamentalBasis[M]], None, Ctype[np.generic]
+    ],
+    np.dtype[np.floating],
 ]:
     """Get the displacements from origin.
 
@@ -144,23 +181,20 @@ def x_displacement_operator[M: LengthMetadata](
     data = np.remainder((distances + metadata.delta), max_distance) - max_distance
 
     basis = FundamentalBasis(metadata)
-    return build_legacy_operator(tuple_basis((basis, basis.dual_basis())), data)
+    return Operator.build(
+        TupleBasis((basis, basis.dual_basis())).resolve_ctype().upcast(),
+        data,
+    ).ok()
 
 
 def _get_displacements_matrix_x_along_axis[M: SpacedLengthMetadata, E: AxisDirections](
-    metadata: StackedMetadata[M, E],
+    metadata: TupleMetadata[tuple[M, ...], E],
     origin: float = 0,
     *,
     axis: int,
-) -> LegacyOperator[
-    StackedMetadata[M, E],
-    np.floating,
-    LegacyTupleBasis2D[
-        np.generic,
-        Basis[StackedMetadata[M, E], Any],
-        Basis[StackedMetadata[M, E], Any],
-        None,
-    ],
+) -> Operator[
+    FundamentalPositionOperatorBasis[M, E],
+    np.dtype[np.floating],
 ]:
     x_points = _metadata.volume.fundamental_stacked_x_points(metadata)[axis]
     distances = x_points[:, np.newaxis] - x_points[np.newaxis, :] - origin
@@ -169,28 +203,17 @@ def _get_displacements_matrix_x_along_axis[M: SpacedLengthMetadata, E: AxisDirec
     )
     max_distance = delta_x / 2
     data = wrap_displacements(distances, max_distance)
-
-    ax = basis.from_metadata(metadata)
-    return build_legacy_operator(tuple_basis((ax, ax.dual_basis())), data)
+    out_basis = (
+        operator_basis(basis.from_metadata(metadata).upcast()).resolve_ctype().upcast()
+    )
+    return Operator.build(out_basis, data).ok()
 
 
 def x_displacement_operators_stacked[M: SpacedLengthMetadata, E: AxisDirections](
-    metadata: StackedMetadata[M, E], origin: tuple[float, ...] | None
-) -> LegacyOperatorList[
-    SimpleMetadata,
-    StackedMetadata[M, E],
-    np.floating,
-    LegacyTupleBasis2D[
-        np.generic,
-        FundamentalBasis[SimpleMetadata],
-        LegacyTupleBasis2D[
-            np.generic,
-            Basis[StackedMetadata[M, E], Any],
-            Basis[StackedMetadata[M, E], Any],
-            None,
-        ],
-        None,
-    ],
+    metadata: TupleMetadata[tuple[M, ...], E], origin: tuple[float, ...] | None
+) -> OperatorList[
+    FundamentalPositionOperatorListBasis[M, E],
+    np.dtype[np.floating],
 ]:
     """Get the displacements from origin."""
     shape = metadata.fundamental_shape
@@ -203,58 +226,55 @@ def x_displacement_operators_stacked[M: SpacedLengthMetadata, E: AxisDirections]
 
 
 def total_x_displacement_operator[M: SpacedLengthMetadata, E: AxisDirections](
-    metadata: StackedMetadata[M, E],
+    metadata: TupleMetadata[tuple[M, ...], E],
     origin: tuple[float, ...] | None = None,
-) -> LegacyOperator[
-    StackedMetadata[M, E],
-    np.float64,
-    LegacyTupleBasis2D[
-        np.generic,
-        Basis[StackedMetadata[M, E], Any],
-        Basis[StackedMetadata[M, E], Any],
-        None,
-    ],
+) -> Operator[
+    Basis[OperatorMetadata[TupleMetadata[tuple[M, ...], E]]],
+    np.dtype[np.float64],
 ]:
     """Get a matrix of displacements in x, taken in a periodic fashion."""
     displacements = x_displacement_operators_stacked(metadata, origin)
-    return build_legacy_operator(
-        displacements.basis[1],
+    return Operator.build(
+        displacements.basis.inner.children[1],
         np.linalg.norm(
-            displacements.raw_data.reshape(displacements.basis.shape), axis=0
+            displacements.raw_data.reshape(displacements.basis.inner.shape), axis=0
         ),
-    )
+    ).ok()
 
 
 def x[M: SpacedLengthMetadata, E: AxisDirections](
-    metadata: StackedMetadata[M, E],
+    metadata: TupleMetadata[tuple[M, ...], E],
     *,
     axis: int,
     offset: float = 0,
     wrapped: bool = False,
-) -> PositionOperator[M, E, np.complexfloating]:
+) -> Potential[M, E, Ctype[Never], np.dtype[np.complexfloating]]:
     """Get the x operator."""
     inner_offset = tuple(offset if i == axis else 0 for i in range(metadata.n_dim))
     points = _metadata.volume.fundamental_stacked_x_points(
         metadata, offset=inner_offset, wrapped=wrapped
     )[axis]
-    return Potential(basis.from_metadata(metadata), points.astype(np.complex128))
+    return potential(
+        basis.from_metadata(metadata).upcast(), points.astype(np.complex128)
+    ).assert_ok()
 
 
 def axis_periodic_operator[M: BasisMetadata](
     inner_basis: Basis[M, Any], *, n_k: int
-) -> DiagonalOperator[M, np.complexfloating]:
+) -> DiagonalOperatorWithMetadata[M, np.dtype[np.complexfloating]]:
     """Get the generalized e^(ik.x) operator in some general basis.
 
     k is chosen such that k = 2 * np.pi n_k / N
     """
-    transformed = TransformedBasis(inner_basis, direction="backward")
-    outer_basis = TruncatedBasis(Truncation(1, 1, n_k), transformed)
-    return DiagonalOperator(inner_basis, outer_basis, np.array([1 + 0j]))
+    transformed = TransformedBasis(inner_basis, direction="backward").upcast()
+    outer_basis = TruncatedBasis(Truncation(1, 1, n_k), transformed).upcast()
+    operator_basis = recast_diagonal_basis_with_metadata(inner_basis, outer_basis)
+    return Operator.build(operator_basis, np.array([1 + 0j])).assert_ok()
 
 
 def axis_scattering_operator[M: BasisMetadata](
     metadata: M, *, n_k: int
-) -> DiagonalOperator[M, np.complexfloating]:
+) -> DiagonalOperatorWithMetadata[M, np.dtype[np.complexfloating]]:
     """Get the e^(ik.x) operator.
 
     k is chosen such that k = 2 * np.pi n_k / N
@@ -264,51 +284,37 @@ def axis_scattering_operator[M: BasisMetadata](
 
 
 def all_axis_periodic_operators[M: BasisMetadata](
-    inner_basis: Basis[M, Any],
-) -> LegacyOperatorList[
-    SimpleMetadata,
-    M,
-    np.complexfloating,
-    LegacyDiagonalBasis[
-        Any,
-        FundamentalBasis[SimpleMetadata],
-        RecastDiagonalOperatorBasis[M, Any],
-        None,
-    ],
-]:
+    inner_basis: Basis[M],
+) -> DiagonalOperatorList[SimpleMetadata, M, np.dtype[np.complexfloating]]:
     """Get all generalized e^(ik.x) operator."""
-    outer_basis = TransformedBasis(inner_basis)
-    operator_basis = recast_diagonal_basis(inner_basis, outer_basis)
+    outer_basis = TransformedBasis(inner_basis).upcast()
+    operator_basis = recast_diagonal_basis_with_metadata(inner_basis, outer_basis)
 
-    list_basis = diagonal_basis(
+    out_basis = TupleBasis(
         (FundamentalBasis.from_size(outer_basis.size), operator_basis)
     )
-    return build_legacy_operator_list(
-        list_basis, np.ones(outer_basis.size, dtype=np.complex128)
+    list_basis = DiagonalBasis(out_basis).upcast()
+    return (
+        OperatorList.build(list_basis, np.ones(outer_basis.size, dtype=np.complex128))
+        .assert_ok()
+        .with_basis(out_basis.upcast())
+        .assert_ok()
     )
 
 
 def all_axis_scattering_operators[M: BasisMetadata](
     metadata: M,
-) -> LegacyOperatorList[
-    SimpleMetadata,
-    M,
-    np.complexfloating,
-    LegacyDiagonalBasis[
-        Any,
-        FundamentalBasis[SimpleMetadata],
-        RecastDiagonalOperatorBasis[M, Any],
-        None,
-    ],
-]:
+) -> DiagonalOperatorList[SimpleMetadata, M, np.dtype[np.complexfloating]]:
     """Get the e^(ik.x) operator."""
     inner_basis = basis.from_metadata(metadata)
     return all_axis_periodic_operators(inner_basis)
 
 
 def periodic_operator[M: BasisMetadata, E](
-    inner_basis: LegacyTupleBasis[M, E, Any], *, n_k: tuple[int, ...]
-) -> DiagonalOperator[StackedMetadata[M, E], np.complexfloating]:
+    inner_basis: TupleBasis[tuple[Basis[M], ...], E, Any], *, n_k: tuple[int, ...]
+) -> DiagonalOperatorWithMetadata[
+    TupleMetadata[tuple[M, ...], E], np.dtype[np.complexfloating]
+]:
     """Get the generalized e^(ik.x) operator in some general basis.
 
     k is chosen such that k = 2 * np.pi * n_k / N
@@ -316,15 +322,21 @@ def periodic_operator[M: BasisMetadata, E](
     outer_basis = basis.with_modified_children(
         inner_basis,
         lambda i, inner: TruncatedBasis(
-            Truncation(1, 1, n_k[i]), TransformedBasis(inner, direction="backward")
-        ),
+            Truncation(1, 1, n_k[i]),
+            TransformedBasis(inner, direction="backward").resolve_ctype().upcast(),
+        )
+        .resolve_ctype()
+        .upcast(),
     )
-    return DiagonalOperator(inner_basis, outer_basis, np.array([1 + 0j]))
+    basis_recast = recast_diagonal_basis_with_metadata(
+        inner_basis.upcast(), outer_basis.upcast()
+    )
+    return Operator.build(basis_recast, np.array([1 + 0j])).ok()
 
 
 def scattering_operator[M: SpacedLengthMetadata, E: AxisDirections](
-    metadata: StackedMetadata[M, E], *, n_k: tuple[int, ...]
-) -> PositionOperator[M, E, np.complexfloating]:
+    metadata: TupleMetadata[tuple[M, ...], E], *, n_k: tuple[int, ...]
+) -> Potential[M, E, Ctype[Never], np.dtype[np.complexfloating]]:
     """Get the e^(ik.x) operator.
 
     k is chosen such that k = 2 * np.pi * n_k / N
@@ -332,52 +344,74 @@ def scattering_operator[M: SpacedLengthMetadata, E: AxisDirections](
     outer_basis = basis.with_modified_children(
         basis.from_metadata(metadata),
         lambda i, inner: TruncatedBasis(
-            Truncation(1, 1, n_k[i]), TransformedBasis(inner, direction="backward")
-        ),
-    )
-    return PositionOperator(outer_basis, np.array([1]))
+            Truncation(1, 1, n_k[i]),
+            TransformedBasis(inner, direction="backward").resolve_ctype().upcast(),
+        )
+        .resolve_ctype()
+        .upcast(),
+    ).upcast()
+    return position(outer_basis, np.array([1], dtype=np.complexfloating)).assert_ok()
 
 
 def all_periodic_operators[M: BasisMetadata, E](
-    inner_basis: LegacyTupleBasis[M, E, Any],
-) -> LegacyOperatorList[
-    SimpleMetadata,
-    StackedMetadata[M, E],
-    np.complexfloating,
-    LegacyDiagonalBasis[
-        Any,
-        FundamentalBasis[SimpleMetadata],
-        RecastDiagonalOperatorBasis[StackedMetadata[M, E], Any],
-        None,
+    inner_basis: TupleBasis[tuple[Basis[M], ...], E, Any],
+) -> OperatorList[
+    AsUpcast[
+        DiagonalBasis[
+            TupleBasis[
+                tuple[
+                    FundamentalBasis[SimpleMetadata],
+                    DiagonalOperatorBasisWithMetadata[TupleMetadata[tuple[M, ...], E],],
+                ],
+                None,
+            ],
+        ],
+        TupleMetadata[
+            tuple[SimpleMetadata, OperatorMetadata[TupleMetadata[tuple[M, ...], E]]],
+            None,
+        ],
     ],
+    np.dtype[np.complexfloating],
 ]:
     """Get all generalized e^(ik.x) operator."""
     outer_basis = basis.with_modified_children(
         inner_basis,
-        lambda _i, inner: TransformedBasis(inner, direction="backward"),
+        lambda _i, inner: TransformedBasis(inner, direction="backward").upcast(),
     )
-    operator_basis = recast_diagonal_basis(inner_basis, outer_basis)
+    operator_basis = recast_diagonal_basis_with_metadata(
+        inner_basis.upcast(), outer_basis.upcast()
+    )
 
-    list_basis = diagonal_basis(
-        (FundamentalBasis.from_size(outer_basis.size), operator_basis)
-    )
-    return build_legacy_operator_list(
+    list_basis = DiagonalBasis(
+        TupleBasis((FundamentalBasis.from_size(outer_basis.size), operator_basis))
+    ).upcast()
+    return OperatorList.build(
         list_basis, np.ones(outer_basis.size, dtype=np.complex128)
-    )
+    ).assert_ok()
 
 
 def all_scattering_operators[M: BasisMetadata, E](
-    metadata: StackedMetadata[M, E],
-) -> LegacyOperatorList[
-    SimpleMetadata,
-    StackedMetadata[M, E],
-    np.complexfloating,
-    LegacyDiagonalBasis[
-        Any,
-        FundamentalBasis[SimpleMetadata],
-        RecastDiagonalOperatorBasis[StackedMetadata[M, E], Any],
-        None,
+    metadata: TupleMetadata[tuple[M, ...], E],
+) -> OperatorList[
+    AsUpcast[
+        DiagonalBasis[
+            TupleBasis[
+                tuple[
+                    FundamentalBasis[SimpleMetadata],
+                    DiagonalOperatorBasis[
+                        TupleBasisLike[tuple[M, ...], E],
+                        TupleBasisLike[tuple[M, ...], E],
+                    ],
+                ],
+                None,
+            ],
+        ],
+        TupleMetadata[
+            tuple[SimpleMetadata, OperatorMetadata[TupleMetadata[tuple[M, ...], E]]],
+            None,
+        ],
     ],
+    np.dtype[np.complexfloating],
 ]:
     """Get the e^(ik.x) operator."""
     inner_basis = basis.from_metadata(metadata)

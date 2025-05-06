@@ -26,7 +26,7 @@ def sample_noise_from_operators[M: BasisMetadata](
     operators: NoiseOperatorList[M], *, n_samples: int
 ) -> LegacyOperatorList[SimpleMetadata, M, np.complexfloating]:
     """Generate noise from a set of noise operators."""
-    n_operators = operators.basis[0].size
+    n_operators = operators.basis.children[0].size
 
     rng = np.random.default_rng()
     factors = (
@@ -56,10 +56,16 @@ def sample_noise_from_diagonal_kernel[M: BasisMetadata](
 ) -> LegacyOperatorList[SimpleMetadata, M, np.complexfloating]:
     """Generate noise for a diagonal kernel."""
     operators = get_periodic_noise_operators_diagonal_eigenvalue(kernel)
-    operators = operators.with_list_basis(basis.as_tuple(operators.basis)[0])
+    operators = operators.with_list_basis(
+        basis.as_tuple(operators.basis).children[0]
+    ).assert_ok()
 
-    truncation = range(operators.basis[0].size) if truncation is None else truncation
+    truncation = (
+        range(operators.basis.children[0].size) if truncation is None else truncation
+    )
     truncated = truncate_noise_operator_list(operators, truncation)
-    truncated = truncated.with_list_basis(basis.as_tuple(truncated.basis)[0])
+    truncated = truncated.with_list_basis(
+        basis.as_tuple(truncated.basis).children[0]
+    ).assert_ok()
 
     return sample_noise_from_operators(truncated, n_samples=n_samples)

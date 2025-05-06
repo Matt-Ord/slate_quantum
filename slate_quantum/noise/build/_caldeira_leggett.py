@@ -45,12 +45,12 @@ def periodic_caldeira_leggett_axis_operators[M: SpacedLengthMetadata](
     n = metadata.fundamental_size
     eigenvalue = n / (4 * k**2)
     operators = build.all_axis_scattering_operators(metadata)
-    operators = operators.with_basis(operators.basis.inner)
+    operators = operators.with_basis(operators.basis.inner).assert_ok()
 
     list_basis = CoordinateBasis(
-        [-1, 1], basis.from_metadata(operators.basis.metadata()[0])
+        [-1, 1], basis.from_metadata(operators.basis.metadata().children[0])
     )
-    converted = operators.with_list_basis(list_basis)
+    converted = operators.with_list_basis(list_basis).assert_ok()
     return build_legacy_operator_list(
         tuple_basis(
             (eigenvalue_basis(np.array([eigenvalue, eigenvalue])), converted.basis[1])
@@ -83,9 +83,9 @@ def periodic_caldeira_leggett_operators[
     operators = operators.with_basis(operators.basis.inner)
 
     list_basis = CoordinateBasis(
-        [-1, 1], basis.from_metadata(operators.basis.metadata()[0])
+        [-1, 1], basis.from_metadata(operators.basis.metadata().children[0])
     )
-    converted = operators.with_list_basis(list_basis)
+    converted = operators.with_list_basis(list_basis).assert_ok()
     return build_legacy_operator_list(
         tuple_basis(
             (eigenvalue_basis(np.array([eigenvalue, eigenvalue])), converted.basis[1])
