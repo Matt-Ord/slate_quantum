@@ -350,7 +350,7 @@ def scattering_operator[M: SpacedLengthMetadata, E: AxisDirections](
         .resolve_ctype()
         .upcast(),
     ).upcast()
-    return position(outer_basis, np.array([1], dtype=np.complexfloating)).assert_ok()
+    return position(outer_basis, np.array([1], dtype=np.complex128)).assert_ok()
 
 
 def all_periodic_operators[M: BasisMetadata, E](

@@ -7,7 +7,7 @@ import numpy as np
 from slate_core import Basis, Ctype, TupleBasis, TupleMetadata
 from slate_core.basis import AsUpcast, BasisConversion, BasisFeature, WrappedBasis
 
-from slate_quantum._util.legacy import LegacyTupleBasis
+from slate_quantum._util.legacy import StackedMetadata
 from slate_quantum.metadata import RepeatedLengthMetadata
 
 if TYPE_CHECKING:
@@ -17,8 +17,9 @@ type LegacyBlochTransposedBasis[
     DT: np.generic,
     M: RepeatedLengthMetadata,
     E,
-    B: Any = LegacyTupleBasis[M, E, DT],
-] = WrappedBasis[Any, Any]
+] = AsUpcast[
+    BlochTransposedBasis[TupleBasis[tuple[Basis[M], ...], E]], StackedMetadata[M, E]
+]
 
 
 class BlochTransposedBasis[

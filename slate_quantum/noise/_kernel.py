@@ -30,16 +30,13 @@ from slate_quantum._util.legacy import (
     tuple_basis,
 )
 from slate_quantum.metadata import EigenvalueMetadata
-from slate_quantum.operator import (
-    LegacyOperatorList,
-    LegacyRecastDiagonalOperatorBasis,
-    OperatorMetadata,
-    SuperOperatorMetadata,
-)
 from slate_quantum.operator._diagonal import recast_diagonal_basis
 from slate_quantum.operator._operator import (
     LegacyOperator,
+    LegacyOperatorList,
     Operator,
+    OperatorMetadata,
+    SuperOperatorMetadata,
     build_legacy_operator_list,
 )
 
@@ -314,6 +311,9 @@ def as_axis_kernel_from_isotropic[
         )
         for i, axis_basis in enumerate(outer_as_tuple.children)  # type:ignore refactor
     )
+
+
+type LegacyRecastDiagonalOperatorBasis[M, DT] = Any
 
 
 def get_diagonal_noise_operators_from_axis[M: BasisMetadata, E](

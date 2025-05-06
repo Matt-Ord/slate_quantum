@@ -7,7 +7,6 @@ from slate_core import Array, Basis, BasisMetadata, TupleBasis, TupleMetadata
 from slate_core import basis as _basis
 
 from slate_quantum._util._prod import outer_product
-from slate_quantum.operator._operator import OperatorMetadata
 
 if TYPE_CHECKING:
     from slate_core.array import ArrayConversion
@@ -44,7 +43,6 @@ def with_list_basis[M1: BasisMetadata, B1: Basis, DT: np.dtype[np.generic]](
 __all__ = [
     "ListBasis",
     "ListMetadata",
-    "OperatorMetadata",
     "outer_product",
     "with_list_basis",
 ]
