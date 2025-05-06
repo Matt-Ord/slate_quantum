@@ -71,6 +71,7 @@ def into_diagonal_hermitian[M: BasisMetadata, DT: np.dtype[np.complexfloating]](
                 (
                     inner,
                     EigenstateBasis(transform, direction="forward", data_id=data_id)
+                    .dual_basis()
                     .upcast()
                     .resolve_ctype(),
                 ),
@@ -104,7 +105,7 @@ def get_eigenstates_hermitian[M: BasisMetadata, DT: np.dtype[np.complexfloating]
         ),
     ).upcast()
     return StateList.build(
-        out_basis, as_tuple.raw_data.astype(np.complexfloating)
+        out_basis, as_tuple.raw_data.astype(np.complex128)
     ).assert_ok()
 
 

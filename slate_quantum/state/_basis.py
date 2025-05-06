@@ -111,7 +111,7 @@ class EigenstateBasis[
         np.dtype[np.complexfloating],
     ]:
         states = super().eigenvectors()
-        return StateList.build(states.basis, states.data.astype(np.complexfloating))  # type: ignore[return-value]
+        return StateList.build(states.basis, states.data.astype(np.complex128))  # type: ignore[return-value]
 
 
 type EigenstateBasisWithInner[Inner: Basis] = EigenstateBasis[

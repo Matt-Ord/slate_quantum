@@ -4,9 +4,9 @@ from itertools import starmap
 from typing import TYPE_CHECKING, Any, Never, override
 
 import numpy as np
-from slate_core import Ctype, TupleMetadata, basis
+from slate_core import Ctype, TupleBasis, TupleMetadata, basis
 from slate_core import metadata as _metadata
-from slate_core.basis import BlockDiagonalBasis
+from slate_core.basis import AsUpcast, BlockDiagonalBasis
 from slate_core.metadata import (
     AxisDirections,
     LabeledMetadata,
@@ -16,7 +16,6 @@ from slate_core.metadata import (
 
 from slate_quantum import operator
 from slate_quantum._util.legacy import (
-    LegacyBlockDiagonalBasis,
     Metadata2D,
     StackedMetadata,
     tuple_basis,
@@ -30,15 +29,13 @@ from slate_quantum.bloch._transposed_basis import (
 )
 from slate_quantum.metadata import RepeatedLengthMetadata
 from slate_quantum.operator._operator import (
-    LegacyOperator,
-    LegacyOperatorList,
+    Operator,
     OperatorList,
-    build_legacy_operator,
-    build_legacy_operator_list,
+    OperatorListBasis,
+    OperatorMetadata,
 )
 
 if TYPE_CHECKING:
-    from slate_quantum._util.legacy import LegacyTupleBasis2D
     from slate_quantum.operator._diagonal import Potential
 
 
@@ -91,7 +88,7 @@ def basis_from_metadata(
         basis.with_modified_children(
             operator_basis, lambda _, i: BlochShiftedBasis(i).upcast()
         )
-    )
+    ).upcast()
 
 
 def _metadata_from_operator_list(
@@ -116,29 +113,27 @@ def bloch_operator_from_list[
     M0: StackedMetadata[BlochFractionMetadata, None],
     M1: SpacedVolumeMetadata,
 ](
-    operators: LegacyOperatorList[M0, M1, np.complexfloating],
-) -> LegacyOperator[
-    StackedMetadata[RepeatedLengthMetadata, AxisDirections],
-    np.complexfloating,
-    LegacyBlockDiagonalBasis[
-        np.complexfloating,
-        RepeatedLengthMetadata,
-        AxisDirections,
-        LegacyTupleBasis2D[
-            np.complexfloating,
-            LegacyBlochTransposedBasis[
-                np.complexfloating,
-                RepeatedLengthMetadata,
-                AxisDirections,
-            ],
-            LegacyBlochTransposedBasis[
-                np.complexfloating,
-                RepeatedLengthMetadata,
-                AxisDirections,
-            ],
-            None,
-        ],
+    operators: OperatorList[
+        OperatorListBasis[M0, OperatorMetadata[M1]], np.dtype[np.complexfloating]
     ],
+) -> Operator[
+    AsUpcast[
+        BlockDiagonalBasis[
+            TupleBasis[
+                tuple[
+                    LegacyBlochTransposedBasis[
+                        np.complexfloating, RepeatedLengthMetadata, AxisDirections
+                    ],
+                    LegacyBlochTransposedBasis[
+                        np.complexfloating, RepeatedLengthMetadata, AxisDirections
+                    ],
+                ],
+                None,
+            ]
+        ],
+        OperatorMetadata[StackedMetadata[RepeatedLengthMetadata, AxisDirections]],
+    ],
+    np.dtype[np.complexfloating],
 ]:
     """Build the block diagonal Bloch Hamiltonian from a list of operators."""
     operators = operators.with_list_basis(
@@ -155,8 +150,8 @@ def bloch_operator_from_list[
     out_basis = BlockDiagonalBasis(
         tuple_basis((operator_basis, operator_basis.dual_basis())),
         operators.basis.metadata().children[1].shape,
-    )
-    return build_legacy_operator(out_basis, operators.raw_data)
+    ).upcast()
+    return Operator.build(out_basis, operators.raw_data).assert_ok()
 
 
 def _get_sample_fractions[M: BlochFractionMetadata](
@@ -171,29 +166,29 @@ def kinetic_hamiltonian[M: SpacedLengthMetadata, E: AxisDirections](
     potential: Potential[M, E, Ctype[Never], np.dtype[np.complexfloating]],
     mass: float,
     repeat: tuple[int, ...],
-) -> LegacyOperator[
-    StackedMetadata[RepeatedLengthMetadata, AxisDirections],
-    np.complexfloating,
-    LegacyBlockDiagonalBasis[
-        np.complexfloating,
-        RepeatedLengthMetadata,
-        AxisDirections,
-        LegacyTupleBasis2D[
-            np.complexfloating,
-            LegacyBlochTransposedBasis[
-                np.complexfloating, RepeatedLengthMetadata, AxisDirections
-            ],
-            LegacyBlochTransposedBasis[
-                np.complexfloating, RepeatedLengthMetadata, AxisDirections
-            ],
-            None,
+) -> Operator[
+    AsUpcast[
+        BlockDiagonalBasis[
+            TupleBasis[
+                tuple[
+                    LegacyBlochTransposedBasis[
+                        np.complexfloating, RepeatedLengthMetadata, AxisDirections
+                    ],
+                    LegacyBlochTransposedBasis[
+                        np.complexfloating, RepeatedLengthMetadata, AxisDirections
+                    ],
+                ],
+                None,
+            ]
         ],
+        OperatorMetadata[StackedMetadata[RepeatedLengthMetadata, AxisDirections]],
     ],
+    np.dtype[np.complexfloating],
 ]:
     """Build a kinetic Hamiltonian in the Bloch basis."""
     list_metadata = BlochFractionMetadata.from_repeats(repeat)
     bloch_fractions = _get_sample_fractions(list_metadata)
-    list_basis = basis.from_metadata(list_metadata)
+    list_basis = basis.from_metadata(list_metadata).upcast()
 
     operators = OperatorList.from_operators(
         [
@@ -201,8 +196,9 @@ def kinetic_hamiltonian[M: SpacedLengthMetadata, E: AxisDirections](
             for fraction in zip(*bloch_fractions, strict=True)
         ]
     )
-    operators = build_legacy_operator_list(
-        tuple_basis((list_basis, operators.basis.inner.children[1])), operators.raw_data
-    )
+    operators = OperatorList.build(
+        tuple_basis((list_basis, operators.basis.inner.children[1])).upcast(),
+        operators.raw_data,
+    ).assert_ok()
 
     return bloch_operator_from_list(operators)

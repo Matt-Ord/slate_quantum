@@ -23,7 +23,6 @@ from slate_quantum.noise.diagonalize import (
     get_periodic_noise_operators_eigenvalue,
 )
 from slate_quantum.operator import (
-    LegacyOperator,
     SuperOperatorMetadata,
     get_commutator_operator_list,
 )
@@ -39,7 +38,8 @@ if TYPE_CHECKING:
 
     from slate_quantum._util.legacy import StackedMetadata
     from slate_quantum.noise._kernel import AxisKernel
-    from slate_quantum.operator import (
+    from slate_quantum.operator._operator import (
+        LegacyOperator,
         LegacyOperatorList,
     )
 
