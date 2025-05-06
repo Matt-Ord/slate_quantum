@@ -396,8 +396,8 @@ def test_build_cl_operators() -> None:
         operators_non_periodic.basis
     ).assert_ok()
     np.testing.assert_allclose(
-        array.as_outer_basis(scaled_periodic)[0:2].as_array(),
-        array.as_outer_basis(operators_non_periodic)[0:2].as_array(),
+        array.extract_diagonal(scaled_periodic)[0:2].as_array(),
+        array.extract_diagonal(operators_non_periodic)[0:2].as_array(),
         atol=1e-4,
     )
 
