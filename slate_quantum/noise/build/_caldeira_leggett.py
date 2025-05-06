@@ -3,8 +3,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 import numpy as np
-from slate_core import basis
-from slate_core.basis import CoordinateBasis, FundamentalBasis
+from slate_core import FundamentalBasis, TupleBasis, TupleMetadata, basis
+from slate_core.basis import AsUpcast, CoordinateBasis
 from slate_core.metadata import (
     AxisDirections,
     SpacedLengthMetadata,
@@ -13,103 +13,109 @@ from slate_core.metadata import (
 from slate_core.metadata.length import fundamental_dk
 from slate_core.metadata.volume import fundamental_stacked_dk
 
-from slate_quantum._util.legacy import tuple_basis
 from slate_quantum.metadata._label import EigenvalueMetadata, eigenvalue_basis
 from slate_quantum.operator import (
-    LegacyOperatorList,
-    RecastDiagonalOperatorBasis,
+    OperatorList,
     build,
 )
-from slate_quantum.operator._operator import OperatorList, build_legacy_operator_list
 
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from slate_quantum._util.legacy import LegacyTupleBasis2D, StackedMetadata
+    from slate_quantum.operator._operator import (
+        OperatorBasis,
+        OperatorMetadata,
+    )
+
+type CLNoiseOperatorList[M: SpacedLengthMetadata, E] = OperatorList[
+    AsUpcast[
+        TupleBasis[
+            tuple[
+                FundamentalBasis[EigenvalueMetadata],
+                OperatorBasis[TupleMetadata[tuple[M, ...], E]],
+            ],
+            None,
+        ],
+        TupleMetadata[
+            tuple[
+                EigenvalueMetadata,
+                OperatorMetadata[TupleMetadata[tuple[M, ...], E]],
+            ],
+            None,
+        ],
+    ],
+    np.dtype[np.complexfloating],
+]
 
 
 def periodic_caldeira_leggett_axis_operators[M: SpacedLengthMetadata](
     metadata: M,
-) -> LegacyOperatorList[
-    EigenvalueMetadata,
-    M,
-    np.complexfloating,
-    LegacyTupleBasis2D[
-        Any,
-        FundamentalBasis[EigenvalueMetadata],
-        RecastDiagonalOperatorBasis[M, Any],
-        None,
+) -> OperatorList[
+    AsUpcast[
+        TupleBasis[
+            tuple[FundamentalBasis[EigenvalueMetadata], OperatorBasis[M]],
+            None,
+        ],
+        TupleMetadata[
+            tuple[EigenvalueMetadata, OperatorMetadata[M]],
+            None,
+        ],
     ],
+    np.dtype[np.complexfloating],
 ]:
     k = fundamental_dk(metadata)
     n = metadata.fundamental_size
     eigenvalue = n / (4 * k**2)
     operators = build.all_axis_scattering_operators(metadata)
-    operators = operators.with_basis(operators.basis.inner).assert_ok()
 
     list_basis = CoordinateBasis(
         [-1, 1], basis.from_metadata(operators.basis.metadata().children[0])
     )
     converted = operators.with_list_basis(list_basis).assert_ok()
-    return build_legacy_operator_list(
-        tuple_basis(
-            (eigenvalue_basis(np.array([eigenvalue, eigenvalue])), converted.basis[1])
-        ),
+    return OperatorList.build(
+        TupleBasis(
+            (
+                eigenvalue_basis(np.array([eigenvalue, eigenvalue])),
+                converted.basis.inner.children[1],
+            )
+        ).upcast(),
         converted.raw_data,
-    )
+    ).assert_ok()
 
 
 def periodic_caldeira_leggett_operators[
     M: SpacedLengthMetadata,
     E: AxisDirections,
 ](
-    metadata: StackedMetadata[M, E],
-) -> LegacyOperatorList[
-    EigenvalueMetadata,
-    StackedMetadata[M, E],
-    np.complexfloating,
-    LegacyTupleBasis2D[
-        Any,
-        FundamentalBasis[EigenvalueMetadata],
-        RecastDiagonalOperatorBasis[StackedMetadata[M, E], Any],
-        None,
-    ],
-]:
+    metadata: TupleMetadata[tuple[M, ...], E],
+) -> CLNoiseOperatorList[M, E]:
     assert len(metadata.fundamental_shape) == 1
     k = fundamental_stacked_dk(metadata)[0][0]
     n = size_from_nested_shape(metadata.fundamental_shape)
     eigenvalue = n / (4 * k**2)
     operators = build.all_scattering_operators(metadata)
-    operators = operators.with_basis(operators.basis.inner)
 
     list_basis = CoordinateBasis(
         [-1, 1], basis.from_metadata(operators.basis.metadata().children[0])
     )
     converted = operators.with_list_basis(list_basis).assert_ok()
-    return build_legacy_operator_list(
-        tuple_basis(
-            (eigenvalue_basis(np.array([eigenvalue, eigenvalue])), converted.basis[1])
-        ),
+    return OperatorList.build(
+        TupleBasis(
+            (
+                eigenvalue_basis(np.array([eigenvalue, eigenvalue])),
+                converted.basis.inner.children[1],
+            )
+        ).upcast(),
         converted.raw_data,
-    )
+    ).assert_ok()
 
 
 def real_periodic_caldeira_leggett_operators[
     M: SpacedLengthMetadata,
     E: AxisDirections,
 ](
-    metadata: StackedMetadata[M, E],
-) -> LegacyOperatorList[
-    EigenvalueMetadata,
-    StackedMetadata[M, E],
-    np.complexfloating,
-    LegacyTupleBasis2D[
-        Any,
-        FundamentalBasis[EigenvalueMetadata],
-        RecastDiagonalOperatorBasis[StackedMetadata[M, E], Any],
-        None,
-    ],
-]:
+    metadata: TupleMetadata[tuple[M, ...], E],
+) -> CLNoiseOperatorList[M, E]:
     assert len(metadata.fundamental_shape) == 1
     k = fundamental_stacked_dk(metadata)[0][0]
     n = size_from_nested_shape(metadata.fundamental_shape)
@@ -130,15 +136,15 @@ def real_periodic_caldeira_leggett_operators[
         ]
     )
 
-    return build_legacy_operator_list(
-        tuple_basis(
+    return OperatorList.build(
+        TupleBasis(
             (
                 eigenvalue_basis(np.array([eigenvalue, eigenvalue])),
                 operators.basis.inner.children[1],
             )
-        ),
+        ).upcast(),
         operators.raw_data,
-    )
+    ).assert_ok()
 
 
 def caldeira_leggett_correlation_fn(
@@ -165,24 +171,14 @@ def caldeira_leggett_correlation_fn(
 
 
 def caldeira_leggett_operators[M: SpacedLengthMetadata, E: AxisDirections](
-    metadata: StackedMetadata[M, E],
-) -> LegacyOperatorList[
-    EigenvalueMetadata,
-    StackedMetadata[M, E],
-    np.complexfloating,
-    LegacyTupleBasis2D[
-        Any,
-        FundamentalBasis[EigenvalueMetadata],
-        RecastDiagonalOperatorBasis[StackedMetadata[M, E], Any],
-        None,
-    ],
-]:
+    metadata: TupleMetadata[tuple[M, ...], E],
+) -> CLNoiseOperatorList[M, E]:
     assert len(metadata.fundamental_shape) == 1
     operators = OperatorList.from_operators([build.x(metadata, axis=0)])
 
-    return build_legacy_operator_list(
-        tuple_basis(
+    return OperatorList.build(
+        TupleBasis(
             (eigenvalue_basis(np.array([1])), operators.basis.inner.children[1])
-        ),
+        ).upcast(),
         operators.raw_data,
-    )
+    ).assert_ok()
