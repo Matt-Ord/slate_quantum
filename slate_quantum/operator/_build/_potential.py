@@ -1,15 +1,15 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Never
 
 import numpy as np
-from slate_core import basis
+from slate_core import BasisMetadata, Ctype, TupleMetadata, basis
 from slate_core import metadata as _metadata
 from slate_core.basis import (
     CroppedBasis,
     TruncatedBasis,
     Truncation,
-    transformed_from_metadata,
+    TupleBasisLike,
 )
 from slate_core.metadata import (
     AxisDirections,
@@ -19,75 +19,109 @@ from slate_core.metadata import (
 
 from slate_quantum._util import outer_product
 from slate_quantum.metadata import RepeatedLengthMetadata, repeat_volume_metadata
-from slate_quantum.operator._diagonal import Potential
+from slate_quantum.operator._diagonal import (
+    PositionOperatorBasis,
+    Potential,
+    position_operator_basis,
+    with_outer_basis,
+)
+from slate_quantum.operator._operator import Operator, OperatorBuilder
 
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from slate_quantum._util.legacy import StackedMetadata
+
+def potential[M: BasisMetadata, E, CT: Ctype[Never], DT: np.dtype[np.generic]](
+    outer_basis: TupleBasisLike[tuple[M, ...], E, CT], data: np.ndarray[Any, DT]
+) -> OperatorBuilder[PositionOperatorBasis[M, E], DT]:
+    """Get the potential operator."""
+    return Operator.build(position_operator_basis(outer_basis), data)
+
+
+_build_potential = potential
 
 
 def repeat_potential(
-    potential: Potential[SpacedLengthMetadata, AxisDirections, np.complexfloating],
+    potential: Potential[
+        SpacedLengthMetadata,
+        AxisDirections,
+        Ctype[Never],
+        np.dtype[np.complexfloating],
+    ],
     shape: tuple[int, ...],
-) -> Potential[RepeatedLengthMetadata, AxisDirections, np.complexfloating]:
+) -> Potential[
+    RepeatedLengthMetadata,
+    AxisDirections,
+    Ctype[Never],
+    np.dtype[np.complexfloating],
+]:
     """Create a new potential by repeating the original potential in each direction."""
-    transformed_basis = transformed_from_metadata(
-        potential.basis.outer_recast.metadata()
+    transformed_basis = basis.transformed_from_metadata(
+        potential.basis.inner.outer_recast.metadata()
     )
-    as_transformed = potential.with_outer_basis(transformed_basis)
-    converted_basis = transformed_from_metadata(
-        repeat_volume_metadata(potential.basis.outer_recast.metadata(), shape)
+    as_transformed = with_outer_basis(potential, transformed_basis).assert_ok()
+    converted_basis = basis.transformed_from_metadata(
+        repeat_volume_metadata(potential.basis.inner.outer_recast.metadata(), shape)
     )
     repeat_basis = basis.with_modified_children(
         converted_basis,
         lambda i, y: TruncatedBasis(
-            Truncation(transformed_basis[i].size, shape[i], 0),
+            Truncation(transformed_basis.children[i].size, shape[i], 0),
             y,
-        ),
-    )
-    return Potential(
+        )
+        .resolve_ctype()
+        .upcast(),
+    ).upcast()
+    return _build_potential(
         repeat_basis,
         as_transformed.raw_data * np.sqrt(np.prod(shape)),
-    )
+    ).ok()
 
 
 def cos_potential(
     metadata: SpacedVolumeMetadata,
     height: float,
-) -> Potential[SpacedLengthMetadata, AxisDirections, np.complexfloating]:
+) -> Potential[
+    SpacedLengthMetadata,
+    AxisDirections,
+    Ctype[Never],
+    np.dtype[np.complexfloating],
+]:
     """Build a cosine potential."""
-    transformed_basis = transformed_from_metadata(metadata)
+    transformed_basis = basis.transformed_from_metadata(metadata)
     # We need only the three lowest fourier components to represent this potential
     cropped = basis.with_modified_children(
         transformed_basis,
-        lambda _i, y: CroppedBasis(3, y),
-    )
-    n_dim = len(cropped.shape)
+        lambda _i, y: CroppedBasis(3, y).resolve_ctype().upcast(),
+    ).upcast()
+    n_dim = len(cropped.inner.shape)
     data = outer_product(*(np.array([2, 1, 1]),) * n_dim)
-    return Potential(
-        cropped,
-        0.25**n_dim * height * data * np.sqrt(transformed_basis.size),
-    )
+    return potential(
+        cropped, 0.25**n_dim * height * data * np.sqrt(transformed_basis.size)
+    ).ok()
 
 
 def sin_potential(
     metadata: SpacedVolumeMetadata,
     height: float,
-) -> Potential[SpacedLengthMetadata, AxisDirections, np.complexfloating]:
+) -> Potential[
+    SpacedLengthMetadata,
+    AxisDirections,
+    Ctype[Never],
+    np.dtype[np.complexfloating],
+]:
     """Build a cosine potential."""
-    transformed_basis = transformed_from_metadata(metadata)
+    transformed_basis = basis.transformed_from_metadata(metadata)
     # We need only the three lowest fourier components to represent this potential
     cropped = basis.with_modified_children(
         transformed_basis,
-        lambda _i, y: CroppedBasis(3, y),
-    )
-    n_dim = len(cropped.shape)
+        lambda _i, y: CroppedBasis(3, y).resolve_ctype().upcast(),
+    ).upcast()
+    n_dim = len(cropped.inner.shape)
     data = outer_product(*(np.array([2, 1j, -1j]),) * n_dim)
-    return Potential(
-        cropped,
-        0.25**n_dim * height * data * np.sqrt(transformed_basis.size),
-    )
+    return potential(
+        cropped, 0.25**n_dim * height * data * np.sqrt(transformed_basis.size)
+    ).assert_ok()
 
 
 def _square_wave_points(
@@ -105,66 +139,82 @@ def square_potential(
     *,
     n_terms: tuple[int, ...] | None = None,
     lanczos_factor: float = 0,
-) -> Potential[SpacedLengthMetadata, AxisDirections, np.complexfloating]:
+) -> Potential[
+    SpacedLengthMetadata,
+    AxisDirections,
+    Ctype[Never],
+    np.dtype[np.complexfloating],
+]:
     """Build a square potential."""
-    transformed_basis = transformed_from_metadata(metadata)
+    transformed_basis = basis.transformed_from_metadata(metadata)
     # We need only the three lowest fourier components to represent this potential
     cropped = basis.with_modified_children(
         transformed_basis,
-        lambda i, y: y if n_terms is None else CroppedBasis(n_terms[i], y),
-    )
+        lambda i, y: y
+        if n_terms is None
+        else CroppedBasis(n_terms[i], y).resolve_ctype().upcast(),
+    ).upcast()
 
     data = outer_product(
-        *(_square_wave_points(n, lanczos_factor) for n in cropped.shape)
+        *(_square_wave_points(n, lanczos_factor) for n in cropped.inner.shape)
     )
-    return Potential(
+    return potential(
         cropped,
         0.5 * height * data * np.sqrt(transformed_basis.size),
-    )
+    ).ok()
 
 
 def fcc_potential(
     metadata: SpacedVolumeMetadata,
     height: float,
-) -> Potential[SpacedLengthMetadata, AxisDirections, np.complexfloating]:
+) -> Potential[
+    SpacedLengthMetadata,
+    AxisDirections,
+    Ctype[Never],
+    np.dtype[np.complexfloating],
+]:
     """Generate a potential suitable for modelling an fcc surface.
 
     This potential contains the lowest fourier components - however for an fcc surface
     there are only six degenerate fourier components.
     """
-    transformed_basis = transformed_from_metadata(metadata)
+    transformed_basis = basis.transformed_from_metadata(metadata)
     # We need only the three lowest fourier components to represent this potential
     cropped = basis.with_modified_children(
         transformed_basis,
-        lambda _i, y: CroppedBasis(3, y),
-    )
-    n_dim = len(cropped.shape)
+        lambda _i, y: CroppedBasis(3, y).resolve_ctype().upcast(),
+    ).upcast()
+    n_dim = len(cropped.inner.shape)
     # TODO: generalize to n_dim  # noqa: FIX002
     assert n_dim == 2  # noqa: PLR2004
 
     data = np.array([[3, 1, 1], [1, 1, 0], [1, 0, 1]])
-    return Potential(
+    return potential(
         cropped,
         (1 / 3) ** n_dim * data * height * np.sqrt(transformed_basis.size),
-    )
+    ).ok()
 
 
-def potential_from_function[M: SpacedLengthMetadata, E: AxisDirections, DT: np.generic](
-    metadata: StackedMetadata[M, E],
+def potential_from_function[
+    M: SpacedLengthMetadata,
+    E: AxisDirections,
+    DT: np.dtype[np.generic],
+](
+    metadata: TupleMetadata[tuple[M, ...], E],
     fn: Callable[
         [tuple[np.ndarray[Any, np.dtype[np.floating]], ...]],
-        np.ndarray[Any, np.dtype[DT]],
+        np.ndarray[Any, DT],
     ],
     *,
     wrapped: bool = False,
     offset: tuple[float, ...] | None = None,
-) -> Potential[M, E, DT]:
+) -> Potential[M, E, Ctype[Never], DT]:
     """Get the potential operator."""
     positions = _metadata.volume.fundamental_stacked_x_points(
         metadata, offset=offset, wrapped=wrapped
     )
 
-    return Potential(basis.from_metadata(metadata), fn(positions))
+    return potential(basis.from_metadata(metadata).upcast(), fn(positions)).assert_ok()
 
 
 def harmonic_potential(
@@ -172,7 +222,12 @@ def harmonic_potential(
     frequency: float,
     *,
     offset: tuple[float, ...] | None = None,
-) -> Potential[SpacedLengthMetadata, AxisDirections, np.complexfloating]:
+) -> Potential[
+    SpacedLengthMetadata,
+    AxisDirections,
+    Ctype[Never],
+    np.dtype[np.complexfloating],
+]:
     """Build a harmonic potential.
 
     V(x) = 0.5 * frequency^2 * ||x||^2

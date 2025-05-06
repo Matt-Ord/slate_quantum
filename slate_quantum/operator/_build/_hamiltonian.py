@@ -1,10 +1,12 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, Never, cast
 
 import numpy as np
 from scipy.constants import hbar  # type: ignore lib
+from slate_core import TupleMetadata
 from slate_core.basis import (
+    AsUpcast,
     SplitBasis,
     transformed_from_metadata,
 )
@@ -14,18 +16,22 @@ from slate_core.metadata.volume import (
     fundamental_stacked_k_points,
 )
 
-from slate_quantum.operator._diagonal import MomentumOperator
-from slate_quantum.operator._operator import build_legacy_operator
+from slate_quantum.operator._build._momentum import momentum
+from slate_quantum.operator._operator import Operator, OperatorMetadata
 
 if TYPE_CHECKING:
+    from slate_core import Ctype
     from slate_core.metadata import (
         SpacedLengthMetadata,
     )
     from slate_core.metadata.volume import AxisDirections
 
-    from slate_quantum._util.legacy import StackedMetadata
-    from slate_quantum.operator._diagonal import Potential
-    from slate_quantum.operator._operator import LegacyOperator
+    from slate_quantum.operator._diagonal import (
+        MomentumOperator,
+        MomentumOperatorBasis,
+        PositionOperatorBasis,
+        Potential,
+    )
 
 
 def _wrap_k_points(
@@ -37,10 +43,10 @@ def _wrap_k_points(
 
 
 def kinetic_energy[M: SpacedLengthMetadata, E: AxisDirections](
-    metadata: StackedMetadata[M, E],
+    metadata: TupleMetadata[tuple[M, ...], E],
     mass: float,
     bloch_fraction: np.ndarray[Any, np.dtype[np.floating]] | None = None,
-) -> MomentumOperator[M, E]:
+) -> MomentumOperator[M, E, Ctype[Never], np.dtype[np.complexfloating]]:
     """
     Given a mass and a basis calculate the kinetic part of the Hamiltonian.
 
@@ -67,19 +73,28 @@ def kinetic_energy[M: SpacedLengthMetadata, E: AxisDirections](
         k_points, tuple(np.linalg.norm(fundamental_stacked_delta_k(metadata), axis=1))
     )
     energy = cast(
-        "Any",
+        "np.ndarray[Any, np.dtype[np.complexfloating]]",
         np.sum(np.square(hbar * k_points) / (2 * mass), axis=0, dtype=np.complex128),
     )
-    momentum_basis = transformed_from_metadata(metadata)
+    momentum_basis = transformed_from_metadata(metadata).upcast()
 
-    return MomentumOperator(momentum_basis, energy)
+    return momentum(momentum_basis, energy).assert_ok()
 
 
 def kinetic_hamiltonian[M: SpacedLengthMetadata, E: AxisDirections](
-    potential: Potential[M, E, np.complexfloating],
+    potential: Potential[M, E, Ctype[Never], np.dtype[np.complexfloating]],
     mass: float,
     bloch_fraction: np.ndarray[Any, np.dtype[np.floating]] | None = None,
-) -> LegacyOperator[StackedMetadata[M, E], np.complexfloating]:
+) -> Operator[
+    AsUpcast[
+        SplitBasis[
+            PositionOperatorBasis[M, E],
+            MomentumOperatorBasis[M, E],
+        ],
+        OperatorMetadata[TupleMetadata[tuple[M, ...], E]],
+    ],
+    np.dtype[np.complexfloating],
+]:
     """
     Calculate the total hamiltonian in momentum basis for a given potential and mass.
 
@@ -93,11 +108,12 @@ def kinetic_hamiltonian[M: SpacedLengthMetadata, E: AxisDirections](
     -------
     MomentumBasisHamiltonian[_L0, _L1, _L2]
     """
-    kinetic_hamiltonian = kinetic_energy(
-        potential.basis.metadata().children[0], mass, bloch_fraction
-    )
+    metadata = potential.basis.inner.inner.inner.inner.children[0].metadata()
+    kinetic_hamiltonian = kinetic_energy(metadata, mass, bloch_fraction)
+    basis = SplitBasis(potential.basis, kinetic_hamiltonian.basis)
+    upcast = AsUpcast(basis, TupleMetadata((metadata, metadata)))
 
-    return build_legacy_operator(
-        SplitBasis(potential.basis, kinetic_hamiltonian.basis),
+    return Operator.build(
+        upcast,
         np.concatenate([potential.raw_data, kinetic_hamiltonian.raw_data], axis=None),
-    )
+    ).assert_ok()

@@ -8,12 +8,12 @@ from slate_core.metadata import spaced_volume_metadata_from_stacked_delta_x
 from slate_core.plot import get_figure
 
 from slate_quantum.noise import (
-    IsotropicNoiseKernel,
     build,
     gaussian_correlation_fn,
     get_periodic_noise_operators_isotropic_stacked_fft,
     truncate_noise_operator_list,
 )
+from slate_quantum.noise._kernel import isotropic_kernel_from_operators
 
 if __name__ == "__main__":
     # Starting with a simple 1D system, we can define the noise
@@ -54,7 +54,7 @@ if __name__ == "__main__":
     # If we take only the first few operators, we can see that they
     # approximate the kernel.
     truncated = truncate_noise_operator_list(operators, range(3))
-    restored = IsotropicNoiseKernel.from_operators(truncated)
+    restored = isotropic_kernel_from_operators(truncated)
     restored_data = array.as_outer_basis(array.as_outer_basis(restored))
 
     # The restored kernel is an approximation of the original kernel

@@ -14,6 +14,9 @@ from slate_quantum.noise._kernel import (
     DiagonalNoiseKernel,
     IsotropicNoiseKernel,
     NoiseKernel,
+    build_isotropic_kernel,
+    diagonal_kernel_from_operators,
+    noise_kernel_from_operators,
 )
 from slate_quantum.noise.diagonalize import (
     get_periodic_noise_operators_diagonal_eigenvalue,
@@ -69,7 +72,7 @@ def isotropic_kernel_from_function[M: LengthMetadata](
     displacements = operator.build.x_displacement_operator(metadata)
     correlation = fn(displacements.raw_data.reshape(displacements.basis.shape)[0])
 
-    return IsotropicNoiseKernel(displacements.basis[0], correlation)
+    return build_isotropic_kernel(displacements.basis[0], correlation)
 
 
 def isotropic_kernel_from_function_stacked[
@@ -103,7 +106,7 @@ def isotropic_kernel_from_function_stacked[
     displacements = operator.build.total_x_displacement_operator(metadata)
     correlation = fn(displacements.raw_data.reshape(displacements.basis.shape)[0])
 
-    return IsotropicNoiseKernel(displacements.basis[0], correlation)
+    return build_isotropic_kernel(displacements.basis[0], correlation)
 
 
 def axis_kernel_from_function_stacked[M: SpacedLengthMetadata](
@@ -234,16 +237,20 @@ def truncate_noise_operator_list[M0: EigenvalueMetadata, M1: BasisMetadata](
     -------
     DiagonalNoiseOperatorList[FundamentalBasis[BasisMetadata], B_0, B_1]
     """
-    converted = operators.with_basis(basis.as_tuple(operators.basis))
-    converted_list = converted.with_list_basis(basis.as_index(converted.basis[0]))
+    converted = operators.with_basis(
+        basis.as_tuple(operators.basis).upcast()
+    ).assert_ok()
+    converted_list = converted.with_list_basis(
+        basis.as_index(converted.basis.inner.children[0])
+    ).assert_ok()
     eigenvalues = (
         converted_list.basis.metadata()
         .children[0]
-        .values[converted_list.basis[0].points]
+        .values[converted_list.basis.inner.children[0].points]
     )
     args = np.argsort(np.abs(eigenvalues))[::-1][np.array(list(truncation))]
-    list_basis = CoordinateBasis(args, basis.as_tuple(operators.basis)[0])
-    return operators.with_list_basis(list_basis)
+    list_basis = CoordinateBasis(args, basis.as_tuple(operators.basis).children[0])
+    return operators.with_list_basis(list_basis).assert_ok()
 
 
 def truncate_noise_kernel[M: SuperOperatorMetadata](
@@ -265,7 +272,7 @@ def truncate_noise_kernel[M: SuperOperatorMetadata](
     operators = get_periodic_noise_operators_eigenvalue(kernel)
 
     truncated = truncate_noise_operator_list(operators, truncation)
-    return NoiseKernel.from_operators(truncated)
+    return noise_kernel_from_operators(truncated)
 
 
 def truncate_diagonal_noise_kernel[
@@ -289,4 +296,4 @@ def truncate_diagonal_noise_kernel[
     operators = get_periodic_noise_operators_diagonal_eigenvalue(kernel)
 
     truncated = truncate_noise_operator_list(operators, truncation)
-    return DiagonalNoiseKernel.from_operators(truncated)
+    return diagonal_kernel_from_operators(truncated)

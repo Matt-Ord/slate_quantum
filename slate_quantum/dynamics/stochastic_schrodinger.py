@@ -4,16 +4,15 @@ import datetime
 from typing import TYPE_CHECKING, Any, TypedDict, Unpack, cast
 
 import numpy as np
-import slate_core
 import slate_core.linalg
 from scipy.constants import hbar  # type: ignore lib
-from slate_core import FundamentalBasis, SimpleMetadata, array, basis
+from slate_core import Ctype, FundamentalBasis, TupleMetadata, array, basis
+from slate_core.basis import TupleBasis, TupleBasis2D, TupleBasisLike2D
 from slate_core.metadata import BasisMetadata
 from slate_core.util import timed
 
 from slate_quantum import operator
-from slate_quantum._util.legacy import tuple_basis
-from slate_quantum.state._state import build_legacy_state_list
+from slate_quantum.state import State, StateList
 
 try:
     import sse_solver_py
@@ -21,13 +20,17 @@ except ImportError:
     sse_solver_py = None
 
 if TYPE_CHECKING:
+    from slate_core.basis import Basis
     from sse_solver_py import BandedData, SSEMethod
 
-    from slate_quantum._util.legacy import LegacyBasis, LegacyTupleBasis2D, Metadata2D
     from slate_quantum.metadata import EigenvalueMetadata, TimeMetadata
-    from slate_quantum.operator import LegacyOperatorList
-    from slate_quantum.operator._operator import LegacyOperator
-    from slate_quantum.state import LegacyState, LegacyStateList
+    from slate_quantum.operator import OperatorList
+    from slate_quantum.operator._operator import (
+        Operator,
+        OperatorBasis,
+        OperatorListBasis,
+        OperatorMetadata,
+    )
 
 
 def _get_operator_diagonals(
@@ -93,35 +96,19 @@ def solve_stochastic_schrodinger_equation_banded[
     M: BasisMetadata,
     MT: TimeMetadata,
 ](
-    initial_state: LegacyState[M],
-    times: LegacyBasis[MT, np.complexfloating],
-    hamiltonian: LegacyOperator[M, np.complexfloating],
-    noise: LegacyOperatorList[
-        EigenvalueMetadata,
-        M,
-        np.complexfloating,
-        LegacyTupleBasis2D[
-            np.complexfloating,
-            LegacyBasis[EigenvalueMetadata, np.complexfloating],
-            LegacyBasis[Metadata2D[M, M, Any], np.complexfloating],
-            Any,
-        ],
+    initial_state: State[Basis[M]],
+    times: Basis[MT, Ctype[np.complexfloating]],
+    hamiltonian: Operator[OperatorBasis[M], np.dtype[np.complexfloating]],
+    noise: OperatorList[
+        OperatorListBasis[EigenvalueMetadata, OperatorMetadata[M]],
+        np.dtype[np.complexfloating],
     ],
     **kwargs: Unpack[SSEConfig],
-) -> LegacyStateList[
-    Metadata2D[SimpleMetadata, MT, None],
-    M,
-    LegacyTupleBasis2D[
-        np.complexfloating,
-        LegacyTupleBasis2D[
-            np.complexfloating,
-            FundamentalBasis[SimpleMetadata],
-            LegacyBasis[MT, np.complexfloating],
-            None,
-        ],
-        LegacyBasis[M, np.complexfloating],
-        None,
+) -> StateList[
+    TupleBasis2D[
+        tuple[TupleBasis[tuple[FundamentalBasis, Basis[MT]], None], Basis[M]], None
     ],
+    np.dtype[np.complexfloating],
 ]:
     r"""Given an initial state, use the stochastic schrodinger equation to solve the dynamics of the system.
 
@@ -159,7 +146,7 @@ def solve_stochastic_schrodinger_equation_banded[
     hamiltonian_tuple = array.as_tuple_basis(hamiltonian)
     initial_state_converted = initial_state.with_basis(
         hamiltonian_tuple.basis.children[0]
-    )
+    ).assert_ok()
     coherent_step = operator.apply(hamiltonian, initial_state_converted)
 
     # The actual coherent step is H / hbar not H, so to get the correct
@@ -168,13 +155,11 @@ def solve_stochastic_schrodinger_equation_banded[
     times = basis.as_index(times)
 
     operators_data = [
-        o.with_basis(hamiltonian_tuple.basis).raw_data.reshape(
-            hamiltonian_tuple.basis.shape
-        )
+        o.with_basis(hamiltonian_tuple.basis.upcast())
+        .assert_ok()
+        .raw_data.reshape(hamiltonian_tuple.basis.shape)
         * (np.sqrt(e))
-        for o, e in zip(
-            noise, noise.basis[0].metadata().values[noise.basis[0].points], strict=False
-        )
+        for o, e in zip(noise, noise.basis.metadata().children[0].values, strict=True)
     ]
 
     # We re-scale dt to be equal to 1 when the coherent step is equal to
@@ -218,19 +203,22 @@ def solve_stochastic_schrodinger_equation_banded[
 
     te = datetime.datetime.now(tz=datetime.UTC)
     print(f"solve rust banded took: {(te - ts).total_seconds()} sec")  # noqa: T201
-    return build_legacy_state_list(
-        tuple_basis(
+    return StateList.build(
+        TupleBasis(
             (
-                tuple_basis((FundamentalBasis.from_size(n_realizations), times)),
+                TupleBasis((FundamentalBasis.from_size(n_realizations), times)),
                 hamiltonian_tuple.basis.children[0],
             )
-        ),
+        ).upcast(),
         np.array(data),
-    )
+    ).assert_ok()
 
 
 def select_realization[MT: BasisMetadata, M: BasisMetadata](
-    states: LegacyStateList[Metadata2D[SimpleMetadata, MT, None], M], idx: int = 0
-) -> LegacyStateList[MT, M]:
+    states: StateList[
+        TupleBasisLike2D[tuple[TupleMetadata[tuple[Any, MT], None], M], None]
+    ],
+    idx: int = 0,
+) -> StateList[TupleBasisLike2D[tuple[MT, M], None]]:
     """Select a realization from a state list."""
     return states[(idx, slice(None)), :]

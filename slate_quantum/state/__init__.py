@@ -6,8 +6,8 @@ import slate_quantum.state._build as build
 from slate_quantum.state._basis import EigenstateBasis
 from slate_quantum.state._build import coherent as build_coherent
 from slate_quantum.state._state import (
-    LegacyState,
-    LegacyStateList,
+    State,
+    StateList,
     all_inner_product,
     get_all_occupations,
     get_average_occupations,
@@ -20,8 +20,8 @@ from slate_quantum.state._state import (
 
 __all__ = [
     "EigenstateBasis",
-    "LegacyState",
-    "LegacyStateList",
+    "State",
+    "StateList",
     "all_inner_product",
     "build",
     "build_coherent",

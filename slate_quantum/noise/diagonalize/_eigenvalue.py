@@ -8,6 +8,7 @@ from slate_core.basis import FundamentalBasis
 
 from slate_quantum._util.legacy import tuple_basis
 from slate_quantum.metadata import EigenvalueMetadata
+from slate_quantum.noise._kernel import diagonal_kernel_with_outer_basis
 from slate_quantum.operator._operator import build_legacy_operator_list
 
 if TYPE_CHECKING:
@@ -81,7 +82,9 @@ def get_periodic_noise_operators_diagonal_eigenvalue[M: BasisMetadata](
     as it is not currently possible to represent a sparse StackedBasis (unless it can
     be represented as a StackedBasis of individual sparse Basis)
     """
-    converted = kernel.with_outer_basis(basis_.as_tuple(kernel.basis.outer_recast))
+    converted = diagonal_kernel_with_outer_basis(
+        kernel, basis_.as_tuple(kernel.basis.outer_recast)
+    )
 
     data = kernel.raw_data.reshape(converted.basis.outer_recast.shape)  # type: ignore we need to improve the typing of RecastBasis
     # Find the n^2 operators which are independent
