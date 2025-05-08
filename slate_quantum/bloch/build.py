@@ -109,17 +109,9 @@ def bloch_operator_from_list[
     ],
 ) -> Operator[BlochOperatorBasis, np.dtype[np.complexfloating]]:
     """Build the block diagonal Bloch Hamiltonian from a list of operators."""
-    op_old = operators
-    assert (
-        basis.from_metadata(operators.basis.metadata().children[0])
-        == op_old.basis.inner.children[0].inner
-    )
     operators = operators.with_list_basis(
         basis.from_metadata(operators.basis.metadata().children[0])
     ).assert_ok()
-    assert op_old.basis.inner.children[1] == op_old.basis.inner.children[1]
-
-    np.testing.assert_allclose(op_old.raw_data, operators.raw_data)
     operators = operators.with_operator_basis(
         basis.transformed_from_metadata(
             operators.basis.metadata().children[1],
