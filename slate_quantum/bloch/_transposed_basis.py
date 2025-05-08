@@ -5,21 +5,20 @@ from typing import TYPE_CHECKING, Any, Never, cast, overload, override
 
 import numpy as np
 from slate_core import Basis, Ctype, TupleBasis, TupleMetadata
-from slate_core.basis import AsUpcast, BasisConversion, BasisFeature, WrappedBasis
+from slate_core.basis import (
+    AsUpcast,
+    BasisConversion,
+    BasisFeature,
+    BlockDiagonalBasis,
+    WrappedBasis,
+)
+from slate_core.metadata import AxisDirections
 
-from slate_quantum._util.legacy import StackedMetadata
 from slate_quantum.metadata import RepeatedLengthMetadata
+from slate_quantum.operator._operator import OperatorMetadata
 
 if TYPE_CHECKING:
     from slate_core.basis import Basis
-
-type LegacyBlochTransposedBasis[
-    DT: np.generic,
-    M: RepeatedLengthMetadata,
-    E,
-] = AsUpcast[
-    BlochTransposedBasis[TupleBasis[tuple[Basis[M], ...], E]], StackedMetadata[M, E]
-]
 
 
 class BlochTransposedBasis[
@@ -236,3 +235,30 @@ class BlochTransposedBasis[
             .__from_inner__(self.inner.points)
             .ok()
         )
+
+
+type BlochStateMetadata[
+    M: RepeatedLengthMetadata = RepeatedLengthMetadata,
+    E: AxisDirections = AxisDirections,
+] = TupleMetadata[tuple[M, ...], E]
+
+type BlochStateBasis[
+    M: RepeatedLengthMetadata = RepeatedLengthMetadata,
+    E: AxisDirections = AxisDirections,
+] = AsUpcast[
+    BlochTransposedBasis[TupleBasis[tuple[Basis[M], ...], E]],
+    BlochStateMetadata[M, E],
+]
+
+type BlochOperatorBasis[
+    M: RepeatedLengthMetadata = RepeatedLengthMetadata,
+    E: AxisDirections = AxisDirections,
+] = AsUpcast[
+    BlockDiagonalBasis[
+        TupleBasis[
+            tuple[BlochStateBasis[M, E], BlochStateBasis[M, E]],
+            None,
+        ]
+    ],
+    OperatorMetadata[BlochStateMetadata[M, E]],
+]

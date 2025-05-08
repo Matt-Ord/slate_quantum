@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Any, Never, override
 import numpy as np
 from slate_core import Ctype, TupleBasis, TupleMetadata, basis
 from slate_core import metadata as _metadata
-from slate_core.basis import AsUpcast, BlockDiagonalBasis
+from slate_core.basis import BlockDiagonalBasis
 from slate_core.metadata import (
     AxisDirections,
     LabeledMetadata,
@@ -15,17 +15,14 @@ from slate_core.metadata import (
 )
 
 from slate_quantum import operator
-from slate_quantum._util.legacy import (
-    Metadata2D,
-    StackedMetadata,
-    tuple_basis,
-)
 from slate_quantum.bloch._shifted_basis import (
     BlochShiftedBasis,
 )
 from slate_quantum.bloch._transposed_basis import (
+    BlochOperatorBasis,
+    BlochStateBasis,
+    BlochStateMetadata,
     BlochTransposedBasis,
-    LegacyBlochTransposedBasis,
 )
 from slate_quantum.metadata import RepeatedLengthMetadata
 from slate_quantum.operator._operator import (
@@ -54,15 +51,15 @@ class BlochFractionMetadata(LabeledMetadata[np.dtype[np.floating]]):
     @staticmethod
     def from_repeats(
         repeat: tuple[int, ...],
-    ) -> StackedMetadata[BlochFractionMetadata, None]:
+    ) -> TupleMetadata[tuple[BlochFractionMetadata, ...], None]:
         """Build a stacked metadata from a tuple of repeats."""
         return TupleMetadata(tuple(BlochFractionMetadata(n) for n in repeat), None)
 
 
 def metadata_from_split(
-    fraction_meta: StackedMetadata[BlochFractionMetadata, None],
+    fraction_meta: TupleMetadata[tuple[BlochFractionMetadata, ...], None],
     state_meta: SpacedVolumeMetadata,
-) -> StackedMetadata[RepeatedLengthMetadata, AxisDirections]:
+) -> BlochStateMetadata:
     """Get the metadata for the Bloch operator."""
     return TupleMetadata(
         tuple(
@@ -76,12 +73,8 @@ def metadata_from_split(
 
 
 def basis_from_metadata(
-    metadata: StackedMetadata[RepeatedLengthMetadata, AxisDirections],
-) -> LegacyBlochTransposedBasis[
-    np.complexfloating,
-    RepeatedLengthMetadata,
-    AxisDirections,
-]:
+    metadata: BlochStateMetadata,
+) -> BlochStateBasis:
     """Build the Bloch basis."""
     operator_basis = basis.transformed_from_metadata(metadata)
     return BlochTransposedBasis(
@@ -92,16 +85,14 @@ def basis_from_metadata(
 
 
 def _metadata_from_operator_list(
-    meta: Metadata2D[
-        StackedMetadata[BlochFractionMetadata, None],
-        Metadata2D[SpacedVolumeMetadata, SpacedVolumeMetadata, None],
+    meta: TupleMetadata[
+        tuple[
+            TupleMetadata[tuple[BlochFractionMetadata, ...], None],
+            TupleMetadata[tuple[SpacedVolumeMetadata, SpacedVolumeMetadata], None],
+        ],
         None,
     ],
-) -> LegacyBlochTransposedBasis[
-    np.complexfloating,
-    RepeatedLengthMetadata,
-    AxisDirections,
-]:
+) -> BlochStateBasis:
     """Get the metadata for the Bloch operator."""
     list_meta = meta.children[0]
     single_operator_meta = meta.children[1].children[0]
@@ -110,52 +101,42 @@ def _metadata_from_operator_list(
 
 
 def bloch_operator_from_list[
-    M0: StackedMetadata[BlochFractionMetadata, None],
+    M0: TupleMetadata[tuple[BlochFractionMetadata, ...], None],
     M1: SpacedVolumeMetadata,
 ](
     operators: OperatorList[
         OperatorListBasis[M0, OperatorMetadata[M1]], np.dtype[np.complexfloating]
     ],
-) -> Operator[
-    AsUpcast[
-        BlockDiagonalBasis[
-            TupleBasis[
-                tuple[
-                    LegacyBlochTransposedBasis[
-                        np.complexfloating, RepeatedLengthMetadata, AxisDirections
-                    ],
-                    LegacyBlochTransposedBasis[
-                        np.complexfloating, RepeatedLengthMetadata, AxisDirections
-                    ],
-                ],
-                None,
-            ]
-        ],
-        OperatorMetadata[StackedMetadata[RepeatedLengthMetadata, AxisDirections]],
-    ],
-    np.dtype[np.complexfloating],
-]:
+) -> Operator[BlochOperatorBasis, np.dtype[np.complexfloating]]:
     """Build the block diagonal Bloch Hamiltonian from a list of operators."""
+    op_old = operators
+    assert (
+        basis.from_metadata(operators.basis.metadata().children[0])
+        == op_old.basis.inner.children[0].inner
+    )
     operators = operators.with_list_basis(
         basis.from_metadata(operators.basis.metadata().children[0])
     ).assert_ok()
+    assert op_old.basis.inner.children[1] == op_old.basis.inner.children[1]
+
+    np.testing.assert_allclose(op_old.raw_data, operators.raw_data)
     operators = operators.with_operator_basis(
         basis.transformed_from_metadata(
-            operators.basis.inner.children[1].metadata(),
-            is_dual=operators.basis.inner.children[1].is_dual,
+            operators.basis.metadata().children[1],
+            is_dual=operators.basis.inner.is_dual[1],
         ).upcast()
     ).assert_ok()
 
     operator_basis = _metadata_from_operator_list(operators.basis.metadata())
     out_basis = BlockDiagonalBasis(
-        tuple_basis((operator_basis, operator_basis.dual_basis())),
+        TupleBasis((operator_basis, operator_basis.dual_basis())),
         operators.basis.metadata().children[1].shape,
     ).upcast()
     return Operator.build(out_basis, operators.raw_data).assert_ok()
 
 
 def _get_sample_fractions[M: BlochFractionMetadata](
-    metadata: StackedMetadata[M, None],
+    metadata: TupleMetadata[tuple[M, ...], None],
 ) -> tuple[np.ndarray[tuple[int], np.dtype[np.floating]], ...]:
     """Get the frequencies of the samples in a wavepacket, as a fraction of dk."""
     mesh = np.meshgrid(*(n.values for n in metadata.children), indexing="ij")
@@ -166,25 +147,7 @@ def kinetic_hamiltonian[M: SpacedLengthMetadata, E: AxisDirections](
     potential: Potential[M, E, Ctype[Never], np.dtype[np.complexfloating]],
     mass: float,
     repeat: tuple[int, ...],
-) -> Operator[
-    AsUpcast[
-        BlockDiagonalBasis[
-            TupleBasis[
-                tuple[
-                    LegacyBlochTransposedBasis[
-                        np.complexfloating, RepeatedLengthMetadata, AxisDirections
-                    ],
-                    LegacyBlochTransposedBasis[
-                        np.complexfloating, RepeatedLengthMetadata, AxisDirections
-                    ],
-                ],
-                None,
-            ]
-        ],
-        OperatorMetadata[StackedMetadata[RepeatedLengthMetadata, AxisDirections]],
-    ],
-    np.dtype[np.complexfloating],
-]:
+) -> Operator[BlochOperatorBasis, np.dtype[np.complexfloating]]:
     """Build a kinetic Hamiltonian in the Bloch basis."""
     list_metadata = BlochFractionMetadata.from_repeats(repeat)
     bloch_fractions = _get_sample_fractions(list_metadata)
@@ -197,7 +160,7 @@ def kinetic_hamiltonian[M: SpacedLengthMetadata, E: AxisDirections](
         ]
     )
     operators = OperatorList.build(
-        tuple_basis((list_basis, operators.basis.inner.children[1])).upcast(),
+        TupleBasis((list_basis, operators.basis.inner.children[1])).upcast(),
         operators.raw_data,
     ).assert_ok()
 

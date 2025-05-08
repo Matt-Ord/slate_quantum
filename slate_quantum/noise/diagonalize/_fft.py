@@ -8,20 +8,22 @@ from slate_core.basis import FundamentalBasis
 from slate_core.util import pad_ft_points
 
 from slate_quantum import operator
-from slate_quantum._util.legacy import LegacyBasis, LegacyTupleBasis, tuple_basis
 from slate_quantum.metadata import EigenvalueMetadata
-from slate_quantum.noise._kernel import isotropic_kernel_with_isotropic_basis
+from slate_quantum.noise._kernel import (
+    LegacyRecastDiagonalOperatorBasis,
+    isotropic_kernel_with_isotropic_basis,
+)
+from slate_quantum.noise.legacy import LegacyBasis, LegacyTupleBasis, tuple_basis
 from slate_quantum.operator._operator import build_legacy_operator_list
 
 if TYPE_CHECKING:
     from slate_core import SimpleMetadata
     from slate_core.metadata import BasisMetadata
 
-    from slate_quantum._util.legacy import LegacyTupleBasis2D, StackedMetadata
     from slate_quantum.noise._kernel import IsotropicNoiseKernel
-    from slate_quantum.operator import (
+    from slate_quantum.noise.legacy import LegacyTupleBasis2D, StackedMetadata
+    from slate_quantum.operator._operator import (
         LegacyOperatorList,
-        LegacyRecastDiagonalOperatorBasis,
     )
 
 

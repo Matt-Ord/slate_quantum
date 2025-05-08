@@ -3,75 +3,86 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, cast
 
 import numpy as np
-from slate_core import BasisMetadata, FundamentalBasis, SimpleMetadata
-from slate_core.basis import (
-    BasisStateMetadata,
+from slate_core import (
+    Array,
+    Ctype,
+    FundamentalBasis,
+    SimpleMetadata,
+    TupleBasis,
+    TupleMetadata,
 )
+from slate_core.basis import (
+    AsUpcast,
+    BasisStateMetadata,
+    BlockDiagonalBasis,
+    DiagonalBasis,
+)
+from slate_core.metadata import AxisDirections
 
 from slate_quantum import operator as _operator
-from slate_quantum._util.legacy import (
-    LegacyBlockDiagonalBasis,
-    LegacyDiagonalBasis,
-    LegacyTupleBasis2D,
-    StackedMetadata,
+from slate_quantum.bloch._transposed_basis import (
+    BlochOperatorBasis,
+    BlochStateBasis,
 )
-from slate_quantum.bloch._transposed_basis import LegacyBlochTransposedBasis
 from slate_quantum.metadata._repeat import RepeatedLengthMetadata
-from slate_quantum.state._basis import LegacyEigenstateBasis
+from slate_quantum.state._basis import EigenstateBasis
 
 if TYPE_CHECKING:
-    from slate_quantum.operator._operator import LegacyOperator
+    from slate_quantum.operator._operator import (
+        Operator,
+        OperatorMetadata,
+    )
 
-type BlochEigenstateBasis[M: RepeatedLengthMetadata, E] = LegacyEigenstateBasis[
-    StackedMetadata[M, E],
-    LegacyBlochTransposedBasis[np.complexfloating, M, E],
-    LegacyBlockDiagonalBasis[
-        np.generic,
-        BasisMetadata,
+
+type BlochEigenstateBasis[M: RepeatedLengthMetadata, E: AxisDirections] = (
+    EigenstateBasis[
+        Array[
+            AsUpcast[
+                BlockDiagonalBasis[
+                    TupleBasis[
+                        tuple[
+                            FundamentalBasis,
+                            FundamentalBasis[BasisStateMetadata[BlochStateBasis[M, E]]],
+                        ],
+                        E,
+                    ]
+                ],
+                TupleMetadata[
+                    tuple[
+                        SimpleMetadata,
+                        BasisStateMetadata[BlochStateBasis[M, E]],
+                    ],
+                    None,
+                ],
+            ],
+            np.dtype[np.complexfloating],
+        ],
+    ]
+)
+
+
+type DiagonalBlochBasis[M: RepeatedLengthMetadata, E: AxisDirections] = DiagonalBasis[
+    TupleBasis[
+        tuple[
+            BlochEigenstateBasis[M, E],
+            BlochEigenstateBasis[M, E],
+        ],
         None,
-        LegacyTupleBasis2D[
-            np.generic,
-            FundamentalBasis[SimpleMetadata],
-            FundamentalBasis[
-                BasisStateMetadata[LegacyBlochTransposedBasis[np.complexfloating, M, E]]
-            ],
-            None,
-        ],
     ],
+    Ctype[np.complexfloating],
 ]
 
 
-type DiagonalBlochBasis[M: RepeatedLengthMetadata, E] = LegacyDiagonalBasis[
-    np.complexfloating,
-    BlochEigenstateBasis[M, E],
-    BlochEigenstateBasis[M, E],
-    None,
-]
-
-
-def into_diagonal[M: RepeatedLengthMetadata, E](
-    operator: LegacyOperator[
-        StackedMetadata[M, E],
-        np.complexfloating,
-        LegacyBlockDiagonalBasis[
-            np.complexfloating,
-            M,
-            E,
-            LegacyTupleBasis2D[
-                np.complexfloating,
-                LegacyBlochTransposedBasis[np.complexfloating, M, E],
-                LegacyBlochTransposedBasis[np.complexfloating, M, E],
-                None,
-            ],
-        ],
+def into_diagonal[M: RepeatedLengthMetadata, E: AxisDirections](
+    operator: Operator[BlochOperatorBasis[M, E], np.dtype[np.complexfloating]],
+) -> Operator[
+    AsUpcast[
+        DiagonalBlochBasis[M, E], OperatorMetadata[TupleMetadata[tuple[M, ...], E]]
     ],
-) -> LegacyOperator[
-    StackedMetadata[M, E],
-    np.complexfloating,
-    DiagonalBlochBasis[M, E],
+    np.dtype[np.complexfloating],
 ]:
     diagonal = _operator.into_diagonal_hermitian(operator)
     return cast(
-        "LegacyOperator[StackedMetadata[M, E], np.complexfloating, DiagonalBlochBasis[M, E]]",
+        "Operator[AsUpcast[DiagonalBlochBasis[M, E], OperatorMetadata[TupleMetadata[tuple[M, ...], E]]], np.dtype[np.complexfloating]]",
         diagonal,
     )

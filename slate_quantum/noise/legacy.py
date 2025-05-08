@@ -3,9 +3,8 @@ from __future__ import annotations
 from typing import Any, overload
 
 import numpy as np
-from slate_core import Array, Basis, BasisMetadata, Ctype, TupleBasis, TupleMetadata
+from slate_core import Basis, BasisMetadata, Ctype, TupleBasis, TupleMetadata
 from slate_core.basis import (
-    BlockDiagonalBasis,
     DiagonalBasis,
     IsotropicBasis,
     RecastBasis,
@@ -13,11 +12,6 @@ from slate_core.basis import (
 )
 
 type LegacyBasis[M: BasisMetadata, DT: np.generic] = Basis[M, Any]
-
-
-type LegacyArray[M: BasisMetadata, DT: np.generic, B: Basis = Basis] = Array[
-    B, np.dtype[DT]
-]
 
 
 type Metadata2D[M0: BasisMetadata, M1: BasisMetadata, E] = TupleMetadata[
@@ -55,12 +49,6 @@ type LegacyDiagonalBasis[
     B1: Basis[Any, Any],
     E: Any,
 ] = DiagonalBasis[Any, Any]
-type LegacyBlockDiagonalBasis[
-    DT: np.generic,
-    M: BasisMetadata,
-    E: Any,
-    B1: Basis[Any, Any],
-] = BlockDiagonalBasis[Any, Any]
 type LegacyIsotropicBasis[
     M: BasisMetadata,
     B0: Basis[Any, Any],

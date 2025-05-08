@@ -6,9 +6,9 @@ import numpy as np
 from slate_core import basis as basis_
 from slate_core.basis import FundamentalBasis
 
-from slate_quantum._util.legacy import tuple_basis
 from slate_quantum.metadata import EigenvalueMetadata
 from slate_quantum.noise._kernel import diagonal_kernel_with_outer_basis
+from slate_quantum.noise.legacy import tuple_basis
 from slate_quantum.operator._operator import build_legacy_operator_list
 
 if TYPE_CHECKING:

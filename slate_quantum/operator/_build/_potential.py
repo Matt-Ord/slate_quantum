@@ -95,7 +95,7 @@ def cos_potential(
         lambda _i, y: CroppedBasis(3, y).resolve_ctype().upcast(),
     ).upcast()
     n_dim = len(cropped.inner.shape)
-    data = outer_product(*(np.array([2, 1, 1]),) * n_dim)
+    data = outer_product(*(np.array([2, 1, 1], dtype=np.complex128),) * n_dim)
     return potential(
         cropped, 0.25**n_dim * height * data * np.sqrt(transformed_basis.size)
     ).ok()

@@ -40,6 +40,8 @@ if __name__ == "__main__":
     ax.set_ylabel("V(x)")
     fig.show()
 
+    # TODO: improve efficiency of next lines
+    plot.wait_for_close()
     # Metadata for a 2D volume with 100 points and a width of 14, 10
     metadata = spaced_volume_metadata_from_stacked_delta_x(
         (np.array([20, 0]), np.array([0, 10])), (100, 100)

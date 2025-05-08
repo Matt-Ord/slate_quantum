@@ -18,7 +18,8 @@ from slate_core.metadata import (
 from slate_core.util import slice_ignoring_axes
 
 from slate_quantum._util import outer_product
-from slate_quantum._util.legacy import (
+from slate_quantum.metadata import EigenvalueMetadata
+from slate_quantum.noise.legacy import (
     LegacyBasis,
     LegacyDiagonalBasis,
     LegacyIsotropicBasis,
@@ -29,7 +30,6 @@ from slate_quantum._util.legacy import (
     diagonal_basis,
     tuple_basis,
 )
-from slate_quantum.metadata import EigenvalueMetadata
 from slate_quantum.operator._diagonal import recast_diagonal_basis
 from slate_quantum.operator._operator import (
     LegacyOperator,
@@ -177,8 +177,8 @@ def diagonal_kernel_from_operators[M_: BasisMetadata, DT_: np.generic](
         "Any",
         np.einsum(  # type:ignore  unknown
             "a,ai,aj->ij",
-            converted.basis.inner.children[0]
-            .metadata()
+            converted.basis.metadata()
+            .children[0]
             .values[converted_inner.basis.inner.children[0].points],  # type:ignore refactor
             np.conj(operators_data),
             operators_data,  # type:ignore DT not numeric
