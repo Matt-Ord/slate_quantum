@@ -8,8 +8,6 @@ from slate_core.metadata import (
     SpacedVolumeMetadata,
 )
 
-from slate_quantum._util.legacy import StackedMetadata
-
 
 class RepeatedLengthMetadata(SpacedLengthMetadata):
     def __init__(self, inner: SpacedLengthMetadata, n_repeats: int) -> None:
@@ -27,7 +25,9 @@ class RepeatedLengthMetadata(SpacedLengthMetadata):
         return self._inner
 
 
-type RepeatedVolumeMetadata = StackedMetadata[RepeatedLengthMetadata, AxisDirections]
+type RepeatedVolumeMetadata = TupleMetadata[
+    tuple[RepeatedLengthMetadata, ...], AxisDirections
+]
 
 
 def repeat_volume_metadata(

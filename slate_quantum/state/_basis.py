@@ -7,7 +7,6 @@ from slate_core import Array, Basis, Ctype, SimpleMetadata
 from slate_core.explicit_basis import ExplicitUnitaryBasis
 from slate_core.metadata import BasisMetadata, TupleMetadata
 
-from slate_quantum._util.legacy import Metadata2D
 from slate_quantum.state._state import StateList, StateListBuilder
 
 if TYPE_CHECKING:
@@ -120,11 +119,3 @@ type EigenstateBasisWithInner[Inner: Basis] = EigenstateBasis[
         np.dtype[np.complexfloating],
     ],
 ]
-
-type LegacyEigenstateBasis[
-    M: BasisMetadata,
-    B: Basis[Any, Any] = Basis[M, Any],
-    BTransform: Basis[Any, Any] = Basis[
-        Metadata2D[SimpleMetadata, BasisStateMetadata[B], None], Any
-    ],
-] = EigenstateBasis[Any]

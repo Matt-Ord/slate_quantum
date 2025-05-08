@@ -8,14 +8,22 @@ from slate_quantum.bloch._linalg import (
     DiagonalBlochBasis,
     into_diagonal,
 )
-from slate_quantum.bloch._shifted_basis import LegacyBlochShiftedBasis
-from slate_quantum.bloch._transposed_basis import LegacyBlochTransposedBasis
+from slate_quantum.bloch._shifted_basis import BlochShiftedBasis
+from slate_quantum.bloch._transposed_basis import (
+    BlochStateBasis,
+    BlochStateMetadata,
+    BlochTransposedBasis,
+    BlockDiagonalBasis,
+)
 
 __all__ = [
     "BlochEigenstateBasis",
+    "BlochShiftedBasis",
+    "BlochStateBasis",
+    "BlochStateMetadata",
+    "BlochTransposedBasis",
+    "BlockDiagonalBasis",
     "DiagonalBlochBasis",
-    "LegacyBlochShiftedBasis",
-    "LegacyBlochTransposedBasis",
     "build",
     "into_diagonal",
 ]

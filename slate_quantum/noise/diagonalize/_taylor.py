@@ -21,24 +21,24 @@ from slate_core.metadata import (
 from slate_core.util import pad_ft_points
 
 from slate_quantum import operator
-from slate_quantum._util.legacy import tuple_basis
 from slate_quantum.metadata import EigenvalueMetadata
 from slate_quantum.noise._kernel import (
     IsotropicNoiseKernel,
     as_axis_kernel_from_isotropic,
     get_diagonal_noise_operators_from_axis,
 )
+from slate_quantum.noise.legacy import tuple_basis
 from slate_quantum.operator._operator import build_legacy_operator_list
 
 if TYPE_CHECKING:
-    from slate_quantum._util.legacy import (
+    from slate_quantum.noise.legacy import (
         LegacyBasis,
         LegacyDiagonalBasis,
         LegacyTupleBasis2D,
         Metadata2D,
         StackedMetadata,
     )
-    from slate_quantum.operator import (
+    from slate_quantum.operator._operator import (
         LegacyOperatorList,
     )
 

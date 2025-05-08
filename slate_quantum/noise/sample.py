@@ -19,7 +19,7 @@ if TYPE_CHECKING:
         DiagonalNoiseKernel,
         NoiseOperatorList,
     )
-    from slate_quantum.operator import LegacyOperatorList
+    from slate_quantum.operator._operator import LegacyOperatorList
 
 
 def sample_noise_from_operators[M: BasisMetadata](
@@ -40,7 +40,9 @@ def sample_noise_from_operators[M: BasisMetadata](
             np.einsum(  # type: ignore lib
                 "ij,j->ij",
                 factors,
-                np.lib.scimath.sqrt(operators.basis[0].metadata().values * hbar),
+                np.lib.scimath.sqrt(
+                    operators.basis.metadata().children[0].values * hbar
+                ),
             ),
         )
     )

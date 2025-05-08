@@ -22,15 +22,18 @@ if __name__ == "__main__":
     fig, ax = get_figure()
     for state in list(eigenstates)[:3]:
         plot.array_against_axes_1d(state, ax=ax, measure="abs")
+    ax.set_title("Free Particle Eigenstates in Position Space")
     fig.show()
 
+    # TODO: in k space these should be delta functions??
     fig, ax = get_figure()
     for state in list(eigenstates)[:3]:
         plot.array_against_axes_1d_k(state, ax=ax, measure="abs")
+    ax.set_title("Free Particle Eigenstates in Momentum Space")
     fig.show()
 
     # Now we modify the potential to have a barrier
-    potential = operator.build.cos_potential(metadata, 1)
+    potential = operator.build.cos_potential(metadata, 10)
     hamiltonian = operator.build.kinetic_hamiltonian(potential, hbar**2)
     eigenstates = operator.get_eigenstates_hermitian(hamiltonian)
 
@@ -38,6 +41,7 @@ if __name__ == "__main__":
     fig, ax = get_figure()
     for state in list(eigenstates)[:3]:
         plot.array_against_axes_1d(state, ax=ax, measure="abs")
+    ax.set_title("Particle in a Potential Well Eigenstates in Position Space")
     fig.show()
 
     plot.wait_for_close()

@@ -5,19 +5,15 @@ import itertools
 import numpy as np
 import pytest
 from scipy.constants import hbar  # type: ignore module
-from slate_core import basis, metadata
+from slate_core import TupleBasis, basis, metadata
 
 from slate_quantum import bloch, operator
-from slate_quantum._util.legacy import tuple_basis
 from slate_quantum.bloch.build import BlochFractionMetadata
-from slate_quantum.operator._operator import build_legacy_operator
+from slate_quantum.operator._operator import Operator
 
 # TODO: this
-# SHAPES_1D = [(x,) for x in [1, 2, 3, 5]]
-# SHAPES_2D = [*itertools.product([1, 2, 3], [1, 2, 3]), (5, 5)]
-
-SHAPES_1D = [(x,) for x in [1]]
-SHAPES_2D = [*itertools.product([1], [1]), (5, 5)]
+SHAPES_1D = [(x,) for x in [1, 2, 3, 5]]
+SHAPES_2D = [*itertools.product([1, 2, 3], [1, 2, 3]), (5, 5)]
 
 
 @pytest.mark.parametrize(
@@ -121,7 +117,7 @@ def test_build_potential_bloch_operator_1d(
     ).upcast()
 
     operator_list = operator.OperatorList.build(
-        tuple_basis((fraction_basis, potential.basis)).upcast(),
+        TupleBasis((fraction_basis, potential.basis)).upcast(),
         np.tile(potential.raw_data, np.prod(repeat).item()),
     ).assert_ok()
 
@@ -153,18 +149,22 @@ def test_bloch_operator_from_list() -> None:
     fraction_basis = basis.from_metadata(
         BlochFractionMetadata.from_repeats((2,))
     ).upcast()
-    operator_basis_tuple = tuple_basis(
+    operator_basis_tuple = TupleBasis(
         (operator_basis, operator_basis.dual_basis())
     ).upcast()
 
-    operator_0 = build_legacy_operator(operator_basis_tuple, np.ones((3, 3)))
-    operator_1 = build_legacy_operator(operator_basis_tuple, 2 * np.ones((3, 3)))
+    operator_0 = Operator.build(
+        operator_basis_tuple, np.ones((3, 3), dtype=complex)
+    ).assert_ok()
+    operator_1 = Operator.build(
+        operator_basis_tuple, 2 * np.ones((3, 3), dtype=complex)
+    ).assert_ok()
     operator_list = operator.OperatorList.build(
-        tuple_basis((fraction_basis, operator_basis_tuple)).upcast(),
+        TupleBasis((fraction_basis, operator_basis_tuple)).upcast(),
         np.array([operator_0.raw_data, operator_1.raw_data], dtype=complex),
     ).assert_ok()
 
     sparse = bloch.build.bloch_operator_from_list(operator_list)
     basis.transformed_from_metadata(
-        sparse.basis.inner.metadata(), is_dual=sparse.basis.is_dual
+        sparse.basis.metadata(), is_dual=sparse.basis.is_dual
     )

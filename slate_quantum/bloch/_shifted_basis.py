@@ -6,17 +6,10 @@ import numpy as np
 from slate_core import Ctype
 from slate_core.basis import AsUpcast, BasisConversion, BasisFeature, WrappedBasis
 
-from slate_quantum._util.legacy import LegacyBasis
 from slate_quantum.metadata import RepeatedLengthMetadata
 
 if TYPE_CHECKING:
     from slate_core.basis import Basis
-
-type LegacyBlochShiftedBasis[
-    DT: np.generic,
-    M: RepeatedLengthMetadata,
-    B: Basis[Any, Any] = LegacyBasis[M, DT],
-] = WrappedBasis[Any, Any]
 
 
 class BlochShiftedBasis[
