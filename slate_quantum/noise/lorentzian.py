@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, Any, cast
 
 import numpy as np
 from scipy.constants import Boltzmann, hbar  # type: ignore stubs
+from slate_core import Basis, TupleMetadata
 from slate_core import basis as basis_
 from slate_core.metadata import (
     AxisDirections,
@@ -27,10 +28,6 @@ if TYPE_CHECKING:
         DiagonalNoiseOperatorList,
         IsotropicNoiseKernelWithMetadata,
     )
-    from slate_quantum.noise.legacy import (
-        LegacyBasis,
-        StackedMetadata,
-    )
 
 
 def get_effective_lorentzian_parameter(
@@ -52,11 +49,11 @@ def get_effective_lorentzian_parameter(
 
 
 def get_lorentzian_isotropic_noise_kernel[M: SpacedLengthMetadata, E: AxisDirections](
-    metadata: StackedMetadata[M, E],
+    metadata: TupleMetadata[tuple[M, ...], E],
     a: float,
     lambda_: float,
 ) -> IsotropicNoiseKernelWithMetadata[
-    StackedMetadata[M, E], np.dtype[np.complexfloating]
+    TupleMetadata[tuple[M, ...], E], np.dtype[np.complexfloating]
 ]:
     """Get an isotropic noise kernel for a lorentzian correlation.
 
@@ -89,10 +86,10 @@ def _get_explicit_taylor_coefficients_lorentzian(
     return a**2 * ((-1 / (lambda_**2)) ** i)
 
 
-def get_lorentzian_operators_explicit_taylor[M: VolumeMetadata, DT: np.generic](
+def get_lorentzian_operators_explicit_taylor[M: VolumeMetadata](
     a: float,
     lambda_: float,
-    basis: LegacyBasis[M, DT],
+    basis: Basis[M],
     *,
     n_terms: int | None = None,
 ) -> DiagonalNoiseOperatorList[EigenvalueMetadata, M]:

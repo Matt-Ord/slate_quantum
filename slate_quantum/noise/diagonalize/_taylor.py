@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, Any, cast
 
 import numpy as np
 from scipy.special import factorial  # type: ignore library type
+from slate_core import TupleBasis
 from slate_core.basis import (
     Basis,
     FundamentalBasis,
@@ -25,16 +26,13 @@ from slate_quantum.noise._kernel import (
     as_axis_kernel_from_isotropic,
     get_diagonal_noise_operators_from_axis,
 )
-from slate_quantum.noise.legacy import tuple_basis
 from slate_quantum.operator._diagonal import recast_diagonal_basis_with_metadata
 from slate_quantum.operator._operator import (
     OperatorList,
 )
 
 if TYPE_CHECKING:
-    from slate_quantum.noise.legacy import (
-        StackedMetadata,
-    )
+    from slate_core import TupleMetadata
 
 
 def _get_cos_coefficients_for_taylor_series(
@@ -105,7 +103,7 @@ def get_periodic_noise_operators_explicit_taylor_expansion[
     eigenvalues = EigenvalueMetadata(coefficients.astype(np.complex128))
 
     return OperatorList.build(
-        tuple_basis((FundamentalBasis(eigenvalues), op_basis)).upcast(),
+        TupleBasis((FundamentalBasis(eigenvalues), op_basis)).upcast(),
         operators.raw_data,
     ).assert_ok()
 
@@ -133,7 +131,7 @@ def _get_linear_operators_for_noise[M: BasisMetadata](
         nx_displacements.basis.inner.children[0],
     )
     return OperatorList.build(
-        tuple_basis((FundamentalBasis.from_size(n_terms), op_basis), None).upcast(),
+        TupleBasis((FundamentalBasis.from_size(n_terms), op_basis), None).upcast(),
         data,
     ).assert_ok()
 
@@ -152,7 +150,7 @@ def get_linear_noise_operators_explicit_taylor_expansion[M: BasisMetadata](
     eigenvalues = EigenvalueMetadata(polynomial_coefficients.astype(np.complex128))
 
     return OperatorList.build(
-        tuple_basis(
+        TupleBasis(
             (FundamentalBasis(eigenvalues), operators.basis.inner.children[1])
         ).upcast(),
         operators.raw_data,
@@ -206,7 +204,7 @@ def get_periodic_noise_operators_real_isotropic_taylor_expansion[M: BasisMetadat
     msg = "Need to implement for e^ikx operators."
     raise NotImplementedError(msg)
     return OperatorList.build(
-        tuple_basis((FundamentalBasis(eigenvalues), operators.basis[1])),
+        TupleBasis((FundamentalBasis(eigenvalues), operators.basis[1])),
         operators.raw_data,
     )
 
@@ -216,12 +214,12 @@ def get_periodic_noise_operators_real_isotropic_stacked_taylor_expansion[
     E,
 ](
     kernel: IsotropicNoiseKernelWithMetadata[
-        StackedMetadata[M, E],
+        TupleMetadata[tuple[M, ...], E],
         np.dtype[np.complexfloating],
     ],
     *,
     shape: tuple[int | None, ...] | None = None,
-) -> DiagonalNoiseOperatorList[EigenvalueMetadata, StackedMetadata[M, E]]:
+) -> DiagonalNoiseOperatorList[EigenvalueMetadata, TupleMetadata[tuple[M, ...], E]]:
     """Calculate the noise operators for a general isotropic noise kernel.
 
     Polynomial fitting to get Taylor expansion.

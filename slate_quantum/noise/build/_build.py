@@ -26,7 +26,7 @@ from slate_quantum.operator import (
     SuperOperatorMetadata,
     get_commutator_operator_list,
 )
-from slate_quantum.operator._operator import OperatorList, build_legacy_operator
+from slate_quantum.operator._operator import Operator
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterable
@@ -37,10 +37,10 @@ if TYPE_CHECKING:
     from slate_core.metadata.length import LengthMetadata, SpacedLengthMetadata
 
     from slate_quantum.noise._kernel import AxisKernel
-    from slate_quantum.noise.legacy import StackedMetadata
     from slate_quantum.operator._operator import (
-        LegacyOperator,
+        OperatorList,
         OperatorListWithMetadata,
+        OperatorWithMetadata,
     )
 
 
@@ -79,13 +79,13 @@ def isotropic_kernel_from_function_stacked[
     M: SpacedLengthMetadata,
     E: AxisDirections,
 ](
-    metadata: StackedMetadata[M, E],
+    metadata: TupleMetadata[tuple[M, ...], E],
     fn: Callable[
         [np.ndarray[Any, np.dtype[np.float64]]],
         np.ndarray[Any, np.dtype[np.complexfloating]],
     ],
 ) -> IsotropicNoiseKernelWithMetadata[
-    StackedMetadata[M, E], np.dtype[np.complexfloating]
+    TupleMetadata[tuple[M, ...], E], np.dtype[np.complexfloating]
 ]:
     """
     Get an Isotropic Kernel with a correlation beta(x-x').
@@ -112,7 +112,7 @@ def isotropic_kernel_from_function_stacked[
 
 
 def axis_kernel_from_function_stacked[M: SpacedLengthMetadata](
-    metadata: StackedMetadata[M, Any],
+    metadata: TupleMetadata[tuple[M, ...], Any],
     fn: Callable[
         [np.ndarray[Any, np.dtype[np.float64]]],
         np.ndarray[Any, np.dtype[np.complexfloating]],
@@ -192,7 +192,7 @@ def lorentzian_correlation_fn(
 
 
 def temperature_corrected_operators[M0: BasisMetadata, M1: BasisMetadata](
-    hamiltonian: LegacyOperator[M1, np.complexfloating],
+    hamiltonian: OperatorWithMetadata[M1, np.dtype[np.complexfloating]],
     operators: OperatorListWithMetadata[M0, M1, np.dtype[np.complexfloating]],
     temperature: float,
     eta: float,
@@ -209,20 +209,22 @@ def temperature_corrected_operators[M0: BasisMetadata, M1: BasisMetadata](
 
 
 def hamiltonian_shift[M1: BasisMetadata](
-    hamiltonian: LegacyOperator[M1, np.complexfloating],
+    hamiltonian: OperatorWithMetadata[M1, np.dtype[np.complexfloating]],
     operators: OperatorListWithMetadata[
         BasisMetadata, M1, np.dtype[np.complexfloating]
     ],
     eta: float,
-) -> LegacyOperator[M1, np.complexfloating]:
+) -> OperatorWithMetadata[M1, np.dtype[np.complexfloating]]:
     """Get the temperature corrected Hamiltonian shift."""
     shift_product = linalg.einsum(
         "(i (j k)),(i (k' l))->(k' l)", operator.dagger_each(operators), operators
     )
-    shift_product = build_legacy_operator(shift_product.basis, shift_product.raw_data)
+    shift_product = Operator.build(
+        shift_product.basis, shift_product.raw_data
+    ).assert_ok()
     commutator = operator.commute(hamiltonian, shift_product)
     pre_factor = 1j * eta / (4 * hbar)
-    return commutator * pre_factor
+    return (commutator * pre_factor).as_type(np.complex128)
 
 
 def truncate_noise_operator_list[M0: EigenvalueMetadata, M1: BasisMetadata](

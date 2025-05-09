@@ -8,6 +8,8 @@ from slate_quantum.state._build import coherent as build_coherent
 from slate_quantum.state._state import (
     State,
     StateList,
+    StateListWithMetadata,
+    StateWithMetadata,
     all_inner_product,
     get_all_occupations,
     get_average_occupations,
@@ -22,6 +24,8 @@ __all__ = [
     "EigenstateBasis",
     "State",
     "StateList",
+    "StateListWithMetadata",
+    "StateWithMetadata",
     "all_inner_product",
     "build",
     "build_coherent",
