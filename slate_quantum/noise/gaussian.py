@@ -134,18 +134,6 @@ def get_effective_gaussian_noise_kernel[
 
     This chooses the largest possible wavelength, such that the smallest correlation between
     any two points is a**2 * np.exp(- lambda_factor ** 2 / 2), where a**2 is the max correlation
-
-    Parameters
-    ----------
-    basis : TupleBasisLike[BasisWithLengthLike[Any, Any, Literal[1]]]
-    eta : float
-    temperature : float
-    lambda_factor : float, optional
-        lambda_factor, by default 2*np.sqrt(2)
-
-    Returns
-    -------
-    SingleBasisDiagonalNoiseKernel[ TupleBasisLike[FundamentalPositionBasis] ]
     """
     a, lambda_ = get_effective_gaussian_parameters(
         metadata, eta, temperature, lambda_factor=lambda_factor
@@ -170,18 +158,6 @@ def get_effective_gaussian_isotropic_noise_kernel[
 
     This chooses the largest possible wavelength, such that the smallest correlation between
     any two points is a**2 * np.exp(- lambda_factor ** 2 / 2), where a**2 is the max correlation
-
-    Parameters
-    ----------
-    basis : TupleBasisLike[BasisWithLengthLike[Any, Any, Literal[1]]]
-    eta : float
-    temperature : float
-    lambda_factor : float, optional
-        lambda_factor, by default 2*np.sqrt(2)
-
-    Returns
-    -------
-    SingleBasisDiagonalNoiseKernel[ TupleBasisLike[FundamentalPositionBasis] ]
     """
     a, lambda_ = get_effective_gaussian_parameters(
         metadata, eta, temperature, lambda_factor=lambda_factor
@@ -201,23 +177,7 @@ def get_gaussian_noise_operators_periodic[
 ) -> OperatorListWithMetadata[
     EigenvalueMetadata, TupleMetadata[tuple[M, ...], E], np.dtype[np.complexfloating]
 ]:
-    """Get the noise operators for a gausssian kernel in the given basis.
-
-    Parameters
-    ----------
-    hamiltonian : SingleBasisOperator[B_L0]
-    mass : float
-    temperature : float
-    gamma : float
-
-    Returns
-    -------
-    SingleBasisNoiseOperatorList[
-        FundamentalBasis[BasisMetadata],
-        FundamentalPositionBasis,
-    ]
-
-    """
+    """Get the noise operators for a gausssian kernel in the given basis."""
     kernel = get_gaussian_isotropic_noise_kernel(metadata, a, lambda_)
 
     operators = get_periodic_noise_operators_isotropic_stacked_fft(kernel)
@@ -241,23 +201,7 @@ def get_effective_gaussian_noise_operators_periodic[
 ) -> OperatorListWithMetadata[
     EigenvalueMetadata, TupleMetadata[tuple[M, ...], E], np.dtype[np.complexfloating]
 ]:
-    """Get the noise operators for a gausssian kernel in the given basis.
-
-    Parameters
-    ----------
-    hamiltonian : SingleBasisOperator[B_L0]
-    mass : float
-    temperature : float
-    gamma : float
-
-    Returns
-    -------
-    SingleBasisNoiseOperatorList[
-        FundamentalBasis[BasisMetadata],
-        FundamentalPositionBasis,
-    ]
-
-    """
+    """Get the noise operators for a gausssian kernel in the given basis."""
     a, lambda_ = get_effective_gaussian_parameters(metadata, eta, temperature)
     return get_gaussian_noise_operators_periodic(
         metadata, a, lambda_, truncation=truncation
@@ -317,23 +261,7 @@ def get_linear_gaussian_noise_operators_explicit_taylor[M: SpacedLengthMetadata]
     *,
     n_terms: int | None = None,
 ) -> DiagonalNoiseOperatorList[EigenvalueMetadata, M]:
-    """Get the noise operators for a gausssian kernel in the given basis.
-
-    Parameters
-    ----------
-    hamiltonian : SingleBasisOperator[B_L0]
-    mass : float
-    temperature : float
-    gamma : float
-
-    Returns
-    -------
-    SingleBasisNoiseOperatorList[
-        FundamentalBasis[BasisMetadata],
-        FundamentalPositionBasis,
-    ]
-
-    """
+    """Get the noise operators for a gausssian kernel in the given basis."""
     n_terms = (
         (np.prod(metadata.fundamental_shape).item()) if n_terms is None else n_terms
     )

@@ -117,15 +117,6 @@ def matmul[M0: BasisMetadata](
     Multiply each operator in rhs by lhs.
 
     Aij Bjk = Mik
-
-    Parameters
-    ----------
-    lhs : Operator[OperatorBasis[M0], np.dtype[np.complexfloating]]
-    rhs : Operator[OperatorBasis[M0], np.dtype[np.complexfloating]]
-
-    Returns
-    -------
-    OperatorList[B_3, B_0, B_2]
     """
     data = einsum("(i k'),(k j) -> (i j)", lhs, rhs)
     return Operator.build(data.basis, data.raw_data).ok()
@@ -191,15 +182,6 @@ def matmul_list_operator[M0: BasisMetadata, M1: OperatorMetadata](
     Multiply each operator in rhs by lhs.
 
     Aij Bjk = Mik
-
-    Parameters
-    ----------
-    lhs : OperatorList[B_3, B_0, B_1]
-    rhs : Operator[B_1, B_2]
-
-    Returns
-    -------
-    OperatorList[B_3, B_0, B_2]
     """
     data = einsum("(m (i k')),(k j) -> (m (i j))", lhs, rhs)
     return OperatorList.build(data.basis, data.raw_data).ok()
@@ -213,15 +195,6 @@ def matmul_operator_list[M0: BasisMetadata, M1: OperatorMetadata](
     Multiply each operator in rhs by lhs.
 
     Aij Bjk = Mik
-
-    Parameters
-    ----------
-    lhs : Operator[B_0, B_1]
-    rhs : OperatorList[B_3, B_1, B_2]
-
-    Returns
-    -------
-    OperatorList[B_3, B_0, B_2]
     """
     data = einsum("(i k'),(m (k j)) -> (m (i j))", lhs, rhs)
     return OperatorList.build(data.basis, data.raw_data).ok()

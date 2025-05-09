@@ -61,17 +61,7 @@ def position[M: BasisMetadata, E, CT: Ctype[Never], DT: np.dtype[np.generic]](
 def get_displacements_x[M: LengthMetadata](
     metadata: M, origin: float
 ) -> Array[FundamentalBasis[M], np.dtype[np.floating]]:
-    """Get the displacements from origin.
-
-    Parameters
-    ----------
-    basis : BasisWithLengthLike
-    origin : float
-
-    Returns
-    -------
-    ValueList[FundamentalPositionBasis]
-    """
+    """Get the displacements from origin."""
     distances = np.array(list(metadata.values)) - origin
     max_distance = np.linalg.norm(metadata.delta) / 2
     data = wrap_displacements(distances, max_distance)
@@ -164,17 +154,7 @@ def x_displacement_operator[M: LengthMetadata](
     ],
     np.dtype[np.floating],
 ]:
-    """Get the displacements from origin.
-
-    Parameters
-    ----------
-    basis : BasisWithLengthLike
-    origin : float
-
-    Returns
-    -------
-    ValueList[FundamentalPositionBasis]
-    """
+    """Get the displacements from origin."""
     x_points = np.array(list(metadata.values))
     distances = x_points[:, np.newaxis] - x_points[np.newaxis, :] - origin
     max_distance = np.linalg.norm(metadata.delta) / 2

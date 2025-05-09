@@ -47,20 +47,7 @@ def kinetic_energy[M: SpacedLengthMetadata, E: AxisDirections](
     mass: float,
     bloch_fraction: np.ndarray[Any, np.dtype[np.floating]] | None = None,
 ) -> MomentumOperator[M, E, Ctype[Never], np.dtype[np.complexfloating]]:
-    """
-    Given a mass and a basis calculate the kinetic part of the Hamiltonian.
-
-    Parameters
-    ----------
-    basis : B_0Inv
-    mass : float
-    bloch_fraction : np.ndarray[tuple[int], np.dtype[np.float_]] | None, optional
-        bloch phase, by default None
-
-    Returns
-    -------
-    Hamiltonian[B_0Inv]
-    """
+    """Given a mass and a basis calculate the kinetic part of the Hamiltonian."""
     bloch_fraction = (
         np.zeros(len(metadata.children)) if bloch_fraction is None else bloch_fraction
     )
@@ -95,19 +82,7 @@ def kinetic_hamiltonian[M: SpacedLengthMetadata, E: AxisDirections](
     ],
     np.dtype[np.complexfloating],
 ]:
-    """
-    Calculate the total hamiltonian in momentum basis for a given potential and mass.
-
-    Parameters
-    ----------
-    potential : Potential[_L0, _L1, _L2]
-    mass : float
-    bloch_fraction : np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]
-
-    Returns
-    -------
-    MomentumBasisHamiltonian[_L0, _L1, _L2]
-    """
+    """Calculate the total hamiltonian in momentum basis for a given potential and mass."""
     metadata = potential.basis.metadata().children[0]
     kinetic_hamiltonian = kinetic_energy(metadata, mass, bloch_fraction)
     basis = SplitBasis(potential.basis, kinetic_hamiltonian.basis)
