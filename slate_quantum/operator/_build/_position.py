@@ -100,7 +100,7 @@ type FundamentalPositionOperatorListBasis[
     TupleBasis[
         tuple[
             FundamentalBasis,
-            Basis[OperatorMetadata[TupleMetadata[tuple[M, ...], E]]],
+            FundamentalPositionOperatorBasis[M, E],
         ],
         None,
     ],
@@ -219,7 +219,7 @@ def x_displacement_operators_stacked[M: SpacedLengthMetadata, E: AxisDirections]
     shape = metadata.fundamental_shape
     origin = tuple(0.0 for _ in shape) if origin is None else origin
 
-    return OperatorList.from_operators(
+    return OperatorList.from_operators(  # type: ignore[reportGeneralTypeIssues]
         _get_displacements_matrix_x_along_axis(metadata, o, axis=axis)
         for (axis, o) in enumerate(origin)
     )
@@ -229,7 +229,7 @@ def total_x_displacement_operator[M: SpacedLengthMetadata, E: AxisDirections](
     metadata: TupleMetadata[tuple[M, ...], E],
     origin: tuple[float, ...] | None = None,
 ) -> Operator[
-    Basis[OperatorMetadata[TupleMetadata[tuple[M, ...], E]]],
+    FundamentalPositionOperatorBasis[M, E],
     np.dtype[np.float64],
 ]:
     """Get a matrix of displacements in x, taken in a periodic fashion."""

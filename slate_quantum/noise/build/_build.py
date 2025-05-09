@@ -4,16 +4,16 @@ from typing import TYPE_CHECKING, Any
 
 import numpy as np
 from scipy.constants import Boltzmann, hbar  # type: ignore stubs
-from slate_core import basis, linalg
+from slate_core import Basis, TupleMetadata, basis, linalg
 from slate_core.basis import CoordinateBasis
 from slate_core.metadata import AxisDirections
 
 from slate_quantum import operator
 from slate_quantum.metadata import EigenvalueMetadata
 from slate_quantum.noise._kernel import (
-    DiagonalNoiseKernel,
-    IsotropicNoiseKernel,
-    NoiseKernel,
+    DiagonalNoiseKernelWithMetadata,
+    IsotropicNoiseKernelWithMetadata,
+    NoiseKernelWithMetadata,
     build_isotropic_kernel,
     diagonal_kernel_from_operators,
     noise_kernel_from_operators,
@@ -26,7 +26,7 @@ from slate_quantum.operator import (
     SuperOperatorMetadata,
     get_commutator_operator_list,
 )
-from slate_quantum.operator._operator import build_legacy_operator
+from slate_quantum.operator._operator import OperatorList, build_legacy_operator
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterable
@@ -40,7 +40,7 @@ if TYPE_CHECKING:
     from slate_quantum.noise.legacy import StackedMetadata
     from slate_quantum.operator._operator import (
         LegacyOperator,
-        LegacyOperatorList,
+        OperatorListWithMetadata,
     )
 
 
@@ -50,7 +50,7 @@ def isotropic_kernel_from_function[M: LengthMetadata](
         [np.ndarray[Any, np.dtype[np.float64]]],
         np.ndarray[Any, np.dtype[np.complexfloating]],
     ],
-) -> IsotropicNoiseKernel[M, np.complexfloating]:
+) -> IsotropicNoiseKernelWithMetadata[M, np.dtype[np.complexfloating]]:
     """
     Get an Isotropic Kernel with a correlation beta(x-x').
 
@@ -70,9 +70,9 @@ def isotropic_kernel_from_function[M: LengthMetadata](
     ]
     """
     displacements = operator.build.x_displacement_operator(metadata)
-    correlation = fn(displacements.raw_data.reshape(displacements.basis.shape)[0])
+    correlation = fn(displacements.raw_data.reshape(displacements.basis.inner.shape)[0])
 
-    return build_isotropic_kernel(displacements.basis[0], correlation)
+    return build_isotropic_kernel(displacements.basis.inner.children[0], correlation)
 
 
 def isotropic_kernel_from_function_stacked[
@@ -84,7 +84,9 @@ def isotropic_kernel_from_function_stacked[
         [np.ndarray[Any, np.dtype[np.float64]]],
         np.ndarray[Any, np.dtype[np.complexfloating]],
     ],
-) -> IsotropicNoiseKernel[StackedMetadata[M, E], np.complexfloating]:
+) -> IsotropicNoiseKernelWithMetadata[
+    StackedMetadata[M, E], np.dtype[np.complexfloating]
+]:
     """
     Get an Isotropic Kernel with a correlation beta(x-x').
 
@@ -104,9 +106,9 @@ def isotropic_kernel_from_function_stacked[
     ]
     """
     displacements = operator.build.total_x_displacement_operator(metadata)
-    correlation = fn(displacements.raw_data.reshape(displacements.basis.shape)[0])
+    correlation = fn(displacements.raw_data.reshape(displacements.basis.inner.shape)[0])
 
-    return build_isotropic_kernel(displacements.basis[0], correlation)
+    return build_isotropic_kernel(displacements.basis.inner.children[0], correlation)
 
 
 def axis_kernel_from_function_stacked[M: SpacedLengthMetadata](
@@ -191,10 +193,10 @@ def lorentzian_correlation_fn(
 
 def temperature_corrected_operators[M0: BasisMetadata, M1: BasisMetadata](
     hamiltonian: LegacyOperator[M1, np.complexfloating],
-    operators: LegacyOperatorList[M0, M1, np.complexfloating],
+    operators: OperatorListWithMetadata[M0, M1, np.dtype[np.complexfloating]],
     temperature: float,
     eta: float,
-) -> LegacyOperatorList[M0, M1, np.complexfloating]:
+) -> OperatorListWithMetadata[M0, M1, np.dtype[np.complexfloating]]:
     """Get the temperature corrected operators.
 
     Note this returns the operators multiplied by hbar, to avoid numerical issues.
@@ -208,7 +210,9 @@ def temperature_corrected_operators[M0: BasisMetadata, M1: BasisMetadata](
 
 def hamiltonian_shift[M1: BasisMetadata](
     hamiltonian: LegacyOperator[M1, np.complexfloating],
-    operators: LegacyOperatorList[BasisMetadata, M1, np.complexfloating],
+    operators: OperatorListWithMetadata[
+        BasisMetadata, M1, np.dtype[np.complexfloating]
+    ],
     eta: float,
 ) -> LegacyOperator[M1, np.complexfloating]:
     """Get the temperature corrected Hamiltonian shift."""
@@ -222,9 +226,15 @@ def hamiltonian_shift[M1: BasisMetadata](
 
 
 def truncate_noise_operator_list[M0: EigenvalueMetadata, M1: BasisMetadata](
-    operators: LegacyOperatorList[M0, M1, np.complexfloating],
+    operators: OperatorList[
+        Basis[TupleMetadata[tuple[M0, TupleMetadata[tuple[M1, M1], None]], None]],
+        np.dtype[np.complexfloating],
+    ],
     truncation: Iterable[int],
-) -> LegacyOperatorList[M0, M1, np.complexfloating]:
+) -> OperatorList[
+    Basis[TupleMetadata[tuple[M0, TupleMetadata[tuple[M1, M1], None]], None]],
+    np.dtype[np.complexfloating],
+]:
     """
     Get a truncated list of diagonal operators.
 
@@ -254,9 +264,9 @@ def truncate_noise_operator_list[M0: EigenvalueMetadata, M1: BasisMetadata](
 
 
 def truncate_noise_kernel[M: SuperOperatorMetadata](
-    kernel: NoiseKernel[M, np.complexfloating],
+    kernel: NoiseKernelWithMetadata[M, np.dtype[np.complexfloating]],
     truncation: Iterable[int],
-) -> NoiseKernel[M, np.complexfloating]:
+) -> NoiseKernelWithMetadata[M, np.dtype[np.complexfloating]]:
     """
     Given a noise kernel, retain only the first n noise operators.
 
@@ -278,9 +288,9 @@ def truncate_noise_kernel[M: SuperOperatorMetadata](
 def truncate_diagonal_noise_kernel[
     M: BasisMetadata,
 ](
-    kernel: DiagonalNoiseKernel[M, np.complexfloating],
+    kernel: DiagonalNoiseKernelWithMetadata[M, np.dtype[np.complexfloating]],
     truncation: Iterable[int],
-) -> DiagonalNoiseKernel[M, np.complexfloating]:
+) -> DiagonalNoiseKernelWithMetadata[M, np.dtype[np.complexfloating]]:
     """
     Given a noise kernel, retain only the first n noise operators.
 

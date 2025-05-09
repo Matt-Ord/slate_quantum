@@ -8,14 +8,14 @@ requires-python = ">=3.13,<3.14"
 dependencies = [
     "numpy >=2.0.0,<3.0.0",
     "scipy >=1.14.1,<2.0.0",
-    "slate_core @ git+https://github.com/Matt-Ord/slate.git@88ba3e2",
+    "slate_core @ git+https://github.com/Matt-Ord/slate.git@746a151",
 ]
 
 [dependency-groups]
 dev = [
     "ruff",
     "pytest >=8.3.3,<9.0.0",
-    "pyright ==1.1.394",
+    "pyright ==1.1.398",
     "sphinx >=8.1.3,<9.0.0",
     "pydata-sphinx-theme >=0.16.0,<0.17.0",
 ]

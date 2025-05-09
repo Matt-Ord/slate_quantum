@@ -11,7 +11,6 @@ from slate_quantum import bloch, operator
 from slate_quantum.bloch.build import BlochFractionMetadata
 from slate_quantum.operator._operator import Operator
 
-# TODO: this
 SHAPES_1D = [(x,) for x in [1, 2, 3, 5]]
 SHAPES_2D = [*itertools.product([1, 2, 3], [1, 2, 3]), (5, 5)]
 

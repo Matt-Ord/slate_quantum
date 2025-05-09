@@ -546,19 +546,11 @@ class OperatorList[
         )
 
 
-type LegacyOperatorList[
+type OperatorListWithMetadata[
     M0: BasisMetadata,
     M1: BasisMetadata,
-    DT: np.generic,
-    B: Basis = Basis,
-] = OperatorList[Basis[OperatorListMetadata[M0, OperatorMetadata[M1]]], np.dtype[DT]]
-
-
-def build_legacy_operator_list(
-    basis: Basis,
-    data: np.ndarray[Any, Any],
-) -> LegacyOperatorList[Any, Any, Any, Any]:
-    return OperatorList.build(basis, data).assert_ok()  # type: ignore legacy
+    DT: np.dtype[np.generic],
+] = OperatorList[Basis[OperatorListMetadata[M0, OperatorMetadata[M1]]], DT]
 
 
 type SuperOperatorMetadata[M: BasisMetadata = BasisMetadata] = OperatorMetadata[
