@@ -96,14 +96,7 @@ class State[
         return StateBuilder(basis, data)
 
 
-type LegacyState[M: BasisMetadata] = State[Basis[M], np.dtype[np.complexfloating]]
-
-
-def build_legacy_state(
-    basis: Basis, data: np.ndarray[Any, np.dtype[np.complexfloating]]
-) -> LegacyState[Any]:
-    """Build a legacy state."""
-    return State.build(basis, data).assert_ok()
+type StateWithMetadata[M: BasisMetadata] = State[Basis[M], np.dtype[np.complexfloating]]
 
 
 def inner_product[B: Basis](
@@ -323,16 +316,9 @@ class StateList[
         return StateListBuilder(basis, data)
 
 
-type LegacyStateList[M0: BasisMetadata, M1: BasisMetadata, B: Basis = Basis] = (
+type StateListWithMetadata[M0: BasisMetadata, M1: BasisMetadata, B: Basis = Basis] = (
     StateList[TupleBasisLike[tuple[M0, M1], None], np.dtype[np.complexfloating]]
 )
-
-
-def build_legacy_state_list(
-    basis: Basis, data: np.ndarray[Any, np.dtype[np.complexfloating]]
-) -> LegacyStateList[Any, Any, Any]:
-    """Build a legacy state list."""
-    return StateList.build(basis, data).assert_ok()  # type: ignore legacy
 
 
 def all_inner_product[

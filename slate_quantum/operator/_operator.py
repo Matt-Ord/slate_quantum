@@ -192,16 +192,9 @@ class Operator[
         )
 
 
-type LegacyOperator[M0: BasisMetadata, DT: np.generic, B: Basis = Basis] = Operator[
-    Any, Any
+type OperatorWithMetadata[M: BasisMetadata, DT: np.dtype[np.generic]] = Operator[
+    OperatorBasis[M], DT
 ]
-
-
-def build_legacy_operator(
-    basis: Basis,
-    data: np.ndarray[Any, Any],
-) -> LegacyOperator[Any, Any, Any]:
-    return Operator.build(basis, data).assert_ok()  # type: ignore legacy
 
 
 def _assert_operator_list_basis(basis: Basis) -> None:
