@@ -165,16 +165,6 @@ def get_periodic_noise_operators_real_isotropic_taylor_expansion[M: BasisMetadat
     """Calculate the noise operators for a general isotropic noise kernel.
 
     Polynomial fitting to get Taylor expansion.
-
-    Parameters
-    ----------
-    kernel: IsotropicNoiseKernel[TupleBasisWithLengthLike[Any, Any]]
-    n: int, by default 1
-
-    Returns
-    -------
-    The noise operators formed using the 2n+1 lowest fourier terms, and the corresponding coefficients.
-
     """
     n_states: int = kernel.basis.fundamental_size
     n = (n_states + 1) // 2 if n is None else n
@@ -223,16 +213,6 @@ def get_periodic_noise_operators_real_isotropic_stacked_taylor_expansion[
     """Calculate the noise operators for a general isotropic noise kernel.
 
     Polynomial fitting to get Taylor expansion.
-
-    Parameters
-    ----------
-    kernel: IsotropicNoiseKernel[TupleBasisWithLengthLike[Any, Any]]
-    n: int, by default 1
-
-    Returns
-    -------
-    The noise operators formed using the 2n+1 lowest fourier terms, and the corresponding coefficients.
-
     """
     axis_kernels = as_axis_kernel_from_isotropic(kernel)
 

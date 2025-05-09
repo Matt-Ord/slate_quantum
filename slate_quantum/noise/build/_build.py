@@ -51,24 +51,7 @@ def isotropic_kernel_from_function[M: LengthMetadata](
         np.ndarray[Any, np.dtype[np.complexfloating]],
     ],
 ) -> IsotropicNoiseKernelWithMetadata[M, np.dtype[np.complexfloating]]:
-    """
-    Get an Isotropic Kernel with a correlation beta(x-x').
-
-    Parameters
-    ----------
-    basis : StackedBasisWithVolumeLike
-    fn : Callable[
-        [np.ndarray[Any, np.dtype[np.float64]]],
-        np.ndarray[Any, np.dtype[np.complexfloating]],
-    ]
-        beta(x-x'), the correlation as a function of displacement
-
-    Returns
-    -------
-    IsotropicNoiseKernel[
-        TupleBasisWithLengthLike[*tuple[FundamentalPositionBasis, ...]],
-    ]
-    """
+    """Get an Isotropic Kernel with a correlation beta(x-x')."""
     displacements = operator.build.x_displacement_operator(metadata)
     correlation = fn(displacements.raw_data.reshape(displacements.basis.inner.shape)[0])
 
@@ -87,24 +70,7 @@ def isotropic_kernel_from_function_stacked[
 ) -> IsotropicNoiseKernelWithMetadata[
     TupleMetadata[tuple[M, ...], E], np.dtype[np.complexfloating]
 ]:
-    """
-    Get an Isotropic Kernel with a correlation beta(x-x').
-
-    Parameters
-    ----------
-    basis : StackedBasisWithVolumeLike
-    fn : Callable[
-        [np.ndarray[Any, np.dtype[np.float64]]],
-        np.ndarray[Any, np.dtype[np.complexfloating]],
-    ]
-        beta(x-x'), the correlation as a function of displacement
-
-    Returns
-    -------
-    IsotropicNoiseKernel[
-        TupleBasisWithLengthLike[*tuple[FundamentalPositionBasis, ...]],
-    ]
-    """
+    """Get an Isotropic Kernel with a correlation beta(x-x')."""
     displacements = operator.build.total_x_displacement_operator(metadata)
     correlation = fn(displacements.raw_data.reshape(displacements.basis.inner.shape)[0])
 
@@ -118,24 +84,7 @@ def axis_kernel_from_function_stacked[M: SpacedLengthMetadata](
         np.ndarray[Any, np.dtype[np.complexfloating]],
     ],
 ) -> AxisKernel[M, np.complexfloating]:
-    """
-    Get an Isotropic Kernel with a correlation beta(x-x').
-
-    Parameters
-    ----------
-    basis : StackedBasisWithVolumeLike
-    fn : Callable[
-        [np.ndarray[Any, np.dtype[np.float64]]],
-        np.ndarray[Any, np.dtype[np.complexfloating]],
-    ]
-        beta(x-x'), the correlation as a function of displacement
-
-    Returns
-    -------
-    IsotropicNoiseKernel[
-        TupleBasisWithLengthLike[*tuple[FundamentalPositionBasis, ...]],
-    ]
-    """
+    """Get an Isotropic Kernel with a correlation beta(x-x')."""
     return tuple(
         isotropic_kernel_from_function(child, fn) for child in metadata.children
     )
@@ -237,18 +186,7 @@ def truncate_noise_operator_list[M0: EigenvalueMetadata, M1: BasisMetadata](
     Basis[TupleMetadata[tuple[M0, TupleMetadata[tuple[M1, M1], None]], None]],
     np.dtype[np.complexfloating],
 ]:
-    """
-    Get a truncated list of diagonal operators.
-
-    Parameters
-    ----------
-    operators : DiagonalNoiseOperatorList[FundamentalBasis[BasisMetadata], B_0, B_1]
-    truncation : Iterable[int]
-
-    Returns
-    -------
-    DiagonalNoiseOperatorList[FundamentalBasis[BasisMetadata], B_0, B_1]
-    """
+    """Get a truncated list of diagonal operators."""
     converted = operators.with_basis(
         basis.as_tuple(operators.basis).upcast()
     ).assert_ok()
@@ -269,18 +207,7 @@ def truncate_noise_kernel[M: SuperOperatorMetadata](
     kernel: NoiseKernelWithMetadata[M, np.dtype[np.complexfloating]],
     truncation: Iterable[int],
 ) -> NoiseKernelWithMetadata[M, np.dtype[np.complexfloating]]:
-    """
-    Given a noise kernel, retain only the first n noise operators.
-
-    Parameters
-    ----------
-    kernel : NoiseKernel[B_0, B_1, B_0, B_1]
-    n : int
-
-    Returns
-    -------
-    NoiseKernel[B_0, B_1, B_0, B_1]
-    """
+    """Given a noise kernel, retain only the first n noise operators."""
     operators = get_periodic_noise_operators_eigenvalue(kernel)
 
     truncated = truncate_noise_operator_list(operators, truncation)
@@ -293,18 +220,7 @@ def truncate_diagonal_noise_kernel[
     kernel: DiagonalNoiseKernelWithMetadata[M, np.dtype[np.complexfloating]],
     truncation: Iterable[int],
 ) -> DiagonalNoiseKernelWithMetadata[M, np.dtype[np.complexfloating]]:
-    """
-    Given a noise kernel, retain only the first n noise operators.
-
-    Parameters
-    ----------
-    kernel : NoiseKernel[B_0, B_1, B_0, B_1]
-    n : int
-
-    Returns
-    -------
-    NoiseKernel[B_0, B_1, B_0, B_1]
-    """
+    """Given a noise kernel, retain only the first n noise operators."""
     operators = get_periodic_noise_operators_diagonal_eigenvalue(kernel)
 
     truncated = truncate_noise_operator_list(operators, truncation)

@@ -58,18 +58,6 @@ def get_lorentzian_isotropic_noise_kernel[M: SpacedLengthMetadata, E: AxisDirect
     """Get an isotropic noise kernel for a lorentzian correlation.
 
     beta(x,x') = a**2 * lambda_**2 / ((x-x')**2 + lambda_**2)
-
-    Parameters
-    ----------
-    basis : TupleBasisWithLengthLike[*B_0s]
-    a : float
-    lambda_ : float
-
-    Returns
-    -------
-    IsotropicNoiseKernel[
-    TupleBasisLike[*tuple[FundamentalPositionBasis, ...]],
-    ]
     """
     return isotropic_kernel_from_function_stacked(
         metadata, lorentzian_correlation_fn(a, lambda_)
@@ -97,15 +85,6 @@ def get_lorentzian_operators_explicit_taylor[M: VolumeMetadata](
 
     This function makes use of the analytical expression for the Taylor expansion of lorentzian
     noise lambda_/(x^2 + lambda_^2) about origin to find the 2n+1 lowest fourier coefficients.
-
-    Parameters
-    ----------
-    lambda_: float, the width of the lorentzian noise kernel
-    basis: TupleBasisWithLengthLike[FundamentalPositionBasis]
-    n: int, by default 1
-
-    Return in the order of [const term, first n sine terms, first n cos terms]
-    and also their corresponding coefficients.
     """
     # currently only support 1D
     assert len(shallow_shape_from_nested(basis.fundamental_shape)) == 1

@@ -115,14 +115,6 @@ def normalization(
     Calculate the normalization of a state.
 
     This should always be 1
-
-    Parameters
-    ----------
-    state: StateVector[Any] | StateDualVector[Any]
-
-    Returns
-    -------
-    float
     """
     product = inner_product(state, state)
     return np.abs(product)
