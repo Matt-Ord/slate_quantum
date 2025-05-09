@@ -25,7 +25,6 @@ if __name__ == "__main__":
     ax.set_title("Free Particle Eigenstates in Position Space")
     fig.show()
 
-    # TODO: in k space these should be delta functions??
     fig, ax = get_figure()
     for state in list(eigenstates)[:3]:
         plot.array_against_axes_1d_k(state, ax=ax, measure="abs")

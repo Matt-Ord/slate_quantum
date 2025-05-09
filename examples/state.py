@@ -30,7 +30,6 @@ if __name__ == "__main__":
     line.set_label("Coherent State")
 
     # Here we use the from_function method to build the same coherent state.
-    # TODO: add test for this...
     function_state = state.build.from_function(
         metadata,
         lambda x: np.exp(-(((x[0] - x_0) / sigma_0) ** 2 / 2)),

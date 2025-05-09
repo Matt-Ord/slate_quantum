@@ -11,9 +11,9 @@ from slate_quantum.noise import (
     build,
     gaussian_correlation_fn,
     get_periodic_noise_operators_isotropic_stacked_fft,
+    isotropic_kernel_from_operators,
     truncate_noise_operator_list,
 )
-from slate_quantum.noise._kernel import isotropic_kernel_from_operators
 
 if __name__ == "__main__":
     # Starting with a simple 1D system, we can define the noise
@@ -28,7 +28,9 @@ if __name__ == "__main__":
 
     # We can plot the kernel to see how the correlation decays with distance.
     # The correlation falls by $e^-1$ at a distance of \pi / 2$.
-    full_data = array.as_outer_basis(array.as_outer_basis(kernel))
+    full_data = array.as_outer_basis(
+        array.as_inner_basis(array.as_outer_basis(array.as_inner_basis(kernel)))
+    )
     fig, ax, _ = plot.array_against_axes_1d(full_data)
     ax.set_title(r"Isotropic Gaussian Kernel with $\sigma = \pi / 2$")
     fig.show()
@@ -46,7 +48,9 @@ if __name__ == "__main__":
     fig, ax = get_figure()
     for i in range(3):
         plot.array_against_axes_1d(
-            array.as_outer_basis(operators[i, :]), ax=ax, measure="real"
+            array.as_outer_basis(operators[i, :]),  # type: ignore refactor
+            ax=ax,
+            measure="real",
         )
     fig.show()
     ax.set_title("The real part of the first three noise operators")
@@ -54,8 +58,10 @@ if __name__ == "__main__":
     # If we take only the first few operators, we can see that they
     # approximate the kernel.
     truncated = truncate_noise_operator_list(operators, range(3))
-    restored = isotropic_kernel_from_operators(truncated)
-    restored_data = array.as_outer_basis(array.as_outer_basis(restored))
+    restored = isotropic_kernel_from_operators(truncated)  # type: ignore refactor
+    restored_data = array.as_outer_basis(
+        array.as_inner_basis(array.as_outer_basis(array.as_inner_basis(restored)))
+    )
 
     # The restored kernel is an approximation of the original kernel
     # which is good in the region which is smooth.
