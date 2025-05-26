@@ -55,7 +55,7 @@ def _get_displacements_x_along_axis(
     max_distance = delta_x / 2
     data = wrap_displacements(distances, max_distance)
 
-    return Array.build(basis.from_metadata(metadata), data).ok()
+    return Array(basis.from_metadata(metadata), data)
 
 
 def get_displacements_x_stacked(
@@ -96,7 +96,7 @@ def coherent[M: SpacedLengthMetadata, E: AxisDirections](
     data = np.exp(1j * phi - np.square(distance) / 2)
     norm = np.sqrt(np.sum(np.square(np.abs(data))))
 
-    return State.build(basis.from_metadata(metadata).upcast(), data / norm).ok()
+    return State(basis.from_metadata(metadata).upcast(), data / norm)
 
 
 def position[M: SpacedLengthMetadata, E: AxisDirections](
@@ -108,7 +108,7 @@ def position[M: SpacedLengthMetadata, E: AxisDirections](
     data = np.zeros(metadata.shape, dtype=np.complex128)
     idx = tuple(i % n for (i, n) in zip(idx, metadata.shape, strict=True))
     data[idx] = 1.0
-    return State.build(position_basis, data).ok()
+    return State(position_basis, data)
 
 
 def momentum[M: SpacedLengthMetadata, E: AxisDirections](
@@ -120,7 +120,7 @@ def momentum[M: SpacedLengthMetadata, E: AxisDirections](
     data = np.zeros(metadata.shape, dtype=np.complex128)
     idx = tuple(i % n for (i, n) in zip(idx, metadata.shape, strict=True))
     data[idx] = 1.0
-    return State.build(momentum_basis, data).ok()
+    return State(momentum_basis, data)
 
 
 def from_function[M: SpacedLengthMetadata, E: AxisDirections](
@@ -139,5 +139,5 @@ def from_function[M: SpacedLengthMetadata, E: AxisDirections](
         metadata, offset=offset, wrapped=wrapped
     )
 
-    result = State.build(basis.from_metadata(metadata).upcast(), fn(positions)).ok()
+    result = State(basis.from_metadata(metadata).upcast(), fn(positions))
     return normalize_state(result) if normalize else result

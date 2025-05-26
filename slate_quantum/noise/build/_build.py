@@ -168,9 +168,7 @@ def hamiltonian_shift[M1: BasisMetadata](
     shift_product = linalg.einsum(
         "(i (j k)),(i (k' l))->(k' l)", operator.dagger_each(operators), operators
     )
-    shift_product = Operator.build(
-        shift_product.basis, shift_product.raw_data
-    ).assert_ok()
+    shift_product = Operator(shift_product.basis, shift_product.raw_data)
     commutator = operator.commute(hamiltonian, shift_product)
     pre_factor = 1j * eta / (4 * hbar)
     return (commutator * pre_factor).as_type(np.complex128)
@@ -187,12 +185,10 @@ def truncate_noise_operator_list[M0: EigenvalueMetadata, M1: BasisMetadata](
     np.dtype[np.complexfloating],
 ]:
     """Get a truncated list of diagonal operators."""
-    converted = operators.with_basis(
-        basis.as_tuple(operators.basis).upcast()
-    ).assert_ok()
+    converted = operators.with_basis(basis.as_tuple(operators.basis).upcast())
     converted_list = converted.with_list_basis(
         basis.as_index(converted.basis.inner.children[0])
-    ).assert_ok()
+    )
     eigenvalues = (
         converted_list.basis.metadata()
         .children[0]
@@ -200,7 +196,7 @@ def truncate_noise_operator_list[M0: EigenvalueMetadata, M1: BasisMetadata](
     )
     args = np.argsort(np.abs(eigenvalues))[::-1][np.array(list(truncation))]
     list_basis = CoordinateBasis(args, basis.as_tuple(operators.basis).children[0])
-    return operators.with_list_basis(list_basis).assert_ok()
+    return operators.with_list_basis(list_basis)
 
 
 def truncate_noise_kernel[M: SuperOperatorMetadata](

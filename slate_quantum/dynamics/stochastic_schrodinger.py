@@ -147,7 +147,7 @@ def solve_stochastic_schrodinger_equation_banded[
     hamiltonian_tuple = array.as_tuple_basis(hamiltonian)
     initial_state_converted = initial_state.with_basis(
         hamiltonian_tuple.basis.children[0]
-    ).assert_ok()
+    )
     coherent_step = operator.apply(hamiltonian, initial_state_converted)
 
     # The actual coherent step is H / hbar not H, so to get the correct
@@ -156,9 +156,9 @@ def solve_stochastic_schrodinger_equation_banded[
     times = basis.as_index(times)
 
     operators_data = [
-        o.with_basis(hamiltonian_tuple.basis.upcast())
-        .assert_ok()
-        .raw_data.reshape(hamiltonian_tuple.basis.shape)
+        o.with_basis(hamiltonian_tuple.basis.upcast()).raw_data.reshape(
+            hamiltonian_tuple.basis.shape
+        )
         * (np.sqrt(e))
         for o, e in zip(noise, noise.basis.metadata().children[0].values, strict=True)
     ]
@@ -204,7 +204,7 @@ def solve_stochastic_schrodinger_equation_banded[
 
     te = datetime.datetime.now(tz=datetime.UTC)
     print(f"solve rust banded took: {(te - ts).total_seconds()} sec")  # noqa: T201
-    return StateList.build(
+    return StateList(
         TupleBasis(
             (
                 TupleBasis((FundamentalBasis.from_size(n_realizations), times)),
@@ -212,7 +212,7 @@ def solve_stochastic_schrodinger_equation_banded[
             )
         ).upcast(),
         np.array(data),
-    ).assert_ok()
+    )
 
 
 def select_realization[MT: BasisMetadata, M: BasisMetadata](

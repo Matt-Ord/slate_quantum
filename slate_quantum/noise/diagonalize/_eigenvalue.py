@@ -31,7 +31,7 @@ def get_periodic_noise_operators_eigenvalue[M: BasisMetadata](
 
     Note these are the operators `L`
     """
-    converted = kernel.with_basis(basis_.as_tuple(kernel.basis).upcast()).assert_ok()
+    converted = kernel.with_basis(basis_.as_tuple(kernel.basis).upcast())
     converted_second = converted.with_basis(
         TupleBasis(
             (
@@ -39,7 +39,7 @@ def get_periodic_noise_operators_eigenvalue[M: BasisMetadata](
                 basis_.as_tuple(converted.basis.inner.children[0]).dual_basis(),
             )
         ).upcast()
-    ).assert_ok()
+    )
     data = (
         converted_second.raw_data.reshape(
             *converted_second.basis.inner.children[0].shape,
@@ -71,7 +71,7 @@ def get_periodic_noise_operators_eigenvalue[M: BasisMetadata](
     basis = TupleBasis(
         (eigenvalue, converted_second.basis.inner.children[0].upcast())
     ).upcast()
-    return OperatorList.build(basis, data).assert_ok()
+    return OperatorList(basis, data)
 
 
 def get_periodic_noise_operators_diagonal_eigenvalue[M: BasisMetadata](
@@ -122,4 +122,4 @@ def get_periodic_noise_operators_diagonal_eigenvalue[M: BasisMetadata](
     eigenvalue = FundamentalBasis(EigenvalueMetadata(res.eigenvalues))
 
     basis = TupleBasis((eigenvalue, converted.basis.inner.outer_recast)).upcast()
-    return OperatorList.build(basis, data).assert_ok()
+    return OperatorList(basis, data)

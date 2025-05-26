@@ -20,7 +20,6 @@ from slate_quantum.operator._diagonal import (
 from slate_quantum.operator._operator import (
     Operator,
     OperatorBasis,
-    OperatorBuilder,
     OperatorList,
     OperatorListBasis,
     OperatorMetadata,
@@ -32,9 +31,9 @@ if TYPE_CHECKING:
 
 def momentum[M: BasisMetadata, E, CT: Ctype[Never], DT: np.dtype[np.generic]](
     outer_basis: basis.TupleBasisLike[tuple[M, ...], E, CT], data: np.ndarray[Any, DT]
-) -> OperatorBuilder[MomentumOperatorBasis[M, E], DT]:
+) -> Operator[MomentumOperatorBasis[M, E], DT]:
     """Get the potential operator."""
-    return Operator.build(momentum_operator_basis(outer_basis), data)
+    return Operator(momentum_operator_basis(outer_basis), data)
 
 
 def k[M: SpacedLengthMetadata, E: AxisDirections](
@@ -44,9 +43,7 @@ def k[M: SpacedLengthMetadata, E: AxisDirections](
     points = _metadata.volume.fundamental_stacked_k_points(metadata)[axis].astype(
         np.complex128
     )
-    return momentum(
-        basis.transformed_from_metadata(metadata).upcast(), points
-    ).assert_ok()
+    return momentum(basis.transformed_from_metadata(metadata).upcast(), points)
 
 
 def p[M: SpacedLengthMetadata, E: AxisDirections](
@@ -59,7 +56,7 @@ def p[M: SpacedLengthMetadata, E: AxisDirections](
     return momentum(
         basis.transformed_from_metadata(metadata).upcast(),
         (hbar * points).astype(np.complex128),
-    ).assert_ok()
+    )
 
 
 def momentum_from_function[M: SpacedLengthMetadata, E: AxisDirections, DT: np.generic](
@@ -77,7 +74,7 @@ def momentum_from_function[M: SpacedLengthMetadata, E: AxisDirections, DT: np.ge
         metadata, offset=offset, wrapped=wrapped
     )
     out_basis = basis.transformed_from_metadata(metadata).upcast()
-    return momentum(out_basis, fn(positions)).assert_ok()
+    return momentum(out_basis, fn(positions))
 
 
 def filter_scatter(
@@ -89,7 +86,7 @@ def filter_scatter(
         basis.transformed_from_metadata(
             operator.basis.metadata(), is_dual=operator.basis.is_dual
         ).upcast()
-    ).ok()
+    )
     data = converted.raw_data.reshape(converted.basis.inner.shape)
     nk_points = _metadata.fundamental_stacked_nk_points(
         operator.basis.metadata().children[0]
@@ -101,7 +98,7 @@ def filter_scatter(
         ],
         axis=0,
     )
-    return Operator.build(converted.basis, np.where(mask, data, 0)).ok()
+    return Operator(converted.basis, np.where(mask, data, 0))
 
 
 def all_filter_scatter[M: BasisMetadata](
@@ -118,7 +115,7 @@ def all_filter_scatter[M: BasisMetadata](
         basis.transformed_from_metadata(
             operator.basis.metadata().children[1], is_dual=is_dual
         ).upcast()
-    ).assert_ok()
+    )
     data = converted.raw_data.reshape(
         -1, *converted.basis.inner.children[1].inner.shape
     )
@@ -133,4 +130,4 @@ def all_filter_scatter[M: BasisMetadata](
         axis=0,
     )
     data[:, np.logical_not(mask)] = 0
-    return OperatorList.build(converted.basis, data).assert_ok()
+    return OperatorList(converted.basis, data)

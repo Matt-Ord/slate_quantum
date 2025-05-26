@@ -71,8 +71,8 @@ def periodic_caldeira_leggett_axis_operators[M: SpacedLengthMetadata](
     list_basis = CoordinateBasis(
         [-1, 1], basis.from_metadata(operators.basis.metadata().children[0])
     )
-    converted = operators.with_list_basis(list_basis).assert_ok()
-    return OperatorList.build(
+    converted = operators.with_list_basis(list_basis)
+    return OperatorList(
         TupleBasis(
             (
                 eigenvalue_basis(np.array([eigenvalue, eigenvalue])),
@@ -80,7 +80,7 @@ def periodic_caldeira_leggett_axis_operators[M: SpacedLengthMetadata](
             )
         ).upcast(),
         converted.raw_data,
-    ).assert_ok()
+    )
 
 
 def periodic_caldeira_leggett_operators[
@@ -98,8 +98,8 @@ def periodic_caldeira_leggett_operators[
     list_basis = CoordinateBasis(
         [-1, 1], basis.from_metadata(operators.basis.metadata().children[0])
     )
-    converted = operators.with_list_basis(list_basis).assert_ok()
-    return OperatorList.build(
+    converted = operators.with_list_basis(list_basis)
+    return OperatorList(
         TupleBasis(
             (
                 eigenvalue_basis(np.array([eigenvalue, eigenvalue])),
@@ -107,7 +107,7 @@ def periodic_caldeira_leggett_operators[
             )
         ).upcast(),
         converted.raw_data,
-    ).assert_ok()
+    )
 
 
 def real_periodic_caldeira_leggett_operators[
@@ -136,7 +136,7 @@ def real_periodic_caldeira_leggett_operators[
         ]
     )
 
-    return OperatorList.build(
+    return OperatorList(
         TupleBasis(
             (
                 eigenvalue_basis(np.array([eigenvalue, eigenvalue])),
@@ -144,7 +144,7 @@ def real_periodic_caldeira_leggett_operators[
             )
         ).upcast(),
         operators.raw_data,
-    ).assert_ok()
+    )
 
 
 def caldeira_leggett_correlation_fn(
@@ -176,9 +176,9 @@ def caldeira_leggett_operators[M: SpacedLengthMetadata, E: AxisDirections](
     assert len(metadata.fundamental_shape) == 1
     operators = OperatorList.from_operators([build.x(metadata, axis=0)])
 
-    return OperatorList.build(
+    return OperatorList(
         TupleBasis(
             (eigenvalue_basis(np.array([1])), operators.basis.inner.children[1])
         ).upcast(),
         operators.raw_data,
-    ).assert_ok()
+    )

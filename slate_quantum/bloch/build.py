@@ -127,20 +127,20 @@ def bloch_operator_from_list[
     """Build the block diagonal Bloch Hamiltonian from a list of operators."""
     operators = operators.with_list_basis(
         basis.from_metadata(operators.basis.metadata().children[0])
-    ).assert_ok()
+    )
     operators = operators.with_operator_basis(
         basis.transformed_from_metadata(
             operators.basis.metadata().children[1],
             is_dual=operators.basis.inner.is_dual[1],
         ).upcast()
-    ).assert_ok()
+    )
 
     operator_basis = _metadata_from_operator_list(operators.basis.metadata())
     out_basis = BlockDiagonalBasis(
         TupleBasis((operator_basis, operator_basis.dual_basis())),
         operators.basis.metadata().children[1].shape,
     ).upcast()
-    return Operator.build(out_basis, operators.raw_data).assert_ok()
+    return Operator(out_basis, operators.raw_data)
 
 
 def get_sample_fractions(
@@ -167,9 +167,9 @@ def kinetic_hamiltonian[M: SpacedLengthMetadata, E: AxisDirections](
             for fraction in zip(*bloch_fractions, strict=True)
         ]
     )
-    operators = OperatorList.build(
+    operators = OperatorList(
         TupleBasis((list_basis, operators.basis.inner.children[1])).upcast(),
         operators.raw_data,
-    ).assert_ok()
+    )
 
     return bloch_operator_from_list(operators)

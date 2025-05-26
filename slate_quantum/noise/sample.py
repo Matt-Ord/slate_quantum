@@ -50,7 +50,7 @@ def sample_noise_from_operators[M: BasisMetadata](
         )
     )
     data = linalg.einsum("(i j),(j k)->(i k)", scaled_factors, operators)
-    return OperatorList.build(data.basis, data.raw_data).assert_ok()
+    return OperatorList(data.basis, data.raw_data)
 
 
 def sample_noise_from_diagonal_kernel[M: BasisMetadata](
@@ -61,9 +61,7 @@ def sample_noise_from_diagonal_kernel[M: BasisMetadata](
 ) -> OperatorListWithMetadata[SimpleMetadata, M, np.dtype[np.complexfloating]]:
     """Generate noise for a diagonal kernel."""
     operators = get_periodic_noise_operators_diagonal_eigenvalue(kernel)
-    operators = operators.with_list_basis(
-        basis.as_tuple(operators.basis).children[0]
-    ).assert_ok()
+    operators = operators.with_list_basis(basis.as_tuple(operators.basis).children[0])
 
     truncation = (
         range(operators.basis.inner.children[0].size)
@@ -71,8 +69,6 @@ def sample_noise_from_diagonal_kernel[M: BasisMetadata](
         else truncation
     )
     truncated = truncate_noise_operator_list(operators, truncation)
-    truncated = truncated.with_list_basis(
-        basis.as_tuple(truncated.basis).children[0]
-    ).assert_ok()
+    truncated = truncated.with_list_basis(basis.as_tuple(truncated.basis).children[0])
 
     return sample_noise_from_operators(truncated, n_samples=n_samples)

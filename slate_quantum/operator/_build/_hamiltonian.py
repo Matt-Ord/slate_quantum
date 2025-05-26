@@ -65,7 +65,7 @@ def kinetic_energy[M: SpacedLengthMetadata, E: AxisDirections](
     )
     momentum_basis = transformed_from_metadata(metadata).upcast()
 
-    return momentum(momentum_basis, energy).assert_ok()
+    return momentum(momentum_basis, energy)
 
 
 def kinetic_hamiltonian[M: SpacedLengthMetadata, E: AxisDirections](
@@ -88,7 +88,7 @@ def kinetic_hamiltonian[M: SpacedLengthMetadata, E: AxisDirections](
     basis = SplitBasis(potential.basis, kinetic_hamiltonian.basis)
     upcast = AsUpcast(basis, TupleMetadata((metadata, metadata)))
 
-    return Operator.build(
+    return Operator(
         upcast,
         np.concatenate([potential.raw_data, kinetic_hamiltonian.raw_data], axis=None),
-    ).assert_ok()
+    )

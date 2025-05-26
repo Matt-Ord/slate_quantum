@@ -40,17 +40,10 @@ type NoiseKernelWithMetadata[M: BasisMetadata, DT: np.dtype[np.generic]] = Noise
 def noise_kernel_from_operators[M_: BasisMetadata, DT_: np.dtype[np.generic]](
     operators: OperatorListWithMetadata[EigenvalueMetadata, M_, DT_],
 ) -> NoiseKernelWithMetadata[M_, DT_]:
-    converted = operators.with_basis(
-        basis_.as_tuple(operators.basis).upcast()
-    ).assert_ok()
-    converted_inner = (
-        converted.with_operator_basis(
-            basis_.as_tuple(converted.basis.inner.children[1]).upcast()
-        )
-        .assert_ok()
-        .with_list_basis(basis_.as_index(converted.basis.inner.children[0]))
-        .assert_ok()
-    )
+    converted = operators.with_basis(basis_.as_tuple(operators.basis).upcast())
+    converted_inner = converted.with_operator_basis(
+        basis_.as_tuple(converted.basis.inner.children[1]).upcast()
+    ).with_list_basis(basis_.as_index(converted.basis.inner.children[0]))
     operators_data = converted_inner.raw_data.reshape(
         converted.basis.inner.children[0].size,
         *converted_inner.basis.inner.children[1].shape,  # type:ignore refactor
@@ -64,7 +57,7 @@ def noise_kernel_from_operators[M_: BasisMetadata, DT_: np.dtype[np.generic]](
         np.conj(operators_data),
         operators_data.astype(np.complex128),
     )
-    return Operator.build(
+    return Operator(
         TupleBasis(
             (
                 converted_inner.basis.inner.children[1],
@@ -72,7 +65,7 @@ def noise_kernel_from_operators[M_: BasisMetadata, DT_: np.dtype[np.generic]](
             )
         ).upcast(),
         data,
-    ).assert_ok()
+    )
 
 
 type DiagonalKernelBasis[
@@ -132,7 +125,7 @@ def build_diagonal_kernel[
         (DiagonalBasis(TupleBasis((b0, b0))), DiagonalBasis(TupleBasis((b1, b1))))
     )
     recast = RecastBasis(inner, inner_recast, outer_recast)
-    return Operator.build(cast("Any", recast), cast("Any", data)).assert_ok()
+    return Operator(cast("Any", recast), cast("Any", data))
 
 
 def diagonal_kernel_with_outer_basis[
@@ -162,16 +155,11 @@ def diagonal_kernel_from_operators[M_: BasisMetadata, DT_: np.dtype[np.generic]]
     ],
 ) -> DiagonalNoiseKernelWithMetadata[M_, DT_]:
     """Build a diagonal kernel from operators."""
-    converted = operators.with_basis(
-        basis_.as_tuple(operators.basis).upcast()
-    ).assert_ok()
+    converted = operators.with_basis(basis_.as_tuple(operators.basis).upcast())
     converted_inner = (  # type:ignore refactor
         converted.with_operator_basis(
             DiagonalBasis(basis_.as_tuple(converted.basis.inner.children[1]))  # type:ignore refactor
-        )
-        .assert_ok()
-        .with_list_basis(basis_.as_index(converted.basis.inner.children[0]))
-        .assert_ok()
+        ).with_list_basis(basis_.as_index(converted.basis.inner.children[0]))
     )
 
     operators_data = converted_inner.raw_data.reshape(
@@ -346,16 +334,15 @@ def get_diagonal_noise_operators_from_axis[M: BasisMetadata, E](
 ) -> DiagonalNoiseOperatorList[EigenvalueMetadata, TupleMetadata[tuple[M, ...], E]]:
     """Convert axis operators into full operators."""
     op_as_tuple = tuple(
-        operators.with_basis(basis_.as_tuple(operators.basis).upcast()).assert_ok()
+        operators.with_basis(basis_.as_tuple(operators.basis).upcast())
         for operators in operators_list
     )
     op_as_tuple_nested = tuple(
-        operators.with_list_basis(basis_.as_index(operators.basis.inner.children[0]))
-        .assert_ok()
-        .with_operator_basis(
+        operators.with_list_basis(
+            basis_.as_index(operators.basis.inner.children[0])
+        ).with_operator_basis(
             DiagonalBasis(basis_.as_tuple(operators.basis.inner.children[1])).upcast()
         )
-        .assert_ok()
         for operators in op_as_tuple
     )
 
@@ -392,7 +379,7 @@ def get_diagonal_noise_operators_from_axis[M: BasisMetadata, E](
     eigenvalues = outer_product(*full_coefficients)
     eigenvalue_basis = FundamentalBasis(EigenvalueMetadata(eigenvalues))
 
-    return OperatorList.build(  # type:ignore refactor
+    return OperatorList(  # type:ignore refactor
         TupleBasis(
             (eigenvalue_basis, recast_diagonal_basis(full_basis_1, full_basis_1))
         ).upcast(),
