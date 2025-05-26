@@ -387,13 +387,10 @@ def get_diagonal_noise_operators_from_axis[M: BasisMetadata, E](
     )
 
 
-type NoiseOperatorList[
-    M: BasisMetadata,
-    B: Basis[Any, Any] = Any,
-] = OperatorList[
+type NoiseOperatorList[M0: SimpleMetadata, M1: BasisMetadata] = OperatorList[
     AsUpcast[
-        TupleBasis[tuple[Basis[EigenvalueMetadata], OperatorBasis[M]], None],
-        TupleMetadata[tuple[EigenvalueMetadata, OperatorMetadata[M]], None],
+        TupleBasis[tuple[Basis[M0], OperatorBasis[M1]], None],
+        TupleMetadata[tuple[M0, OperatorMetadata[M1]], None],
     ],
     np.dtype[np.complexfloating],
 ]
