@@ -99,6 +99,11 @@ class SSEConfig(TypedDict, total=False):
     target_delta: float
 
 
+type RealizationMetadata[MT: TimeMetadata] = TupleMetadata[
+    tuple[SimpleMetadata, MT], None
+]
+
+
 @timed
 def solve_stochastic_schrodinger_equation_banded[
     M: BasisMetadata,
@@ -114,10 +119,8 @@ def solve_stochastic_schrodinger_equation_banded[
     **kwargs: Unpack[SSEConfig],
 ) -> StateList[
     AsUpcast[
-        TupleBasis[
-            tuple[Basis[TupleMetadata[tuple[SimpleMetadata, MT], None]], Basis[M]], None
-        ],
-        TupleMetadata[tuple[TupleMetadata[tuple[SimpleMetadata, MT], None], M], None],
+        TupleBasis[tuple[Basis[RealizationMetadata[MT]], Basis[M]], None],
+        TupleMetadata[tuple[RealizationMetadata[MT], M], None],
     ],
     np.dtype[np.complexfloating],
 ]:
