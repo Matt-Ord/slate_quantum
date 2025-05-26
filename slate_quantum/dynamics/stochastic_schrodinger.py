@@ -6,8 +6,15 @@ from typing import TYPE_CHECKING, Any, TypedDict, Unpack, cast
 import numpy as np
 import slate_core.linalg
 from scipy.constants import hbar  # type: ignore lib
-from slate_core import Ctype, FundamentalBasis, TupleMetadata, array, basis
-from slate_core.basis import TupleBasis, TupleBasis2D, TupleBasisLike2D
+from slate_core import (
+    Ctype,
+    FundamentalBasis,
+    SimpleMetadata,
+    TupleMetadata,
+    array,
+    basis,
+)
+from slate_core.basis import AsUpcast, TupleBasis, TupleBasisLike2D
 from slate_core.metadata import BasisMetadata
 from slate_core.util import timed
 
@@ -106,8 +113,11 @@ def solve_stochastic_schrodinger_equation_banded[
     ],
     **kwargs: Unpack[SSEConfig],
 ) -> StateList[
-    TupleBasis2D[
-        tuple[TupleBasis[tuple[FundamentalBasis, Basis[MT]], None], Basis[M]], None
+    AsUpcast[
+        TupleBasis[
+            tuple[Basis[TupleMetadata[tuple[SimpleMetadata, MT], None]], Basis[M]], None
+        ],
+        TupleMetadata[tuple[TupleMetadata[tuple[SimpleMetadata, MT], None], M], None],
     ],
     np.dtype[np.complexfloating],
 ]:
@@ -207,7 +217,9 @@ def solve_stochastic_schrodinger_equation_banded[
     return StateList(
         TupleBasis(
             (
-                TupleBasis((FundamentalBasis.from_size(n_realizations), times)),
+                TupleBasis(
+                    (FundamentalBasis.from_size(n_realizations), times)
+                ).upcast(),
                 hamiltonian_tuple.basis.children[0],
             )
         ).upcast(),
