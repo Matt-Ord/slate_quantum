@@ -358,12 +358,12 @@ class OperatorList[
         return out
 
     @staticmethod
-    def from_operators[M: OperatorMetadata, DT_: np.dtype[np.generic]](
-        iter_: Iterable[Operator[Basis[M], DT_]],
+    def from_operators[B_: OperatorBasis, DT_: np.dtype[np.generic]](
+        iter_: Iterable[Operator[B_, DT_]],
     ) -> OperatorList[
         AsUpcast[
-            TupleBasis[tuple[FundamentalBasis[SimpleMetadata], Basis[M]], None],
-            OperatorListMetadata[SimpleMetadata, M],
+            TupleBasis[tuple[FundamentalBasis[SimpleMetadata], B_], None],
+            OperatorListMetadata[SimpleMetadata, OperatorMetadata],
         ],
         DT_,
     ]:
