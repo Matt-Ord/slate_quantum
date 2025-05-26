@@ -50,7 +50,7 @@ type DiagonalOperatorBasisWithMetadata[
     CT: Ctype[Never] = Ctype[Never],
 ] = DiagonalOperatorBasis[Basis[M], Basis[M], CT, OperatorMetadata[M]]
 
-type DiagonalOperatorListBasis[M0: SimpleMetadata, M: BasisMetadata] = _basis.AsUpcast[
+type DiagonalOperatorListBasis[M0: SimpleMetadata, M: BasisMetadata] = AsUpcast[
     TupleBasis[
         tuple[
             FundamentalBasis[M0],
@@ -113,15 +113,52 @@ type PositionOperatorBasis[
     E = Any,
     CT: Ctype[Never] = Ctype[Never],
 ] = DiagonalOperatorBasis[
-    TupleBasis[tuple[Basis[M, Ctype[np.generic]], ...], E],
+    AsUpcast[
+        TupleBasis[tuple[Basis[M, Ctype[np.generic]], ...], E],
+        TupleMetadata[tuple[M, ...], E],
+    ],
     TupleBasisLike[tuple[M, ...], E],
     CT,
     OperatorMetadata[TupleMetadata[tuple[M, ...], E]],
 ]
 
+
+def _assert_position_ty[M: BasisMetadata, E](  # type: ignore this is just a type test
+    basis: PositionOperatorBasis[M, E],
+) -> DiagonalOperatorBasisWithMetadata[TupleMetadata[tuple[M, ...], E]]:
+    return basis
+
+
+type PositionOperatorListBasis[M0: SimpleMetadata, M: BasisMetadata, E = Any] = (
+    AsUpcast[
+        TupleBasis[
+            tuple[
+                FundamentalBasis[M0],
+                PositionOperatorBasis[M, E],
+            ],
+            None,
+        ],
+        OperatorListMetadata[M0, OperatorMetadata[TupleMetadata[tuple[M, ...], E]]],
+    ]
+)
+
+
+def position_list_basis_as_diagonal[M0: SimpleMetadata, M: BasisMetadata, E](
+    basis: PositionOperatorListBasis[M0, M, E],
+) -> DiagonalOperatorListBasis[M0, TupleMetadata[tuple[M, ...], E]]:
+    return basis  # type: ignore[return-value] this should be allowed ...
+
+
 type PositionOperator[B: PositionOperatorBasis, DT: np.dtype[np.generic]] = (
     DiagonalOperator[B, DT]
 )
+type PositionOperatorList[
+    M0: SimpleMetadata,
+    M: BasisMetadata,
+    E = Any,
+    DT: np.dtype[np.generic] = np.dtype[np.generic],
+] = OperatorList[PositionOperatorListBasis[M0, M, E], DT]
+
 type Potential[
     M: BasisMetadata,
     E: AxisDirections,
@@ -133,7 +170,9 @@ type Potential[
 def position_operator_basis[M: BasisMetadata, E, CT: Ctype[Never]](
     basis: TupleBasisLike[tuple[M, ...], E, CT],
 ) -> PositionOperatorBasis[M, E]:
-    inner_recast = _basis.from_metadata(basis.metadata(), is_dual=basis.is_dual)
+    inner_recast = _basis.from_metadata(
+        basis.metadata(), is_dual=basis.is_dual
+    ).upcast()
     recast = recast_diagonal_basis(inner_recast, basis).inner
     return AsUpcast(recast, TupleMetadata((basis.metadata(), basis.metadata())))
 

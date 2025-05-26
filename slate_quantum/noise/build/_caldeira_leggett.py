@@ -18,35 +18,16 @@ from slate_quantum.operator import (
     OperatorList,
     build,
 )
-from slate_quantum.operator._diagonal import PositionOperatorBasis
 
 if TYPE_CHECKING:
     from collections.abc import Callable
 
+    from slate_quantum.operator._diagonal import PositionOperatorList
     from slate_quantum.operator._operator import (
         OperatorBasis,
         OperatorMetadata,
     )
 
-type CLNoiseOperatorList[M: SpacedLengthMetadata, E] = OperatorList[
-    AsUpcast[
-        TupleBasis[
-            tuple[
-                FundamentalBasis[EigenvalueMetadata],
-                PositionOperatorBasis[M, E],
-            ],
-            None,
-        ],
-        TupleMetadata[
-            tuple[
-                EigenvalueMetadata,
-                OperatorMetadata[TupleMetadata[tuple[M, ...], E]],
-            ],
-            None,
-        ],
-    ],
-    np.dtype[np.complexfloating],
-]
 
 type CLNoiseOperatorListLike[M: SpacedLengthMetadata, E] = OperatorList[
     AsUpcast[
@@ -136,7 +117,7 @@ def real_periodic_caldeira_leggett_operators[
     E: AxisDirections,
 ](
     metadata: TupleMetadata[tuple[M, ...], E],
-) -> CLNoiseOperatorList[M, E]:
+) -> PositionOperatorList[EigenvalueMetadata, M, E, np.dtype[np.complexfloating]]:
     assert len(metadata.fundamental_shape) == 1
     k = fundamental_stacked_dk(metadata)[0][0]
     n = size_from_nested_shape(metadata.fundamental_shape)
@@ -193,7 +174,7 @@ def caldeira_leggett_correlation_fn(
 
 def caldeira_leggett_operators[M: SpacedLengthMetadata, E: AxisDirections](
     metadata: TupleMetadata[tuple[M, ...], E],
-) -> CLNoiseOperatorList[M, E]:
+) -> PositionOperatorList[EigenvalueMetadata, M, E, np.dtype[np.complexfloating]]:
     assert len(metadata.fundamental_shape) == 1
     operators = OperatorList.from_operators([build.x(metadata, axis=0)])
 
