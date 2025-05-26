@@ -149,6 +149,19 @@ def position_list_basis_as_diagonal[M0: SimpleMetadata, M: BasisMetadata, E](
     return basis  # type: ignore[return-value] this should be allowed ...
 
 
+def position_list_as_diagonal[
+    M0: SimpleMetadata,
+    M: BasisMetadata,
+    E,
+    DT: np.dtype[np.generic],
+](
+    operator: PositionOperatorList[M0, M, E, DT],
+) -> DiagonalOperatorList[M0, TupleMetadata[tuple[M, ...], E], DT]:
+    return OperatorList(
+        position_list_basis_as_diagonal(operator.basis), operator.raw_data
+    )
+
+
 type PositionOperator[B: PositionOperatorBasis, DT: np.dtype[np.generic]] = (
     DiagonalOperator[B, DT]
 )
