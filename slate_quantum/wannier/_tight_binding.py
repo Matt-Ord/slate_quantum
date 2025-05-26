@@ -1,74 +1,40 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Literal, TypeVar, TypeVarTuple, cast, overload
+from typing import TYPE_CHECKING, Any, cast, overload
 
 import numpy as np
-from surface_potential_analysis.basis.util import BasisUtil
-from surface_potential_analysis.stacked_basis.conversion import (
-    tuple_basis_as_fundamental,
-)
-from surface_potential_analysis.stacked_basis.util import (
-    get_x01_mirrored_index,
-    wrap_index_around_origin,
-)
-from surface_potential_analysis.state_vector.conversion import (
-    convert_state_vector_to_position_basis,
-)
-from surface_potential_analysis.util.decorators import timed
-from surface_potential_analysis.wavepacket.conversion import (
-    convert_wavepacket_to_position_basis,
-)
-from surface_potential_analysis.wavepacket.get_eigenstate import (
-    get_wavepacket_state_vector,
-)
-from surface_potential_analysis.wavepacket.wavepacket import (
-    BlochWavefunctionList,
-    get_wavepacket_sample_fractions,
-)
+from slate_core.util import timed
+
+from slate_quantum.bloch._transposed_basis import BlochStateMetadata
+from slate_quantum.wannier._localization_operator import state_list_from_bloch_state
 
 if TYPE_CHECKING:
-    from surface_potential_analysis.basis.legacy import (
-        BasisWithLengthLike,
-        FundamentalBasis,
-        TupleBasisLike,
-        TupleBasisWithLengthLike,
-    )
-    from surface_potential_analysis.types import (
-        ArrayIndexLike,
-        SingleFlatIndexLike,
-        SingleIndexLike,
-        SingleStackedIndexLike,
-    )
-
-    _FB0 = TypeVar("_FB0", bound=FundamentalBasis[Any])
-    _FB1 = TypeVar("_FB1", bound=FundamentalBasis[Any])
-
-    _SB0 = TypeVar("_SB0", bound=TupleBasisLike[*tuple[Any, ...]])
-    _SB1 = TypeVar("_SB1", bound=TupleBasisWithLengthLike[*tuple[Any, ...]])
-
-    _BL0 = TypeVar("_BL0", bound=BasisWithLengthLike[Any, Any, Literal[3]])
-    _BL1 = TypeVar("_BL1", bound=BasisWithLengthLike[Any, Any, Literal[3]])
-    _BL2 = TypeVar("_BL2", bound=BasisWithLengthLike[Any, Any, Literal[3]])
-
-    _TS = TypeVarTuple("_TS")
+    from slate_quantum.state._state import StateWithMetadata
 
 
 @overload
-def _get_global_phases(
+def _get_global_phases[
+    SB0: TupleBasisLike[*tuple[Any, ...]],
+    SB1: TupleBasisWithLengthLike[*tuple[Any, ...]],
+](
     wavepacket: BlochWavefunctionList[_SB0, _SB1],
     idx: SingleIndexLike,
 ) -> np.ndarray[tuple[int], np.dtype[np.float64]]: ...
 
 
 @overload
-def _get_global_phases(
+def _get_global_phases[
+    SB0: TupleBasisLike[*tuple[Any, ...]],
+    SB1: TupleBasisWithLengthLike[*tuple[Any, ...]],
+    *TS,
+](
     wavepacket: BlochWavefunctionList[_SB0, _SB1],
     idx: ArrayIndexLike[*_TS],
 ) -> np.ndarray[tuple[int, *_TS], np.dtype[np.float64]]: ...
 
 
-def _get_global_phases(
-    wavepacket: BlochWavefunctionList[_SB0, _SB1],
+def _get_global_phases[M: BlochStateMetadata](
+    wavepacket: StateWithMetadata[M],
     idx: SingleIndexLike | ArrayIndexLike[*_TS],
 ) -> (
     np.ndarray[tuple[int, *_TS], np.dtype[np.float64]]
@@ -101,9 +67,9 @@ def _get_global_phases(
     return 2 * np.pi * np.tensordot(nk_fractions, nx_fractions, axes=(0, 0))  # type: ignore[no-any-return]
 
 
-def _get_bloch_wavefunction_phases(
-    wavepacket: BlochWavefunctionList[_SB0, _SB1],
-    idx: SingleIndexLike = 0,
+def _get_bloch_wavefunction_phases[M: BlochStateMetadata](
+    wavepacket: StateWithMetadata[M],
+    idx: int | tuple[int, ...] = 0,
 ) -> np.ndarray[tuple[int], np.dtype[np.float64]]:
     """
     Get the phase of the bloch wavefunctions at the given point in position space.
@@ -128,11 +94,11 @@ def _get_bloch_wavefunction_phases(
 
 
 @timed
-def localize_tightly_bound_wavepacket_idx(
-    wavepacket: BlochWavefunctionList[_SB0, _SB1],
-    idx: SingleIndexLike = 0,
+def localize_tightly_bound_wavepacket_idx[M: BlochStateMetadata](
+    wavepacket: StateWithMetadata[M],
+    idx: int | tuple[int, ...] = 0,
     angle: float = 0,
-) -> BlochWavefunctionList[_SB0, _SB1]:
+) -> StateWithMetadata[M]:
     """
     Localize a wavepacket in momentum basis.
 
@@ -161,13 +127,10 @@ def localize_tightly_bound_wavepacket_idx(
     return {"basis": wavepacket["basis"], "data": localized_data.reshape(-1)}
 
 
-def get_wavepacket_two_points(
-    wavepacket: BlochWavefunctionList[
-        TupleBasisLike[_FB0, _FB1, FundamentalBasis[Literal[1]]],
-        TupleBasisWithLengthLike[_BL0, _BL1, _BL2],
-    ],
+def get_wavepacket_two_points[M: BlochStateMetadata](
+    wavepacket: StateWithMetadata[M],
     offset: tuple[int, int] = (0, 0),
-) -> tuple[SingleStackedIndexLike, SingleStackedIndexLike]:
+) -> tuple[tuple[int, ...], tuple[int, ...]]:
     """
     Get the index of the maximum, and the index mirrored in x01 for the wavepacket, wrapped about the given offset.
 
@@ -205,17 +168,11 @@ def _wrap_phases(
 
 
 @timed
-def localize_tightly_bound_wavepacket_two_point_max(
-    wavepacket: BlochWavefunctionList[
-        TupleBasisLike[_FB0, _FB1, FundamentalBasis[Literal[1]]],
-        TupleBasisWithLengthLike[_BL0, _BL1, _BL2],
-    ],
+def localize_tightly_bound_wavepacket_two_point_max[M: BlochStateMetadata](
+    wavepacket: StateWithMetadata[M],
     offset: tuple[int, int] = (0, 0),
     angle: float = 0,
-) -> BlochWavefunctionList[
-    TupleBasisLike[_FB0, _FB1, FundamentalBasis[Literal[1]]],
-    TupleBasisLike[_BL0, _BL1, _BL2],
-]:
+) -> StateWithMetadata[M]:
     """
     Normalize a wavepacket using a 'two-point' calculation.
 
@@ -240,6 +197,8 @@ def localize_tightly_bound_wavepacket_two_point_max(
     Wavepacket[_NS0Inv, _NS1Inv, _B3d0Inv]
         Normalized wavepacket
     """
+    assert len(wavepacket.basis.metadata().children) == 3  # noqa: PLR2004
+    assert wavepacket.basis.metadata().children[2].n_repeats == 1
     idx_0, idx_1 = get_wavepacket_two_points(wavepacket, offset)
 
     bloch_phases_0 = _get_bloch_wavefunction_phases(wavepacket, idx_0)
@@ -292,10 +251,10 @@ def localize_tightly_bound_wavepacket_two_point_max(
 
 
 @timed
-def localize_tightly_bound_wavepacket_max_point(
-    wavepacket: BlochWavefunctionList[_SB0, _SB1],
+def localize_tightly_bound_state_max_point[M: BlochStateMetadata](
+    state: StateWithMetadata[M],
     angle: float = 0,
-) -> BlochWavefunctionList[_SB0, _SB1]:
+) -> StateWithMetadata[M]:
     """
     Normalize a wavepacket using a 'single-point' calculation.
 
@@ -314,9 +273,7 @@ def localize_tightly_bound_wavepacket_max_point(
     Wavepacket[_NS0Inv, _NS1Inv, _B3d0Inv]
         Normalized wavepacket
     """
-    converted = convert_state_vector_to_position_basis(
-        get_wavepacket_state_vector(wavepacket, 0)
-    )
+    state_list_from_bloch_state(state)
     max_idx = cast("SingleFlatIndexLike", np.argmax(np.abs(converted["data"]), axis=-1))
     max_idx = BasisUtil(converted["basis"]).get_stacked_index(max_idx)
     max_idx = wrap_index_around_origin(wavepacket["basis"][1], max_idx, axes=(0, 1))

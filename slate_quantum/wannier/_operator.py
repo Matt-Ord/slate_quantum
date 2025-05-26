@@ -3,17 +3,11 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, TypeVar
 
 import numpy as np
+from slate_core import Basis
+from slate_core.metadata import SpacedVolumeMetadata
 from surface_potential_analysis.basis.legacy import (
     FundamentalBasis,
     StackedBasisLike,
-    StackedBasisWithVolumeLike,
-    TupleBasisWithLengthLike,
-)
-from surface_potential_analysis.basis.util import (
-    BasisUtil,
-)
-from surface_potential_analysis.operator.conversion import (
-    convert_operator_to_basis,
 )
 from surface_potential_analysis.stacked_basis.conversion import (
     tuple_basis_as_fundamental,
@@ -38,6 +32,14 @@ from surface_potential_analysis.wavepacket.wavepacket import (
     get_fundamental_unfurled_basis,
 )
 
+from slate_quantum import operator
+from slate_quantum.bloch._transposed_basis import BlochStateMetadata
+from slate_quantum.wannier._localization_operator import (
+    BlochListMetadata,
+    WannierListMetadata,
+)
+
+StackedBasisWithVolumeLike = Basis[SpacedVolumeMetadata]
 if TYPE_CHECKING:
     from surface_potential_analysis.basis.legacy import (
         BasisLike,
@@ -49,26 +51,18 @@ if TYPE_CHECKING:
         BlochWavefunctionListWithEigenvalues,
     )
 
+    from slate_quantum.operator._operator import Operator, OperatorMetadata
+    from slate_quantum.wannier._localization_operator import (
+        BlochStateListWithMetadataa,
+        WannierStateListWithMetadata,
+    )
+
     _SB0 = TypeVar("_SB0", bound=StackedBasisLike)
 
     _SBV0 = TypeVar("_SBV0", bound=StackedBasisWithVolumeLike)
-    _SBV1 = TypeVar("_SBV1", bound=StackedBasisWithVolumeLike)
 
     _B0 = TypeVar("_B0", bound=BasisLike)
     _BL0 = TypeVar("_BL0", bound=BasisWithLengthLike)
-
-
-def _get_position_operator(basis: _SBV0) -> SingleBasisOperator[_SBV0]:
-    util = BasisUtil(basis)
-    # We only get the location in the x0 direction here
-    locations = util.fundamental_x_points_stacked[0]
-
-    basis_position = tuple_basis_as_fundamental(basis)
-    operator: SingleBasisOperator[Any] = {
-        "basis": VariadicTupleBasis((basis_position, basis_position), None),
-        "data": np.diag(locations),
-    }
-    return convert_operator_to_basis(operator, VariadicTupleBasis((basis, basis), None))
 
 
 @timed
@@ -89,10 +83,11 @@ def _get_operator_between_states(
     return {"data": array, "basis": VariadicTupleBasis((basis, basis), None)}
 
 
-def _localize_operator(
-    wavepacket: BlochWavefunctionListWithEigenvalues[_SB0, _SBV0],
-    operator: SingleBasisOperator[_SBV1],
-) -> list[BlochWavefunctionListWithEigenvalues[_SB0, _SBV0]]:
+def _localize_operator[MBloch: BlochListMetadata, MState: BlochStateMetadata](
+    states: BlochStateListWithMetadataa[MBloch, MState],
+    operator: Operator[Basis[OperatorMetadata[MState]], np.dtype[np.complexfloating]],
+    # TODO: out metadata
+) -> WannierStateListWithMetadata[WannierListMetadata, MState]:
     states = [
         convert_state_vector_to_basis(state, operator["basis"][0])
         for state in get_all_eigenstates(wavepacket)
@@ -109,9 +104,10 @@ def _localize_operator(
     ]
 
 
-def localize_position_operator(
-    wavepacket: BlochWavefunctionListWithEigenvalues[_SB0, _SBV0],
-) -> list[BlochWavefunctionListWithEigenvalues[_SB0, _SBV0]]:
+def localize_position_operator[MBloch: BlochListMetadata, MState: BlochStateMetadata](
+    states: BlochStateListWithMetadataa[MBloch, MState],
+    # TODO: out metadata WannierListMetadata more specific
+) -> WannierStateListWithMetadata[WannierListMetadata, BlochStateMetadata]:
     """
     Given a wavepacket generate a set of normalized wavepackets using the operator method.
 
@@ -123,14 +119,11 @@ def localize_position_operator(
     -------
     list[Wavepacket[_S0Inv, _B0Inv]]
     """
-    basis = tuple_basis_as_fundamental(
-        get_fundamental_unfurled_basis(wavepacket["basis"])
-    )
-    operator_position = _get_position_operator(basis)
-    return _localize_operator(wavepacket, operator_position)
+    operator_position = operator.build.x(states.basis.metadata().children[1], axis=0)
+    return _localize_operator(states, operator_position)
 
 
-def localize_position_operator_many_band(
+def localize_position_operator_many_band[B0: BasisLike, BL0: BasisWithLengthLike](
     wavepackets: list[
         BlochWavefunctionListWithEigenvalues[
             TupleBasisLike[*tuple[_B0, ...]],
@@ -157,7 +150,7 @@ def localize_position_operator_many_band(
         for wavepacket in wavepackets
         for state in get_all_eigenstates(wavepacket)
     ]
-    operator_position = _get_position_operator(basis)
+    operator_position = operator.build.x(basis)
     operator = _get_operator_between_states(states, operator_position)
     eigenstates = calculate_eigenvectors_hermitian(operator)
     state_vectors = np.array([s["data"] for s in states], dtype=np.complex128)
@@ -170,7 +163,10 @@ def localize_position_operator_many_band(
     ]
 
 
-def localize_position_operator_many_band_individual(
+def localize_position_operator_many_band_individual[
+    SB0: StackedBasisLike,
+    SBV0: StackedBasisWithVolumeLike,
+](
     wavepackets: list[BlochWavefunctionListWithEigenvalues[_SB0, _SBV0]],
 ) -> list[LegacyStateVector[Any]]:
     """
@@ -191,7 +187,7 @@ def localize_position_operator_many_band_individual(
         )
         for wavepacket in wavepackets
     ]
-    operator_position = _get_position_operator(states[0]["basis"])
+    operator_position = operator.build.x(states[0]["basis"])
     operator = _get_operator_between_states(states, operator_position)  # type: ignore[arg-type]
     eigenstates = calculate_eigenvectors_hermitian(operator)
     state_vectors = np.array([s["data"] for s in states])

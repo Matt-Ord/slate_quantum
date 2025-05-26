@@ -1,122 +1,62 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 import scipy.linalg  # type:ignore lib
-from surface_potential_analysis.basis.legacy import (
-    BasisLike,
-    FundamentalBasis,
-    StackedBasisLike,
-    StackedBasisWithVolumeLike,
-    TupleBasis,
-    TupleBasisWithLengthLike,
+from slate_core import Array, Basis, BasisMetadata, TupleBasis, TupleMetadata, array
+from slate_core.metadata import SpacedVolumeMetadata
+
+from slate_quantum.bloch._transposed_basis import BlochStateMetadata
+from slate_quantum.state._state import (
+    StateList,
+    StateWithMetadata,
+    all_inner_product,
 )
-from surface_potential_analysis.basis.util import (
-    BasisUtil,
-)
-from surface_potential_analysis.stacked_basis.conversion import (
-    tuple_basis_as_fundamental,
-)
-from surface_potential_analysis.stacked_basis.util import wrap_index_around_origin
-from surface_potential_analysis.state_vector.conversion import (
-    convert_state_vector_list_to_basis,
-    convert_state_vector_to_momentum_basis,
-    convert_state_vector_to_position_basis,
-)
-from surface_potential_analysis.state_vector.state_vector_list import (
-    as_state_vector_list,
-    get_state_vector,
-)
-from surface_potential_analysis.state_vector.state_vector_list import (
-    calculate_inner_products as calculate_inner_product_states,
-)
-from surface_potential_analysis.state_vector.util import (
-    get_single_point_state_vector_excact,
-)
-from surface_potential_analysis.wavepacket.get_eigenstate import (
-    get_states_at_bloch_idx,
-    get_tight_binding_state,
-    get_tight_binding_states,
-    get_wavepacket_state_vector,
-)
-from surface_potential_analysis.wavepacket.localization_operator import (
-    LocalizationOperator,
-    get_localized_wavepackets,
-)
-from surface_potential_analysis.wavepacket.wavepacket import (
-    BlochWavefunctionListBasis,
-    BlochWavefunctionListList,
-    as_wavepacket_list,
-    get_fundamental_unfurled_basis,
-    get_wavepacket,
+from slate_quantum.wannier._localization_operator import (
+    BlochListMetadata,
+    BlochStateListWithMetadata,
+    LocalizationOperatorWithMetadata,
+    WannierListMetadata,
+    WannierStateListWithMetadata,
+    bloch_state_list_from_state,
+    localize_states,
 )
 
 if TYPE_CHECKING:
-    from slate.metadata._metadata import BasisMetadata
-    from surface_potential_analysis.basis.legacy import (
-        FundamentalPositionBasis,
-    )
-    from surface_potential_analysis.operator.operator import LegacyOperator
-    from surface_potential_analysis.state_vector.state_vector import (
-        LegacyStateVector,
-    )
-    from surface_potential_analysis.state_vector.state_vector_list import (
-        LegacyStateVectorList,
-    )
-    from surface_potential_analysis.types import (
-        SingleIndexLike,
-        SingleStackedIndexLike,
-    )
-    from surface_potential_analysis.wavepacket.wavepacket import (
-        BlochWavefunctionList,
-    )
-
-_SB0 = TypeVar("_SB0", bound=StackedBasisLike)
-
-_SBV0 = TypeVar("_SBV0", bound=StackedBasisWithVolumeLike)
-_SBV1 = TypeVar("_SBV1", bound=StackedBasisWithVolumeLike)
-
-_B0 = TypeVar("_B0", bound=BasisLike)
-_B1 = TypeVar("_B1", bound=BasisLike)
-_B2 = TypeVar("_B2", bound=BasisLike)
-_B3 = TypeVar("_B3", bound=BasisLike)
+    from slate_quantum.state import StateListWithMetadata
 
 
-def get_state_projections_many_band(
-    states: LegacyStateVectorList[_B0, _B2],
-    projections: LegacyStateVectorList[_B1, _B3],
-) -> LegacyOperator[_B0, _B1]:
-    converted = convert_state_vector_list_to_basis(projections, states["basis"][1])
-    return calculate_inner_product_states(states, converted)
-
-
-def _get_orthogonal_projected_states_many_band(
-    states: LegacyStateVectorList[_B0, _SBV0],
-    projections: LegacyStateVectorList[_B1, _B2],
-) -> LegacyOperator[_B1, _B0]:
-    projected = get_state_projections_many_band(states, projections)
+def _get_orthogonal_projected_states_many_band[
+    M0: BasisMetadata,
+    M1: SpacedVolumeMetadata,
+    M2: BasisMetadata,
+    M3: BasisMetadata,
+](
+    states: StateListWithMetadata[M0, M1],
+    projections: StateListWithMetadata[M2, M3],
+) -> Array[TupleBasis[tuple[Basis[M0], Basis[M2]], None], np.dtype[np.floating]]:
+    projected = array.as_tuple_basis(all_inner_product(states, projections))
     # Use SVD to generate orthogonal matrix u v_dagger
     u, _s, v_dagger = scipy.linalg.svd(  # type:ignore lib
-        projected["data"].reshape(projected["basis"].shape),
+        projected.raw_data.reshape(projected.basis.shape),
         full_matrices=False,
         compute_uv=True,
         overwrite_a=False,
         check_finite=True,
     )
     orthonormal_a = np.tensordot(u, v_dagger, axes=(1, 0))  # type:ignore lib
-    return {
-        "basis": VariadicTupleBasis(
-            (projections["basis"][0], states["basis"][0]), None
-        ),
-        "data": orthonormal_a.T.reshape(-1),  # Maybe this should be .conj().T ??
-    }
+    return Array.build(projected.basis, orthonormal_a.T).assert_ok()
 
 
-def get_localization_operator_for_projections(
-    wavepackets: BlochWavefunctionListList[_B0, _SB0, _SBV0],
-    projections: LegacyStateVectorList[_B1, _B2],
-) -> LocalizationOperator[_SB0, _B1, _B0]:
+def get_localization_operator_for_projections[
+    MBloch: BlochListMetadata,
+    MState: BlochStateMetadata,
+](
+    states: BlochStateListWithMetadata[MBloch, MState],
+    projections: StateList[Basis[TupleMetadata[tuple[BasisMetadata, MState], Any]]],
+    # TODO: what WannierListMetadata metadata here?
+) -> LocalizationOperatorWithMetadata[WannierListMetadata, MBloch]:
     converted = convert_state_vector_list_to_basis(
         wavepackets,
         stacked_basis_as_transformed_basis(wavepackets["basis"][1]),
@@ -127,7 +67,7 @@ def get_localization_operator_for_projections(
         for idx in range(converted["basis"][0][1].n)
     ]
     data = [
-        _get_orthogonal_projected_states_many_band(s, projections)["data"]
+        _get_orthogonal_projected_states_many_band(s, projections).raw_data
         for s in states
     ]
     return {
@@ -141,10 +81,14 @@ def get_localization_operator_for_projections(
     }
 
 
-def localize_wavepacket_projection(
-    wavepackets: BlochWavefunctionListList[_B0, _SB0, _SBV0],
-    projections: LegacyStateVectorList[_B1, _B2],
-) -> BlochWavefunctionListList[_B1, _SB0, _SBV0]:
+def localize_states_projection[
+    MBloch: BlochListMetadata,
+    MState: BlochStateMetadata,
+](
+    states: BlochStateListWithMetadata[MBloch, MState],
+    projections: StateList[Basis[TupleMetadata[tuple[BasisMetadata, MState], Any]]],
+    # TODO: what out metadata here?
+) -> WannierStateListWithMetadata[WannierListMetadata, MState]:
     """
     Given a wavepacket, localize using the given projection.
 
@@ -157,14 +101,17 @@ def localize_wavepacket_projection(
     -------
     Wavepacket[_B0Inv, _B0Inv]
     """
-    operator = get_localization_operator_for_projections(wavepackets, projections)
-    return get_localized_wavepackets(wavepackets, operator)
+    operator = get_localization_operator_for_projections(states, projections)
+    return localize_states(states, operator)
 
 
-def localize_single_band_wavepacket_projection(
-    wavepacket: BlochWavefunctionList[_SB0, _SBV0],
-    projection: LegacyStateVector[_SBV1],
-) -> BlochWavefunctionList[_SB0, _SBV0]:
+def localize_state_projection[
+    MState: BlochStateMetadata,
+](
+    state: StateWithMetadata[MState],
+    projection: StateWithMetadata[MState],
+    # TODO: out Metadata here?
+) -> StateWithMetadata[MState]:
     """
     Given a wavepacket, localize using the given projection.
 
@@ -177,27 +124,43 @@ def localize_single_band_wavepacket_projection(
     -------
     Wavepacket[_B0Inv, _B0Inv]
     """
-    wavepackets = as_wavepacket_list([wavepacket])
-    projections = as_state_vector_list([projection])
+    projections = StateList.from_states([projection])
+    states = bloch_state_list_from_state(state)
+    return localize_states_projection(states, projections)[0, :]
 
-    return get_wavepacket(localize_wavepacket_projection(wavepackets, projections), 0)
+
+def get_tight_binding_states[
+    MBloch: BlochListMetadata,
+    MState: BlochStateMetadata,
+](
+    states: BlochStateListWithMetadata[MBloch, MState],
+) -> StateList[Basis[TupleMetadata[tuple[BasisMetadata, MState], Any]]]:
+    # Initial guess is that the localized state is just the state of some eigenstate
+    # truncated at the edge of the first
+    # unit cell, centered at the two point max of the wavefunction
+    raise NotImplementedError
 
 
-def get_localization_operator_tight_binding_projections(
-    wavepackets: BlochWavefunctionListList[_B0, _SB0, _SBV0],
-) -> LocalizationOperator[_SB0, _B0, _B0]:
-    projections = get_tight_binding_states(wavepackets)
+def get_localization_operator_tight_binding_projections[
+    MBloch: BlochListMetadata,
+    MState: BlochStateMetadata,
+](
+    states: BlochStateListWithMetadata[MBloch, MState],
+) -> LocalizationOperatorWithMetadata[WannierListMetadata, MBloch]:
+    projections = get_tight_binding_states(states)
     # Better performace if we provide the projection in transformed basis
-    converted = convert_state_vector_list_to_basis(
-        projections,
-        stacked_basis_as_transformed_basis(projections["basis"][1]),
-    )
-    return get_localization_operator_for_projections(wavepackets, converted)
+    # TODO: we still want it to be sparse I think??
+    converted = projections.with_state_basis(basis_k)
+
+    return get_localization_operator_for_projections(states, converted)
 
 
-def localize_tight_binding_projection(
-    wavepacket: BlochWavefunctionList[_SB0, _SBV0],
-) -> BlochWavefunctionList[_SB0, _SBV0]:
+def localize_tight_binding_projection[
+    MBloch: BlochListMetadata,
+    MState: BlochStateMetadata,
+](
+    states: BlochStateListWithMetadata[MBloch, MState],
+) -> WannierStateListWithMetadata[WannierListMetadata, MState]:
     """
     Given a wavepacket, localize using a tight binding projection.
 
@@ -209,38 +172,39 @@ def localize_tight_binding_projection(
     -------
     Wavepacket[_B0Inv, _B0Inv]
     """
-    # Initial guess is that the localized state is just the state of some eigenstate
-    # truncated at the edge of the first
-    # unit cell, centered at the two point max of the wavefunction
-    projection = get_tight_binding_state(wavepacket)
-    # Better performace if we provide the projection in transformed basis
-    transformed = convert_state_vector_to_momentum_basis(projection)
-    return localize_single_band_wavepacket_projection(wavepacket, transformed)
+    operator = get_localization_operator_tight_binding_projections(states)
+    return localize_states(states, operator)
 
 
-def get_single_point_state_for_wavepacket(
-    wavepacket: BlochWavefunctionList[_SB0, _SBV0],
-    idx: SingleIndexLike = 0,
-    origin: SingleStackedIndexLike | None = None,
-) -> LegacyStateVector[TupleBasisWithLengthLike[*tuple[FundamentalPositionBasis, ...]]]:
-    state_0 = convert_state_vector_to_position_basis(
-        get_wavepacket_state_vector(wavepacket, idx)
-    )
-    util = BasisUtil(state_0["basis"])
+from slate_core import basis
+
+
+def get_single_point_state_for_wavepacket[
+    MBloch: BlochListMetadata,
+    MState: BlochStateMetadata,
+](
+    state: StateWithMetadata[MState],
+    idx: int | tuple[int, ...] = 0,
+    origin: tuple[int, ...] | None = None,
+) -> StateWithMetadata[MState]:
+    state_0 = state.with_basis(basis.as_fundamental(state.basis)).assert_ok()
+
     if origin is None:
-        idx_0: SingleStackedIndexLike = util.get_stacked_index(
-            int(np.argmax(np.abs(state_0["data"]), axis=-1))
-        )
+        idx_0 = array.max_arg(state_0)
+
         origin = wrap_index_around_origin(state_0["basis"], idx_0)
     return get_single_point_state_vector_excact(
         state_0["basis"], util.get_flat_index(origin, mode="wrap")
     )
 
 
-def localize_single_point_projection(
-    wavepacket: BlochWavefunctionList[_SB0, _SBV0],
-    idx: SingleIndexLike = 0,
-) -> BlochWavefunctionList[_SB0, _SBV0]:
+def localize_single_point_projection[
+    MBloch: BlochListMetadata,
+    MState: BlochStateMetadata,
+](
+    state: StateWithMetadata[MState],
+    idx: int | tuple[int, ...] = 0,
+) -> WannierStateListWithMetadata[WannierListMetadata, MState]:
     """
     Given a wavepacket, localize using a tight binding projection.
 
@@ -255,16 +219,20 @@ def localize_single_point_projection(
     # Initial guess is that the localized state is just the state of some eigenstate
     # truncated at the edge of the first
     # unit cell, centered at the two point max of the wavefunction
-    projection = get_single_point_state_for_wavepacket(wavepacket, idx)
+    projection = get_single_point_state_for_wavepacket(state, idx)
     # Will have better performace if we provide it in a truncated position basis
-    return localize_single_band_wavepacket_projection(wavepacket, projection)
+    return localize_state_projection(state, projection)
 
 
-def get_exponential_state(
-    wavepacket: BlochWavefunctionList[_SB0, _SBV0],
-    idx: SingleIndexLike = 0,
-    origin: SingleIndexLike | None = None,
-) -> LegacyStateVector[TupleBasisWithLengthLike[*tuple[FundamentalPositionBasis, ...]]]:
+def get_exponential_state[
+    MBloch: BlochListMetadata,
+    MState: BlochStateMetadata,
+](
+    # TODO: single band version?
+    states: BlochStateListWithMetadata[MBloch, MState],
+    idx: int | tuple[int, ...] = 0,
+    origin: int | tuple[int, ...] | None = None,
+) -> StateWithMetadata[MState]:
     """
     Given a wavepacket, get the state decaying exponentially from the maximum.
 
@@ -316,7 +284,10 @@ def get_exponential_state(
     return out
 
 
-def _get_exponential_decay_state(
+def _get_exponential_decay_state[
+    SB0: StackedBasisLike,
+    SBV0: StackedBasisWithVolumeLike,
+](
     wavepacket: BlochWavefunctionList[_SB0, _SBV0],
 ) -> LegacyStateVector[TupleBasisWithLengthLike[*tuple[FundamentalPositionBasis, ...]]]:
     exponential = get_exponential_state(wavepacket)
@@ -333,7 +304,10 @@ def _get_exponential_decay_state(
     return out
 
 
-def localize_exponential_decay_projection(
+def localize_exponential_decay_projection[
+    SB0: StackedBasisLike,
+    SBV0: StackedBasisWithVolumeLike,
+](
     wavepacket: BlochWavefunctionList[_SB0, _SBV0],
 ) -> BlochWavefunctionList[_SB0, _SBV0]:
     """
@@ -350,10 +324,10 @@ def localize_exponential_decay_projection(
     # Initial guess is that the localized state is the tight binding state
     # multiplied by an exponential
     projection = _get_exponential_decay_state(wavepacket)
-    return localize_single_band_wavepacket_projection(wavepacket, projection)
+    return localize_state_projection(wavepacket, projection)
 
 
-def get_gaussian_states(
+def get_gaussian_states[SB0: StackedBasisLike, SBV0: StackedBasisWithVolumeLike](
     wavepacket: BlochWavefunctionList[_SB0, _SBV0],
     origin: SingleIndexLike = 0,
 ) -> LegacyStateVectorList[
@@ -407,7 +381,10 @@ def get_gaussian_states(
     return out
 
 
-def localize_wavepacket_gaussian_projection(
+def localize_wavepacket_gaussian_projection[
+    SB0: StackedBasisLike,
+    SBV0: StackedBasisWithVolumeLike,
+](
     wavepacket: BlochWavefunctionList[_SB0, _SBV0],
 ) -> BlochWavefunctionList[_SB0, _SBV0]:
     """
@@ -426,7 +403,7 @@ def localize_wavepacket_gaussian_projection(
     projection = get_state_vector(get_gaussian_states(wavepacket), 0)
     # Better performace if we provide the projection in transformed basis
     projection = convert_state_vector_to_momentum_basis(projection)
-    return localize_single_band_wavepacket_projection(wavepacket, projection)
+    return localize_state_projection(wavepacket, projection)
 
 
 def get_evenly_spaced_points(

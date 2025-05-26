@@ -9,140 +9,97 @@ from pathlib import Path
 from typing import (
     TYPE_CHECKING,
     Any,
-    Generic,
     TypedDict,
-    TypeVar,
-    TypeVarTuple,
     cast,
     overload,
 )
 
 import numpy as np
 import scipy.ndimage  # type:ignore lib
-from surface_potential_analysis.basis.legacy import (
-    BasisLike,
-    FundamentalBasis,
-    StackedBasisLike,
-    StackedBasisWithVolumeLike,
-    TupleBasis,
-    TupleBasisLike,
-    TupleBasisWithLengthLike,
-)
-from surface_potential_analysis.basis.util import (
-    BasisUtil,
-)
-from surface_potential_analysis.state_vector.conversion import (
-    convert_state_vector_list_to_basis,
-)
-from surface_potential_analysis.state_vector.state_vector import (
-    as_legacy_dual_vector,
-    legacy_calculate_inner_product,
-)
-from surface_potential_analysis.types import ArrayFlatIndexLike, FlatIndexLike
-from surface_potential_analysis.wavepacket.get_eigenstate import (
-    get_bloch_state_vector,
-    get_states_at_bloch_idx,
-)
-from surface_potential_analysis.wavepacket.localization_operator import (
-    get_localized_wavepackets,
-)
-from surface_potential_analysis.wavepacket.wavepacket import (
-    BlochWavefunctionListList,
-    as_wavepacket_list,
-    get_wavepacket_sample_fractions,
-    wavepacket_list_into_iter,
+from slate_core import BasisMetadata, TupleMetadata, basis, metadata
+from slate_core.basis import (
+    AsUpcast,
 )
 
-from slate_quantum.wannier._projection import (
-    get_state_projections_many_band,
+from slate_quantum.bloch._transposed_basis import BlochStateMetadata
+from slate_quantum.bloch.build import (
+    fraction_metadata_from_bloch_state,
+    get_sample_fractions,
 )
+from slate_quantum.state._state import State, StateWithMetadata
+from slate_quantum.wannier._localization_operator import (
+    BlochListMetadata,
+    LocalizationOperatorWithMetadata,
+    WannierListMetadata,
+    WannierStateListWithMetadata,
+    localize_states,
+)
+from slate_quantum.wannier._projection import get_state_projections_many_band
 
 if TYPE_CHECKING:
-    from surface_potential_analysis.basis.legacy import (
-        FundamentalTransformedPositionBasis,
-    )
-    from surface_potential_analysis.state_vector.state_vector import LegacyStateVector
-    from surface_potential_analysis.state_vector.state_vector_list import (
-        LegacyStateVectorList,
-    )
-    from surface_potential_analysis.wavepacket.localization_operator import (
-        LocalizationOperator,
-    )
+    from slate_core.metadata import SpacedVolumeMetadata, VolumeMetadata
 
-    _SBL0 = TypeVar(
-        "_SBL0",
-        bound=StackedBasisWithVolumeLike,
-    )
-    _PB1Inv = TypeVar(
-        "_PB1Inv",
-        bound=FundamentalTransformedPositionBasis,
-    )
-    _FB0 = TypeVar("_FB0", bound=FundamentalBasis[Any])
+    from slate_quantum.bloch.build import StackedBlockedFractionMetadata
+    from slate_quantum.wannier._localization_operator import BlochStateListWithMetadata
 
-    _SB0 = TypeVar("_SB0", bound=StackedBasisLike)
 
-    _B2 = TypeVar("_B2", bound=BasisLike)
-
-_B0 = TypeVar("_B0", bound=BasisLike)
-_B1 = TypeVar("_B1", bound=BasisLike)
-Ts = TypeVarTuple("Ts")
 SymmetryOp = Callable[
-    [ArrayFlatIndexLike[*Ts], tuple[int, ...]], ArrayFlatIndexLike[*Ts]
+    [np.ndarray[Any, np.dtype[np.int_]], tuple[int, ...]],
+    np.ndarray[Any, np.dtype[np.int_]],
 ]
 
 
-class ProjectionsBasis(TypedDict, Generic[_B0]):
+class ProjectionsBasis[B0: BasisLike](TypedDict):
     basis: TupleBasisLike[_B0]
 
 
 @dataclass
-class Wannier90Options(Generic[_B0]):
+class Wannier90Options[B0: BasisLike]:
     projection: ProjectionsBasis[_B0] | LegacyStateVectorList[_B0, Any]
     num_iter: int = 10000
     convergence_window: int = 3
     convergence_tolerance: float = 1e-10
-    symmetry_operations: Sequence[SymmetryOp[Any]] | None = None
+    symmetry_operations: Sequence[SymmetryOp] | None = None
     ignore_axes: tuple[int, ...] = ()
     """Axes which one should assume are tightly bound"""
 
 
 def _build_real_lattice_block(
-    delta_x: np.ndarray[tuple[int, int], np.dtype[np.float64]],
+    meta: VolumeMetadata,
 ) -> str:
     # Wannier90 expects the wavefunction to be 3D, so we add the extra fake axis here
+    delta_x = metadata.volume.fundamental_stacked_delta_x(meta)
     delta_x_padded = np.eye(3)
-    n_dim = delta_x.shape[0]
+    n_dim = len(delta_x)
     delta_x_padded[:n_dim, :n_dim] = delta_x * 10**10
 
-    newline = "\n"
     return f"""begin unit_cell_cart
-{newline.join(" ".join(str(x) for x in o) for o in delta_x_padded)}
+{"\n".join(" ".join(str(x) for x in o) for o in delta_x_padded)}
 end unit_cell_cart"""
 
 
 # ! cSpell:disable
 def _build_k_points_block(
-    list_basis: StackedBasisLike,
+    # TODO: what should the bloch metadata be here?
+    # Do we want to infer from the state basis instead?
+    metadata: StackedBlockedFractionMetadata,
 ) -> str:
-    n_dim = list_basis.n_dim
-    fractions = get_wavepacket_sample_fractions(list_basis)
-    fractions_padded = np.zeros((3, fractions.shape[1]))
-    fractions_padded[:n_dim] = fractions
+    fractions = get_sample_fractions(metadata)
+    fractions_padded = np.zeros((3, fractions[0].shape[0]))
+    fractions_padded[: metadata.n_dim] = fractions
 
     # mp_grid is 1 in the directions not included in the wavefunction
     mp_grid = np.ones(3, dtype=np.int_)
-    mp_grid[:n_dim] = np.array(list_basis.shape)
+    mp_grid[: metadata.n_dim] = np.array(metadata.shape)
 
-    # TODO(matt): declare inline in python 3.12  # noqa: FIX002
-    newline = "\n"
     return f"""mp_grid : {" ".join(str(x) for x in mp_grid)}
 begin kpoints
-{newline.join([f"{f0!r} {f1!r} {f2!r}" for (f0, f1, f2) in fractions_padded.T])}
+{"\n".join([f"{f0!r} {f1!r} {f2!r}" for (f0, f1, f2) in fractions_padded.T])}
 end kpoints"""
 
 
-def _build_win_file(
-    wavepackets: BlochWavefunctionListList[_B0, _SB0, _SBL0],
+def _build_win_file[MBloch: BlochListMetadata, MState: BlochStateMetadata](
+    states: BlochStateListWithMetadata[MBloch, MState],
     *,
     postproc_setup: bool = False,
     options: Wannier90Options[Any],
@@ -158,8 +115,12 @@ def _build_win_file(
     -------
     str
     """
-    util = BasisUtil(wavepackets["basis"][1])
     has_projections = options.projection.get("data", None) is not None
+    list_metadata = states.basis.metadata()
+    sample_metadata = fraction_metadata_from_bloch_state(list_metadata.children[1])
+    n_wannier = metadata.size_from_nested_shape(
+        list_metadata.children[0].children[0].fundamental_shape
+    )
     return f"""
 {"postproc_setup = .true." if postproc_setup else ""}
 num_iter = {options.num_iter}
@@ -167,9 +128,9 @@ conv_tol = {options.convergence_tolerance}
 conv_window = {options.convergence_window}
 write_u_matrices = .true.
 {"auto_projections = .true." if has_projections else "use_bloch_phases = .true."}
-num_wann = {wavepackets["basis"][0][0].n}
-{_build_real_lattice_block(util.delta_x_stacked)}
-{_build_k_points_block(wavepackets["basis"][0][1])}
+num_wann = {n_wannier}
+{_build_real_lattice_block(list_metadata.children[1])}
+{_build_k_points_block(sample_metadata)}
 search_shells = 500
 """
 
@@ -177,9 +138,9 @@ search_shells = 500
 # ! cSpell:enable
 
 
-def _get_offset_bloch_state(
-    state: LegacyStateVector[_SB0], offset: tuple[int, ...]
-) -> LegacyStateVector[_SB0]:
+def _get_offset_bloch_state[SB0: SpacedVolumeMetadata](
+    state: StateWithMetadata[SB0], offset: tuple[int, ...]
+) -> StateWithMetadata[SB0]:
     """
     Get the bloch state corresponding to the bloch k offset by 'offset'.
 
@@ -198,10 +159,11 @@ def _get_offset_bloch_state(
         _description_
     """
     # Note: requires state in k basis
+    state_in_k = state.with_basis(basis.as_transformed(state.basis)).assert_ok()
     padded_shape = np.ones(3, dtype=np.int_)
-    padded_shape[: state["basis"].n_dim] = state["basis"].shape
+    padded_shape[: len(state_in_k.basis.shape)] = state_in_k.basis.shape
     vector = np.roll(
-        (state["data"]).reshape(padded_shape),
+        (state_in_k.raw_data).reshape(padded_shape),
         tuple(-o for o in offset),
         (0, 1, 2),
     )
@@ -217,8 +179,8 @@ def _get_offset_bloch_state(
     # !f_0 = (vector.shape[2] + 1) // 2
     # !f_1 = f_0 + offset[2]
     # !vector[:, :, min(f_0, f_1) : max(f_0, f_1) :] = 0
-
-    return {"basis": state["basis"], "data": vector.reshape(-1)}
+    upcast = AsUpcast(state_in_k.basis, state.basis.metadata())
+    return State.build(upcast, vector).assert_ok()
     # Should be -offset if psi(k+b) = psi(k)
     vector = scipy.ndimage.shift(
         (state["data"]).reshape(padded_shape),
@@ -229,21 +191,19 @@ def _get_offset_bloch_state(
     return {"basis": state["basis"], "data": vector}
 
 
-def _build_mmn_file_block(
-    wavepackets: BlochWavefunctionListList[
-        _B0, _SB0, TupleBasisWithLengthLike[*tuple[_PB1Inv, ...]]
-    ],
+def _build_mmn_file_block[MBloch: BlochListMetadata, MState: BlochStateMetadata](
+    states: BlochStateListWithMetadata[MBloch, MState],
     k: tuple[int, int, int, int, int],
     *,
-    options: Wannier90Options[_B1],
+    options: Wannier90Options[Any],
 ) -> str:
     k_0, k_1, *offset = k
     block = f"{k_0} {k_1} {offset[0]} {offset[1]} {offset[2]}"
     for i in options.ignore_axes:
         offset[i] = 0
 
-    for wavepacket_n in wavepacket_list_into_iter(wavepackets):
-        for wavepacket_m in wavepacket_list_into_iter(wavepackets):
+    for wavepacket_n in states:
+        for wavepacket_m in states:
             mat = legacy_calculate_inner_product(
                 _get_offset_bloch_state(
                     get_bloch_state_vector(wavepacket_n, k_1 - 1),
@@ -277,13 +237,11 @@ def _parse_nnk_points_file(
     return first_element, data
 
 
-def _build_mmn_file(
-    wavepackets: BlochWavefunctionListList[
-        _B0, _SB0, TupleBasisWithLengthLike[*tuple[_PB1Inv, ...]]
-    ],
+def _build_mmn_file[MBloch: BlochListMetadata, MState: BlochStateMetadata](
+    states: BlochStateListWithMetadata[MBloch, MState],
     nnk_points_file: str,
     *,
-    options: Wannier90Options[_B1],
+    options: Wannier90Options[Any],
 ) -> str:
     """
     Given a .nnkp file, generate the mmn file.  # cSpell:disable-line.
@@ -297,22 +255,19 @@ def _build_mmn_file(
     -------
     Wavepacket[_B0Inv, _B0Inv]
     """
-    n_wavefunctions = wavepackets["basis"][0][0].n
-    n_k_points = wavepackets["basis"][0][1].n
+    meta = states.basis.metadata()
+    n_wavefunctions = meta.children[0].children[0].fundamental_size
+    n_k_points = meta.children[0].children[1].fundamental_size
     (n_n_tot, nnk_points) = _parse_nnk_points_file(nnk_points_file)
 
     newline = "\n"
     return f"""
 {n_wavefunctions} {n_k_points} {n_n_tot}
-{newline.join(_build_mmn_file_block(wavepackets, k, options=options) for k in nnk_points)}"""
+{newline.join(_build_mmn_file_block(states, k, options=options) for k in nnk_points)}"""
 
 
-def _build_amn_file(
-    wavepackets: BlochWavefunctionListList[
-        _B0,
-        TupleBasisLike[*tuple[Any, ...]],
-        TupleBasisWithLengthLike[*tuple[_PB1Inv, ...]],
-    ],
+def _build_amn_file[MBloch: BlochListMetadata, MState: BlochStateMetadata](
+    states: BlochStateListWithMetadata[MBloch, MState],
     projections: LegacyStateVectorList[_B1, _B2],
 ) -> str:
     n_projections = projections["basis"][0].size
@@ -343,17 +298,13 @@ def _build_amn_file(
 """
 
 
-def x0_symmetry_op(
-    idx: FlatIndexLike, shape: tuple[int, ...], axis: int
-) -> FlatIndexLike:
+def x0_symmetry_op(idx: int, shape: tuple[int, ...], axis: int) -> int:
     idx_stacked = list(np.unravel_index(idx, shape))
     idx_stacked[axis] = -idx_stacked[axis]
     return np.ravel_multi_index(tuple(idx_stacked), shape, mode="wrap")
 
 
-def x0x1_symmetry_op(
-    idx: FlatIndexLike, shape: tuple[int, ...], axes: tuple[int, int]
-) -> FlatIndexLike:
+def x0x1_symmetry_op(idx: int, shape: tuple[int, ...], axes: tuple[int, int]) -> int:
     idx_stacked = list(np.unravel_index(idx, shape))
     idx_0 = idx_stacked[axes[0]]
     idx_stacked[axes[0]] = idx_stacked[axes[1]]
@@ -362,29 +313,28 @@ def x0x1_symmetry_op(
 
 
 def _get_fundamental_k_points(
-    basis: TupleBasisLike[*tuple[_FB0, ...]], symmetry: Sequence[SymmetryOp[Any]]
-) -> ArrayFlatIndexLike[tuple[int]]:
-    fundamental_idx = np.arange(cast("int", basis.n))
+    metadata: TupleMetadata[tuple[BasisMetadata, ...], None],
+    symmetry: Sequence[SymmetryOp],
+) -> np.ndarray[tuple[int], np.dtype[np.int_]]:
+    fundamental_idx = np.arange(metadata.fundamental_size)
     for op in symmetry:
-        b = op(fundamental_idx, basis.shape)
+        b = op(fundamental_idx, metadata.shape)
         fundamental_idx = np.minimum(b, fundamental_idx)
 
     return fundamental_idx
 
 
-def _build_dmn_file(
-    wavepackets: BlochWavefunctionListList[
-        _B0,
-        TupleBasisLike[*tuple[_FB0, ...]],
-        TupleBasisWithLengthLike[*tuple[_PB1Inv, ...]],
-    ],
-    symmetry: Sequence[SymmetryOp[Any]],
+def _build_dmn_file[MBloch: BlochListMetadata, MState: BlochStateMetadata](
+    states: BlochStateListWithMetadata[MBloch, MState],
+    symmetry: Sequence[SymmetryOp],
 ) -> str:
-    n_wavefunctions = wavepackets["basis"][0][0].n
-    n_k_points = wavepackets["basis"][0][1].n
+    n_wavefunctions = states.basis.metadata().children[0].children[0].fundamental_size
+    n_k_points = states.basis.metadata().children[0].children[1].fundamental_size
     n_symmetry = len(symmetry)
 
-    fundamental = _get_fundamental_k_points(wavepackets["basis"][0][1], symmetry)
+    fundamental = _get_fundamental_k_points(
+        states.basis.metadata().children[0].children[1], symmetry
+    )
     u, idx = np.unique(fundamental, return_inverse=True)
     n_k_points_irr = u.size
 
@@ -415,11 +365,12 @@ def _parse_u_mat_file_block(
     return np.array([float(s[0]) + 1j * float(s[1]) for s in variables])  # type: ignore[no-any-return]
 
 
-def _get_localization_operator_from_u_mat_file(
-    wavepackets_basis: TupleBasisLike[_B0, _SB0],
-    projection_basis: _B1,
+def _get_localization_operator_from_u_mat_file[
+    MBloch: BlochListMetadata,
+](
+    wavepackets_basis: MBloch,
     u_matrix_file: str,
-) -> LocalizationOperator[_SB0, _B1, _B0]:
+) -> LocalizationOperatorWithMetadata[WannierListMetadata, MBloch]:
     """
     Get the u_mat coefficients, indexed such that U_{m,n}^k === out[n, m, k].
 
@@ -456,7 +407,12 @@ def _get_localization_operator_from_u_mat_file(
     }
 
 
-def _write_setup_files_wannier90(
+def _write_setup_files_wannier90[
+    B0: BasisLike,
+    SB0: StackedBasisLike,
+    SBL0: StackedBasisWithVolumeLike,
+    B1: BasisLike,
+](
     wavepackets: BlochWavefunctionListList[_B0, _SB0, _SBL0],
     tmp_dir_path: Path,
     *,
@@ -467,10 +423,11 @@ def _write_setup_files_wannier90(
         f.write(_build_win_file(wavepackets, postproc_setup=True, options=options))
 
 
-def _write_localization_files_wannier90(
-    wavepackets: BlochWavefunctionListList[
-        _B0, TupleBasisLike[*tuple[_FB0, ...]], _SBL0
-    ],
+def _write_localization_files_wannier90[
+    MBloch: BlochListMetadata,
+    MState: BlochStateMetadata,
+](
+    states: BlochStateListWithMetadata[MBloch, MState],
     tmp_dir_path: Path,
     n_nkp_file: str,
     *,
@@ -558,7 +515,12 @@ def _run_wannier90_in_container(directory: Path) -> None:
 
 
 @overload
-def get_localization_operator_wannier90(
+def get_localization_operator_wannier90[
+    B0: BasisLike,
+    SB0: StackedBasisLike,
+    SBL0: StackedBasisWithVolumeLike,
+    B1: BasisLike,
+](
     wavefunctions: BlochWavefunctionListList[_B0, _SB0, _SBL0],
     *,
     options: Wannier90Options[_B1],
@@ -566,18 +528,26 @@ def get_localization_operator_wannier90(
 
 
 @overload
-def get_localization_operator_wannier90(
+def get_localization_operator_wannier90[
+    B0: BasisLike,
+    SB0: StackedBasisLike,
+    SBL0: StackedBasisWithVolumeLike,
+](
     wavefunctions: BlochWavefunctionListList[_B0, _SB0, _SBL0],
     *,
     options: None = None,
 ) -> LocalizationOperator[_SB0, FundamentalBasis[BasisMetadata], _B0]: ...
 
 
-def get_localization_operator_wannier90(
-    wavefunctions: BlochWavefunctionListList[_B0, _SB0, _SBL0],
+def get_localization_operator_wannier90[
+    MBloch: BlochListMetadata,
+    MState: BlochStateMetadata,
+](
+    states: BlochStateListWithMetadata[MBloch, MState],
     *,
     options: Wannier90Options[Any] | None = None,
-) -> LocalizationOperator[_SB0, Any, _B0]:
+    # TODO: what metadata should we use here?
+) -> LocalizationOperatorWithMetadata[WannierListMetadata, MBloch]:
     """
     Localizes a set of wavepackets using wannier 90.
 
@@ -613,7 +583,7 @@ def get_localization_operator_wannier90(
         tmp_dir_path = Path(tmp_dir)
 
         # Build Files for initial Setup
-        _write_setup_files_wannier90(wavefunctions, tmp_dir_path, options=options)
+        _write_setup_files_wannier90(states, tmp_dir_path, options=options)
         try:
             _run_wannier90(tmp_dir_path)
         except Exception:  # noqa: BLE001
@@ -626,7 +596,7 @@ def get_localization_operator_wannier90(
 
         # Build Files for localisation
         _write_localization_files_wannier90(
-            wavefunctions,
+            states,
             tmp_dir_path,
             n_nkp_file,
             options=options,  # type: ignore should be fundamental basis, but we have no way of ensuring this in the type system
@@ -642,15 +612,18 @@ def get_localization_operator_wannier90(
             u_mat_file = f.read()
 
     return _get_localization_operator_from_u_mat_file(
-        wavefunctions["basis"][0], options.projection["basis"][0], u_mat_file
+        states.basis.metadata().children[0], u_mat_file
     )
 
 
-def localize_wavepacket_wannier90(
-    wavepackets: BlochWavefunctionListList[_B0, _SB0, _SBL0],
+def localize_wavepacket_wannier90[
+    MBloch: BlochListMetadata,
+    MState: BlochStateMetadata,
+](
+    states: BlochStateListWithMetadata[MBloch, MState],
     *,
-    options: Wannier90Options[_B1],
-) -> BlochWavefunctionListList[_B1, _SB0, _SBL0]:
+    options: Wannier90Options[Any],
+) -> WannierStateListWithMetadata[WannierListMetadata, MState]:
     """
     Localizes a set of wavepackets using wannier 90, with a single point projection as an initial guess.
 
@@ -671,13 +644,17 @@ def localize_wavepacket_wannier90(
     WavepacketList[_B1, _SB0, _SBL0]
         Localized wavepackets, with each wavepacket correspondign to a different projection
     """
-    operator = get_localization_operator_wannier90(wavepackets, options=options)
-    return get_localized_wavepackets(wavepackets, operator)
+    operator = get_localization_operator_wannier90(states, options=options)
+    return localize_states(states, operator)
 
 
-def get_localization_operator_wannier90_individual_bands(
-    wavepackets: BlochWavefunctionListList[_B0, _SB0, _SBL0],
-) -> LocalizationOperator[_SB0, _B0, _B0]:
+def get_localization_operator_wannier90_individual_bands[
+    MBloch: BlochListMetadata,
+    MState: BlochStateMetadata,
+](
+    states: BlochStateListWithMetadata[MBloch, MState],
+    # Specifically, it's diagonal
+) -> LocalizationOperatorWithMetadata[WannierListMetadata, MBloch]:
     options = Wannier90Options[FundamentalBasis[BasisMetadata]](
         projection={"basis": VariadicTupleBasis((FundamentalBasis(1), None))},
         convergence_tolerance=1e-20,
