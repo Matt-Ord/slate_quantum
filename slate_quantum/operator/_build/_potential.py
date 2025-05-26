@@ -25,7 +25,7 @@ from slate_quantum.operator._diagonal import (
     position_operator_basis,
     with_outer_basis,
 )
-from slate_quantum.operator._operator import Operator, OperatorBuilder
+from slate_quantum.operator._operator import Operator
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -33,9 +33,9 @@ if TYPE_CHECKING:
 
 def potential[M: BasisMetadata, E, CT: Ctype[Never], DT: np.dtype[np.generic]](
     outer_basis: TupleBasisLike[tuple[M, ...], E, CT], data: np.ndarray[Any, DT]
-) -> OperatorBuilder[PositionOperatorBasis[M, E], DT]:
+) -> Operator[PositionOperatorBasis[M, E], DT]:
     """Get the potential operator."""
-    return Operator.build(position_operator_basis(outer_basis), data)
+    return Operator(position_operator_basis(outer_basis), data)
 
 
 _build_potential = potential
@@ -59,7 +59,7 @@ def repeat_potential(
     transformed_basis = basis.transformed_from_metadata(
         potential.basis.inner.outer_recast.metadata()
     )
-    as_transformed = with_outer_basis(potential, transformed_basis).assert_ok()
+    as_transformed = with_outer_basis(potential, transformed_basis)
     converted_basis = basis.transformed_from_metadata(
         repeat_volume_metadata(potential.basis.inner.outer_recast.metadata(), shape)
     )
@@ -75,7 +75,7 @@ def repeat_potential(
     return _build_potential(
         repeat_basis,
         as_transformed.raw_data * np.sqrt(np.prod(shape)),
-    ).ok()
+    )
 
 
 def cos_potential(
@@ -98,7 +98,7 @@ def cos_potential(
     data = outer_product(*(np.array([2, 1, 1], dtype=np.complex128),) * n_dim)
     return potential(
         cropped, 0.25**n_dim * height * data * np.sqrt(transformed_basis.size)
-    ).ok()
+    )
 
 
 def sin_potential(
@@ -121,7 +121,7 @@ def sin_potential(
     data = outer_product(*(np.array([2, 1j, -1j]),) * n_dim)
     return potential(
         cropped, 0.25**n_dim * height * data * np.sqrt(transformed_basis.size)
-    ).assert_ok()
+    )
 
 
 def _square_wave_points(
@@ -161,7 +161,7 @@ def square_potential(
     return potential(
         cropped,
         0.5 * height * data * np.sqrt(transformed_basis.size),
-    ).ok()
+    )
 
 
 def fcc_potential(
@@ -188,11 +188,11 @@ def fcc_potential(
     # TODO: generalize to n_dim  # noqa: FIX002
     assert n_dim == 2  # noqa: PLR2004
 
-    data = np.array([[3, 1, 1], [1, 1, 0], [1, 0, 1]])
+    data = np.array([[3, 1, 1], [1, 1, 0], [1, 0, 1]]).astype(np.complex128)
     return potential(
         cropped,
         (1 / 3) ** n_dim * data * height * np.sqrt(transformed_basis.size),
-    ).ok()
+    )
 
 
 def potential_from_function[
@@ -214,7 +214,7 @@ def potential_from_function[
         metadata, offset=offset, wrapped=wrapped
     )
 
-    return potential(basis.from_metadata(metadata).upcast(), fn(positions)).assert_ok()
+    return potential(basis.from_metadata(metadata).upcast(), fn(positions))
 
 
 def harmonic_potential(

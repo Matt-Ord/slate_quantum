@@ -44,18 +44,18 @@ def _solve_schrodinger_equation_diagonal[
     TupleBasis2D[tuple[TB, B], None],
     np.dtype[np.complexfloating],
 ]:
-    coefficients = (
-        initial_state.with_basis(hamiltonian.basis.inner.children[0]).ok().raw_data
-    )
+    coefficients = initial_state.with_basis(
+        hamiltonian.basis.inner.children[0]
+    ).raw_data
     eigenvalues = hamiltonian.raw_data
 
     time_values = np.array(list(times.metadata().values))[times.points]
     vectors = coefficients[np.newaxis, :] * np.exp(
         -1j * eigenvalues * time_values[:, np.newaxis] / hbar
     )
-    return StateList.build(
+    return StateList(
         TupleBasis((times, hamiltonian.basis.inner.children[0])).upcast(), vectors
-    ).assert_ok()
+    )
 
 
 def solve_schrodinger_equation_decomposition[
@@ -74,7 +74,7 @@ def solve_schrodinger_equation_decomposition[
 ]:
     """Solve the schrodinger equation by directly finding eigenstates for the given initial state and hamiltonian."""
     diagonal = into_diagonal_hermitian(hamiltonian)
-    diagonal = array.cast_basis(diagonal, diagonal.basis.inner).assert_ok()
+    diagonal = array.cast_basis(diagonal, diagonal.basis.inner)
     return _solve_schrodinger_equation_diagonal(initial_state, times, diagonal)  # type: ignore cant infer M type
 
 
@@ -109,7 +109,7 @@ def solve_schrodinger_equation[
     state_basis = cast(
         "Basis[M, Ctype[np.complexfloating]]", hamiltonian_as_tuple.basis.children[0]
     )
-    initial_state_qobj = qutip.Qobj(initial_state.with_basis(state_basis).ok().raw_data)
+    initial_state_qobj = qutip.Qobj(initial_state.with_basis(state_basis).raw_data)
     time_values = np.array(list(times.metadata().values))[times.points]
     result = qutip.sesolve(  # type: ignore lib
         hamiltonian_qobj,
@@ -121,10 +121,10 @@ def solve_schrodinger_equation[
             "store_states": True,
         },
     )
-    return StateList.build(
+    return StateList(
         TupleBasis((times, state_basis)).upcast(),
         np.array(
             np.asarray([state.full().reshape(-1) for state in result.states]),  # type: ignore lib
             dtype=np.complex128,
         ).reshape(-1),
-    ).assert_ok()
+    )

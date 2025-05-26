@@ -289,7 +289,7 @@ def all_variance_x[
     """
     basis = from_metadata(states.basis.metadata().children[0])
     data = np.array([variance_x(state, axis=axis) for state in states])
-    return Array.build(basis, data).ok()
+    return Array(basis, data)
 
 
 def all_coherent_width[
@@ -376,7 +376,7 @@ def all_variance_k[
     """
     basis = from_metadata(states.basis.metadata().children[0])
     data = np.array([variance_k(state, axis=axis) for state in states])
-    return Array.build(basis, data).ok()
+    return Array(basis, data)
 
 
 def uncertainty[
@@ -405,4 +405,4 @@ def all_uncertainty[
     r"""Get the uncertainty in position of all states."""
     basis = from_metadata(states.basis.metadata().children[0])
     data = np.array([uncertainty(state, axis=axis) for state in states])
-    return Array.build(basis, data).ok()
+    return Array(basis, data)

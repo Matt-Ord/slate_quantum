@@ -36,7 +36,7 @@ def test_build_hamiltonian() -> None:
     transformed_basis = transformed_from_metadata(metadata)
     transformed_operator = hamiltonian.with_basis(
         TupleBasis((transformed_basis, transformed_basis.dual_basis())).upcast()
-    ).assert_ok()
+    )
 
     expected = [
         [0.0, 0.0, 0.0, 0.0, 0.0],
@@ -187,9 +187,7 @@ def test_k_operator() -> None:
     np.testing.assert_array_equal(
         momentum_operator.with_basis(
             TupleBasis((basis_k, basis_k.dual_basis())).upcast()
-        )
-        .assert_ok()
-        .raw_data.reshape(5, 5),
+        ).raw_data.reshape(5, 5),
         np.diag([0, 1, 2, -2, -1]),
     )
     np.testing.assert_array_equal(
@@ -256,10 +254,10 @@ def test_filter_scatter_operator() -> None:
         (np.array([2 * np.pi, 0]),), (5,)
     )
     basis_k = basis.transformed_from_metadata(metadata).upcast()
-    test_operator = Operator.build(
+    test_operator = Operator(
         TupleBasis((basis_k, basis_k.dual_basis())).upcast(),
         np.ones(25, dtype=np.complex128),
-    ).assert_ok()
+    )
     filtered = operator.build.filter_scatter(test_operator)
     np.testing.assert_array_equal(
         filtered.raw_data,
@@ -389,12 +387,10 @@ def test_build_cl_operators() -> None:
     # At the origin the cos operator just provides a constant offset to the energy,
     # and the sin(x) operator is roughly linear
     operators_non_periodic = noise.build.caldeira_leggett_operators(metadata)[0, :]
-    scaled_periodic = operators[1, :] * float(
+    scaled_periodic = operators[1, :] * complex(
         np.sqrt(operators.basis.metadata().children[0].values[0])
     )
-    scaled_periodic = scaled_periodic.with_basis(
-        operators_non_periodic.basis
-    ).assert_ok()
+    scaled_periodic = scaled_periodic.with_basis(operators_non_periodic.basis)
     np.testing.assert_allclose(
         array.extract_diagonal(scaled_periodic)[0:2].as_array(),
         array.extract_diagonal(operators_non_periodic)[0:2].as_array(),

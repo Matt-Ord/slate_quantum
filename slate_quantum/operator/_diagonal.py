@@ -20,7 +20,6 @@ from slate_core.metadata import (
 
 from slate_quantum.operator._operator import (
     Operator,
-    OperatorConversion,
     OperatorList,
     OperatorListMetadata,
     OperatorMetadata,
@@ -103,7 +102,7 @@ type DiagonalOperatorWithMetadata[M: BasisMetadata, DT: np.dtype[np.generic]] = 
 
 def with_outer_basis[BInner: Basis, B: Basis, DT: np.dtype[np.generic]](
     operator: DiagonalOperator[DiagonalOperatorBasis[BInner, Any], DT], outer_basis: B
-) -> OperatorConversion[OperatorMetadata, DiagonalOperatorBasis[BInner, B], DT]:
+) -> Operator[DiagonalOperatorBasis[BInner, B], DT]:
     """Create a new operator with the specified outer basis."""
     basis = recast_diagonal_basis(operator.basis.inner.inner_recast, outer_basis)
     return operator.with_basis(basis)

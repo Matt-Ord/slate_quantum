@@ -23,9 +23,9 @@ if __name__ == "__main__":
 
     # The hamiltonian is block diagonal, when we use the BlochTransposedBasis
     diag_data = Array.from_array(
-        hamiltonian.with_basis(hamiltonian.basis.inner.inner.upcast())
-        .assert_ok()
-        .raw_data.reshape(hamiltonian.basis.inner.inner.shape)
+        hamiltonian.with_basis(hamiltonian.basis.inner.inner.upcast()).raw_data.reshape(
+            hamiltonian.basis.inner.inner.shape
+        )
     )
     fig, ax, _ = plot.array_against_axes_2d(diag_data)
     fig.show()

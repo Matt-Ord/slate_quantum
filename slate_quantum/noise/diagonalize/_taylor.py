@@ -92,7 +92,7 @@ def get_periodic_noise_operators_explicit_taylor_expansion[
             Truncation(n_terms, 0, 0),
             from_metadata(operators.basis.metadata().children[0]),
         ).upcast()
-    ).assert_ok()
+    )
 
     # coefficients for the Taylor expansion of the trig terms
     coefficients = _get_periodic_coefficients_for_taylor_series(
@@ -102,10 +102,10 @@ def get_periodic_noise_operators_explicit_taylor_expansion[
 
     eigenvalues = EigenvalueMetadata(coefficients.astype(np.complex128))
 
-    return OperatorList.build(
+    return OperatorList(
         TupleBasis((FundamentalBasis(eigenvalues), op_basis)).upcast(),
         operators.raw_data,
-    ).assert_ok()
+    )
 
 
 def _get_linear_operators_for_noise[M: BasisMetadata](
@@ -130,10 +130,10 @@ def _get_linear_operators_for_noise[M: BasisMetadata](
         nx_displacements.basis.inner.children[0],
         nx_displacements.basis.inner.children[0],
     )
-    return OperatorList.build(
+    return OperatorList(
         TupleBasis((FundamentalBasis.from_size(n_terms), op_basis), None).upcast(),
         data,
-    ).assert_ok()
+    )
 
 
 def get_linear_noise_operators_explicit_taylor_expansion[M: BasisMetadata](
@@ -149,12 +149,12 @@ def get_linear_noise_operators_explicit_taylor_expansion[M: BasisMetadata](
     operators = _get_linear_operators_for_noise(metadata, n_terms=n_terms)
     eigenvalues = EigenvalueMetadata(polynomial_coefficients.astype(np.complex128))
 
-    return OperatorList.build(
+    return OperatorList(
         TupleBasis(
             (FundamentalBasis(eigenvalues), operators.basis.inner.children[1])
         ).upcast(),
         operators.raw_data,
-    ).assert_ok()
+    )
 
 
 def get_periodic_noise_operators_real_isotropic_taylor_expansion[M: BasisMetadata](
@@ -193,7 +193,7 @@ def get_periodic_noise_operators_real_isotropic_taylor_expansion[M: BasisMetadat
     operators = None
     msg = "Need to implement for e^ikx operators."
     raise NotImplementedError(msg)
-    return OperatorList.build(
+    return OperatorList(
         TupleBasis((FundamentalBasis(eigenvalues), operators.basis[1])),
         operators.raw_data,
     )

@@ -59,16 +59,14 @@ def get_periodic_noise_operators_isotropic_fft[M: BasisMetadata](
     operators = operator.build.all_axis_periodic_operators(
         kernel.basis.inner.outer_recast.inner.outer_recast,
     )
-    operators = operators.with_basis(
-        basis.as_tuple(operators.basis).upcast()
-    ).assert_ok()
+    operators = operators.with_basis(basis.as_tuple(operators.basis).upcast())
     eigenvalues = _get_noise_eigenvalues_isotropic_fft(kernel)
-    return OperatorList.build(
+    return OperatorList(
         TupleBasis(
             (FundamentalBasis(eigenvalues), operators.basis.inner.children[1])
         ).upcast(),
         operators.raw_data,
-    ).assert_ok()
+    )
 
 
 def _get_noise_eigenvalues_isotropic_stacked_fft[M: BasisMetadata, E](
@@ -119,7 +117,7 @@ def build_periodic_noise_operators[
     """
     operators = operator.build.all_periodic_operators(inner_basis)
     op_basis = operators.basis.inner.inner.children[1]
-    return OperatorList.build(
+    return OperatorList(
         TupleBasis(
             (
                 FundamentalBasis(list_basis.metadata()),
@@ -127,7 +125,7 @@ def build_periodic_noise_operators[
             )
         ).upcast(),
         operators.raw_data,
-    ).assert_ok()
+    )
 
 
 def get_periodic_noise_operators_isotropic_stacked_fft[M: BasisMetadata, E](

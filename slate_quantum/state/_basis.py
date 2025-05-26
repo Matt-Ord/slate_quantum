@@ -7,7 +7,7 @@ from slate_core import Array, Basis, Ctype, SimpleMetadata
 from slate_core.explicit_basis import ExplicitUnitaryBasis
 from slate_core.metadata import BasisMetadata, TupleMetadata
 
-from slate_quantum.state._state import StateList, StateListBuilder
+from slate_quantum.state._state import StateList
 
 if TYPE_CHECKING:
     import uuid
@@ -95,7 +95,7 @@ class EigenstateBasis[
                 DT_,
             ]
         ],
-    ) -> StateListBuilder[
+    ) -> StateList[
         AsUpcast[
             RecastBasis[
                 TupleBasis2D[tuple[Basis[M1_, Ctype[np.generic]], BInner_], None],
@@ -110,7 +110,7 @@ class EigenstateBasis[
         np.dtype[np.complexfloating],
     ]:
         states = super().eigenvectors()
-        return StateList.build(states.basis, states.data.astype(np.complex128))  # type: ignore[return-value]
+        return StateList(states.basis, states.data.astype(np.complex128))  # type: ignore[return-value]
 
 
 type EigenstateBasisWithInner[Inner: Basis] = EigenstateBasis[

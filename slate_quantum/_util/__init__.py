@@ -9,7 +9,6 @@ from slate_core import basis as _basis
 from slate_quantum._util._prod import outer_product
 
 if TYPE_CHECKING:
-    from slate_core.array import ArrayConversion
     from slate_core.basis import AsUpcast
 
 
@@ -26,8 +25,7 @@ type ListBasis[
 
 def with_list_basis[M1: BasisMetadata, B1: Basis, DT: np.dtype[np.generic]](
     array: Array[ListBasis[Any, M1], DT], basis: B1
-) -> ArrayConversion[
-    TupleMetadata[tuple[BasisMetadata, M1], None],
+) -> Array[
     AsUpcast[
         TupleBasis[tuple[B1, Basis[M1]], None],
         TupleMetadata[tuple[BasisMetadata, M1], None],
