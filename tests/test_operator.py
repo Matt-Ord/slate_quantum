@@ -273,6 +273,7 @@ def test_filter_scatter_operator() -> None:
     )
 
     test_operators = OperatorList.from_operators([test_operator, test_operator])
+    test_operators = OperatorList(test_operators.basis.inner.upcast(), test_operators.raw_data)
     filtered = operator.build.all_filter_scatter(test_operators)
     for op in filtered:
         np.testing.assert_array_equal(

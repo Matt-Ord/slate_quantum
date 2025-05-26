@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 import numpy as np
-from slate_core import FundamentalBasis, TupleBasis, TupleMetadata, basis
+from slate_core import Basis, FundamentalBasis, TupleBasis, TupleMetadata, basis
 from slate_core.basis import AsUpcast, CoordinateBasis
 from slate_core.metadata import (
     AxisDirections,
@@ -18,6 +18,7 @@ from slate_quantum.operator import (
     OperatorList,
     build,
 )
+from slate_quantum.operator._diagonal import PositionOperatorBasis
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -32,7 +33,27 @@ type CLNoiseOperatorList[M: SpacedLengthMetadata, E] = OperatorList[
         TupleBasis[
             tuple[
                 FundamentalBasis[EigenvalueMetadata],
-                OperatorBasis[TupleMetadata[tuple[M, ...], E]],
+                PositionOperatorBasis[M, E],
+            ],
+            None,
+        ],
+        TupleMetadata[
+            tuple[
+                EigenvalueMetadata,
+                OperatorMetadata[TupleMetadata[tuple[M, ...], E]],
+            ],
+            None,
+        ],
+    ],
+    np.dtype[np.complexfloating],
+]
+
+type CLNoiseOperatorListLike[M: SpacedLengthMetadata, E] = OperatorList[
+    AsUpcast[
+        TupleBasis[
+            tuple[
+                FundamentalBasis[EigenvalueMetadata],
+                Basis[OperatorMetadata[TupleMetadata[tuple[M, ...], E]]],
             ],
             None,
         ],
@@ -88,7 +109,7 @@ def periodic_caldeira_leggett_operators[
     E: AxisDirections,
 ](
     metadata: TupleMetadata[tuple[M, ...], E],
-) -> CLNoiseOperatorList[M, E]:
+) -> CLNoiseOperatorListLike[M, E]:
     assert len(metadata.fundamental_shape) == 1
     k = fundamental_stacked_dk(metadata)[0][0]
     n = size_from_nested_shape(metadata.fundamental_shape)

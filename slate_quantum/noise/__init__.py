@@ -29,15 +29,16 @@ from slate_quantum.noise._kernel import (
     noise_kernel_from_operators,
 )
 from slate_quantum.noise.build import (
-    axis_kernel_from_function_stacked as build_axis_kernel_from_function_stacked,
-)
-from slate_quantum.noise.build import (
+    CLNoiseOperatorList,
     caldeira_leggett_correlation_fn,
     gaussian_correlation_fn,
     lorentzian_correlation_fn,
     truncate_diagonal_noise_kernel,
     truncate_noise_kernel,
     truncate_noise_operator_list,
+)
+from slate_quantum.noise.build import (
+    axis_kernel_from_function_stacked as build_axis_kernel_from_function_stacked,
 )
 from slate_quantum.noise.build import (
     hamiltonian_shift as build_hamiltonian_shift,
@@ -73,6 +74,7 @@ from slate_quantum.noise.diagonalize import (
 
 __all__ = [
     "AxisKernel",
+    "CLNoiseOperatorList",
     "DiagonalKernelBasis",
     "DiagonalNoiseKernel",
     "DiagonalNoiseKernel",

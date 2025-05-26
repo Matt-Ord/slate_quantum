@@ -110,7 +110,7 @@ def nx_displacement_operators_stacked[M: BasisMetadata](
             ],
             None,
         ],
-        OperatorListMetadata[SimpleMetadata, TupleMetadata[tuple[M, M], None]],
+        OperatorListMetadata[SimpleMetadata, OperatorMetadata],
     ],
     np.dtype[np.signedinteger],
 ]:
