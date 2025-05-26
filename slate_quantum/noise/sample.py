@@ -18,6 +18,7 @@ from slate_quantum.operator._operator import (
 if TYPE_CHECKING:
     from collections.abc import Iterable
 
+    from slate_quantum.metadata._label import EigenvalueMetadata
     from slate_quantum.noise._kernel import (
         DiagonalNoiseKernelWithMetadata,
         NoiseOperatorList,
@@ -26,7 +27,7 @@ if TYPE_CHECKING:
 
 
 def sample_noise_from_operators[M: BasisMetadata](
-    operators: NoiseOperatorList[M], *, n_samples: int
+    operators: NoiseOperatorList[EigenvalueMetadata, M], *, n_samples: int
 ) -> OperatorListWithMetadata[SimpleMetadata, M, np.dtype[np.complexfloating]]:
     """Generate noise from a set of noise operators."""
     n_operators = operators.basis.inner.children[0].size
