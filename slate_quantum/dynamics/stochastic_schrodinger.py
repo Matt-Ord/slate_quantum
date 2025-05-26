@@ -12,7 +12,7 @@ from slate_core.metadata import BasisMetadata
 from slate_core.util import timed
 
 from slate_quantum import operator
-from slate_quantum.state import State, StateList
+from slate_quantum.state import StateList
 
 try:
     import sse_solver_py
@@ -31,6 +31,7 @@ if TYPE_CHECKING:
         OperatorListBasis,
         OperatorMetadata,
     )
+    from slate_quantum.state._state import StateWithMetadata
 
 
 def _get_operator_diagonals(
@@ -96,7 +97,7 @@ def solve_stochastic_schrodinger_equation_banded[
     M: BasisMetadata,
     MT: TimeMetadata,
 ](
-    initial_state: State[Basis[M]],
+    initial_state: StateWithMetadata[M],
     times: Basis[MT, Ctype[np.complexfloating]],
     hamiltonian: Operator[OperatorBasis[M], np.dtype[np.complexfloating]],
     noise: OperatorList[

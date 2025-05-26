@@ -26,7 +26,7 @@ from slate_core.basis import (
 from slate_core.linalg import into_diagonal
 from slate_core.metadata import BasisMetadata, NestedLength
 
-from slate_quantum.state._state import State, StateList
+from slate_quantum.state._state import State, StateList, StateWithMetadata
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Iterator
@@ -208,7 +208,7 @@ def _assert_operator_list_basis(basis: Basis) -> None:
 
 def expectation[M: BasisMetadata](
     operator: Operator[OperatorBasis[M], np.dtype[np.complexfloating]],
-    state: State[Basis[M]],
+    state: StateWithMetadata[M],
 ) -> complex:
     """Calculate the expectation value of an operator."""
     return (
@@ -239,8 +239,8 @@ def expectation_of_each[M0: BasisMetadata, M: BasisMetadata](
 
 def apply[M: BasisMetadata](
     operator: Operator[Basis[OperatorMetadata[M]], np.dtype[np.complexfloating]],
-    state: State[Basis[M]],
-) -> State[Basis[M]]:
+    state: StateWithMetadata[M],
+) -> StateWithMetadata[M]:
     """Apply an operator to a state."""
     out = linalg.einsum("(i j'),j -> i", operator, state)
     return State.build(out.basis, out.raw_data).ok()

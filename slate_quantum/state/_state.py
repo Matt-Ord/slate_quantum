@@ -30,11 +30,9 @@ if TYPE_CHECKING:
     from collections.abc import Iterable, Iterator
 
 
-class StateBuilder[B: Basis, DT: np.dtype[np.complexfloating]](
-    array.ArrayBuilder[B, DT]
-):
+class StateBuilder[B: Basis, DT: np.dtype[np.generic]](array.ArrayBuilder[B, DT]):
     @override
-    def ok[DT_: np.complexfloating](
+    def ok[DT_: np.generic](
         self: StateBuilder[Basis[Any, Ctype[DT_]], np.dtype[DT_]],
     ) -> State[B, DT]:
         return cast("Any", State(self._basis, self._data, 0))  # type: ignore safe to construct
@@ -48,10 +46,10 @@ class StateBuilder[B: Basis, DT: np.dtype[np.complexfloating]](
 class StateConversion[
     M0: BasisMetadata,
     B1: Basis,
-    DT: np.dtype[np.complexfloating],
+    DT: np.dtype[np.generic],
 ](array.ArrayConversion[M0, B1, DT]):
     @override
-    def ok[M_: BasisMetadata, DT_: np.complexfloating](
+    def ok[M_: BasisMetadata, DT_: np.generic](
         self: StateConversion[M_, Basis[M_, Ctype[DT_]], np.dtype[DT_]],
     ) -> State[B1, DT]:
         return cast(
@@ -72,13 +70,13 @@ class StateConversion[
 
 class State[
     B: Basis = Basis,
-    DT: np.dtype[np.complexfloating] = np.dtype[np.complexfloating],
+    DT: np.dtype[np.generic] = np.dtype[np.complexfloating],
 ](Array[B, DT]):
     """represents a state vector in a basis."""
 
     @override
     def with_basis[
-        DT_: np.dtype[np.complexfloating],
+        DT_: np.dtype[np.generic],
         M0_: BasisMetadata,
         B1_: Basis,
     ](
@@ -90,7 +88,7 @@ class State[
 
     @override
     @staticmethod
-    def build[B_: Basis, DT_: np.dtype[np.complexfloating]](
+    def build[B_: Basis, DT_: np.dtype[np.generic]](
         basis: B_, data: np.ndarray[Any, DT_]
     ) -> StateBuilder[B_, DT_]:
         return StateBuilder(basis, data)
@@ -144,11 +142,11 @@ def get_occupations[B: Basis](
     )
 
 
-class StateListBuilder[B: TupleBasisLike2D, DT: np.dtype[np.complexfloating]](
+class StateListBuilder[B: TupleBasisLike2D, DT: np.dtype[np.generic]](
     array.ArrayBuilder[B, DT]
 ):
     @override
-    def ok[DT_: np.complexfloating](
+    def ok[DT_: np.generic](
         self: StateListBuilder[Basis[Any, Ctype[DT_]], np.dtype[DT_]],
     ) -> StateList[B, DT]:
         return cast("Any", StateList(self._basis, self._data, 0))  # type: ignore safe to construct
@@ -162,12 +160,12 @@ class StateListBuilder[B: TupleBasisLike2D, DT: np.dtype[np.complexfloating]](
 class StateListConversion[
     M0: BasisMetadata,
     B1: TupleBasisLike2D,
-    DT: np.dtype[np.complexfloating],
+    DT: np.dtype[np.generic],
 ](array.ArrayConversion[M0, B1, DT]):
     @override
     def ok[
         M_: TupleMetadata[tuple[BasisMetadata, BasisMetadata]],
-        DT_: np.complexfloating,
+        DT_: np.generic,
     ](
         self: StateListConversion[M_, Basis[M_, Ctype[DT_]], np.dtype[DT_]],
     ) -> StateList[B1, DT]:
@@ -189,13 +187,13 @@ class StateListConversion[
 
 class StateList[
     B: TupleBasisLike2D = TupleBasisLike2D,
-    DT: np.dtype[np.complexfloating] = np.dtype[np.complexfloating],
+    DT: np.dtype[np.generic] = np.dtype[np.complexfloating],
 ](Array[B, DT]):
     """represents a state vector in a basis."""
 
     @override
     def with_basis[
-        DT_: np.dtype[np.complexfloating],
+        DT_: np.dtype[np.generic],
         M0_: BasisMetadata,
         B1_: TupleBasisLike2D,
     ](
@@ -302,7 +300,7 @@ class StateList[
 
     @override
     @staticmethod
-    def build[B_: TupleBasisLike2D, DT_: np.dtype[np.complexfloating]](
+    def build[B_: TupleBasisLike2D, DT_: np.dtype[np.generic]](
         basis: B_, data: np.ndarray[Any, DT_]
     ) -> StateListBuilder[B_, DT_]:
         return StateListBuilder(basis, data)
@@ -313,7 +311,7 @@ type StateListWithMetadata[M0: BasisMetadata, M1: BasisMetadata, B: Basis = Basi
 )
 
 
-def all_inner_product[
+def inner_product_each[
     M0: BasisMetadata,
     M1: BasisMetadata,
     DT: np.dtype[np.complexfloating],
@@ -325,13 +323,26 @@ def all_inner_product[
     return linalg.einsum("(j i'),(j i) ->j", state_0, state_1)
 
 
+def all_inner_product[
+    M0: BasisMetadata,
+    M1: BasisMetadata,
+    M2: BasisMetadata,
+    DT: np.dtype[np.complexfloating],
+](
+    state_0: StateList[TupleBasisLike[tuple[M0, M2], None], DT],
+    state_1: StateList[TupleBasisLike[tuple[M1, M2], None], DT],
+) -> Array[TupleBasisLike[tuple[M0, M1], None], DT]:
+    """Calculate the inner product of two states."""
+    return linalg.einsum("(j i'),(k i) ->(j k)", state_0, state_1)
+
+
 def normalize_all[
     M: TupleMetadata[tuple[BasisMetadata, BasisMetadata], None],
     DT: np.dtype[np.complexfloating],
 ](
     states: StateList[Basis[M], DT],
 ) -> StateList[Basis[M], DT]:
-    norms = all_inner_product(states, states)
+    norms = inner_product_each(states, states)
     norms = array.as_index_basis(norms)
     as_index = states.with_list_basis(norms.basis).assert_ok()
     as_mul = _basis.as_mul(as_index.basis.inner.children[1])

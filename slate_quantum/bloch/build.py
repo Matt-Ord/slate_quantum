@@ -45,19 +45,24 @@ class BlochFractionMetadata(LabeledMetadata[np.dtype[np.floating]]):
     @property
     @override
     def values(self) -> np.ndarray[Any, np.dtype[np.floating]]:
-        """Shape of the full data."""
+        """The individual bloch fractions."""
         return _metadata.fundamental_nk_points(self) / self.fundamental_size
 
     @staticmethod
     def from_repeats(
         repeat: tuple[int, ...],
-    ) -> TupleMetadata[tuple[BlochFractionMetadata, ...], None]:
+    ) -> StackedBlockedFractionMetadata:
         """Build a stacked metadata from a tuple of repeats."""
         return TupleMetadata(tuple(BlochFractionMetadata(n) for n in repeat), None)
 
 
-def metadata_from_split(
-    fraction_meta: TupleMetadata[tuple[BlochFractionMetadata, ...], None],
+type StackedBlockedFractionMetadata = TupleMetadata[
+    tuple[BlochFractionMetadata, ...], None
+]
+
+
+def bloch_state_metadata_from_split(
+    fraction_meta: StackedBlockedFractionMetadata,
     state_meta: SpacedVolumeMetadata,
 ) -> BlochStateMetadata:
     """Get the metadata for the Bloch operator."""
@@ -69,6 +74,15 @@ def metadata_from_split(
             )
         ),
         state_meta.extra,
+    )
+
+
+def fraction_metadata_from_bloch_state(
+    metadata: BlochStateMetadata,
+) -> StackedBlockedFractionMetadata:
+    """Get the metadata for the Bloch operator."""
+    return BlochFractionMetadata.from_repeats(
+        tuple(c.n_repeats for c in metadata.children)
     )
 
 
@@ -96,7 +110,9 @@ def _metadata_from_operator_list(
     """Get the metadata for the Bloch operator."""
     list_meta = meta.children[0]
     single_operator_meta = meta.children[1].children[0]
-    full_operator_metadata = metadata_from_split(list_meta, single_operator_meta)
+    full_operator_metadata = bloch_state_metadata_from_split(
+        list_meta, single_operator_meta
+    )
     return basis_from_metadata(full_operator_metadata)
 
 
@@ -127,8 +143,8 @@ def bloch_operator_from_list[
     return Operator.build(out_basis, operators.raw_data).assert_ok()
 
 
-def _get_sample_fractions[M: BlochFractionMetadata](
-    metadata: TupleMetadata[tuple[M, ...], None],
+def get_sample_fractions(
+    metadata: StackedBlockedFractionMetadata,
 ) -> tuple[np.ndarray[tuple[int], np.dtype[np.floating]], ...]:
     """Get the frequencies of the samples in a wavepacket, as a fraction of dk."""
     mesh = np.meshgrid(*(n.values for n in metadata.children), indexing="ij")
@@ -142,7 +158,7 @@ def kinetic_hamiltonian[M: SpacedLengthMetadata, E: AxisDirections](
 ) -> Operator[BlochOperatorBasis, np.dtype[np.complexfloating]]:
     """Build a kinetic Hamiltonian in the Bloch basis."""
     list_metadata = BlochFractionMetadata.from_repeats(repeat)
-    bloch_fractions = _get_sample_fractions(list_metadata)
+    bloch_fractions = get_sample_fractions(list_metadata)
     list_basis = basis.from_metadata(list_metadata).upcast()
 
     operators = OperatorList.from_operators(
