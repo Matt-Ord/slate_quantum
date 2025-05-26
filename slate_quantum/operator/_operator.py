@@ -212,13 +212,11 @@ type OperatorListMetadata[
     M0: BasisMetadata = BasisMetadata,
     M1: OperatorMetadata = OperatorMetadata,
 ] = TupleMetadata[tuple[M0, M1], None]
+
 type OperatorListBasis[
     M0: BasisMetadata = BasisMetadata,
     M1: OperatorMetadata = OperatorMetadata,
 ] = Basis[OperatorListMetadata[M0, M1]]
-
-
-type AsOperatorListBasis[B: Basis] = AsUpcast[B, OperatorListMetadata]
 
 
 class OperatorList[
