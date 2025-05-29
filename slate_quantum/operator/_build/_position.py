@@ -227,7 +227,7 @@ def x[M: SpacedLengthMetadata, E: AxisDirections](
     axis: int,
     offset: float = 0,
     wrapped: bool = False,
-) -> Potential[M, E, Ctype[Never], np.dtype[np.complexfloating]]:
+) -> Potential[M, E]:
     """Get the x operator."""
     inner_offset = tuple(offset if i == axis else 0 for i in range(metadata.n_dim))
     points = _metadata.volume.fundamental_stacked_x_points(
@@ -312,7 +312,7 @@ def periodic_operator[M: BasisMetadata, E](
 
 def scattering_operator[M: SpacedLengthMetadata, E: AxisDirections](
     metadata: TupleMetadata[tuple[M, ...], E], *, n_k: tuple[int, ...]
-) -> Potential[M, E, Ctype[Never], np.dtype[np.complexfloating]]:
+) -> Potential[M, E]:
     """Get the e^(ik.x) operator.
 
     k is chosen such that k = 2 * np.pi * n_k / N

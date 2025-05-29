@@ -49,12 +49,7 @@ def repeat_potential(
         np.dtype[np.complexfloating],
     ],
     shape: tuple[int, ...],
-) -> Potential[
-    RepeatedLengthMetadata,
-    AxisDirections,
-    Ctype[Never],
-    np.dtype[np.complexfloating],
-]:
+) -> Potential[RepeatedLengthMetadata, AxisDirections]:
     """Create a new potential by repeating the original potential in each direction."""
     transformed_basis = basis.transformed_from_metadata(
         potential.basis.inner.outer_recast.metadata()
@@ -81,12 +76,7 @@ def repeat_potential(
 def cos_potential(
     metadata: SpacedVolumeMetadata,
     height: float,
-) -> Potential[
-    SpacedLengthMetadata,
-    AxisDirections,
-    Ctype[Never],
-    np.dtype[np.complexfloating],
-]:
+) -> Potential[SpacedLengthMetadata, AxisDirections]:
     """Build a cosine potential."""
     transformed_basis = basis.transformed_from_metadata(metadata)
     # We need only the three lowest fourier components to represent this potential
@@ -104,12 +94,7 @@ def cos_potential(
 def sin_potential(
     metadata: SpacedVolumeMetadata,
     height: float,
-) -> Potential[
-    SpacedLengthMetadata,
-    AxisDirections,
-    Ctype[Never],
-    np.dtype[np.complexfloating],
-]:
+) -> Potential[SpacedLengthMetadata, AxisDirections]:
     """Build a cosine potential."""
     transformed_basis = basis.transformed_from_metadata(metadata)
     # We need only the three lowest fourier components to represent this potential
@@ -139,12 +124,7 @@ def square_potential(
     *,
     n_terms: tuple[int, ...] | None = None,
     lanczos_factor: float = 0,
-) -> Potential[
-    SpacedLengthMetadata,
-    AxisDirections,
-    Ctype[Never],
-    np.dtype[np.complexfloating],
-]:
+) -> Potential[SpacedLengthMetadata, AxisDirections]:
     """Build a square potential."""
     transformed_basis = basis.transformed_from_metadata(metadata)
     # We need only the three lowest fourier components to represent this potential
@@ -167,12 +147,7 @@ def square_potential(
 def fcc_potential(
     metadata: SpacedVolumeMetadata,
     height: float,
-) -> Potential[
-    SpacedLengthMetadata,
-    AxisDirections,
-    Ctype[Never],
-    np.dtype[np.complexfloating],
-]:
+) -> Potential[SpacedLengthMetadata, AxisDirections]:
     """Generate a potential suitable for modelling an fcc surface.
 
     This potential contains the lowest fourier components - however for an fcc surface
@@ -222,12 +197,7 @@ def harmonic_potential(
     frequency: float,
     *,
     offset: tuple[float, ...] | None = None,
-) -> Potential[
-    SpacedLengthMetadata,
-    AxisDirections,
-    Ctype[Never],
-    np.dtype[np.complexfloating],
-]:
+) -> Potential[SpacedLengthMetadata, AxisDirections]:
     """Build a harmonic potential.
 
     V(x) = 0.5 * frequency^2 * ||x||^2

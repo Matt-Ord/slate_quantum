@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import datetime
-from typing import TYPE_CHECKING, Any, TypedDict, Unpack, cast
+from typing import TYPE_CHECKING, TypedDict, Unpack, cast
 
 import numpy as np
 import slate_core.linalg
@@ -9,12 +9,10 @@ from scipy.constants import hbar  # type: ignore lib
 from slate_core import (
     Ctype,
     FundamentalBasis,
-    SimpleMetadata,
-    TupleMetadata,
     array,
     basis,
 )
-from slate_core.basis import AsUpcast, TupleBasis, TupleBasisLike2D
+from slate_core.basis import TupleBasis
 from slate_core.metadata import BasisMetadata
 from slate_core.util import timed
 
@@ -30,6 +28,10 @@ if TYPE_CHECKING:
     from slate_core.basis import Basis
     from sse_solver_py import BandedData, SSEMethod
 
+    from slate_quantum.dynamics._realization import (
+        RealizationList,
+        RealizationListBasis,
+    )
     from slate_quantum.metadata import EigenvalueMetadata, TimeMetadata
     from slate_quantum.operator import OperatorList
     from slate_quantum.operator._operator import (
@@ -99,11 +101,6 @@ class SSEConfig(TypedDict, total=False):
     target_delta: float
 
 
-type RealizationMetadata[MT: TimeMetadata] = TupleMetadata[
-    tuple[SimpleMetadata, MT], None
-]
-
-
 @timed
 def solve_stochastic_schrodinger_equation_banded[
     M: BasisMetadata,
@@ -117,13 +114,7 @@ def solve_stochastic_schrodinger_equation_banded[
         np.dtype[np.complexfloating],
     ],
     **kwargs: Unpack[SSEConfig],
-) -> StateList[
-    AsUpcast[
-        TupleBasis[tuple[Basis[RealizationMetadata[MT]], Basis[M]], None],
-        TupleMetadata[tuple[RealizationMetadata[MT], M], None],
-    ],
-    np.dtype[np.complexfloating],
-]:
+) -> RealizationList[RealizationListBasis[MT, M]]:
     r"""Given an initial state, use the stochastic schrodinger equation to solve the dynamics of the system.
 
     The stochastic schrodinger equation is a numerical method used to simulate the
@@ -228,13 +219,3 @@ def solve_stochastic_schrodinger_equation_banded[
         ).upcast(),
         np.array(data),
     )
-
-
-def select_realization[MT: BasisMetadata, M: BasisMetadata](
-    states: StateList[
-        TupleBasisLike2D[tuple[TupleMetadata[tuple[Any, MT], None], M], None]
-    ],
-    idx: int = 0,
-) -> StateList[TupleBasisLike2D[tuple[MT, M], None]]:
-    """Select a realization from a state list."""
-    return states[(idx, slice(None)), :]

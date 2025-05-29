@@ -10,7 +10,10 @@ from slate_core.metadata import (
 from slate_core.plot import animate_data_over_list_1d_x
 
 from slate_quantum import operator
-from slate_quantum.dynamics import solve_schrodinger_equation_decomposition
+from slate_quantum.dynamics import (
+    solve_schrodinger_equation,
+    solve_schrodinger_equation_decomposition,
+)
 from slate_quantum.metadata import SpacedTimeMetadata
 
 if __name__ == "__main__":
@@ -39,6 +42,17 @@ if __name__ == "__main__":
     # If we plot the absolute value of the state, we see no change
     fig, ax, _anim1 = animate_data_over_list_1d_x(evolution, measure="abs")
     ax.set_title("Abs state, which does not change with time")
+    fig.show()
+
+    # We can also use Qutip to solve the same problem without using eigenvalue decomposition.
+    evolution = solve_schrodinger_equation(initial_state, times, hamiltonian)
+    # The state changes in time, but only by a phase difference
+    fig, ax, _anim2 = animate_data_over_list_1d_x(evolution, measure="real")
+    ax.set_title("Real part of the state as simulated by Qutip")
+    fig.show()
+    # If we plot the absolute value of the state, we see no change
+    fig, ax, _anim3 = animate_data_over_list_1d_x(evolution, measure="abs")
+    ax.set_title("Abs state, which does not change with time as simulated by Qutip")
     fig.show()
 
     plot.wait_for_close()

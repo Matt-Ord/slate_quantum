@@ -175,8 +175,8 @@ type PositionOperatorList[
 type Potential[
     M: BasisMetadata,
     E: AxisDirections,
-    CT: Ctype[Never],
-    DT: np.dtype[np.generic],
+    CT: Ctype[Never] = Ctype[Never],
+    DT: np.dtype[np.generic] = np.dtype[np.complexfloating],
 ] = PositionOperator[PositionOperatorBasis[M, E, CT], DT]
 
 
