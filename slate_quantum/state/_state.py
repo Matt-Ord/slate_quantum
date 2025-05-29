@@ -121,9 +121,14 @@ class StateList[
     ) -> State[Basis[M1_], DT]: ...
 
     @overload
-    def __getitem__[M1_: BasisMetadata, I: slice | tuple[array.NestedIndex, ...]](
-        self: StateList[TupleBasisLike2D[tuple[Any, M1_]]], index: tuple[I, slice[None]]
-    ) -> StateList[TupleBasisLike2D[tuple[Any, M1_]], DT]: ...
+    def __getitem__[
+        M1_: BasisMetadata,
+        I: slice | tuple[array.NestedIndex, ...],
+        DT_: np.dtype[np.generic],
+    ](
+        self: StateList[TupleBasisLike2D[tuple[Any, M1_]], DT_],
+        index: tuple[I, slice[None]],
+    ) -> StateList[TupleBasisLike2D[tuple[Any, M1_]], DT_]: ...
 
     @overload
     def __getitem__[DT1: Ctype[Never], DT_: np.dtype[np.generic]](
@@ -194,9 +199,9 @@ class StateList[
         )
 
 
-type StateListWithMetadata[M0: BasisMetadata, M1: BasisMetadata, B: Basis = Basis] = (
-    StateList[TupleBasisLike[tuple[M0, M1], None], np.dtype[np.complexfloating]]
-)
+type StateListWithMetadata[M0: BasisMetadata, M1: BasisMetadata] = StateList[
+    TupleBasisLike[tuple[M0, M1], None], np.dtype[np.complexfloating]
+]
 
 
 def inner_product_each[

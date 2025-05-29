@@ -40,3 +40,13 @@ def repeat_volume_metadata(
         ),
         metadata.extra,
     )
+
+
+def unit_cell_metadata[E: AxisDirections](
+    metadata: TupleMetadata[tuple[RepeatedLengthMetadata, ...], E],
+) -> TupleMetadata[tuple[SpacedLengthMetadata, ...], E]:
+    """Get the fundamental cell metadata from the repeated volume metadata."""
+    return TupleMetadata(
+        tuple(c.inner for c in metadata.children),
+        metadata.extra,
+    )

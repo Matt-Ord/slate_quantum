@@ -17,7 +17,10 @@ from slate_core.metadata.volume import (
 )
 
 from slate_quantum.operator._build._momentum import momentum
-from slate_quantum.operator._operator import Operator, OperatorMetadata
+from slate_quantum.operator._operator import (
+    Operator,
+    OperatorMetadata,
+)
 
 if TYPE_CHECKING:
     from slate_core import Ctype
@@ -42,19 +45,23 @@ def _wrap_k_points(
     return np.mod(k_points + shift, 2 * shift) - shift
 
 
-def kinetic_energy[M: SpacedLengthMetadata, E: AxisDirections](
-    metadata: TupleMetadata[tuple[M, ...], E],
-    mass: float,
+def _get_bloch_phase(
+    metadata: TupleMetadata[tuple[SpacedLengthMetadata, ...], AxisDirections],
     bloch_fraction: np.ndarray[Any, np.dtype[np.floating]] | None = None,
-) -> MomentumOperator[M, E, Ctype[Never], np.dtype[np.complexfloating]]:
-    """Given a mass and a basis calculate the kinetic part of the Hamiltonian."""
+) -> np.ndarray[Any, np.dtype[np.floating]]:
+    """Get the default Bloch fraction for the given metadata."""
     bloch_fraction = (
         np.zeros(len(metadata.children)) if bloch_fraction is None else bloch_fraction
     )
+    return np.tensordot(fundamental_stacked_dk(metadata), bloch_fraction, axes=(0, 0))
 
-    bloch_phase = np.tensordot(
-        fundamental_stacked_dk(metadata), bloch_fraction, axes=(0, 0)
-    )
+
+def _kinetic_energy_with_phase_offset[M: SpacedLengthMetadata, E: AxisDirections](
+    metadata: TupleMetadata[tuple[M, ...], E],
+    mass: float,
+    bloch_phase: np.ndarray[Any, np.dtype[np.floating]],
+) -> MomentumOperator[M, E, Ctype[Never], np.dtype[np.complexfloating]]:
+    """Given a mass and a basis calculate the kinetic part of the Hamiltonian."""
     k_points = fundamental_stacked_k_points(metadata) + bloch_phase[:, np.newaxis]
     k_points = _wrap_k_points(
         k_points, tuple(np.linalg.norm(fundamental_stacked_delta_k(metadata), axis=1))
@@ -68,8 +75,18 @@ def kinetic_energy[M: SpacedLengthMetadata, E: AxisDirections](
     return momentum(momentum_basis, energy)
 
 
+def kinetic_energy[M: SpacedLengthMetadata, E: AxisDirections](
+    metadata: TupleMetadata[tuple[M, ...], E],
+    mass: float,
+    bloch_fraction: np.ndarray[Any, np.dtype[np.floating]] | None = None,
+) -> MomentumOperator[M, E, Ctype[Never], np.dtype[np.complexfloating]]:
+    """Given a mass and a basis calculate the kinetic part of the Hamiltonian."""
+    bloch_phase = _get_bloch_phase(metadata, bloch_fraction)
+    return _kinetic_energy_with_phase_offset(metadata, mass, bloch_phase)
+
+
 def kinetic_hamiltonian[M: SpacedLengthMetadata, E: AxisDirections](
-    potential: Potential[M, E, Ctype[Never], np.dtype[np.complexfloating]],
+    potential: Potential[M, E],
     mass: float,
     bloch_fraction: np.ndarray[Any, np.dtype[np.floating]] | None = None,
 ) -> Operator[
@@ -86,9 +103,8 @@ def kinetic_hamiltonian[M: SpacedLengthMetadata, E: AxisDirections](
     metadata = potential.basis.metadata().children[0]
     kinetic_hamiltonian = kinetic_energy(metadata, mass, bloch_fraction)
     basis = SplitBasis(potential.basis, kinetic_hamiltonian.basis)
-    upcast = AsUpcast(basis, TupleMetadata((metadata, metadata)))
 
     return Operator(
-        upcast,
+        AsUpcast(basis, TupleMetadata((metadata, metadata))),
         np.concatenate([potential.raw_data, kinetic_hamiltonian.raw_data], axis=None),
     )

@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+from slate_quantum.operator._build._caldeira_leggett import (
+    caldeira_leggett_collapse,
+    caldeira_leggett_shift,
+)
 from slate_quantum.operator._build._hamiltonian import (
     kinetic_energy,
     kinetic_hamiltonian,
@@ -48,6 +52,8 @@ __all__ = [
     "all_scattering_operators",
     "axis_periodic_operator",
     "axis_scattering_operator",
+    "caldeira_leggett_collapse",
+    "caldeira_leggett_shift",
     "cos_potential",
     "fcc_potential",
     "filter_scatter",

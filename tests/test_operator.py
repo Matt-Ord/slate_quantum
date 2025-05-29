@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Any
+
 import numpy as np
 from scipy.constants import hbar  # type: ignore stubs
 from slate_core import array, basis
@@ -199,6 +201,12 @@ def test_k_operator() -> None:
         ),
     )
 
+    np.testing.assert_allclose(
+        (momentum_operator * hbar).as_array(),
+        operator.build.p(metadata, axis=0).as_array(),
+        atol=1e-15,
+    )
+
 
 def test_x_k_commutator() -> None:
     metadata = spaced_volume_metadata_from_stacked_delta_x(
@@ -337,7 +345,7 @@ def test_build_fcc_operator() -> None:
     np.testing.assert_allclose(actual.as_array(), expected.as_array())
 
 
-def test_build_cl_operators() -> None:
+def test_build_periodic_cl_operators() -> None:
     metadata = spaced_volume_metadata_from_stacked_delta_x(
         (np.array([2 * np.pi]),), (160,)
     )
@@ -401,6 +409,35 @@ def test_build_cl_operators() -> None:
     )
 
 
+def test_build_cl_operator() -> None:
+    metadata = spaced_volume_metadata_from_stacked_delta_x(
+        (np.array([2 * np.pi]),), (160,)
+    )
+    temperature = 1
+    mass = 1
+
+    operators = noise.build.caldeira_leggett_operators(metadata)
+    # Should only have 1 operator for a 1D system
+    assert operators.basis.metadata().fundamental_shape[0] == (1,)
+
+    # The cl-operator should be the same as x
+    x_operator = operator.build.x(metadata, axis=0)
+    np.testing.assert_allclose(
+        operators[0, :].as_array(), x_operator.as_array(), atol=1e-15
+    )
+
+    hamiltonian = operator.build.kinetic_energy(metadata, mass)
+    corrected_operators = noise.build.temperature_corrected_operators(
+        hamiltonian, operators, temperature
+    )
+    assert corrected_operators.basis.metadata().fundamental_shape[0] == (1,)
+    # [x, p] = i hbar
+    commutator = operator.commute(
+        operator.build.x(metadata, axis=0), operator.build.p(metadata, axis=0)
+    )
+    np.testing.assert_allclose(commutator.as_array(), (1j * hbar), atol=1e-15)
+
+
 def test_dagger() -> None:
     metadata = spaced_volume_metadata_from_stacked_delta_x(
         (np.array([2 * np.pi]),), (5,)
@@ -421,4 +458,45 @@ def test_dagger() -> None:
     assert (
         operator.dagger(scatter_operator).basis.is_dual
         == scatter_operator.basis.is_dual
+    )
+
+
+def commutator_numpy(
+    a: np.ndarray[Any, np.dtype[np.complexfloating]],
+    b: np.ndarray[Any, np.dtype[np.complexfloating]],
+) -> np.ndarray[Any, np.dtype[np.complexfloating]]:
+    return a @ b - b @ a
+
+
+def test_commute() -> None:
+    metadata = spaced_volume_metadata_from_stacked_delta_x(
+        (np.array([2 * np.pi * 10]),), (300,)
+    )
+
+    position_operator = operator.build.x(metadata, axis=0)
+    k_operator = operator.build.k(metadata, axis=0)
+
+    commutator = operator.commute(position_operator, k_operator)
+    np.testing.assert_allclose(
+        commutator.as_array(),
+        commutator_numpy(position_operator.as_array(), k_operator.as_array()),
+        atol=1e-13,
+    )
+
+    mass = hbar**2
+    kinetic_operator = operator.build.kinetic_energy(metadata, mass)
+    commutator = operator.commute(kinetic_operator, position_operator)
+    np.testing.assert_allclose(
+        commutator.as_array(),
+        commutator_numpy(kinetic_operator.as_array(), position_operator.as_array()),
+        atol=2e-12,
+    )
+
+    potential = operator.build.cos_potential(metadata, 0)
+    hamiltonian = operator.build.kinetic_hamiltonian(potential, mass)
+    commutator = operator.commute(hamiltonian, position_operator)
+    np.testing.assert_allclose(
+        commutator.as_array(),
+        commutator_numpy(hamiltonian.as_array(), position_operator.as_array()),
+        atol=2e-12,
     )

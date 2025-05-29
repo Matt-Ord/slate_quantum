@@ -14,6 +14,7 @@ from slate_quantum.metadata._repeat import (
     RepeatedLengthMetadata,
     RepeatedVolumeMetadata,
     repeat_volume_metadata,
+    unit_cell_metadata,
 )
 
 __all__ = [
@@ -26,4 +27,5 @@ __all__ = [
     "TimeMetadata",
     "eigenvalue_basis",
     "repeat_volume_metadata",
+    "unit_cell_metadata",
 ]
