@@ -21,6 +21,7 @@ if TYPE_CHECKING:
     from slate_core.basis import Basis
 
 
+# TODO: this should use the ContractedBasis ...  # noqa: FIX002
 class BlochTransposedBasis[
     B: TupleBasis[tuple[Basis[RepeatedLengthMetadata], ...], Any],
     CT: Ctype[Never] = Ctype[Never],

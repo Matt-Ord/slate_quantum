@@ -79,10 +79,7 @@ def recast_diagonal_basis[
     return AsUpcast(recast, inner.metadata())
 
 
-def recast_diagonal_basis_with_metadata[
-    M: BasisMetadata,
-    CT: Ctype[Never],
-](
+def recast_diagonal_basis_with_metadata[M: BasisMetadata](
     inner_recast: Basis[M], outer_recast: Basis[M]
 ) -> DiagonalOperatorBasisWithMetadata[M]:
     inner = DiagonalBasis(
@@ -117,7 +114,7 @@ type PositionOperatorBasis[
         TupleBasis[tuple[Basis[M, Ctype[np.generic]], ...], E],
         TupleMetadata[tuple[M, ...], E],
     ],
-    TupleBasisLike[tuple[M, ...], E],
+    Basis[TupleMetadata[tuple[M, ...], E]],
     CT,
     OperatorMetadata[TupleMetadata[tuple[M, ...], E]],
 ]
