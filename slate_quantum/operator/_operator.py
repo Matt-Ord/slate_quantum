@@ -31,6 +31,8 @@ from slate_quantum.state._state import State, StateList, StateWithMetadata
 if TYPE_CHECKING:
     from collections.abc import Iterable, Iterator
 
+    from slate_core.array import ArrayWithMetadata
+
 
 def _assert_operator_basis(basis: Basis[BasisMetadata, Any]) -> None:
     is_dual = basis.is_dual
@@ -79,17 +81,26 @@ class Operator[B: OperatorBasis, DT: np.dtype[np.generic]](Array[B, DT]):
         other: Operator[Basis[M1], np.dtype[DT_]],
     ) -> Operator[Basis[M1, Ctype[DT_]], np.dtype[DT_]]: ...
     @overload
-    def __add__[M_: BasisMetadata, DT_: np.number](
-        self: Array[Basis[M_], np.dtype[DT_]],
-        other: Array[Basis[M_], np.dtype[DT_]],
-    ) -> Array[Basis[M_, Ctype[DT_]], np.dtype[DT_]]: ...
+    def __add__[M_: BasisMetadata, T: np.number](
+        self: ArrayWithMetadata[M_, np.dtype[T]],
+        other: ArrayWithMetadata[M_, np.dtype[T]],
+    ) -> Array[Basis[M_, Ctype[T]], np.dtype[T]]: ...
+    @overload
+    def __add__[M1: OperatorMetadata, DT_: np.number](
+        self: Operator[Basis[M1], np.dtype[DT_]], other: complex
+    ) -> Operator[Basis[M1, Ctype[DT_]], np.dtype[np.number]]: ...
+    @overload
+    def __add__[M_: BasisMetadata, T: np.number](
+        self: ArrayWithMetadata[M_, np.dtype[T]],
+        other: complex,
+    ) -> Array[Basis[M_, Ctype[T]], np.dtype[np.number]]: ...
     @override
-    def __add__[M_: BasisMetadata, DT_: np.number](
-        self: Array[Basis[M_], np.dtype[DT_]],
-        other: Array[Basis[M_], np.dtype[DT_]],
-    ) -> Array[Basis[M_, Ctype[DT_]], np.dtype[DT_]]:
-        array = cast("Array[Any, np.dtype[DT_]]", super()).__add__(other)
-        if isinstance(other, Operator):
+    def __add__[M_: BasisMetadata, T: np.number](  # type: ignore bad overload
+        self: ArrayWithMetadata[M_, np.dtype[T]],
+        other: ArrayWithMetadata[M_, np.dtype[T]] | complex,
+    ) -> Any:
+        array = cast("Array[Any, np.dtype[T]]", super()).__add__(other)
+        if isinstance(other, (Operator, complex, int, float)):
             return cast("Any", Operator(array.basis, array.raw_data))
         return array
 
@@ -99,17 +110,25 @@ class Operator[B: OperatorBasis, DT: np.dtype[np.generic]](Array[B, DT]):
         other: Operator[Basis[M1], np.dtype[DT_]],
     ) -> Operator[Basis[M1, Ctype[DT_]], np.dtype[DT_]]: ...
     @overload
-    def __sub__[M_: BasisMetadata, DT_: np.number](
-        self: Array[Basis[M_], np.dtype[DT_]],
-        other: Array[Basis[M_], np.dtype[DT_]],
-    ) -> Array[Basis[M_, Ctype[DT_]], np.dtype[DT_]]: ...
+    def __sub__[M1: BasisMetadata, DT_: np.number](
+        self: Array[Basis[M1], np.dtype[DT_]],
+        other: Array[Basis[M1], np.dtype[DT_]],
+    ) -> Array[Basis[M1, Ctype[DT_]], np.dtype[DT_]]: ...
+    @overload
+    def __sub__[M1: OperatorMetadata, DT_: np.number](
+        self: Operator[Basis[M1], np.dtype[DT_]], other: complex
+    ) -> Operator[Basis[M1, Ctype[DT_]], np.dtype[np.number]]: ...
+    @overload
+    def __sub__[M1: BasisMetadata, DT_: np.number](
+        self: Array[Basis[M1], np.dtype[DT_]], other: complex
+    ) -> Array[Basis[M1, Ctype[DT_]], np.dtype[np.number]]: ...
     @override
-    def __sub__[M_: BasisMetadata, DT_: np.number](
-        self: Array[Basis[M_], np.dtype[DT_]],
-        other: Array[Basis[M_], np.dtype[DT_]],
-    ) -> Array[Basis[M_, Ctype[DT_]], np.dtype[DT_]]:
-        array = cast("Array[Any, np.dtype[DT_]]", super()).__sub__(other)
-        if isinstance(other, Operator):
+    def __sub__[M_: BasisMetadata, T: np.number](  # type: ignore bad overload
+        self: ArrayWithMetadata[M_, np.dtype[T]],
+        other: ArrayWithMetadata[M_, np.dtype[T]] | complex,
+    ) -> Any:
+        array = cast("Array[Any, np.dtype[T]]", super()).__sub__(other)
+        if isinstance(other, (Operator, complex, int, float)):
             return cast("Any", Operator(array.basis, array.raw_data))
 
         return array
@@ -387,13 +406,24 @@ class OperatorList[
         self: Array[Basis[M_], np.dtype[DT_]],
         other: Array[Basis[M_], np.dtype[DT_]],
     ) -> Array[Basis[M_, Ctype[DT_]], np.dtype[DT_]]: ...
+    @overload
+    def __add__[M_: OperatorListMetadata, T: np.number](
+        self: OperatorList[Basis[M_], np.dtype[T]],
+        other: complex,
+    ) -> Array[Basis[M_, Ctype[T]], np.dtype[np.number]]: ...
+    @overload
+    def __add__[M_: BasisMetadata, T: np.number](
+        self: ArrayWithMetadata[M_, np.dtype[T]],
+        other: complex,
+    ) -> Array[Basis[M_, Ctype[T]], np.dtype[np.number]]: ...
+
     @override
-    def __add__[M_: BasisMetadata, DT_: np.number](
+    def __add__[M_: BasisMetadata, DT_: np.number](  # type: ignore bad overload
         self: Array[Basis[M_], np.dtype[DT_]],
         other: Array[Basis[M_], np.dtype[DT_]],
     ) -> Array[Basis[M_, Ctype[DT_]], np.dtype[DT_]]:
         array = cast("Array[Any, np.dtype[DT_]]", super()).__add__(other)
-        if isinstance(other, OperatorList):
+        if isinstance(other, (OperatorList, complex, int, float)):
             return cast("Any", OperatorList(array.basis, array.raw_data))
         return array
 
@@ -407,13 +437,23 @@ class OperatorList[
         self: Array[Basis[M_], np.dtype[DT_]],
         other: Array[Basis[M_], np.dtype[DT_]],
     ) -> Array[Basis[M_, Ctype[DT_]], np.dtype[DT_]]: ...
+    @overload
+    def __sub__[M_: OperatorListMetadata, T: np.number](
+        self: OperatorList[Basis[M_], np.dtype[T]],
+        other: complex,
+    ) -> Array[Basis[M_, Ctype[T]], np.dtype[np.number]]: ...
+    @overload
+    def __sub__[M_: BasisMetadata, T: np.number](
+        self: ArrayWithMetadata[M_, np.dtype[T]],
+        other: complex,
+    ) -> Array[Basis[M_, Ctype[T]], np.dtype[np.number]]: ...
     @override
-    def __sub__[M_: BasisMetadata, DT_: np.number](
+    def __sub__[M_: BasisMetadata, DT_: np.number](  # type: ignore bad overload
         self: Array[Basis[M_], np.dtype[DT_]],
         other: Array[Basis[M_], np.dtype[DT_]],
     ) -> Array[Basis[M_, Ctype[DT_]], np.dtype[DT_]]:
         array = cast("Array[Any, np.dtype[DT_]]", super()).__sub__(other)
-        if isinstance(other, OperatorList):
+        if isinstance(other, (OperatorList, complex, int, float)):
             return OperatorList(array.basis, array.raw_data)
 
         return array
