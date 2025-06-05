@@ -41,7 +41,7 @@ if __name__ == "__main__":
     )
 
     idx = -2
-    fig, ax, _ = plot.array_against_axes_2d_x(array.flatten(operators[idx, :]))  # type: ignore refactor
+    fig, ax, _ = plot.array_against_axes_2d(array.flatten(operators[idx, :]))  # type: ignore refactor
     ax.set_label("Original noise operator")
     fig.show()
 
@@ -49,7 +49,7 @@ if __name__ == "__main__":
     ax.set_label("Original noise operator")
     fig.show()
 
-    fig, ax, _ = plot.array_against_axes_2d_x(
+    fig, ax, _ = plot.array_against_axes_2d(
         array.flatten(corrected_operators[idx, :])  # type: ignore refactor
     )
     ax.set_label("Temperature corrected noise operator")

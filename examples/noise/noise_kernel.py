@@ -37,7 +37,7 @@ if __name__ == "__main__":
     # We can also plot the 'full' isotropic kernel, to see the correlation
     # between all points in the system.
     diagonal_data = array.flatten(array.as_outer_basis(array.as_inner_basis(kernel)))  # type: ignore refactor
-    fig, ax, _ = plot.array_against_axes_2d_x(diagonal_data)  # type: ignore refactor
+    fig, ax, _ = plot.array_against_axes_2d(diagonal_data)  # type: ignore refactor
     ax.set_title(r"Isotropic Gaussian Kernel with $\sigma = \pi / \sqrt{2}$")
     fig.show()
 

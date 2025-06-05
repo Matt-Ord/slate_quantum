@@ -50,13 +50,13 @@ if __name__ == "__main__":
     ax.set_title("2D Cos Potential at x1=0")
     ax.set_ylabel("V(x)")
     fig.show()
-    fig, ax, line = plot.array_against_axes_2d_x(array.extract_diagonal(potential))
+    fig, ax, line = plot.array_against_axes_2d(array.extract_diagonal(potential))
     ax.set_title("Cos Potential in 2D")
     fig.show()
 
     potential = operator.repeat_potential(potential, (3, 4))
     # A repeated cos potential, with (3, 4) repeats
-    fig, ax, line = plot.array_against_axes_2d_x(array.extract_diagonal(potential))
+    fig, ax, line = plot.array_against_axes_2d(array.extract_diagonal(potential))
     ax.set_title("Repeated 2D Cos Potential")
     fig.show()
 
@@ -64,7 +64,7 @@ if __name__ == "__main__":
     potential = operator.build.square_potential(
         metadata, 10, n_terms=(30, 30), lanczos_factor=1
     )
-    fig, ax, line = plot.array_against_axes_2d_x(array.extract_diagonal(potential))
+    fig, ax, line = plot.array_against_axes_2d(array.extract_diagonal(potential))
     ax.set_title("2D Square Potential")
     ax.set_ylabel("V(x)")
     fig.show()
@@ -84,7 +84,7 @@ if __name__ == "__main__":
     ax.set_title("2D Cos Potential with FCC symmetry at x1=0")
     ax.set_ylabel("V(x)")
     fig.show()
-    fig, ax, line = plot.array_against_axes_2d_x(array.extract_diagonal(potential))
+    fig, ax, line = plot.array_against_axes_2d(array.extract_diagonal(potential))
     ax.set_title("Cos Potential in 2D with FCC symmetry")
     fig.show()
 
@@ -93,7 +93,7 @@ if __name__ == "__main__":
     ax.set_title("FCC Potential at x1=0")
     ax.set_ylabel("V(x)")
     fig.show()
-    fig, ax, line = plot.array_against_axes_2d_x(array.extract_diagonal(potential))
+    fig, ax, line = plot.array_against_axes_2d(array.extract_diagonal(potential))
     ax.set_title("FCC Potential in 2D")
     fig.show()
 
