@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Never
+from typing import TYPE_CHECKING, Any, Never, cast
 
 import numpy as np
 from slate_core import BasisMetadata, Ctype, TupleMetadata, basis
@@ -13,8 +13,10 @@ from slate_core.basis import (
 )
 from slate_core.metadata import (
     AxisDirections,
-    SpacedLengthMetadata,
-    SpacedVolumeMetadata,
+    EvenlySpacedLengthMetadata,
+    EvenlySpacedMetadata,
+    EvenlySpacedVolumeMetadata,
+    LengthMetadata,
 )
 
 from slate_quantum._util import outer_product
@@ -43,7 +45,7 @@ _build_potential = potential
 
 def repeat_potential(
     potential: Potential[
-        SpacedLengthMetadata,
+        EvenlySpacedLengthMetadata,
         AxisDirections,
         Ctype[Never],
         np.dtype[np.complexfloating],
@@ -74,9 +76,9 @@ def repeat_potential(
 
 
 def cos_potential(
-    metadata: SpacedVolumeMetadata,
+    metadata: EvenlySpacedVolumeMetadata,
     height: float,
-) -> Potential[SpacedLengthMetadata, AxisDirections]:
+) -> Potential[EvenlySpacedLengthMetadata, AxisDirections]:
     """Build a cosine potential."""
     transformed_basis = basis.transformed_from_metadata(metadata)
     # We need only the three lowest fourier components to represent this potential
@@ -92,9 +94,9 @@ def cos_potential(
 
 
 def sin_potential(
-    metadata: SpacedVolumeMetadata,
+    metadata: EvenlySpacedVolumeMetadata,
     height: float,
-) -> Potential[SpacedLengthMetadata, AxisDirections]:
+) -> Potential[EvenlySpacedLengthMetadata, AxisDirections]:
     """Build a cosine potential."""
     transformed_basis = basis.transformed_from_metadata(metadata)
     # We need only the three lowest fourier components to represent this potential
@@ -119,12 +121,12 @@ def _square_wave_points(
 
 
 def square_potential(
-    metadata: SpacedVolumeMetadata,
+    metadata: EvenlySpacedVolumeMetadata,
     height: float,
     *,
     n_terms: tuple[int, ...] | None = None,
     lanczos_factor: float = 0,
-) -> Potential[SpacedLengthMetadata, AxisDirections]:
+) -> Potential[EvenlySpacedLengthMetadata, AxisDirections]:
     """Build a square potential."""
     transformed_basis = basis.transformed_from_metadata(metadata)
     # We need only the three lowest fourier components to represent this potential
@@ -145,9 +147,9 @@ def square_potential(
 
 
 def fcc_potential(
-    metadata: SpacedVolumeMetadata,
+    metadata: EvenlySpacedVolumeMetadata,
     height: float,
-) -> Potential[SpacedLengthMetadata, AxisDirections]:
+) -> Potential[EvenlySpacedLengthMetadata, AxisDirections]:
     """Generate a potential suitable for modelling an fcc surface.
 
     This potential contains the lowest fourier components - however for an fcc surface
@@ -171,9 +173,9 @@ def fcc_potential(
 
 
 def potential_from_function[
-    M: SpacedLengthMetadata,
+    M: LengthMetadata,
     E: AxisDirections,
-    DT: np.dtype[np.generic],
+    DT: np.dtype[np.number],
 ](
     metadata: TupleMetadata[tuple[M, ...], E],
     fn: Callable[
@@ -188,16 +190,20 @@ def potential_from_function[
     positions = _metadata.volume.fundamental_stacked_x_points(
         metadata, offset=offset, wrapped=wrapped
     )
+    points = fn(positions)
+    if any(not isinstance(c, EvenlySpacedMetadata) for c in metadata.children):
+        weights = _metadata.fundamental_stacked_weights(metadata)
+        points *= cast("np.ndarray[Any, DT]", weights.astype(points.dtype))
 
     return potential(basis.from_metadata(metadata).upcast(), fn(positions))
 
 
 def harmonic_potential(
-    metadata: SpacedVolumeMetadata,
+    metadata: EvenlySpacedVolumeMetadata,
     frequency: float,
     *,
     offset: tuple[float, ...] | None = None,
-) -> Potential[SpacedLengthMetadata, AxisDirections]:
+) -> Potential[EvenlySpacedLengthMetadata, AxisDirections]:
     """Build a harmonic potential.
 
     V(x) = 0.5 * frequency^2 * ||x||^2

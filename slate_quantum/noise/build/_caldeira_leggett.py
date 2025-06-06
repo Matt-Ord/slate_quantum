@@ -7,7 +7,7 @@ from slate_core import Basis, FundamentalBasis, TupleBasis, TupleMetadata, basis
 from slate_core.basis import AsUpcast, CoordinateBasis
 from slate_core.metadata import (
     AxisDirections,
-    SpacedLengthMetadata,
+    EvenlySpacedLengthMetadata,
     size_from_nested_shape,
 )
 from slate_core.metadata.length import fundamental_dk
@@ -29,7 +29,7 @@ if TYPE_CHECKING:
     )
 
 
-type CLNoiseOperatorListLike[M: SpacedLengthMetadata, E] = OperatorList[
+type CLNoiseOperatorListLike[M: EvenlySpacedLengthMetadata, E] = OperatorList[
     AsUpcast[
         TupleBasis[
             tuple[
@@ -50,7 +50,7 @@ type CLNoiseOperatorListLike[M: SpacedLengthMetadata, E] = OperatorList[
 ]
 
 
-def periodic_caldeira_leggett_axis_operators[M: SpacedLengthMetadata](
+def periodic_caldeira_leggett_axis_operators[M: EvenlySpacedLengthMetadata](
     metadata: M,
 ) -> OperatorList[
     AsUpcast[
@@ -86,7 +86,7 @@ def periodic_caldeira_leggett_axis_operators[M: SpacedLengthMetadata](
 
 
 def periodic_caldeira_leggett_operators[
-    M: SpacedLengthMetadata,
+    M: EvenlySpacedLengthMetadata,
     E: AxisDirections,
 ](
     metadata: TupleMetadata[tuple[M, ...], E],
@@ -113,7 +113,7 @@ def periodic_caldeira_leggett_operators[
 
 
 def real_periodic_caldeira_leggett_operators[
-    M: SpacedLengthMetadata,
+    M: EvenlySpacedLengthMetadata,
     E: AxisDirections,
 ](
     metadata: TupleMetadata[tuple[M, ...], E],
@@ -172,7 +172,7 @@ def caldeira_leggett_correlation_fn(
     return fn
 
 
-def caldeira_leggett_operators[M: SpacedLengthMetadata, E: AxisDirections](
+def caldeira_leggett_operators[M: EvenlySpacedLengthMetadata, E: AxisDirections](
     metadata: TupleMetadata[tuple[M, ...], E],
 ) -> PositionOperatorList[EigenvalueMetadata, M, E, np.dtype[np.complexfloating]]:
     assert len(metadata.fundamental_shape) == 1

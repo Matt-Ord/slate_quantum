@@ -8,9 +8,9 @@ from scipy.special import factorial  # type:ignore bad stub file
 from slate_core.basis import FundamentalBasis
 from slate_core.metadata import (
     AxisDirections,
-    SpacedVolumeMetadata,
+    EvenlySpacedVolumeMetadata,
 )
-from slate_core.metadata.length import SpacedLengthMetadata
+from slate_core.metadata.length import EvenlySpacedLengthMetadata
 from slate_core.metadata.volume import fundamental_stacked_delta_x
 
 from slate_quantum.noise._kernel import (
@@ -48,7 +48,7 @@ if TYPE_CHECKING:
 
 
 def get_gaussian_isotropic_noise_kernel[
-    M: SpacedLengthMetadata,
+    M: EvenlySpacedLengthMetadata,
     E: AxisDirections,
 ](
     metadata: TupleMetadata[tuple[M, ...], E],
@@ -63,7 +63,7 @@ def get_gaussian_isotropic_noise_kernel[
     )
 
 
-def get_gaussian_axis_noise_kernel[M: SpacedLengthMetadata](
+def get_gaussian_axis_noise_kernel[M: EvenlySpacedLengthMetadata](
     metadata: TupleMetadata[tuple[M, ...], Any],
     a: float,
     lambda_: float,
@@ -75,7 +75,7 @@ def get_gaussian_axis_noise_kernel[M: SpacedLengthMetadata](
 
 
 def get_gaussian_noise_kernel[
-    M: SpacedLengthMetadata,
+    M: EvenlySpacedLengthMetadata,
     E: AxisDirections,
 ](
     metadata: TupleMetadata[tuple[M, ...], E],
@@ -91,7 +91,7 @@ def get_gaussian_noise_kernel[
 
 
 def get_effective_gaussian_parameters(
-    metadata: SpacedVolumeMetadata,
+    metadata: EvenlySpacedVolumeMetadata,
     eta: float,
     temperature: float,
     *,
@@ -118,7 +118,7 @@ def get_effective_gaussian_parameters(
 
 
 def get_effective_gaussian_noise_kernel[
-    M: SpacedLengthMetadata,
+    M: EvenlySpacedLengthMetadata,
     E: AxisDirections,
 ](
     metadata: TupleMetadata[tuple[M, ...], E],
@@ -142,7 +142,7 @@ def get_effective_gaussian_noise_kernel[
 
 
 def get_effective_gaussian_isotropic_noise_kernel[
-    M: SpacedLengthMetadata,
+    M: EvenlySpacedLengthMetadata,
     E: AxisDirections,
 ](
     metadata: TupleMetadata[tuple[M, ...], E],
@@ -166,7 +166,7 @@ def get_effective_gaussian_isotropic_noise_kernel[
 
 
 def get_gaussian_noise_operators_periodic[
-    M: SpacedLengthMetadata,
+    M: EvenlySpacedLengthMetadata,
     E: AxisDirections,
 ](
     metadata: TupleMetadata[tuple[M, ...], E],
@@ -190,7 +190,7 @@ def get_gaussian_noise_operators_periodic[
 
 
 def get_effective_gaussian_noise_operators_periodic[
-    M: SpacedLengthMetadata,
+    M: EvenlySpacedLengthMetadata,
     E: AxisDirections,
 ](
     metadata: TupleMetadata[tuple[M, ...], E],
@@ -218,7 +218,7 @@ def _get_explicit_taylor_coefficients_gaussian(
     return (a**2 / factorial(i)) * ((-1 / (2 * lambda_**2)) ** i)  # type: ignore unknown
 
 
-def get_periodic_gaussian_operators_explicit_taylor[M: SpacedLengthMetadata](
+def get_periodic_gaussian_operators_explicit_taylor[M: EvenlySpacedLengthMetadata](
     metadata: M,
     a: float,
     lambda_: float,
@@ -254,7 +254,7 @@ def get_periodic_gaussian_operators_explicit_taylor[M: SpacedLengthMetadata](
     )
 
 
-def get_linear_gaussian_noise_operators_explicit_taylor[M: SpacedLengthMetadata](
+def get_linear_gaussian_noise_operators_explicit_taylor[M: EvenlySpacedLengthMetadata](
     metadata: M,
     a: float,
     lambda_: float,
@@ -279,7 +279,10 @@ def get_linear_gaussian_noise_operators_explicit_taylor[M: SpacedLengthMetadata]
     )
 
 
-def get_periodic_gaussian_operators_explicit_taylor_stacked[M: SpacedLengthMetadata, E](
+def get_periodic_gaussian_operators_explicit_taylor_stacked[
+    M: EvenlySpacedLengthMetadata,
+    E,
+](
     metadata: TupleMetadata[tuple[M, ...], E],
     a: float,
     lambda_: float,
@@ -307,7 +310,10 @@ def get_periodic_gaussian_operators_explicit_taylor_stacked[M: SpacedLengthMetad
     return get_diagonal_noise_operators_from_axis(axis_operators, metadata.extra)
 
 
-def get_linear_gaussian_operators_explicit_taylor_stacked[M: SpacedLengthMetadata, E](
+def get_linear_gaussian_operators_explicit_taylor_stacked[
+    M: EvenlySpacedLengthMetadata,
+    E,
+](
     metadata: TupleMetadata[tuple[M, ...], E],
     a: float,
     lambda_: float,

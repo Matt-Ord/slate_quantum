@@ -5,25 +5,25 @@ from typing import Any
 import numpy as np
 from slate_core import FundamentalBasis
 from slate_core.metadata import (
-    DeltaMetadata,
+    EvenlySpacedMetadata,
     ExplicitLabeledMetadata,
-    SpacedLabeledMetadata,
+    SpacedMetadata,
 )
 
 
-class TimeMetadata(DeltaMetadata[np.dtype[np.floating]]):
+class TimeMetadata(SpacedMetadata[np.dtype[np.floating]]):
     """Metadata with the addition of length."""
 
 
-class SpacedTimeMetadata(SpacedLabeledMetadata, TimeMetadata):
+class SpacedTimeMetadata(EvenlySpacedMetadata, TimeMetadata):
     """Metadata with the addition of length."""
 
 
-class MomentumMetadata(DeltaMetadata[np.dtype[np.floating]]):
+class MomentumMetadata(SpacedMetadata[np.dtype[np.floating]]):
     """Metadata with the addition of momentum."""
 
 
-class SpacedMomentumMetadata(SpacedLabeledMetadata, MomentumMetadata):
+class EvenlySpacedMomentumMetadata(EvenlySpacedMetadata, MomentumMetadata):
     """Metadata with the addition of momentum."""
 
 

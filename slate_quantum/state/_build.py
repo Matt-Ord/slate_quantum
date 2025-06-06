@@ -15,8 +15,8 @@ from slate_core import (
 from slate_core import metadata as _metadata
 from slate_core.metadata import (
     AxisDirections,
-    SpacedLengthMetadata,
-    SpacedVolumeMetadata,
+    EvenlySpacedLengthMetadata,
+    EvenlySpacedVolumeMetadata,
 )
 
 from slate_quantum.state._state import State
@@ -37,12 +37,12 @@ def wrap_displacements(
 
 
 def _get_displacements_x_along_axis(
-    metadata: SpacedVolumeMetadata,
+    metadata: EvenlySpacedVolumeMetadata,
     origin: float,
     axis: int,
 ) -> Array[
     TupleBasis[
-        tuple[Basis[SpacedLengthMetadata], ...], AxisDirections, Ctype[np.generic]
+        tuple[Basis[EvenlySpacedLengthMetadata], ...], AxisDirections, Ctype[np.generic]
     ],
     np.dtype[np.floating],
 ]:
@@ -59,11 +59,13 @@ def _get_displacements_x_along_axis(
 
 
 def get_displacements_x_stacked(
-    metadata: SpacedVolumeMetadata, origin: tuple[float, ...]
+    metadata: EvenlySpacedVolumeMetadata, origin: tuple[float, ...]
 ) -> tuple[
     Array[
         TupleBasis[
-            tuple[Basis[SpacedLengthMetadata], ...], AxisDirections, Ctype[np.generic]
+            tuple[Basis[EvenlySpacedLengthMetadata], ...],
+            AxisDirections,
+            Ctype[np.generic],
         ],
         np.dtype[np.floating],
     ],
@@ -76,7 +78,7 @@ def get_displacements_x_stacked(
     )
 
 
-def coherent[M: SpacedLengthMetadata, E: AxisDirections](
+def coherent[M: EvenlySpacedLengthMetadata, E: AxisDirections](
     metadata: TupleMetadata[tuple[M, ...], E],
     x_0: tuple[float, ...],
     k_0: tuple[float, ...],
@@ -99,7 +101,7 @@ def coherent[M: SpacedLengthMetadata, E: AxisDirections](
     return State(basis.from_metadata(metadata).upcast(), data / norm)
 
 
-def position[M: SpacedLengthMetadata, E: AxisDirections](
+def position[M: EvenlySpacedLengthMetadata, E: AxisDirections](
     metadata: TupleMetadata[tuple[M, ...], E],
     idx: tuple[int, ...],
 ) -> State[TupleBasisLike[tuple[M, ...], E]]:
@@ -111,7 +113,7 @@ def position[M: SpacedLengthMetadata, E: AxisDirections](
     return State(position_basis, data)
 
 
-def momentum[M: SpacedLengthMetadata, E: AxisDirections](
+def momentum[M: EvenlySpacedLengthMetadata, E: AxisDirections](
     metadata: TupleMetadata[tuple[M, ...], E],
     idx: tuple[int, ...],
 ) -> State[TupleBasisLike[tuple[M, ...], E]]:
@@ -123,7 +125,7 @@ def momentum[M: SpacedLengthMetadata, E: AxisDirections](
     return State(momentum_basis, data)
 
 
-def from_function[M: SpacedLengthMetadata, E: AxisDirections](
+def from_function[M: EvenlySpacedLengthMetadata, E: AxisDirections](
     metadata: TupleMetadata[tuple[M, ...], E],
     fn: Callable[
         [tuple[np.ndarray[Any, np.dtype[np.floating]], ...]],

@@ -34,7 +34,7 @@ if TYPE_CHECKING:
     from slate_core.metadata import (
         BasisMetadata,
     )
-    from slate_core.metadata.length import LengthMetadata, SpacedLengthMetadata
+    from slate_core.metadata.length import EvenlySpacedLengthMetadata, LengthMetadata
 
     from slate_quantum.noise._kernel import AxisKernel
     from slate_quantum.operator._operator import (
@@ -59,7 +59,7 @@ def isotropic_kernel_from_function[M: LengthMetadata](
 
 
 def isotropic_kernel_from_function_stacked[
-    M: SpacedLengthMetadata,
+    M: EvenlySpacedLengthMetadata,
     E: AxisDirections,
 ](
     metadata: TupleMetadata[tuple[M, ...], E],
@@ -77,7 +77,7 @@ def isotropic_kernel_from_function_stacked[
     return build_isotropic_kernel(displacements.basis.inner.children[0], correlation)
 
 
-def axis_kernel_from_function_stacked[M: SpacedLengthMetadata](
+def axis_kernel_from_function_stacked[M: EvenlySpacedLengthMetadata](
     metadata: TupleMetadata[tuple[M, ...], Any],
     fn: Callable[
         [np.ndarray[Any, np.dtype[np.float64]]],

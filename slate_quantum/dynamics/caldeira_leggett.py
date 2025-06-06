@@ -9,7 +9,7 @@ from slate_core import FundamentalBasis, TupleBasis, basis
 from slate_core.basis import CroppedBasis
 from slate_core.metadata import (
     AxisDirections,
-    SpacedLengthMetadata,
+    EvenlySpacedLengthMetadata,
 )
 from slate_core.util import timed
 
@@ -39,7 +39,7 @@ if TYPE_CHECKING:
 
 
 @dataclass(frozen=True, kw_only=True)
-class CaldeiraLeggettCondition[M: SpacedLengthMetadata, E: AxisDirections]:
+class CaldeiraLeggettCondition[M: EvenlySpacedLengthMetadata, E: AxisDirections]:
     """Specifies the condition for a Caldeira-Leggett simulation."""
 
     mass: float
@@ -52,7 +52,7 @@ class CaldeiraLeggettCondition[M: SpacedLengthMetadata, E: AxisDirections]:
 DT_RATIO = 10000
 
 
-def _approximate_dt[M: SpacedLengthMetadata, E: AxisDirections](
+def _approximate_dt[M: EvenlySpacedLengthMetadata, E: AxisDirections](
     hamiltonian: Operator[
         OperatorBasis[TupleMetadata[tuple[M, ...], E]], np.dtype[np.complexfloating]
     ],
@@ -65,7 +65,7 @@ def _approximate_dt[M: SpacedLengthMetadata, E: AxisDirections](
     return 1 / (d_psi * DT_RATIO)
 
 
-def _get_simulation_basis[M: SpacedLengthMetadata, E: AxisDirections](
+def _get_simulation_basis[M: EvenlySpacedLengthMetadata, E: AxisDirections](
     metadata: TupleMetadata[tuple[M, ...], E],
 ) -> Basis[TupleMetadata[tuple[M, ...], E]]:
     """Get the simulation basis for the Caldeira-Leggett model."""
@@ -84,7 +84,7 @@ def _get_simulation_basis[M: SpacedLengthMetadata, E: AxisDirections](
 
 @timed
 def simulate_caldeira_leggett_realizations[
-    M: SpacedLengthMetadata,
+    M: EvenlySpacedLengthMetadata,
     E: AxisDirections,
     MT: TimeMetadata,
 ](

@@ -8,8 +8,8 @@ from slate_core import BasisMetadata, Ctype, TupleMetadata, basis
 from slate_core import metadata as _metadata
 from slate_core.metadata import (
     AxisDirections,
-    SpacedLengthMetadata,
-    SpacedVolumeMetadata,
+    EvenlySpacedLengthMetadata,
+    EvenlySpacedVolumeMetadata,
 )
 
 from slate_quantum.operator._diagonal import (
@@ -36,20 +36,28 @@ def momentum[M: BasisMetadata, E, CT: Ctype[Never], DT: np.dtype[np.generic]](
     return Operator(momentum_operator_basis(outer_basis), data)
 
 
-def k[M: SpacedLengthMetadata, E: AxisDirections](
+def k[M: EvenlySpacedLengthMetadata, E: AxisDirections](
     metadata: TupleMetadata[tuple[M, ...], E], *, axis: int
 ) -> MomentumOperator[M, E, Ctype[Never], np.dtype[np.complexfloating]]:
     """Get the k operator."""
+    if any(c.is_periodic for c in metadata.children):
+        msg = "Currently, we only support k operators for periodic axes."
+        raise NotImplementedError(msg)
+
     points = _metadata.volume.fundamental_stacked_k_points(metadata)[axis].astype(
         np.complex128
     )
     return momentum(basis.transformed_from_metadata(metadata).upcast(), points)
 
 
-def p[M: SpacedLengthMetadata, E: AxisDirections](
+def p[M: EvenlySpacedLengthMetadata, E: AxisDirections](
     metadata: TupleMetadata[tuple[M, ...], E], *, axis: int
 ) -> MomentumOperator[M, E, Ctype[Never], np.dtype[np.complexfloating]]:
     """Get the p operator."""
+    if any(c.is_periodic for c in metadata.children):
+        msg = "Currently, we only support p operators for periodic axes."
+        raise NotImplementedError(msg)
+
     points = _metadata.volume.fundamental_stacked_k_points(metadata)[axis].astype(
         np.complex128
     )
@@ -59,7 +67,7 @@ def p[M: SpacedLengthMetadata, E: AxisDirections](
     )
 
 
-def momentum_from_function[M: SpacedLengthMetadata, E: AxisDirections, DT: np.generic](
+def momentum_from_function[M: EvenlySpacedLengthMetadata, E: AxisDirections](
     metadata: TupleMetadata[tuple[M, ...], E],
     fn: Callable[
         [tuple[np.ndarray[Any, np.dtype[np.floating]], ...]],
@@ -70,6 +78,7 @@ def momentum_from_function[M: SpacedLengthMetadata, E: AxisDirections, DT: np.ge
     offset: tuple[float, ...] | None = None,
 ) -> MomentumOperator[M, E, Ctype[Never], np.dtype[np.complexfloating]]:
     """Get the k operator from a function."""
+    assert all(c.is_periodic for c in metadata.children)
     positions = _metadata.volume.fundamental_stacked_k_points(
         metadata, offset=offset, wrapped=wrapped
     )
@@ -79,9 +88,9 @@ def momentum_from_function[M: SpacedLengthMetadata, E: AxisDirections, DT: np.ge
 
 def filter_scatter(
     operator: Operator[
-        OperatorBasis[SpacedVolumeMetadata], np.dtype[np.complexfloating]
+        OperatorBasis[EvenlySpacedVolumeMetadata], np.dtype[np.complexfloating]
     ],
-) -> Operator[OperatorBasis[SpacedVolumeMetadata], np.dtype[np.complexfloating]]:
+) -> Operator[OperatorBasis[EvenlySpacedVolumeMetadata], np.dtype[np.complexfloating]]:
     converted = operator.with_basis(
         basis.transformed_from_metadata(
             operator.basis.metadata(), is_dual=operator.basis.is_dual
@@ -103,11 +112,11 @@ def filter_scatter(
 
 def all_filter_scatter[M: BasisMetadata](
     operator: OperatorList[
-        OperatorListBasis[M, OperatorMetadata[SpacedVolumeMetadata]],
+        OperatorListBasis[M, OperatorMetadata[EvenlySpacedVolumeMetadata]],
         np.dtype[np.complexfloating],
     ],
 ) -> OperatorList[
-    OperatorListBasis[M, OperatorMetadata[SpacedVolumeMetadata]],
+    OperatorListBasis[M, OperatorMetadata[EvenlySpacedVolumeMetadata]],
     np.dtype[np.complexfloating],
 ]:
     is_dual = basis.as_tuple(operator.basis).is_dual[1]

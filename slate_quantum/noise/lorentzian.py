@@ -8,7 +8,7 @@ from slate_core import Basis, TupleMetadata
 from slate_core import basis as basis_
 from slate_core.metadata import (
     AxisDirections,
-    SpacedLengthMetadata,
+    EvenlySpacedLengthMetadata,
     VolumeMetadata,
     shallow_shape_from_nested,
 )
@@ -48,7 +48,10 @@ def get_effective_lorentzian_parameter(
     return (a, lambda_)
 
 
-def get_lorentzian_isotropic_noise_kernel[M: SpacedLengthMetadata, E: AxisDirections](
+def get_lorentzian_isotropic_noise_kernel[
+    M: EvenlySpacedLengthMetadata,
+    E: AxisDirections,
+](
     metadata: TupleMetadata[tuple[M, ...], E],
     a: float,
     lambda_: float,
