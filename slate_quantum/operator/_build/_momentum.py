@@ -129,7 +129,7 @@ def all_filter_scatter[M: BasisMetadata](
         -1, *converted.basis.inner.children[1].inner.shape
     )
     nk_points = _metadata.fundamental_stacked_nk_points(
-        operator.basis.metadata().children[1].children[0].children[0]
+        operator.basis.metadata().children[1].children[0]
     )
     mask = np.all(
         [

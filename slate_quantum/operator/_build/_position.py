@@ -100,7 +100,7 @@ type FundamentalPositionOperatorListBasis[
 ]
 
 
-def nx_displacement_operators_stacked[M: BasisMetadata](
+def nx_displacement_operators_stacked[M: TupleMetadata[tuple[BasisMetadata, ...]]](
     metadata: M,
 ) -> OperatorList[
     AsUpcast[
@@ -116,7 +116,9 @@ def nx_displacement_operators_stacked[M: BasisMetadata](
     np.dtype[np.signedinteger],
 ]:
     """Get a matrix of displacements in nx, taken in a periodic fashion."""
-    out_basis = operator_basis(basis.from_metadata(metadata)).upcast()
+    out_basis = operator_basis(
+        AsUpcast(basis.from_metadata(metadata), metadata)
+    ).upcast()
     operators = (
         Operator(
             out_basis,
@@ -132,7 +134,7 @@ def nx_displacement_operators_stacked[M: BasisMetadata](
     return OperatorList.from_operators(operators)
 
 
-def nx_displacement_operator[M: BasisMetadata](
+def nx_displacement_operator[M: TupleMetadata[tuple[BasisMetadata, ...]]](
     metadata: M,
 ) -> Operator[TupleBasis2D[tuple[Basis[M], Basis[M]]], np.dtype[np.int64]]:
     """Get a matrix of displacements in nx, taken in a periodic fashion."""
@@ -141,7 +143,7 @@ def nx_displacement_operator[M: BasisMetadata](
     data = (n_x_points[:, np.newaxis] - n_x_points[np.newaxis, :] + n // 2) % n - (
         n // 2
     )
-    ax = basis.from_metadata(metadata)
+    ax = AsUpcast(basis.from_metadata(metadata), metadata)
     return Operator(TupleBasis((ax, ax.dual_basis())).upcast(), data)
 
 
