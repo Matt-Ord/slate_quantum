@@ -134,16 +134,16 @@ def nx_displacement_operators_stacked[M: TupleMetadata[tuple[BasisMetadata, ...]
     return OperatorList.from_operators(operators)
 
 
-def nx_displacement_operator[M: TupleMetadata[tuple[BasisMetadata, ...]]](
+def nx_displacement_operator[M: BasisMetadata](
     metadata: M,
 ) -> Operator[TupleBasis2D[tuple[Basis[M], Basis[M]]], np.dtype[np.int64]]:
     """Get a matrix of displacements in nx, taken in a periodic fashion."""
-    n_x_points = np.asarray(_metadata.fundamental_stacked_nx_points(metadata))
+    n_x_points = np.asarray(_metadata.fundamental_nx_points(metadata))
     n = fundamental_size(metadata)
     data = (n_x_points[:, np.newaxis] - n_x_points[np.newaxis, :] + n // 2) % n - (
         n // 2
     )
-    ax = AsUpcast(basis.from_metadata(metadata), metadata)
+    ax = basis.from_metadata(metadata)
     return Operator(TupleBasis((ax, ax.dual_basis())).upcast(), data)
 
 
