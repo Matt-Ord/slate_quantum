@@ -8,7 +8,7 @@ requires-python = ">=3.13,<3.14"
 dependencies = [
     "numpy >=2.0.0,<3.0.0",
     "scipy >=1.14.1,<2.0.0",
-    "slate_core @ git+https://github.com/Matt-Ord/slate.git@c2e6210",
+    "slate_core @ git+https://github.com/Matt-Ord/slate.git@880d046e5d7f25b1e288b3a116adb2eb8d6f78dd",
 ]
 
 [dependency-groups]

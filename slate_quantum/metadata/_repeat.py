@@ -3,14 +3,14 @@ from __future__ import annotations
 from slate_core import TupleMetadata
 from slate_core.metadata import (
     AxisDirections,
+    EvenlySpacedLengthMetadata,
+    EvenlySpacedVolumeMetadata,
     LabelSpacing,
-    SpacedLengthMetadata,
-    SpacedVolumeMetadata,
 )
 
 
-class RepeatedLengthMetadata(SpacedLengthMetadata):
-    def __init__(self, inner: SpacedLengthMetadata, n_repeats: int) -> None:
+class RepeatedLengthMetadata(EvenlySpacedLengthMetadata):
+    def __init__(self, inner: EvenlySpacedLengthMetadata, n_repeats: int) -> None:
         self._inner = inner
         self.n_repeats = n_repeats
         super().__init__(
@@ -18,10 +18,11 @@ class RepeatedLengthMetadata(SpacedLengthMetadata):
             spacing=LabelSpacing(
                 start=inner.spacing.start, delta=n_repeats * inner.spacing.delta
             ),
+            is_periodic=inner.is_periodic,
         )
 
     @property
-    def inner(self) -> SpacedLengthMetadata:
+    def inner(self) -> EvenlySpacedLengthMetadata:
         return self._inner
 
 
@@ -31,7 +32,7 @@ type RepeatedVolumeMetadata = TupleMetadata[
 
 
 def repeat_volume_metadata(
-    metadata: SpacedVolumeMetadata, shape: tuple[int, ...]
+    metadata: EvenlySpacedVolumeMetadata, shape: tuple[int, ...]
 ) -> RepeatedVolumeMetadata:
     return TupleMetadata(
         tuple(
@@ -44,7 +45,7 @@ def repeat_volume_metadata(
 
 def unit_cell_metadata[E: AxisDirections](
     metadata: TupleMetadata[tuple[RepeatedLengthMetadata, ...], E],
-) -> TupleMetadata[tuple[SpacedLengthMetadata, ...], E]:
+) -> TupleMetadata[tuple[EvenlySpacedLengthMetadata, ...], E]:
     """Get the fundamental cell metadata from the repeated volume metadata."""
     return TupleMetadata(
         tuple(c.inner for c in metadata.children),

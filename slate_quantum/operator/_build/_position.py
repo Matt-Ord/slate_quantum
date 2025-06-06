@@ -17,7 +17,7 @@ from slate_core.basis import (
 )
 from slate_core.metadata import (
     AxisDirections,
-    SpacedLengthMetadata,
+    EvenlySpacedLengthMetadata,
 )
 from slate_core.metadata.util import fundamental_size
 
@@ -69,21 +69,22 @@ def get_displacements_x[M: LengthMetadata](
     return Array(basis, data)
 
 
-type FundamentalPositionOperatorBasis[M: SpacedLengthMetadata, E: AxisDirections] = (
-    AsUpcast[
-        TupleBasis[
-            tuple[
-                Basis[TupleMetadata[tuple[M, ...], E]],
-                Basis[TupleMetadata[tuple[M, ...], E]],
-            ],
-            None,
+type FundamentalPositionOperatorBasis[
+    M: EvenlySpacedLengthMetadata,
+    E: AxisDirections,
+] = AsUpcast[
+    TupleBasis[
+        tuple[
+            Basis[TupleMetadata[tuple[M, ...], E]],
+            Basis[TupleMetadata[tuple[M, ...], E]],
         ],
-        OperatorMetadata[TupleMetadata[tuple[M, ...], E]],
-        Ctype[np.generic],
-    ]
-)
+        None,
+    ],
+    OperatorMetadata[TupleMetadata[tuple[M, ...], E]],
+    Ctype[np.generic],
+]
 type FundamentalPositionOperatorListBasis[
-    M: SpacedLengthMetadata,
+    M: EvenlySpacedLengthMetadata,
     E: AxisDirections,
 ] = AsUpcast[
     TupleBasis[
@@ -166,7 +167,10 @@ def x_displacement_operator[M: LengthMetadata](
     )
 
 
-def _get_displacements_matrix_x_along_axis[M: SpacedLengthMetadata, E: AxisDirections](
+def _get_displacements_matrix_x_along_axis[
+    M: EvenlySpacedLengthMetadata,
+    E: AxisDirections,
+](
     metadata: TupleMetadata[tuple[M, ...], E],
     origin: float = 0,
     *,
@@ -188,7 +192,7 @@ def _get_displacements_matrix_x_along_axis[M: SpacedLengthMetadata, E: AxisDirec
     return Operator(out_basis, data)
 
 
-def x_displacement_operators_stacked[M: SpacedLengthMetadata, E: AxisDirections](
+def x_displacement_operators_stacked[M: EvenlySpacedLengthMetadata, E: AxisDirections](
     metadata: TupleMetadata[tuple[M, ...], E], origin: tuple[float, ...] | None
 ) -> OperatorList[
     FundamentalPositionOperatorListBasis[M, E],
@@ -204,7 +208,7 @@ def x_displacement_operators_stacked[M: SpacedLengthMetadata, E: AxisDirections]
     )
 
 
-def total_x_displacement_operator[M: SpacedLengthMetadata, E: AxisDirections](
+def total_x_displacement_operator[M: EvenlySpacedLengthMetadata, E: AxisDirections](
     metadata: TupleMetadata[tuple[M, ...], E],
     origin: tuple[float, ...] | None = None,
 ) -> Operator[
@@ -221,7 +225,7 @@ def total_x_displacement_operator[M: SpacedLengthMetadata, E: AxisDirections](
     )
 
 
-def x[M: SpacedLengthMetadata, E: AxisDirections](
+def x[M: EvenlySpacedLengthMetadata, E: AxisDirections](
     metadata: TupleMetadata[tuple[M, ...], E],
     *,
     axis: int,
@@ -310,7 +314,7 @@ def periodic_operator[M: BasisMetadata, E](
     return Operator(basis_recast, np.array([1 + 0j]))
 
 
-def scattering_operator[M: SpacedLengthMetadata, E: AxisDirections](
+def scattering_operator[M: EvenlySpacedLengthMetadata, E: AxisDirections](
     metadata: TupleMetadata[tuple[M, ...], E], *, n_k: tuple[int, ...]
 ) -> Potential[M, E]:
     """Get the e^(ik.x) operator.

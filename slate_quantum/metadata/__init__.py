@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from slate_quantum.metadata._label import (
     EigenvalueMetadata,
+    EvenlySpacedMomentumMetadata,
     MomentumMetadata,
-    SpacedMomentumMetadata,
     SpacedTimeMetadata,
     TimeMetadata,
     eigenvalue_basis,
@@ -19,10 +19,10 @@ from slate_quantum.metadata._repeat import (
 
 __all__ = [
     "EigenvalueMetadata",
+    "EvenlySpacedMomentumMetadata",
     "MomentumMetadata",
     "RepeatedLengthMetadata",
     "RepeatedVolumeMetadata",
-    "SpacedMomentumMetadata",
     "SpacedTimeMetadata",
     "TimeMetadata",
     "eigenvalue_basis",

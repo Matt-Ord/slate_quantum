@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 from scipy.constants import Boltzmann, hbar  # type: ignore stubs
 from slate_core.metadata import (
     AxisDirections,
-    SpacedLengthMetadata,
+    EvenlySpacedLengthMetadata,
 )
 
 if TYPE_CHECKING:
@@ -20,7 +20,7 @@ from slate_quantum.operator._build._position import x as build_x
 from slate_quantum.operator._linalg import matmul
 
 
-def caldeira_leggett_shift[M: SpacedLengthMetadata, E: AxisDirections](
+def caldeira_leggett_shift[M: EvenlySpacedLengthMetadata, E: AxisDirections](
     metadata: TupleMetadata[tuple[M, ...], E],
     *,
     friction: float,
@@ -44,7 +44,7 @@ def caldeira_leggett_shift[M: SpacedLengthMetadata, E: AxisDirections](
     return ((matmul(p, x) + matmul(x, p)) * (friction / 2)).as_type(np.complex128)
 
 
-def caldeira_leggett_collapse[M: SpacedLengthMetadata, E: AxisDirections](
+def caldeira_leggett_collapse[M: EvenlySpacedLengthMetadata, E: AxisDirections](
     metadata: TupleMetadata[tuple[M, ...], E],
     *,
     friction: float,

@@ -7,6 +7,7 @@ from slate_quantum.operator._build._caldeira_leggett import (
     caldeira_leggett_shift,
 )
 from slate_quantum.operator._build._hamiltonian import (
+    kinetic_basis,
     kinetic_energy,
     kinetic_hamiltonian,
 )
@@ -61,6 +62,7 @@ __all__ = [
     "get_displacements_x_stacked",
     "harmonic_potential",
     "k",
+    "kinetic_basis",
     "kinetic_energy",
     "kinetic_hamiltonian",
     "momentum_from_function",

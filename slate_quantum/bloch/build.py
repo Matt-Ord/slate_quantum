@@ -9,9 +9,9 @@ from slate_core import metadata as _metadata
 from slate_core.basis import BlockDiagonalBasis
 from slate_core.metadata import (
     AxisDirections,
+    EvenlySpacedLengthMetadata,
+    EvenlySpacedVolumeMetadata,
     LabeledMetadata,
-    SpacedLengthMetadata,
-    SpacedVolumeMetadata,
 )
 
 from slate_quantum import operator
@@ -63,7 +63,7 @@ type StackedBlockedFractionMetadata = TupleMetadata[
 
 def bloch_state_metadata_from_split(
     fraction_meta: StackedBlockedFractionMetadata,
-    state_meta: SpacedVolumeMetadata,
+    state_meta: EvenlySpacedVolumeMetadata,
 ) -> BlochStateMetadata:
     """Get the metadata for the Bloch operator."""
     return TupleMetadata(
@@ -102,7 +102,9 @@ def _metadata_from_operator_list(
     meta: TupleMetadata[
         tuple[
             TupleMetadata[tuple[BlochFractionMetadata, ...], None],
-            TupleMetadata[tuple[SpacedVolumeMetadata, SpacedVolumeMetadata], None],
+            TupleMetadata[
+                tuple[EvenlySpacedVolumeMetadata, EvenlySpacedVolumeMetadata], None
+            ],
         ],
         None,
     ],
@@ -118,7 +120,7 @@ def _metadata_from_operator_list(
 
 def bloch_operator_from_list[
     M0: TupleMetadata[tuple[BlochFractionMetadata, ...], None],
-    M1: SpacedVolumeMetadata,
+    M1: EvenlySpacedVolumeMetadata,
 ](
     operators: OperatorList[
         OperatorListBasis[M0, OperatorMetadata[M1]], np.dtype[np.complexfloating]
@@ -151,7 +153,7 @@ def get_sample_fractions(
     return tuple(nki.ravel() for nki in mesh)
 
 
-def kinetic_hamiltonian[M: SpacedLengthMetadata, E: AxisDirections](
+def kinetic_hamiltonian[M: EvenlySpacedLengthMetadata, E: AxisDirections](
     potential: Potential[M, E, Ctype[Never], np.dtype[np.complexfloating]],
     mass: float,
     repeat: tuple[int, ...],

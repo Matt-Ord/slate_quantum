@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any
 import numpy as np
 from slate_core import Array, Basis, BasisMetadata, TupleMetadata, array, metadata
 from slate_core.basis import TupleBasisLike, from_metadata
-from slate_core.metadata import AxisDirections, SpacedLengthMetadata
+from slate_core.metadata import AxisDirections, EvenlySpacedLengthMetadata
 
 from slate_quantum import state as _state
 from slate_quantum.operator import _build
@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 
 
 def potential_from_function[
-    M1: SpacedLengthMetadata,
+    M1: EvenlySpacedLengthMetadata,
     E: AxisDirections,
 ](
     state: State[TupleBasisLike[tuple[M1, ...], E]],
@@ -42,7 +42,7 @@ def potential_from_function[
 
 def all_potential_from_function[
     M0: BasisMetadata,
-    M1: SpacedLengthMetadata,
+    M1: EvenlySpacedLengthMetadata,
     E: AxisDirections,
 ](
     states: StateList[TupleBasisLike[tuple[M0, TupleMetadata[tuple[M1, ...], E]]]],
@@ -64,7 +64,7 @@ def all_potential_from_function[
 
 
 def momentum_from_function[
-    M1: SpacedLengthMetadata,
+    M1: EvenlySpacedLengthMetadata,
     E: AxisDirections,
 ](
     state: State[TupleBasisLike[tuple[M1, ...], E]],
@@ -86,7 +86,7 @@ def momentum_from_function[
 
 
 def x[
-    M1: SpacedLengthMetadata,
+    M1: EvenlySpacedLengthMetadata,
     E: AxisDirections,
 ](
     state: State[TupleBasisLike[tuple[M1, ...], E]],
@@ -105,7 +105,7 @@ def x[
 
 
 def _get_fundamental_scatter[
-    M1: SpacedLengthMetadata,
+    M1: EvenlySpacedLengthMetadata,
     E: AxisDirections,
 ](states: State[TupleBasisLike[tuple[M1, ...], E]], *, axis: int) -> complex:
     r"""Get the scattering operator for a wavepacket.
@@ -127,7 +127,7 @@ def _get_fundamental_scatter[
 
 
 def periodic_x[
-    M1: SpacedLengthMetadata,
+    M1: EvenlySpacedLengthMetadata,
     E: AxisDirections,
 ](state: State[TupleBasisLike[tuple[M1, ...], E]], *, axis: int) -> float:
     r"""Get the periodic position coordinate of a wavepacket.
@@ -149,7 +149,7 @@ def periodic_x[
 
 
 def variance_x[
-    M1: SpacedLengthMetadata,
+    M1: EvenlySpacedLengthMetadata,
     E: AxisDirections,
 ](
     state: State[TupleBasisLike[tuple[M1, ...], E]],
@@ -178,7 +178,7 @@ def variance_x[
 
 
 def coherent_width[
-    M1: SpacedLengthMetadata,
+    M1: EvenlySpacedLengthMetadata,
     E: AxisDirections,
 ](
     state: State[TupleBasisLike[tuple[M1, ...], E]],
@@ -192,7 +192,7 @@ def coherent_width[
 
 def all_x[
     M0: BasisMetadata,
-    M1: SpacedLengthMetadata,
+    M1: EvenlySpacedLengthMetadata,
     E: AxisDirections,
 ](
     states: StateList[TupleBasisLike[tuple[M0, TupleMetadata[tuple[M1, ...], E]]]],
@@ -212,7 +212,7 @@ def all_x[
 
 def _get_all_fundamental_scatter[
     M0: BasisMetadata,
-    M1: SpacedLengthMetadata,
+    M1: EvenlySpacedLengthMetadata,
     E: AxisDirections,
 ](
     states: StateList[TupleBasisLike[tuple[M0, TupleMetadata[tuple[M1, ...], E]]]],
@@ -239,7 +239,7 @@ def _get_all_fundamental_scatter[
 
 def all_periodic_x[
     M0: BasisMetadata,
-    M1: SpacedLengthMetadata,
+    M1: EvenlySpacedLengthMetadata,
     E: AxisDirections,
 ](
     states: StateList[TupleBasisLike[tuple[M0, TupleMetadata[tuple[M1, ...], E]]]],
@@ -270,7 +270,7 @@ def all_periodic_x[
 
 def all_variance_x[
     M0: BasisMetadata,
-    M1: SpacedLengthMetadata,
+    M1: EvenlySpacedLengthMetadata,
     E: AxisDirections,
 ](
     states: StateList[TupleBasisLike[tuple[M0, TupleMetadata[tuple[M1, ...], E]]]],
@@ -294,7 +294,7 @@ def all_variance_x[
 
 def all_coherent_width[
     M0: BasisMetadata,
-    M1: SpacedLengthMetadata,
+    M1: EvenlySpacedLengthMetadata,
     E: AxisDirections,
 ](
     states: StateList[TupleBasisLike[tuple[M0, TupleMetadata[tuple[M1, ...], E]]]],
@@ -307,7 +307,7 @@ def all_coherent_width[
 
 
 def k[
-    M1: SpacedLengthMetadata,
+    M1: EvenlySpacedLengthMetadata,
     E: AxisDirections,
 ](
     state: State[TupleBasisLike[tuple[M1, ...], E]],
@@ -323,7 +323,7 @@ def k[
 
 def all_k[
     M0: BasisMetadata,
-    M1: SpacedLengthMetadata,
+    M1: EvenlySpacedLengthMetadata,
     E: AxisDirections,
 ](
     states: StateList[TupleBasisLike[tuple[M0, TupleMetadata[tuple[M1, ...], E]]]],
@@ -338,7 +338,7 @@ def all_k[
 
 
 def variance_k[
-    M1: SpacedLengthMetadata,
+    M1: EvenlySpacedLengthMetadata,
     E: AxisDirections,
 ](
     state: State[TupleBasisLike[tuple[M1, ...], E]],
@@ -361,7 +361,7 @@ def variance_k[
 
 def all_variance_k[
     M0: BasisMetadata,
-    M1: SpacedLengthMetadata,
+    M1: EvenlySpacedLengthMetadata,
     E: AxisDirections,
 ](
     states: StateList[TupleBasisLike[tuple[M0, TupleMetadata[tuple[M1, ...], E]]]],
@@ -380,7 +380,7 @@ def all_variance_k[
 
 
 def uncertainty[
-    M1: SpacedLengthMetadata,
+    M1: EvenlySpacedLengthMetadata,
     E: AxisDirections,
 ](
     state: State[TupleBasisLike[tuple[M1, ...], E]],
@@ -395,7 +395,7 @@ def uncertainty[
 
 def all_uncertainty[
     M0: BasisMetadata,
-    M1: SpacedLengthMetadata,
+    M1: EvenlySpacedLengthMetadata,
     E: AxisDirections,
 ](
     states: StateList[TupleBasisLike[tuple[M0, TupleMetadata[tuple[M1, ...], E]]]],
