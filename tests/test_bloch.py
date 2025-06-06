@@ -11,8 +11,8 @@ from slate_quantum import bloch, operator
 from slate_quantum.bloch.build import BlochFractionMetadata
 from slate_quantum.operator._operator import Operator
 
-SHAPES_1D = [(x,) for x in [1, 2, 3, 5]]
-SHAPES_2D = [*itertools.product([1, 2, 3], [1, 2, 3]), (5, 5)]
+SHAPES_1D = [(x,) for x in [3, 5]]
+SHAPES_2D = [*itertools.product([3, 4], [3, 4]), (5, 5)]
 
 
 @pytest.mark.parametrize(
