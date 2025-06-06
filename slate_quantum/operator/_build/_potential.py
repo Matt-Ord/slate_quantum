@@ -1,9 +1,19 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Never, cast
 
 import numpy as np
-from slate_core import BasisMetadata, Ctype, TupleMetadata, basis
+from slate_core import (
+    AsUpcast,
+    BasisMetadata,
+    Ctype,
+    FundamentalBasis,
+    TransformedBasis,
+    TupleBasis,
+    TupleMetadata,
+    basis,
+)
 from slate_core import metadata as _metadata
 from slate_core.basis import (
     CroppedBasis,
@@ -17,7 +27,9 @@ from slate_core.metadata import (
     EvenlySpacedMetadata,
     EvenlySpacedVolumeMetadata,
     LengthMetadata,
+    VolumeMetadata,
 )
+from slate_core.util import slice_along_axis
 
 from slate_quantum._util import outer_product
 from slate_quantum.metadata import RepeatedLengthMetadata, repeat_volume_metadata
@@ -27,7 +39,7 @@ from slate_quantum.operator._diagonal import (
     position_operator_basis,
     with_outer_basis,
 )
-from slate_quantum.operator._operator import Operator
+from slate_quantum.operator._operator import Operator, OperatorBasis
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -214,3 +226,233 @@ def harmonic_potential(
         wrapped=True,
         offset=offset,
     )
+
+
+@dataclass(frozen=True, kw_only=True)
+class MorseParameters:
+    """Parameters for the Morse potential."""
+
+    depth: float
+    height: float
+    offset: float = 0
+
+
+def _morse_potential_fn(
+    points: np.ndarray[Any, np.dtype[np.floating]],
+    params: MorseParameters,
+) -> np.ndarray[Any, np.dtype[np.floating]]:
+    """
+    Evaluate Morse potential.
+
+    The morse potential is given by
+    .. math::
+        V(x) = D_e (e^{-2(x - x_e)/a} - 2 e^{-(x - x_e)/a})
+
+    where :math:`D_e` is the depth, :math:`x_e` is the origin, and :math:`a`
+    is the height parameter.
+    """
+    points = np.copy(points)
+    points -= params.offset
+    return params.depth * (
+        np.exp(-2 * (points) / params.height) - 2 * np.exp(-(points) / params.height)
+    )
+
+
+@dataclass(frozen=True, kw_only=True)
+class CorrugatedMorseParameters(MorseParameters):
+    """Parameters for the corrugated Morse potential."""
+
+    beta: float = 0
+
+    def with_beta(self, beta: float) -> CorrugatedMorseParameters:
+        """Return a new instance with the given beta."""
+        return CorrugatedMorseParameters(
+            depth=self.depth,
+            height=self.height,
+            offset=self.offset,
+            beta=beta,
+        )
+
+
+def _morse_corrugation_potential_fn(
+    points: np.ndarray[Any, np.dtype[np.floating]],
+    params: CorrugatedMorseParameters,
+) -> np.ndarray[Any, np.dtype[np.floating]]:
+    r"""
+    Evaluate Morse potential.
+
+    The morse corrugation potential is given by
+    .. math::
+        V(x) = - D_e \beta e^{-2(x - x_e)/a}
+
+    where :math:`D_e` is the depth, :math:`x_e` is the origin, :math:`a`
+    is the height parameter and :math:`\beta` is the corrugation factor.
+    """
+    points = np.copy(points)
+    points -= params.offset
+    return -params.depth * params.beta * np.exp(-2 * points / params.height)
+
+
+def corrugated_morse_potential_function(
+    metadata: VolumeMetadata,
+    params: CorrugatedMorseParameters,
+    *,
+    axis: int = -1,
+) -> Callable[
+    [tuple[np.ndarray[Any, np.dtype[np.floating]], ...]],
+    np.ndarray[Any, np.dtype[np.complex128]],
+]:
+    """Get the corrugated Morse potential operator."""
+    axis %= metadata.n_dim
+
+    def _fn(
+        x: tuple[np.ndarray[Any, np.dtype[np.floating]], ...],
+    ) -> np.ndarray[Any, np.dtype[np.complex128]]:
+        """Evaluate the corrugated Morse potential."""
+        base = _morse_potential_fn(x[axis], params)
+        corrugation = _morse_corrugation_potential_fn(x[axis], params)
+
+        corrugation_xy = np.sum(
+            [
+                np.cos(2 * np.pi * x[i] / metadata.children[i].delta)
+                for i in range(metadata.n_dim)
+                if i != axis
+            ],
+            axis=0,
+        )
+        return base + 2 * corrugation * corrugation_xy
+
+    return _fn
+
+
+def morse_potential[M: VolumeMetadata](
+    metadata: M,
+    params: MorseParameters,
+    *,
+    axis: int = -1,
+) -> Operator[OperatorBasis[M], np.dtype[np.complexfloating]]:
+    """Build a Morse potential.
+
+    The morse potential is given by
+    .. math::
+        V(x) = D_e (e^{-2(x - x_e)/a} - 2 e^{-(x - x_e)/a})
+
+    where :math:`D_e` is the depth, :math:`x_e` is the origin, and :math:`a`
+    is the height parameter.
+    """
+    axis %= metadata.n_dim
+    if not all(
+        isinstance(c, EvenlySpacedMetadata)
+        for i, c in enumerate(metadata.children)
+        if i != axis
+    ):
+        return cast(
+            "Operator[OperatorBasis[M], np.dtype[np.complexfloating]]",
+            potential_from_function(
+                metadata,
+                corrugated_morse_potential_function(
+                    metadata,
+                    CorrugatedMorseParameters(
+                        depth=params.depth,
+                        height=params.height,
+                        offset=params.offset,
+                    ),
+                    axis=axis,
+                ),
+            ),
+        )
+    basis_children = TupleBasis(
+        tuple(
+            (
+                CroppedBasis(1, TransformedBasis(FundamentalBasis(c)))
+                if i != axis
+                else FundamentalBasis(c)
+            )
+            for i, c in enumerate(metadata.children)
+        ),
+        metadata.extra,
+    )
+    out_basis = position_operator_basis(basis_children.upcast())
+    out_basis = AsUpcast(out_basis, TupleMetadata((metadata, metadata)))
+    data = _morse_potential_fn(metadata.children[axis].values, params) * np.sqrt(
+        basis_children.fundamental_size / basis_children.children[axis].fundamental_size
+    )
+
+    if not isinstance(metadata.children[axis], EvenlySpacedMetadata):
+        data *= metadata.children[axis].quadrature_weights
+    return Operator(out_basis, data.astype(np.complex128))
+
+
+def corrugated_morse_potential[M: VolumeMetadata](
+    metadata: M,
+    params: CorrugatedMorseParameters,
+    *,
+    axis: int = -1,
+) -> Operator[OperatorBasis[M], np.dtype[np.complexfloating]]:
+    """Build a Morse potential.
+
+    The morse potential is given by
+    .. math::
+        V(x) = D_e (e^{-2(x - x_e)/a} - 2 e^{-(x - x_e)/a})
+
+    where :math:`D_e` is the depth, :math:`x_e` is the origin, and :math:`a`
+    is the height parameter.
+    """
+    axis %= metadata.n_dim
+    if not all(
+        isinstance(c, EvenlySpacedMetadata)
+        for i, c in enumerate(metadata.children)
+        if i != axis
+    ):
+        return cast(
+            "Operator[OperatorBasis[M], np.dtype[np.complexfloating]]",
+            potential_from_function(
+                metadata,
+                corrugated_morse_potential_function(metadata, params, axis=axis),
+            ),
+        )
+
+    basis_children = TupleBasis(
+        tuple(
+            (
+                CroppedBasis(3, TransformedBasis(FundamentalBasis(c)))
+                if i != axis
+                else FundamentalBasis(c)
+            )
+            for i, c in enumerate(metadata.children)
+        ),
+        metadata.extra,
+    )
+    out_basis = position_operator_basis(basis_children)
+    out_basis = AsUpcast(out_basis, TupleMetadata((metadata, metadata)))
+    data = np.zeros(basis_children.shape, dtype=np.complex128)
+
+    index_along_axis = tuple(
+        0 if i != axis else slice(None) for i in range(metadata.n_dim)
+    )
+    corrugation = _morse_corrugation_potential_fn(
+        metadata.children[axis].values, params
+    )
+    for ax in range(metadata.n_dim):
+        if ax == axis:
+            continue
+        idx_pos = tuple(
+            1 if i_ax == ax else i for i_ax, i in enumerate(index_along_axis)
+        )
+        idx_neg = tuple(
+            -1 if i_ax == ax else i for i_ax, i in enumerate(index_along_axis)
+        )
+
+        data[idx_pos] += corrugation
+        data[idx_neg] += corrugation
+    data[index_along_axis] += _morse_potential_fn(
+        metadata.children[axis].values, params
+    )
+    data *= np.sqrt(
+        basis_children.fundamental_size / basis_children.children[axis].fundamental_size
+    )
+    if not isinstance(metadata.children[axis], EvenlySpacedMetadata):
+        data *= metadata.children[axis].quadrature_weights[
+            slice_along_axis(slice(None), axis)
+        ]
+    return Operator(out_basis, data.astype(np.complex128))

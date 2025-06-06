@@ -13,6 +13,10 @@ from slate_core.metadata import size_from_nested_shape
 from slate_core.metadata.volume import spaced_volume_metadata_from_stacked_delta_x
 
 from slate_quantum import noise, operator
+from slate_quantum.operator._build._potential import (
+    CorrugatedMorseParameters,
+    corrugated_morse_potential_function,
+)
 from slate_quantum.operator._linalg import into_diagonal_hermitian
 from slate_quantum.operator._operator import Operator, OperatorList
 
@@ -343,6 +347,28 @@ def test_build_fcc_operator() -> None:
         ),
     )
     np.testing.assert_allclose(actual.as_array(), expected.as_array())
+
+
+def test_build_corrugated_morse_operator() -> None:
+    metadata = spaced_volume_metadata_from_stacked_delta_x(
+        (np.array([21, 0, 0]), np.array([0, 21, 0]), np.array([0, 0, 5])), (3, 3, 5)
+    )
+    params = CorrugatedMorseParameters(depth=1, height=0.5, offset=1.0, beta=0)
+
+    actual = operator.build.morse_potential(metadata, params)
+    expected = operator.build.potential_from_function(
+        metadata,
+        corrugated_morse_potential_function(metadata, params),
+    )
+    np.testing.assert_allclose(actual.as_array(), expected.as_array())
+
+    params = params.with_beta(4)
+    actual = operator.build.corrugated_morse_potential(metadata, params)
+    expected = operator.build.potential_from_function(
+        metadata,
+        corrugated_morse_potential_function(metadata, params),
+    )
+    np.testing.assert_allclose(np.diag(actual.as_array()), np.diag(expected.as_array()))
 
 
 def test_build_periodic_cl_operators() -> None:
