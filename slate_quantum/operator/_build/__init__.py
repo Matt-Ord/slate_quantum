@@ -35,9 +35,11 @@ from slate_quantum.operator._build._position import (
     x_displacement_operators_stacked,
 )
 from slate_quantum.operator._build._potential import (
+    corrugated_morse_potential,
     cos_potential,
     fcc_potential,
     harmonic_potential,
+    morse_potential,
     potential_from_function,
     repeat_potential,
     sin_potential,
@@ -55,6 +57,7 @@ __all__ = [
     "axis_scattering_operator",
     "caldeira_leggett_collapse",
     "caldeira_leggett_shift",
+    "corrugated_morse_potential",
     "cos_potential",
     "fcc_potential",
     "filter_scatter",
@@ -66,6 +69,7 @@ __all__ = [
     "kinetic_energy",
     "kinetic_hamiltonian",
     "momentum_from_function",
+    "morse_potential",
     "nx_displacement_operator",
     "nx_displacement_operators_stacked",
     "p",
