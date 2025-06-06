@@ -29,7 +29,7 @@ from slate_core.metadata import (
     LengthMetadata,
     VolumeMetadata,
 )
-from slate_core.util import slice_along_axis
+from slate_core.util import reshape_along_axes
 
 from slate_quantum._util import outer_product
 from slate_quantum.metadata import RepeatedLengthMetadata, repeat_volume_metadata
@@ -452,7 +452,7 @@ def corrugated_morse_potential[M: VolumeMetadata](
         basis_children.fundamental_size / basis_children.children[axis].fundamental_size
     )
     if not isinstance(metadata.children[axis], EvenlySpacedMetadata):
-        data *= metadata.children[axis].quadrature_weights[
-            slice_along_axis(slice(None), axis)
-        ]
+        data *= metadata.children[axis].quadrature_weights.reshape(
+            reshape_along_axes((data.shape[axis],), (axis,))
+        )
     return Operator(out_basis, data.astype(np.complex128))
