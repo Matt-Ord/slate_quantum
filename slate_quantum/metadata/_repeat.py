@@ -3,9 +3,9 @@ from __future__ import annotations
 from slate_core import TupleMetadata
 from slate_core.metadata import (
     AxisDirections,
+    Domain,
     EvenlySpacedLengthMetadata,
     EvenlySpacedVolumeMetadata,
-    LabelSpacing,
 )
 
 
@@ -15,10 +15,10 @@ class RepeatedLengthMetadata(EvenlySpacedLengthMetadata):
         self.n_repeats = n_repeats
         super().__init__(
             inner.fundamental_size * n_repeats,
-            spacing=LabelSpacing(
-                start=inner.spacing.start, delta=n_repeats * inner.spacing.delta
+            domain=Domain(
+                start=inner.domain.start, delta=n_repeats * inner.domain.delta
             ),
-            is_periodic=inner.is_periodic,
+            interpolation=inner.interpolation,
         )
 
     @property

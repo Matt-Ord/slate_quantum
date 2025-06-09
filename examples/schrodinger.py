@@ -4,7 +4,7 @@ import numpy as np
 from scipy.constants import hbar  # type: ignore stubs
 from slate_core import FundamentalBasis, plot
 from slate_core.metadata import (
-    LabelSpacing,
+    Domain,
     spaced_volume_metadata_from_stacked_delta_x,
 )
 from slate_core.plot import animate_data_over_list_1d_x
@@ -30,7 +30,7 @@ if __name__ == "__main__":
     # in an eigenstate of the Hamiltonian
     initial_state = eigenstates[1, :]
     times = FundamentalBasis(
-        SpacedTimeMetadata(60, spacing=LabelSpacing(delta=8 * np.pi * hbar))
+        SpacedTimeMetadata(60, domain=Domain(delta=8 * np.pi * hbar))
     )
     evolution = solve_schrodinger_equation_decomposition(
         initial_state, times, hamiltonian

@@ -4,7 +4,7 @@ import numpy as np
 from scipy.constants import Boltzmann, hbar  # type: ignore stubs
 from slate_core import FundamentalBasis, plot
 from slate_core.metadata import (
-    LabelSpacing,
+    Domain,
     spaced_volume_metadata_from_stacked_delta_x,
 )
 from slate_core.plot import animate_data_over_list_1d_x
@@ -38,7 +38,7 @@ if __name__ == "__main__":
         initial_state=eigenstates[0, :],
     )
     times = FundamentalBasis(
-        SpacedTimeMetadata(60, spacing=LabelSpacing(delta=1 * np.pi * hbar))
+        SpacedTimeMetadata(60, domain=Domain(delta=1 * np.pi * hbar))
     )
     realizations = simulate_caldeira_leggett_realizations(condition, times)
     evolution = select_realization(realizations, 0)
