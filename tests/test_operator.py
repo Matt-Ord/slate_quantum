@@ -376,7 +376,7 @@ def test_build_periodic_cl_operators() -> None:
         (np.array([2 * np.pi]),), (160,)
     )
 
-    delta_x = metadata.children[0].spacing.delta
+    delta_x = metadata.children[0].domain.delta
     expected = OperatorList.from_operators(
         [
             operator.build.potential_from_function(

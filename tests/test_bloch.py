@@ -23,8 +23,9 @@ SHAPES_2D = [*itertools.product([3, 4], [3, 4]), (5, 5)]
     ],
 )
 def test_build_bloch_operator(shape: tuple[int, ...], repeat: tuple[int, ...]) -> None:
+    vectors = 2 * np.pi * np.eye(len(shape))
     meta = metadata.volume.spaced_volume_metadata_from_stacked_delta_x(
-        tuple(2 * np.pi * np.eye(len(shape))), shape
+        tuple(vectors[i] for i in range(len(shape))), shape
     )
     potential = operator.build.cos_potential(meta, 1)
     mass = hbar**2
@@ -58,8 +59,9 @@ def test_build_bloch_operator(shape: tuple[int, ...], repeat: tuple[int, ...]) -
 def test_build_momentum_bloch_operator(
     shape: tuple[int, ...], repeat: tuple[int, ...]
 ) -> None:
+    vectors = 2 * np.pi * np.eye(len(shape))
     meta = metadata.volume.spaced_volume_metadata_from_stacked_delta_x(
-        tuple(2 * np.pi * np.eye(len(shape))), shape
+        tuple(vectors[i] for i in range(len(shape))), shape
     )
 
     potential = operator.build.cos_potential(meta, 0)
@@ -96,8 +98,9 @@ def test_build_momentum_bloch_operator(
 def test_build_potential_bloch_operator_1d(
     shape: tuple[int, ...], repeat: tuple[int, ...]
 ) -> None:
+    vectors = 2 * np.pi * np.eye(len(shape))
     meta = metadata.volume.spaced_volume_metadata_from_stacked_delta_x(
-        tuple(2 * np.pi * np.eye(len(shape))), shape
+        tuple(vectors[i] for i in range(len(shape))), shape
     )
 
     potential = operator.build.cos_potential(meta, 1)

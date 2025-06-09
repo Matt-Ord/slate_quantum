@@ -40,7 +40,7 @@ def k[M: EvenlySpacedLengthMetadata, E: AxisDirections](
     metadata: TupleMetadata[tuple[M, ...], E], *, axis: int
 ) -> MomentumOperator[M, E, Ctype[Never], np.dtype[np.complexfloating]]:
     """Get the k operator."""
-    if any(not c.is_periodic for c in metadata.children):
+    if any(c.interpolation == "DST" for c in metadata.children):
         msg = "Currently, we only support k operators for periodic axes."
         raise NotImplementedError(msg)
 
@@ -54,7 +54,7 @@ def p[M: EvenlySpacedLengthMetadata, E: AxisDirections](
     metadata: TupleMetadata[tuple[M, ...], E], *, axis: int
 ) -> MomentumOperator[M, E, Ctype[Never], np.dtype[np.complexfloating]]:
     """Get the p operator."""
-    if any(not c.is_periodic for c in metadata.children):
+    if any(c.interpolation == "DST" for c in metadata.children):
         msg = "Currently, we only support p operators for periodic axes."
         raise NotImplementedError(msg)
 
@@ -78,7 +78,7 @@ def momentum_from_function[M: EvenlySpacedLengthMetadata, E: AxisDirections](
     offset: tuple[float, ...] | None = None,
 ) -> MomentumOperator[M, E, Ctype[Never], np.dtype[np.complexfloating]]:
     """Get the k operator from a function."""
-    assert all(c.is_periodic for c in metadata.children)
+    assert all(c.interpolation == "Fourier" for c in metadata.children)
     positions = _metadata.volume.fundamental_stacked_k_points(
         metadata, offset=offset, wrapped=wrapped
     )

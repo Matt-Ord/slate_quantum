@@ -22,9 +22,9 @@ from slate_core.basis import (
     TupleBasisLike,
 )
 from slate_core.metadata import (
+    SIMPLE_FEATURE,
     AxisDirections,
     EvenlySpacedLengthMetadata,
-    EvenlySpacedMetadata,
     EvenlySpacedVolumeMetadata,
     LengthMetadata,
     VolumeMetadata,
@@ -203,9 +203,9 @@ def potential_from_function[
         metadata, offset=offset, wrapped=wrapped
     )
     points = fn(positions)
-    if any(not isinstance(c, EvenlySpacedMetadata) for c in metadata.children):
-        weights = _metadata.fundamental_stacked_weights(metadata)
-        points *= cast("np.ndarray[Any, DT]", weights.astype(points.dtype))
+    if SIMPLE_FEATURE not in metadata.features:
+        weights = metadata.basis_weights
+        points /= cast("np.ndarray[Any, DT]", np.square(weights).astype(points.dtype))
 
     return potential(basis.from_metadata(metadata).upcast(), fn(positions))
 
@@ -342,7 +342,7 @@ def morse_potential[M: VolumeMetadata](
     """
     axis %= metadata.n_dim
     if not all(
-        isinstance(c, EvenlySpacedMetadata)
+        SIMPLE_FEATURE in c.features
         for i, c in enumerate(metadata.children)
         if i != axis
     ):
@@ -378,8 +378,12 @@ def morse_potential[M: VolumeMetadata](
         basis_children.fundamental_size / basis_children.children[axis].fundamental_size
     )
 
-    if not isinstance(metadata.children[axis], EvenlySpacedMetadata):
-        data *= metadata.children[axis].quadrature_weights
+    if SIMPLE_FEATURE not in metadata.children[axis].features:
+        data /= np.square(
+            metadata.children[axis].basis_weights.reshape(
+                recast_along_axes(data.shape, {axis})
+            )
+        )
     return Operator(out_basis, data.astype(np.complex128))
 
 
@@ -400,7 +404,7 @@ def corrugated_morse_potential[M: VolumeMetadata](
     """
     axis %= metadata.n_dim
     if not all(
-        isinstance(c, EvenlySpacedMetadata)
+        SIMPLE_FEATURE in c.features
         for i, c in enumerate(metadata.children)
         if i != axis
     ):
@@ -451,8 +455,10 @@ def corrugated_morse_potential[M: VolumeMetadata](
     data *= np.sqrt(
         basis_children.fundamental_size / basis_children.children[axis].fundamental_size
     )
-    if not isinstance(metadata.children[axis], EvenlySpacedMetadata):
-        data *= metadata.children[axis].quadrature_weights.reshape(
-            recast_along_axes(data.shape, {axis})
+    if SIMPLE_FEATURE not in metadata.children[axis].features:
+        data /= np.square(
+            metadata.children[axis].basis_weights.reshape(
+                recast_along_axes(data.shape, {axis})
+            )
         )
     return Operator(out_basis, data.astype(np.complex128))
