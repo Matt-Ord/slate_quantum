@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any, Never, cast
 
 import numpy as np
 from scipy.constants import hbar  # type: ignore lib
-from slate_core import Basis, BasisMetadata, TupleBasis, TupleMetadata
+from slate_core import Basis, TupleBasis, TupleMetadata
 from slate_core.basis import (
     AsUpcast,
     SplitBasis,
@@ -12,6 +12,7 @@ from slate_core.basis import (
     trigonometric_transformed_from_metadata,
 )
 from slate_core.metadata import (
+    EvenlySpacedMetadata,
     fundamental_nk_points,
     fundamental_nx_points,
 )
@@ -66,7 +67,7 @@ def _fundamental_n_kinetic(
     metadata: EvenlySpacedLengthMetadata,
 ) -> np.ndarray[Any, np.dtype[np.int_]]:
     """Get the k^2 eigenvalues."""
-    if metadata.is_periodic:
+    if metadata.interpolation == "Fourier":
         return fundamental_nk_points(metadata)
     return fundamental_nx_points(metadata)
 
@@ -96,7 +97,7 @@ def _fundamental_stacked_kinetic_points(
     )
     points += bloch_phase[:, np.newaxis]
     # In a periodic basis we need to wrap the k points to the first Brillouin zone.
-    are_periodic = [c.is_periodic for c in metadata.children]
+    are_periodic = [c.interpolation == "Fourier" for c in metadata.children]
     points[are_periodic] = _wrap_k_points(
         points[are_periodic],
         tuple(
@@ -109,7 +110,7 @@ def _fundamental_stacked_kinetic_points(
 type NestedBool = bool | tuple[NestedBool, ...]
 
 
-def kinetic_basis[M: TupleMetadata[tuple[BasisMetadata, ...], Any]](
+def kinetic_basis[M: TupleMetadata[tuple[EvenlySpacedMetadata, ...], Any]](
     metadata: M, *, is_dual: NestedBool | None = None
 ) -> Basis[M, Ctype[np.complexfloating]]:
     """Get a transformed fundamental basis with the given metadata."""
@@ -121,7 +122,7 @@ def kinetic_basis[M: TupleMetadata[tuple[BasisMetadata, ...], Any]](
 
     children = tuple(
         transformed_from_metadata(c, is_dual=dual)
-        if c.is_periodic
+        if c.interpolation == "Fourier"
         else trigonometric_transformed_from_metadata(c, is_dual=dual)
         for (c, dual) in zip(metadata.children, is_dual, strict=False)
     )
