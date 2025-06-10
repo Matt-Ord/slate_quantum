@@ -379,11 +379,7 @@ def morse_potential[M: VolumeMetadata](
     )
 
     if SIMPLE_FEATURE not in metadata.children[axis].features:
-        data /= np.square(
-            metadata.children[axis].basis_weights.reshape(
-                recast_along_axes(data.shape, {axis})
-            )
-        )
+        data /= np.square(metadata.children[axis].basis_weights)
     return Operator(out_basis, data.astype(np.complex128))
 
 
