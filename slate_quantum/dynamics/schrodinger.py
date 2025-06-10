@@ -5,11 +5,6 @@ from typing import TYPE_CHECKING, Any, cast
 import numpy as np
 from scipy.constants import hbar  # type: ignore lib
 from slate_core import Array, Ctype, TupleBasis, array, basis
-from slate_core.basis import (
-    AsUpcast,
-    Basis,
-    DiagonalBasis,
-)
 from slate_core.metadata import BasisMetadata
 
 from slate_quantum.operator import into_diagonal_hermitian
@@ -22,7 +17,9 @@ except ImportError:
 
 if TYPE_CHECKING:
     from slate_core.basis import (
-        TupleBasis2D,
+        AsUpcast,
+        Basis,
+        DiagonalBasis,
     )
 
     from slate_quantum.dynamics._realization import (
@@ -33,17 +30,18 @@ if TYPE_CHECKING:
     from slate_quantum.operator._operator import Operator, OperatorBasis
 
 
-def _solve_schrodinger_equation_diagonal[
-    B: Basis[BasisMetadata, Ctype[np.complexfloating]],
-    TB: Basis[TimeMetadata, Ctype[np.complexfloating]],
-](
+def _solve_schrodinger_equation_diagonal[M: BasisMetadata, MT: TimeMetadata](
     initial_state: State[Basis],
-    times: TB,
+    times: Basis[MT],
     hamiltonian: Array[
-        DiagonalBasis[TupleBasis[tuple[B, B], Any], Ctype[np.complexfloating]],
+        DiagonalBasis[
+            TupleBasis[tuple[Basis[M], Basis[M]], Any], Ctype[np.complexfloating]
+        ],
         np.dtype[np.number],
     ],
-) -> StateList[TupleBasis2D[tuple[TB, B], None]]:
+) -> StateList[
+    AsUpcast[TupleBasis[tuple[Basis[MT], Basis[M]], None], RealizationMetadata[MT, M]]
+]:
     coefficients = initial_state.with_basis(
         hamiltonian.basis.inner.children[0]
     ).raw_data
@@ -68,7 +66,7 @@ def solve_schrodinger_equation_decomposition[M: BasisMetadata, MT: TimeMetadata]
     """Solve the schrodinger equation by directly finding eigenstates for the given initial state and hamiltonian."""
     diagonal = into_diagonal_hermitian(hamiltonian)
     diagonal = array.cast_basis(diagonal, diagonal.basis.inner)
-    return _solve_schrodinger_equation_diagonal(initial_state, times, diagonal)  # type: ignore cant infer M type
+    return _solve_schrodinger_equation_diagonal(initial_state, times, diagonal)  # type: ignore lib
 
 
 def solve_schrodinger_equation[M: BasisMetadata, MT: TimeMetadata](
