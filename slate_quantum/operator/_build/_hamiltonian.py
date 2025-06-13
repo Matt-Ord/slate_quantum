@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Never, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import numpy as np
 from scipy.constants import hbar  # type: ignore lib
@@ -12,7 +12,6 @@ from slate_core.basis import (
     trigonometric_transformed_from_metadata,
 )
 from slate_core.metadata import (
-    EvenlySpacedMetadata,
     fundamental_nk_points,
     fundamental_nx_points,
 )
@@ -21,25 +20,15 @@ from slate_core.metadata.volume import (
     fundamental_stacked_dk,
 )
 
-from slate_quantum.operator._build._momentum import momentum
-from slate_quantum.operator._operator import (
-    Operator,
-    OperatorMetadata,
-)
+from slate_quantum.operator._diagonal import momentum_operator_basis
+from slate_quantum.operator._operator import Operator, OperatorBasis, OperatorMetadata
 
 if TYPE_CHECKING:
     from slate_core import Ctype
     from slate_core.metadata import (
         EvenlySpacedLengthMetadata,
     )
-    from slate_core.metadata.volume import AxisDirections
-
-    from slate_quantum.operator._diagonal import (
-        MomentumOperator,
-        MomentumOperatorBasis,
-        PositionOperatorBasis,
-        Potential,
-    )
+    from slate_core.metadata.volume import AxisDirections, EvenlySpacedVolumeMetadata
 
 
 def _wrap_k_points(
@@ -85,7 +74,7 @@ def _fundamental_stacked_n_kinetic(
 def _fundamental_stacked_kinetic_points(
     metadata: TupleMetadata[tuple[EvenlySpacedLengthMetadata, ...], AxisDirections],
     bloch_phase: np.ndarray[Any, np.dtype[np.floating]],
-) -> tuple[np.ndarray[Any, np.dtype[np.int_]], ...]:
+) -> tuple[np.ndarray[Any, np.dtype[np.floating]], ...]:
     """Get the stacked k^2 eigenvalues."""
     points = cast(
         "np.ndarray[tuple[int, int], np.dtype[np.floating]]",
@@ -110,7 +99,7 @@ def _fundamental_stacked_kinetic_points(
 type NestedBool = bool | tuple[NestedBool, ...]
 
 
-def kinetic_basis[M: TupleMetadata[tuple[EvenlySpacedMetadata, ...], Any]](
+def kinetic_basis[M: EvenlySpacedVolumeMetadata](
     metadata: M, *, is_dual: NestedBool | None = None
 ) -> Basis[M, Ctype[np.complexfloating]]:
     """Get a transformed fundamental basis with the given metadata."""
@@ -131,11 +120,11 @@ def kinetic_basis[M: TupleMetadata[tuple[EvenlySpacedMetadata, ...], Any]](
     ).resolve_ctype()
 
 
-def _kinetic_energy_with_phase_offset[M: EvenlySpacedLengthMetadata, E: AxisDirections](
-    metadata: TupleMetadata[tuple[M, ...], E],
+def _kinetic_energy_with_phase_offset[M: EvenlySpacedVolumeMetadata](
+    metadata: M,
     mass: float,
     bloch_phase: np.ndarray[Any, np.dtype[np.floating]],
-) -> MomentumOperator[M, E, Ctype[Never], np.dtype[np.complexfloating]]:
+) -> Operator[OperatorBasis[M], np.dtype[np.complexfloating]]:
     """Given a mass and a basis calculate the kinetic part of the Hamiltonian."""
     k_points = _fundamental_stacked_kinetic_points(metadata, bloch_phase=bloch_phase)
     energy = cast(
@@ -148,30 +137,33 @@ def _kinetic_energy_with_phase_offset[M: EvenlySpacedLengthMetadata, E: AxisDire
     )
     momentum_basis = kinetic_basis(metadata)
 
-    return momentum(momentum_basis, energy)
+    return Operator(
+        AsUpcast(
+            momentum_operator_basis(momentum_basis),
+            TupleMetadata((metadata, metadata)),
+        ),
+        energy,
+    )
 
 
-def kinetic_energy[M: EvenlySpacedLengthMetadata, E: AxisDirections](
-    metadata: TupleMetadata[tuple[M, ...], E],
+def kinetic_energy[M: EvenlySpacedVolumeMetadata](
+    metadata: M,
     mass: float,
     bloch_fraction: np.ndarray[Any, np.dtype[np.floating]] | None = None,
-) -> MomentumOperator[M, E, Ctype[Never], np.dtype[np.complexfloating]]:
+) -> Operator[OperatorBasis[M], np.dtype[np.complexfloating]]:
     """Given a mass and a basis calculate the kinetic part of the Hamiltonian."""
     bloch_phase = _get_bloch_phase(metadata, bloch_fraction)
     return _kinetic_energy_with_phase_offset(metadata, mass, bloch_phase)
 
 
-def kinetic_hamiltonian[M: EvenlySpacedLengthMetadata, E: AxisDirections](
-    potential: Potential[M, E],
+def kinetic_hamiltonian[M: EvenlySpacedVolumeMetadata](
+    potential: Operator[OperatorBasis[M], np.dtype[np.complexfloating]],
     mass: float,
     bloch_fraction: np.ndarray[Any, np.dtype[np.floating]] | None = None,
 ) -> Operator[
     AsUpcast[
-        SplitBasis[
-            PositionOperatorBasis[M, E],
-            MomentumOperatorBasis[M, E],
-        ],
-        OperatorMetadata[TupleMetadata[tuple[M, ...], E]],
+        SplitBasis[OperatorBasis[M], OperatorBasis[M]],
+        OperatorMetadata[M],
     ],
     np.dtype[np.complexfloating],
 ]:

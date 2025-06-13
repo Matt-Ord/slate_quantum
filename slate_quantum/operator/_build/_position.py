@@ -305,10 +305,8 @@ def periodic_operator[M: BasisMetadata, E](
         inner_basis,
         lambda i, inner: TruncatedBasis(
             Truncation(1, 1, n_k[i]),
-            TransformedBasis(inner, direction="backward").resolve_ctype().upcast(),
-        )
-        .resolve_ctype()
-        .upcast(),
+            TransformedBasis(inner, direction="backward").upcast(),
+        ).upcast(),
     )
     basis_recast = recast_diagonal_basis_with_metadata(
         inner_basis.upcast(), outer_basis.upcast()
@@ -327,10 +325,8 @@ def scattering_operator[M: EvenlySpacedLengthMetadata, E: AxisDirections](
         basis.from_metadata(metadata),
         lambda i, inner: TruncatedBasis(
             Truncation(1, 1, n_k[i]),
-            TransformedBasis(inner, direction="backward").resolve_ctype().upcast(),
-        )
-        .resolve_ctype()
-        .upcast(),
+            TransformedBasis(inner, direction="backward").upcast(),
+        ).upcast(),
     ).upcast()
     return position(outer_basis, np.array([1], dtype=np.complex128))
 
