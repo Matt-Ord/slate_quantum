@@ -126,18 +126,9 @@ def _assert_position_ty[M: BasisMetadata, E](  # type: ignore this is just a typ
     return basis
 
 
-type PositionOperatorListBasis[M0: SimpleMetadata, M: BasisMetadata, E = Any] = (
-    AsUpcast[
-        TupleBasis[
-            tuple[
-                FundamentalBasis[M0],
-                PositionOperatorBasis[M, E],
-            ],
-            None,
-        ],
-        OperatorListMetadata[M0, OperatorMetadata[TupleMetadata[tuple[M, ...], E]]],
-    ]
-)
+type PositionOperatorListBasis[M0: SimpleMetadata, M: BasisMetadata, E = Any] = Basis[
+    OperatorListMetadata[M0, OperatorMetadata[TupleMetadata[tuple[M, ...], E]]]
+]
 
 
 def position_list_basis_as_diagonal[M0: SimpleMetadata, M: BasisMetadata, E](

@@ -34,7 +34,6 @@ if TYPE_CHECKING:
         RealizationList,
         RealizationListBasis,
     )
-    from slate_quantum.operator._diagonal import Potential
     from slate_quantum.state._state import StateWithMetadata
 
 
@@ -45,7 +44,9 @@ class CaldeiraLeggettCondition[M: EvenlySpacedLengthMetadata, E: AxisDirections]
     mass: float
     friction: float
     temperature: float
-    potential: Potential[M, E]
+    potential: Operator[
+        OperatorBasis[TupleMetadata[tuple[M, ...], E]], np.dtype[np.complexfloating]
+    ]
     initial_state: StateWithMetadata[TupleMetadata[tuple[M, ...], E]]
 
 
