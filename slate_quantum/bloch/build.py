@@ -1,15 +1,13 @@
 from __future__ import annotations
 
 from itertools import starmap
-from typing import TYPE_CHECKING, Any, Never, override
+from typing import Any, override
 
 import numpy as np
-from slate_core import Ctype, TupleBasis, TupleMetadata, basis
+from slate_core import TupleBasis, TupleMetadata, basis
 from slate_core import metadata as _metadata
 from slate_core.basis import BlockDiagonalBasis
 from slate_core.metadata import (
-    AxisDirections,
-    EvenlySpacedLengthMetadata,
     EvenlySpacedVolumeMetadata,
     LabeledMetadata,
 )
@@ -27,13 +25,11 @@ from slate_quantum.bloch._transposed_basis import (
 from slate_quantum.metadata import RepeatedLengthMetadata
 from slate_quantum.operator._operator import (
     Operator,
+    OperatorBasis,
     OperatorList,
     OperatorListBasis,
     OperatorMetadata,
 )
-
-if TYPE_CHECKING:
-    from slate_quantum.operator._diagonal import Potential
 
 
 class BlochFractionMetadata(LabeledMetadata[np.dtype[np.floating]]):
@@ -153,8 +149,8 @@ def get_sample_fractions(
     return tuple(nki.ravel() for nki in mesh)
 
 
-def kinetic_hamiltonian[M: EvenlySpacedLengthMetadata, E: AxisDirections](
-    potential: Potential[M, E, Ctype[Never], np.dtype[np.complexfloating]],
+def kinetic_hamiltonian[M: EvenlySpacedVolumeMetadata](
+    potential: Operator[OperatorBasis[M], np.dtype[np.complexfloating]],
     mass: float,
     repeat: tuple[int, ...],
 ) -> Operator[BlochOperatorBasis, np.dtype[np.complexfloating]]:
