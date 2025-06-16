@@ -265,13 +265,48 @@ class CorrugatedMorseParameters(MorseParameters):
 
     beta: float = 0
 
-    def with_beta(self, beta: float) -> CorrugatedMorseParameters:
+    def with_beta(
+        self, beta: float | Callable[[float], float]
+    ) -> CorrugatedMorseParameters:
         """Return a new instance with the given beta."""
         return CorrugatedMorseParameters(
             depth=self.depth,
             height=self.height,
             offset=self.offset,
-            beta=beta,
+            beta=beta(self.beta) if callable(beta) else beta,
+        )
+
+    def with_depth(
+        self, depth: float | Callable[[float], float]
+    ) -> CorrugatedMorseParameters:
+        """Return a new instance with the given depth."""
+        return CorrugatedMorseParameters(
+            depth=depth(self.depth) if callable(depth) else depth,
+            height=self.height,
+            offset=self.offset,
+            beta=self.beta,
+        )
+
+    def with_height(
+        self, height: float | Callable[[float], float]
+    ) -> CorrugatedMorseParameters:
+        """Return a new instance with the given height."""
+        return CorrugatedMorseParameters(
+            depth=self.depth,
+            height=height(self.height) if callable(height) else height,
+            offset=self.offset,
+            beta=self.beta,
+        )
+
+    def with_offset(
+        self, offset: float | Callable[[float], float]
+    ) -> CorrugatedMorseParameters:
+        """Return a new instance with the given offset."""
+        return CorrugatedMorseParameters(
+            depth=self.depth,
+            height=self.height,
+            offset=offset(self.offset) if callable(offset) else offset,
+            beta=self.beta,
         )
 
 
