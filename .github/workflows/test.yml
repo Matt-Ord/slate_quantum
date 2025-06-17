@@ -39,3 +39,10 @@ jobs:
 
       - name: Run tests
         run: uv run pytest
+
+      - name: Run cspell
+        uses: streetsidesoftware/cspell-action@v7
+        with:
+          use_cspell_files: true
+          strict: true
+          incremental_files_only: true
