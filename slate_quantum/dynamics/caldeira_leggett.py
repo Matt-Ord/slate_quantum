@@ -78,7 +78,7 @@ def _get_simulation_basis[M: EvenlySpacedLengthMetadata, E: AxisDirections](
     )
     return basis.with_modified_children(
         trigonometric,
-        # Remove the high fequency components to avoid numerical instabilities
+        # Remove the high frequency components to avoid numerical instabilities
         lambda _, b: CroppedBasis((b.size) // 2, b).upcast(),
     ).upcast()
 
