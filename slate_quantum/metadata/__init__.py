@@ -1,7 +1,5 @@
 """Specialized data types for quantum simulations."""
 
-from __future__ import annotations
-
 from slate_quantum.metadata._label import (
     EigenvalueMetadata,
     EvenlySpacedMomentumMetadata,

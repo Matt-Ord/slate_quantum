@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import numpy as np
 from slate_core.metadata import spaced_volume_metadata_from_stacked_delta_x, volume
 

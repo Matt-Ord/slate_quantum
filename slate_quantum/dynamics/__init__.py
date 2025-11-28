@@ -1,7 +1,5 @@
 """Functions for simulating the dynamics of a quantum system."""
 
-from __future__ import annotations
-
 from slate_quantum.dynamics._realization import (
     RealizationList,
     RealizationListBasis,

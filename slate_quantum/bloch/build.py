@@ -1,6 +1,3 @@
-from __future__ import annotations
-
-from itertools import starmap
 from typing import Any, override
 
 import numpy as np
@@ -64,9 +61,11 @@ def bloch_state_metadata_from_split(
     """Get the metadata for the Bloch operator."""
     return TupleMetadata(
         tuple(
-            starmap(
+            map(
                 RepeatedLengthMetadata,
-                zip(state_meta.children, fraction_meta.shape, strict=True),
+                state_meta.children,
+                fraction_meta.shape,
+                strict=True,
             )
         ),
         state_meta.extra,

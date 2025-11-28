@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import numpy as np
 from scipy.constants import hbar  # type: ignore stubs
 from slate_core import FundamentalBasis, plot

@@ -1,7 +1,5 @@
 """Representation of a quantum state."""
 
-from __future__ import annotations
-
 import slate_quantum.state._build as build
 from slate_quantum.state._basis import EigenstateBasis
 from slate_quantum.state._build import coherent as build_coherent

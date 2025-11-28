@@ -1,7 +1,5 @@
 """Helpers for building Operators."""
 
-from __future__ import annotations
-
 from slate_quantum.operator._build._caldeira_leggett import (
     caldeira_leggett_collapse,
     caldeira_leggett_shift,
