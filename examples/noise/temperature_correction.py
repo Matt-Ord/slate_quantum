@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import numpy as np
 from scipy.constants import Boltzmann, hbar  # type: ignore unknown
 from slate_core import array, plot

@@ -1,7 +1,5 @@
 """Code for generating noise in quantum simulations."""
 
-from __future__ import annotations
-
 from slate_quantum.noise import build
 from slate_quantum.noise._kernel import (
     AxisKernel,

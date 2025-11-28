@@ -1,7 +1,5 @@
 """Slate Quantum."""
 
-from __future__ import annotations
-
 from slate_quantum import dynamics, metadata, noise, operator, state
 from slate_quantum.operator import (
     MomentumOperator,

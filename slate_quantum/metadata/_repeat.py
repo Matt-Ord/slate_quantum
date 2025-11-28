@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from slate_core import TupleMetadata
 from slate_core.metadata import (
     AxisDirections,
