@@ -155,6 +155,7 @@
         ".ruff_cache/**",
         ".venv/**",
         ".vscode/**",
+        ".gitignore",
         "build/**",
         "docs/**",
         "*.egg-info/**"
