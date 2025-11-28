@@ -12,7 +12,7 @@ from slate_core.basis import (
 )
 from slate_core.metadata import AxisDirections
 
-from slate_quantum.metadata import RepeatedLengthMetadata
+from slate_quantum.metadata import RepeatedMetadata
 from slate_quantum.operator._operator import OperatorMetadata
 
 if TYPE_CHECKING:
@@ -21,7 +21,7 @@ if TYPE_CHECKING:
 
 # TODO: this should use the ContractedBasis ...  # noqa: FIX002
 class BlochTransposedBasis[
-    B: TupleBasis[tuple[Basis[RepeatedLengthMetadata], ...], Any],
+    B: TupleBasis[tuple[Basis[RepeatedMetadata], ...], Any],
     CT: Ctype[Never] = Ctype[Never],
 ](
     WrappedBasis[B, CT],
@@ -35,7 +35,7 @@ class BlochTransposedBasis[
     This is so that they can play nice with BlockDiagonalBasis.
     """
 
-    def __init__[B_: TupleBasis[tuple[Basis[RepeatedLengthMetadata], ...], Any]](
+    def __init__[B_: TupleBasis[tuple[Basis[RepeatedMetadata], ...], Any]](
         self: BlochTransposedBasis[B_, Ctype[Never]], inner: B_
     ) -> None:
         super().__init__(cast("B", inner))
@@ -46,7 +46,7 @@ class BlochTransposedBasis[
         return cast("CT", self.inner.ctype)
 
     @override
-    def metadata[M_: RepeatedLengthMetadata, E](
+    def metadata[M_: RepeatedMetadata, E](
         self: BlochTransposedBasis[TupleBasis[tuple[Basis[M_], ...], E], Any],
     ) -> TupleMetadata[tuple[M_, ...], E]:
         return self.inner.metadata()
@@ -59,18 +59,18 @@ class BlochTransposedBasis[
         return cast("BlochTransposedBasis[B, DT_]", self)
 
     @overload
-    def upcast[M0: RepeatedLengthMetadata, E](
+    def upcast[M0: RepeatedMetadata, E](
         self: BlochTransposedBasis[TupleBasis[tuple[Basis[M0]], E], Any],
     ) -> AsUpcast[BlochTransposedBasis[B, CT], TupleMetadata[tuple[M0], E], CT]: ...
     @overload
-    def upcast[M0: RepeatedLengthMetadata, M1: RepeatedLengthMetadata, E](
+    def upcast[M0: RepeatedMetadata, M1: RepeatedMetadata, E](
         self: BlochTransposedBasis[TupleBasis[tuple[Basis[M0], Basis[M1]], E], Any],
     ) -> AsUpcast[BlochTransposedBasis[B, CT], TupleMetadata[tuple[M0, M1], E], CT]: ...
     @overload
     def upcast[
-        M0: RepeatedLengthMetadata,
-        M1: RepeatedLengthMetadata,
-        M2: RepeatedLengthMetadata,
+        M0: RepeatedMetadata,
+        M1: RepeatedMetadata,
+        M2: RepeatedMetadata,
         E,
     ](
         self: BlochTransposedBasis[
@@ -80,7 +80,7 @@ class BlochTransposedBasis[
         BlochTransposedBasis[B, CT], TupleMetadata[tuple[M0, M1, M2], E], CT
     ]: ...
     @overload
-    def upcast[M: RepeatedLengthMetadata, E](
+    def upcast[M: RepeatedMetadata, E](
         self: BlochTransposedBasis[TupleBasis[tuple[Basis[M], ...], E], Any],
     ) -> AsUpcast[BlochTransposedBasis[B, CT], TupleMetadata[tuple[M, ...], E], CT]: ...
     @override
@@ -88,7 +88,7 @@ class BlochTransposedBasis[
         self,
     ) -> AsUpcast[
         BlochTransposedBasis[B, CT],
-        TupleMetadata[tuple[RepeatedLengthMetadata, ...], Any],
+        TupleMetadata[tuple[RepeatedMetadata, ...], Any],
         CT,
     ]:
         return cast("Any", AsUpcast(self, self.metadata()))
@@ -101,7 +101,7 @@ class BlochTransposedBasis[
     @override
     def __into_inner__[DT1: np.generic, DT2: np.generic, DT3: np.generic](
         self: BlochTransposedBasis[
-            TupleBasis[tuple[Basis[RepeatedLengthMetadata], ...], Ctype[DT3]],
+            TupleBasis[tuple[Basis[RepeatedMetadata], ...], Ctype[DT3]],
             Ctype[DT1],
         ],
         vectors: np.ndarray[Any, np.dtype[DT2]],
@@ -135,7 +135,7 @@ class BlochTransposedBasis[
     @override
     def __from_inner__[DT1: np.generic, DT2: np.generic, DT3: np.generic](
         self: BlochTransposedBasis[
-            TupleBasis[tuple[Basis[RepeatedLengthMetadata], ...], Ctype[DT1]],
+            TupleBasis[tuple[Basis[RepeatedMetadata], ...], Ctype[DT1]],
             Ctype[DT3],
         ],
         vectors: np.ndarray[Any, np.dtype[DT2]],
@@ -237,12 +237,12 @@ class BlochTransposedBasis[
 
 
 type BlochStateMetadata[
-    M: RepeatedLengthMetadata = RepeatedLengthMetadata,
+    M: RepeatedMetadata = RepeatedMetadata,
     E: AxisDirections = AxisDirections,
 ] = TupleMetadata[tuple[M, ...], E]
 
 type BlochStateBasis[
-    M: RepeatedLengthMetadata = RepeatedLengthMetadata,
+    M: RepeatedMetadata = RepeatedMetadata,
     E: AxisDirections = AxisDirections,
 ] = AsUpcast[
     BlochTransposedBasis[TupleBasis[tuple[Basis[M], ...], E]],
@@ -250,7 +250,7 @@ type BlochStateBasis[
 ]
 
 type BlochOperatorBasis[
-    M: RepeatedLengthMetadata = RepeatedLengthMetadata,
+    M: RepeatedMetadata = RepeatedMetadata,
     E: AxisDirections = AxisDirections,
 ] = AsUpcast[
     BlockDiagonalBasis[

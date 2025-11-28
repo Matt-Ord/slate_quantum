@@ -52,7 +52,12 @@
 						"depth": 2
 					}
 				],
-				"python.analysis.autoImportCompletions": true
+				"python.analysis.autoImportCompletions": true,
+				"notebook.formatOnSave.enabled": true,
+				"notebook.codeActionsOnSave": {
+					"notebook.source.fixAll": "explicit",
+					"notebook.source.organizeImports": "explicit"
+				}
 			},
 			"extensions": [
 				"donjayamanne.python-extension-pack",
@@ -67,5 +72,5 @@
 			]
 		}
 	},
-	"onCreateCommand": "npm install -g cspell && uv sync --all-extras"
+	"onCreateCommand": "npm install -g cspell && uv sync --all-extras --no-extra sse_solver_py"
 }

@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from scipy.constants import Boltzmann, hbar  # type: ignore stubs
+from scipy.constants import hbar as hbar_si  # type: ignore stubs
 from slate_core.metadata import (
     AxisDirections,
     EvenlySpacedLengthMetadata,
@@ -39,15 +39,16 @@ def caldeira_leggett_shift[M: EvenlySpacedLengthMetadata, E: AxisDirections](
     assert metadata.n_dim == 1, "Currently only supports 1D systems."
     x = build_x(metadata, axis=0)
     p = build_p(metadata, axis=0)
-    return ((matmul(p, x) + matmul(x, p)) * (friction / 2)).as_type(np.complex128)
+    return ((matmul(p, x) + matmul(x, p)) * (friction / 4)).as_type(np.complex128)
 
 
 def caldeira_leggett_collapse[M: EvenlySpacedLengthMetadata, E: AxisDirections](
     metadata: TupleMetadata[tuple[M, ...], E],
     *,
     friction: float,
-    temperature: float,
+    kb_t: float,
     mass: float,
+    hbar: float = hbar_si,
 ) -> Operator[
     OperatorBasis[TupleMetadata[tuple[M, ...], E]], np.dtype[np.complexfloating]
 ]:
@@ -70,10 +71,9 @@ def caldeira_leggett_collapse[M: EvenlySpacedLengthMetadata, E: AxisDirections](
     assert metadata.n_dim == 1, (
         "For systems with more than 1D, there will be multiple collapse operators."
     )
-    kb_t = Boltzmann * temperature
 
     x = build_x(metadata, axis=0)
     x_prefactor = complex(np.sqrt(4 * mass * friction * kb_t / hbar**2))
     p = build_p(metadata, axis=0)
-    p_prefactor = -1j * complex(np.sqrt(friction / (4 * mass * kb_t)))
+    p_prefactor = 1j * complex(np.sqrt(friction / (4 * mass * kb_t)))
     return (x * x_prefactor + p * p_prefactor).as_type(np.complex128)
