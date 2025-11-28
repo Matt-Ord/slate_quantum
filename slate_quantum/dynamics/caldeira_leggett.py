@@ -147,10 +147,10 @@ def _get_simulation_metadata[M: EvenlySpacedLengthMetadata, E: AxisDirections](
     metadata: TupleMetadata[tuple[M, ...], E], units: _Units
 ) -> TupleMetadata[tuple[M, ...], AxisDirections]:
     """Create a basis with n_repeat repeats of the periodic potential."""
-    AxisDirections(
+    extra = AxisDirections(
         vectors=tuple(v / units.lengthscale for v in metadata.extra.vectors),
     )
-    return TupleMetadata(metadata.children, metadata.extra)
+    return TupleMetadata(metadata.children, extra)
 
 
 @timed
