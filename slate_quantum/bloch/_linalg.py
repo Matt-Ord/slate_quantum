@@ -22,7 +22,7 @@ from slate_quantum.bloch._transposed_basis import (
     BlochOperatorBasis,
     BlochStateBasis,
 )
-from slate_quantum.metadata._repeat import RepeatedLengthMetadata
+from slate_quantum.metadata._repeat import RepeatedMetadata
 from slate_quantum.state._basis import EigenstateBasis
 
 if TYPE_CHECKING:
@@ -32,34 +32,32 @@ if TYPE_CHECKING:
     )
 
 
-type BlochEigenstateBasis[M: RepeatedLengthMetadata, E: AxisDirections] = (
-    EigenstateBasis[
-        Array[
-            AsUpcast[
-                BlockDiagonalBasis[
-                    TupleBasis[
-                        tuple[
-                            FundamentalBasis,
-                            FundamentalBasis[BasisStateMetadata[BlochStateBasis[M, E]]],
-                        ],
-                        E,
-                    ]
-                ],
-                TupleMetadata[
+type BlochEigenstateBasis[M: RepeatedMetadata, E: AxisDirections] = EigenstateBasis[
+    Array[
+        AsUpcast[
+            BlockDiagonalBasis[
+                TupleBasis[
                     tuple[
-                        SimpleMetadata,
-                        BasisStateMetadata[BlochStateBasis[M, E]],
+                        FundamentalBasis,
+                        FundamentalBasis[BasisStateMetadata[BlochStateBasis[M, E]]],
                     ],
-                    None,
-                ],
+                    E,
+                ]
             ],
-            np.dtype[np.complexfloating],
+            TupleMetadata[
+                tuple[
+                    SimpleMetadata,
+                    BasisStateMetadata[BlochStateBasis[M, E]],
+                ],
+                None,
+            ],
         ],
-    ]
-)
+        np.dtype[np.complexfloating],
+    ],
+]
 
 
-type DiagonalBlochBasis[M: RepeatedLengthMetadata, E: AxisDirections] = DiagonalBasis[
+type DiagonalBlochBasis[M: RepeatedMetadata, E: AxisDirections] = DiagonalBasis[
     TupleBasis[
         tuple[
             BlochEigenstateBasis[M, E],
@@ -71,7 +69,7 @@ type DiagonalBlochBasis[M: RepeatedLengthMetadata, E: AxisDirections] = Diagonal
 ]
 
 
-def into_diagonal[M: RepeatedLengthMetadata, E: AxisDirections](
+def into_diagonal[M: RepeatedMetadata, E: AxisDirections](
     operator: Operator[BlochOperatorBasis[M, E], np.dtype[np.complexfloating]],
 ) -> Operator[
     AsUpcast[

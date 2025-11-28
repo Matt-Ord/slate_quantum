@@ -19,7 +19,7 @@ from slate_quantum.bloch._transposed_basis import (
     BlochStateMetadata,
     BlochTransposedBasis,
 )
-from slate_quantum.metadata import RepeatedLengthMetadata
+from slate_quantum.metadata import RepeatedMetadata
 from slate_quantum.operator._operator import (
     Operator,
     OperatorBasis,
@@ -61,12 +61,7 @@ def bloch_state_metadata_from_split(
     """Get the metadata for the Bloch operator."""
     return TupleMetadata(
         tuple(
-            map(
-                RepeatedLengthMetadata,
-                state_meta.children,
-                fraction_meta.shape,
-                strict=True,
-            )
+            map(RepeatedMetadata, state_meta.children, fraction_meta.shape, strict=True)
         ),
         state_meta.extra,
     )

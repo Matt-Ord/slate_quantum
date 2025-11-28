@@ -3,12 +3,13 @@ from slate_core.metadata import (
     AxisDirections,
     Domain,
     EvenlySpacedLengthMetadata,
-    EvenlySpacedVolumeMetadata,
 )
 
 
-class RepeatedLengthMetadata(EvenlySpacedLengthMetadata):
-    def __init__(self, inner: EvenlySpacedLengthMetadata, n_repeats: int) -> None:
+class RepeatedMetadata[M: EvenlySpacedLengthMetadata = EvenlySpacedLengthMetadata](
+    EvenlySpacedLengthMetadata
+):
+    def __init__(self, inner: M, n_repeats: int) -> None:
         self._inner = inner
         self.n_repeats = n_repeats
         super().__init__(
@@ -20,32 +21,31 @@ class RepeatedLengthMetadata(EvenlySpacedLengthMetadata):
         )
 
     @property
-    def inner(self) -> EvenlySpacedLengthMetadata:
+    def inner(self) -> M:
         return self._inner
 
 
-type RepeatedVolumeMetadata = TupleMetadata[
-    tuple[RepeatedLengthMetadata, ...], AxisDirections
-]
+type RepeatedVolumeMetadata[
+    M: EvenlySpacedLengthMetadata = EvenlySpacedLengthMetadata,
+    E: AxisDirections = AxisDirections,
+] = TupleMetadata[tuple[RepeatedMetadata[M], ...], E]
 
 
-def repeat_volume_metadata(
-    metadata: EvenlySpacedVolumeMetadata, shape: tuple[int, ...]
-) -> RepeatedVolumeMetadata:
+def repeat_volume_metadata[M: EvenlySpacedLengthMetadata, E: AxisDirections](
+    metadata: TupleMetadata[tuple[M, ...], E],
+    shape: tuple[int, ...],
+) -> RepeatedVolumeMetadata[M, E]:
     return TupleMetadata(
         tuple(
-            RepeatedLengthMetadata(d, s)
+            RepeatedMetadata(d, s)
             for (s, d) in zip(shape, metadata.children, strict=True)
         ),
         metadata.extra,
     )
 
 
-def unit_cell_metadata[E: AxisDirections](
-    metadata: TupleMetadata[tuple[RepeatedLengthMetadata, ...], E],
-) -> TupleMetadata[tuple[EvenlySpacedLengthMetadata, ...], E]:
+def unit_cell_metadata[M: EvenlySpacedLengthMetadata, E: AxisDirections](
+    metadata: RepeatedVolumeMetadata[M, E],
+) -> TupleMetadata[tuple[M, ...], E]:
     """Get the fundamental cell metadata from the repeated volume metadata."""
-    return TupleMetadata(
-        tuple(c.inner for c in metadata.children),
-        metadata.extra,
-    )
+    return TupleMetadata(tuple(c.inner for c in metadata.children), metadata.extra)

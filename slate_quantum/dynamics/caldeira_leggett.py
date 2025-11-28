@@ -2,8 +2,8 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 import numpy as np
-from scipy.constants import hbar  # type: ignore lib
-from slate_core import FundamentalBasis, TupleBasis, basis
+from scipy.constants import Boltzmann, hbar  # type: ignore lib
+from slate_core import FundamentalBasis, TupleBasis, TupleMetadata, basis
 from slate_core.basis import CroppedBasis
 from slate_core.metadata import (
     AxisDirections,
@@ -11,7 +11,7 @@ from slate_core.metadata import (
 )
 from slate_core.util import timed
 
-from slate_quantum import operator, state
+from slate_quantum import operator
 from slate_quantum.metadata import TimeMetadata
 from slate_quantum.operator._operator import (
     Operator,
@@ -26,7 +26,7 @@ except ImportError:
     qutip = None
 
 if TYPE_CHECKING:
-    from slate_core import Basis, Ctype, TupleMetadata
+    from slate_core import Basis, Ctype
 
     from slate_quantum.dynamics._realization import (
         RealizationList,
@@ -51,20 +51,7 @@ class CaldeiraLeggettCondition[M: EvenlySpacedLengthMetadata, E: AxisDirections]
 DT_RATIO = 10000
 
 
-def _approximate_dt[M: EvenlySpacedLengthMetadata, E: AxisDirections](
-    hamiltonian: Operator[
-        OperatorBasis[TupleMetadata[tuple[M, ...], E]], np.dtype[np.complexfloating]
-    ],
-    initial_state: StateWithMetadata[TupleMetadata[tuple[M, ...], E]],
-) -> float:
-    """Approximate the time step based on the metadata of the times basis."""
-    norm = state.normalization(operator.apply(hamiltonian, initial_state))
-    d_psi = norm / hbar
-    # We want d_psi * dt to be << 1, ie dt << 1 / d_psi
-    return 1 / (d_psi * DT_RATIO)
-
-
-def _get_simulation_basis[M: EvenlySpacedLengthMetadata, E: AxisDirections](
+def _get_hardwall_basis[M: EvenlySpacedLengthMetadata, E: AxisDirections](
     metadata: TupleMetadata[tuple[M, ...], E],
 ) -> Basis[TupleMetadata[tuple[M, ...], E]]:
     """Get the simulation basis for the Caldeira-Leggett model."""
@@ -79,6 +66,91 @@ def _get_simulation_basis[M: EvenlySpacedLengthMetadata, E: AxisDirections](
         # Remove the high frequency components to avoid numerical instabilities
         lambda _, b: CroppedBasis((b.size) // 2, b).upcast(),
     ).upcast()
+
+
+@dataclass(frozen=True, kw_only=True)
+class _Units:
+    """Natural units for the Caldeira-Leggett simulation."""
+
+    lengthscale: float
+    timescale: float
+    mass_scale: float
+
+    @property
+    def hbar(self) -> float:
+        """Get the value of hbar in these natural units."""
+        return hbar * (self.timescale) / (self.mass_scale * self.lengthscale**2)
+
+    def length_to_si(self, length: float) -> float:
+        """Convert a length in natural units to SI units."""
+        return length * self.lengthscale
+
+    def length_from_si(self, length: float) -> float:
+        """Convert a length in SI units to natural units."""
+        return length / self.lengthscale
+
+    def time_to_si(self, time: float) -> float:
+        """Convert a time in natural units to SI units."""
+        return time * self.timescale
+
+    def time_from_si(self, time: float) -> float:
+        """Convert a time in SI units to natural units."""
+        return time / self.timescale
+
+    def frequency_to_si(self, frequency: float) -> float:
+        """Convert a frequency in natural units to SI units."""
+        return frequency / self.timescale
+
+    def frequency_from_si(self, frequency: float) -> float:
+        """Convert a frequency in SI units to natural units."""
+        return frequency * self.timescale
+
+    def mass_to_si(self, mass: float) -> float:
+        """Convert a mass in natural units to SI units."""
+        return mass * self.mass_scale
+
+    def mass_from_si(self, mass: float) -> float:
+        """Convert a mass in SI units to natural units."""
+        return mass / self.mass_scale
+
+    def energy_to_si(self, energy: float) -> float:
+        """Convert an energy in natural units to SI units."""
+        return energy * (self.mass_scale * self.lengthscale**2) / (self.timescale**2)
+
+    def energy_from_si(self, energy: float) -> float:
+        """Convert an energy in SI units to natural units."""
+        return energy / ((self.mass_scale * self.lengthscale**2) / (self.timescale**2))
+
+    @staticmethod
+    def from_condition(
+        unit_cell_length: float,
+        temperature: float,
+    ) -> _Units:
+        """Create natural units from the condition parameters."""
+        kb_t = Boltzmann * temperature  # Boltzmann constant times temperature
+        # We rescale so that the repeat length is 1 in natural units
+        lengthscale = unit_cell_length
+        # The thermal energy must be 1, and d psi / dt = E / hbar
+        timescale = hbar / kb_t
+        mass_scale = kb_t * (timescale**2) / (lengthscale**2)
+        out = _Units(
+            lengthscale=lengthscale, timescale=timescale, mass_scale=mass_scale
+        )
+
+        assert out.energy_from_si(kb_t) == 1.0, (
+            "Natural units energy scaling is incorrect."
+        )
+        return out
+
+
+def _get_simulation_metadata[M: EvenlySpacedLengthMetadata, E: AxisDirections](
+    metadata: TupleMetadata[tuple[M, ...], E], units: _Units
+) -> TupleMetadata[tuple[M, ...], AxisDirections]:
+    """Create a basis with n_repeat repeats of the periodic potential."""
+    AxisDirections(
+        vectors=tuple(v / units.lengthscale for v in metadata.extra.vectors),
+    )
+    return TupleMetadata(metadata.children, metadata.extra)
 
 
 @timed
@@ -98,6 +170,9 @@ def simulate_caldeira_leggett_realizations[
     centered at the origin. This is achieved by generating the initial hamiltonian and
     environment operators in a repeat of the simulation basis, which is then truncated.
 
+    This function also pre-calculates a suitable set of natural units
+    for the simulation based on the Hamiltonian and initial state provided in the `condition`.
+
     Internally, this uses the `ssesolve` function from the `QuTiP` library.
 
     Raises
@@ -109,26 +184,50 @@ def simulate_caldeira_leggett_realizations[
         msg = "The qutip package is required to use this function. Please install it with `pip install qutip`."
         raise ImportError(msg)
 
-    times = basis.as_fundamental(times)
-
-    simulation_basis = _get_simulation_basis(
-        condition.potential.basis.metadata().children[0]
+    units = _Units.from_condition(
+        unit_cell_length=condition.potential.basis.metadata()
+        .children[0]
+        .extra.vectors[0][0],
+        temperature=condition.temperature,
     )
+
+    simulation_metadata = _get_simulation_metadata(
+        condition.potential.basis.metadata().children[0], units
+    )
+    simulation_basis = _get_hardwall_basis(simulation_metadata)
+
     hamiltonian = operator.build.kinetic_hamiltonian(
-        condition.potential, condition.mass
+        # Convert V(x) to natural units. since hardwall basis is
+        # a `mul` basis, we can just scale the operator data directly
+        Operator(
+            operator_basis(simulation_basis).upcast(),
+            condition.potential.with_basis(
+                operator_basis(
+                    _get_hardwall_basis(
+                        condition.potential.basis.metadata().children[0]
+                    )
+                ).upcast()
+            ).raw_data
+            * units.energy_from_si(1.0),
+        ),
+        units.mass_from_si(condition.mass),
+        hbar=units.hbar,
     )
     shift_operator = operator.build.caldeira_leggett_shift(
-        simulation_basis.metadata(), friction=condition.friction
+        simulation_basis.metadata(),
+        friction=units.frequency_from_si(condition.friction),
     )
     environment_operator = operator.build.caldeira_leggett_collapse(
         simulation_basis.metadata(),
-        friction=condition.friction,
-        temperature=condition.temperature,
-        mass=condition.mass,
+        friction=units.frequency_from_si(condition.friction),
+        kb_t=units.energy_from_si(Boltzmann * condition.temperature),
+        mass=units.mass_from_si(condition.mass),
+        hbar=units.hbar,
     )
 
-    dt = _approximate_dt(hamiltonian, condition.initial_state)
-    print(f"Will require {times.metadata().delta / dt:.2e} time steps")  # noqa: T201
+    print(  # noqa: T201
+        f"Will require {units.time_from_si(times.metadata().delta) * DT_RATIO:.2e} time steps"
+    )
 
     # Simulates an SSE defined as in eqn 4.76 in https://doi.org/10.1017/CBO9780511813948
     # Using the qutip.ssesolve method
@@ -140,17 +239,16 @@ def simulate_caldeira_leggett_realizations[
             (hamiltonian + shift_operator)
             .with_basis(operator_basis(simulation_basis))
             .raw_data.reshape((simulation_basis.size, simulation_basis.size))
-            / hbar,
+            / units.hbar,
         ),
         psi0=qutip.Qobj(condition.initial_state.with_basis(simulation_basis).raw_data),
-        tlist=times.metadata().values,
+        tlist=times.metadata().values / units.timescale,
         ntraj=n_realizations,
         sc_ops=[
             qutip.Qobj(
                 environment_operator.with_basis(
                     TupleBasis((simulation_basis, simulation_basis))
-                ).raw_data.reshape((simulation_basis.size, simulation_basis.size))
-                / hbar,
+                ).raw_data.reshape((simulation_basis.size, simulation_basis.size)),
             )
         ],
         options={
@@ -158,17 +256,21 @@ def simulate_caldeira_leggett_realizations[
             "store_states": True,
             "keep_runs_results": True,
             "method": "platen",
-            "dt": dt,
+            "dt": 1 / DT_RATIO,
         },
+        heterodyne=True,
     )
 
     return StateList(
         TupleBasis(
             (
                 TupleBasis(
-                    (FundamentalBasis.from_size(n_realizations), times)
+                    (
+                        FundamentalBasis.from_size(n_realizations),
+                        basis.as_fundamental(times),
+                    )
                 ).upcast(),
-                simulation_basis,
+                _get_hardwall_basis(condition.potential.basis.metadata().children[0]),
             )
         ).upcast(),
         np.array(

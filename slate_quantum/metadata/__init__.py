@@ -9,7 +9,7 @@ from slate_quantum.metadata._label import (
     eigenvalue_basis,
 )
 from slate_quantum.metadata._repeat import (
-    RepeatedLengthMetadata,
+    RepeatedMetadata,
     RepeatedVolumeMetadata,
     repeat_volume_metadata,
     unit_cell_metadata,
@@ -19,7 +19,7 @@ __all__ = [
     "EigenvalueMetadata",
     "EvenlySpacedMomentumMetadata",
     "MomentumMetadata",
-    "RepeatedLengthMetadata",
+    "RepeatedMetadata",
     "RepeatedVolumeMetadata",
     "SpacedTimeMetadata",
     "TimeMetadata",

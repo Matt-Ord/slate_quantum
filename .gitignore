@@ -131,3 +131,7 @@ data/
 
 #Binary
 *.prof
+
+*.mp4
+*.gif
+*.png

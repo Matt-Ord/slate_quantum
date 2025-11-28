@@ -4,14 +4,14 @@ import numpy as np
 from slate_core import Ctype
 from slate_core.basis import AsUpcast, BasisConversion, BasisFeature, WrappedBasis
 
-from slate_quantum.metadata import RepeatedLengthMetadata
+from slate_quantum.metadata import RepeatedMetadata
 
 if TYPE_CHECKING:
     from slate_core.basis import Basis
 
 
 class BlochShiftedBasis[
-    B: Basis[RepeatedLengthMetadata] = Basis[RepeatedLengthMetadata],
+    B: Basis[RepeatedMetadata] = Basis[RepeatedMetadata],
     CT: Ctype[Never] = Ctype[Never],
 ](WrappedBasis[B, CT]):
     """A basis designed to show the underlying sparsity of the Bloch Hamiltonian.
@@ -28,7 +28,7 @@ class BlochShiftedBasis[
     """
 
     def __init__[
-        B_: Basis[RepeatedLengthMetadata, Any],
+        B_: Basis[RepeatedMetadata, Any],
     ](
         self: BlochShiftedBasis[B_, Ctype[Never]],
         inner: B_,
@@ -53,7 +53,7 @@ class BlochShiftedBasis[
         return cast("BlochShiftedBasis[B, DT_]", self)
 
     @override
-    def upcast[M: RepeatedLengthMetadata](
+    def upcast[M: RepeatedMetadata](
         self: BlochShiftedBasis[Basis[M]],
     ) -> AsUpcast[BlochShiftedBasis[B, CT], M, CT]:
         return cast("Any", AsUpcast(self, self.metadata()))

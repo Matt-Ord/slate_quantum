@@ -31,7 +31,7 @@ from slate_core.metadata import (
 from slate_core.util import recast_along_axes
 
 from slate_quantum._util import outer_product
-from slate_quantum.metadata import RepeatedLengthMetadata, repeat_volume_metadata
+from slate_quantum.metadata import RepeatedMetadata, repeat_volume_metadata
 from slate_quantum.operator._diagonal import (
     PositionOperatorBasis,
     Potential,
@@ -62,7 +62,7 @@ def repeat_potential(
         np.dtype[np.complexfloating],
     ],
     shape: tuple[int, ...],
-) -> Potential[RepeatedLengthMetadata, AxisDirections]:
+) -> Potential[RepeatedMetadata, AxisDirections]:
     """Create a new potential by repeating the original potential in each direction."""
     transformed_basis = basis.transformed_from_metadata(
         potential.basis.inner.outer_recast.metadata()

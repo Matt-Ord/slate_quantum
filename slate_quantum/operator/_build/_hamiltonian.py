@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING, Any, cast
 
 import numpy as np
-from scipy.constants import hbar  # type: ignore lib
+from scipy.constants import hbar as hbar_si  # type: ignore lib
 from slate_core import Basis, TupleBasis, TupleMetadata
 from slate_core.basis import (
     AsUpcast,
@@ -122,6 +122,8 @@ def _kinetic_energy_with_phase_offset[M: EvenlySpacedVolumeMetadata](
     metadata: M,
     mass: float,
     bloch_phase: np.ndarray[Any, np.dtype[np.floating]],
+    *,
+    hbar: float = hbar_si,
 ) -> Operator[OperatorBasis[M], np.dtype[np.complexfloating]]:
     """Given a mass and a basis calculate the kinetic part of the Hamiltonian."""
     k_points = _fundamental_stacked_kinetic_points(metadata, bloch_phase=bloch_phase)
@@ -148,16 +150,20 @@ def kinetic_energy[M: EvenlySpacedVolumeMetadata](
     metadata: M,
     mass: float,
     bloch_fraction: np.ndarray[Any, np.dtype[np.floating]] | None = None,
+    *,
+    hbar: float = hbar_si,
 ) -> Operator[OperatorBasis[M], np.dtype[np.complexfloating]]:
     """Given a mass and a basis calculate the kinetic part of the Hamiltonian."""
     bloch_phase = _get_bloch_phase(metadata, bloch_fraction)
-    return _kinetic_energy_with_phase_offset(metadata, mass, bloch_phase)
+    return _kinetic_energy_with_phase_offset(metadata, mass, bloch_phase, hbar=hbar)
 
 
 def kinetic_hamiltonian[M: EvenlySpacedVolumeMetadata](
     potential: Operator[OperatorBasis[M], np.dtype[np.complexfloating]],
     mass: float,
     bloch_fraction: np.ndarray[Any, np.dtype[np.floating]] | None = None,
+    *,
+    hbar: float = hbar_si,
 ) -> Operator[
     AsUpcast[
         SplitBasis[OperatorBasis[M], OperatorBasis[M]],
@@ -167,7 +173,7 @@ def kinetic_hamiltonian[M: EvenlySpacedVolumeMetadata](
 ]:
     """Calculate the total hamiltonian in momentum basis for a given potential and mass."""
     metadata = potential.basis.metadata().children[0]
-    kinetic_hamiltonian = kinetic_energy(metadata, mass, bloch_fraction)
+    kinetic_hamiltonian = kinetic_energy(metadata, mass, bloch_fraction, hbar=hbar)
     basis = SplitBasis(potential.basis, kinetic_hamiltonian.basis)
 
     return Operator(
