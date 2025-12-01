@@ -21,7 +21,10 @@ except ImportError:
 
 if TYPE_CHECKING:
     from slate_core import Basis, Ctype
-    from sse_solver_py import HarmonicLangevinSystemParameters, SSEMethod
+    from sse_solver_py import (  # type: ignore lib
+        HarmonicLangevinSystemParameters,  # type: ignore lib
+        SSEMethod,  # type: ignore lib
+    )
 
     from slate_quantum.dynamics._realization import RealizationListIndexMetadata
 
@@ -53,7 +56,7 @@ class HarmonicParameters:
         return self.lambda_ / self.kbt_div_hbar
 
 
-def _get_normalized_parameters(
+def _get_normalized_parameters(  # type: ignore lib
     parameters: HarmonicParameters,
     times: np.ndarray[tuple[int], np.dtype[np.floating]],
 ) -> tuple[
@@ -70,7 +73,7 @@ def _get_normalized_parameters(
         msg = "sse_solver_py is not installed"
         raise ImportError(msg)
     return (
-        sse_solver_py.HarmonicLangevinSystemParameters(
+        sse_solver_py.HarmonicLangevinSystemParameters(  # type: ignore lib
             dimensionless_lambda=parameters.dimensionless_lambda,
             dimensionless_mass=1.0,
             dimensionless_omega=parameters.dimensionless_omega,
@@ -143,24 +146,24 @@ def solve_harmonic_langevin[
         raise ImportError(msg)
 
     times_basis = basis.as_index(times)
-    normalized_params, (lengthscale, hbar), normalized_times = (
+    normalized_params, (lengthscale, hbar), normalized_times = (  # type: ignore lib
         _get_normalized_parameters(
             parameters, times_basis.metadata().values[times_basis.points]
         )
     )
 
-    target_delta = kwargs.get("target_delta", 1e-3)
-    n_trajectories = kwargs.get("n_trajectories", 1)
-    data = sse_solver_py.solve_harmonic_langevin(
+    target_delta = kwargs.get("target_delta", 1e-3)  # type: ignore lib
+    n_trajectories = kwargs.get("n_trajectories", 1)  # type: ignore lib
+    data = sse_solver_py.solve_harmonic_langevin(  # type: ignore lib
         _get_initial_alpha(initial_state, lengthscale=lengthscale, hbar=hbar),
         normalized_params,
-        sse_solver_py.SimulationConfig(
+        sse_solver_py.SimulationConfig(  # type: ignore lib
             times=normalized_times.tolist(),
             dt=target_delta,
             delta=(None, target_delta, None),
             n_trajectories=n_trajectories,
             n_realizations=1,
-            method=kwargs.get("method", "Euler"),
+            method=kwargs.get("method", "Euler"),  # type: ignore lib
         ),
     )
 
@@ -168,7 +171,9 @@ def solve_harmonic_langevin[
     print(f"solve_harmonic_langevin took: {(te - ts).total_seconds()} sec")  # noqa: T201
 
     x_res, p_res = _split_simulation_result(
-        np.array(data), lengthscale=lengthscale, hbar=hbar
+        np.array(data),  # type: ignore lib
+        lengthscale=lengthscale,
+        hbar=hbar,
     )
     out_basis = TupleBasis(
         (FundamentalBasis.from_size(n_trajectories), times_basis)
