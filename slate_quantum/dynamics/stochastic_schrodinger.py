@@ -1,5 +1,5 @@
 import datetime
-from typing import TYPE_CHECKING, TypedDict, Unpack, cast
+from typing import TYPE_CHECKING, Any, TypedDict, Unpack, cast
 
 import numpy as np
 import slate_core.linalg
@@ -18,13 +18,13 @@ from slate_quantum import operator
 from slate_quantum.state import StateList
 
 try:
-    import sse_solver_py
+    import sse_solver_py  # type: ignore lib
 except ImportError:
     sse_solver_py = None
 
 if TYPE_CHECKING:
     from slate_core.basis import Basis
-    from sse_solver_py import BandedData, SSEMethod
+    from sse_solver_py import BandedData, SSEMethod  # type: ignore lib
 
     from slate_quantum.dynamics._realization import (
         RealizationList,
@@ -58,7 +58,7 @@ def _get_operator_diagonals(
     )
 
 
-def _get_banded_operator(operator: list[list[complex]], threshold: float) -> BandedData:
+def _get_banded_operator(operator: list[list[complex]], threshold: float) -> BandedData:  # type: ignore lib
     diagonals = _get_operator_diagonals(operator)
     above_threshold = np.linalg.norm(diagonals, axis=1) > threshold
 
@@ -76,17 +76,17 @@ def _get_banded_operator(operator: list[list[complex]], threshold: float) -> Ban
     if sse_solver_py is None:
         msg = "sse_solver_py is not installed, please install it using `pip install slate_quantum[sse_solver_py]`"
         raise ImportError(msg)
-    return sse_solver_py.BandedData(
+    return sse_solver_py.BandedData(  # type: ignore lib
         diagonals=diagonals_filtered,
         offsets=offsets,
         shape=(len(operator), len(operator[0])),
     )
 
 
-def _get_banded_operators(
+def _get_banded_operators(  # type: ignore lib
     operators: list[list[list[complex]]], threshold: float
 ) -> list[BandedData]:
-    return [_get_banded_operator(o, threshold) for o in operators]
+    return [_get_banded_operator(o, threshold) for o in operators]  # type: ignore lib
 
 
 class SSEConfig(TypedDict, total=False):
@@ -143,8 +143,8 @@ def solve_stochastic_schrodinger_equation_banded[
     """
     # We get the best numerical performace if we set the norm of the largest collapse operators
     # to be one. This prevents us from accumulating large errors when multiplying state * dt * operator * conj_operator
-    r_threshold = kwargs.get("r_threshold", 1e-8)
-    target_delta = kwargs.get("target_delta", 1e-3)
+    r_threshold = kwargs.get("r_threshold", 1e-8)  # type: ignore lib
+    target_delta = kwargs.get("target_delta", 1e-3)  # type: ignore lib
 
     hamiltonian_tuple = array.as_tuple_basis(hamiltonian)
     initial_state_converted = initial_state.with_basis(
@@ -167,12 +167,12 @@ def solve_stochastic_schrodinger_equation_banded[
 
     # We re-scale dt to be equal to 1 when the coherent step is equal to
     # the target delta. This is done to avoid numerical issues
-    banded_collapse = _get_banded_operators(
+    banded_collapse = _get_banded_operators(  # type: ignore lib
         [[list(x * np.sqrt(dt)) for x in o] for o in operators_data],
         r_threshold,
     )
     # The rust sse solver expects the hamiltonian to be divided by hbar
-    banded_h = _get_banded_operator(
+    banded_h = _get_banded_operator(  # type: ignore lib
         [
             list(x * (dt / hbar))
             for x in hamiltonian_tuple.raw_data.reshape(hamiltonian_tuple.basis.shape)
@@ -187,20 +187,23 @@ def solve_stochastic_schrodinger_equation_banded[
 
     print(f"start solver, estimated {times.metadata().delta / dt:.2g} timesteps")  # noqa: T201
 
-    n_realizations = kwargs.get("n_realizations", 1)
-    data = sse_solver_py.solve_sse_banded(
-        [x.item() for x in initial_state_converted.raw_data],
-        banded_h,
-        banded_collapse,
-        sse_solver_py.SimulationConfig(
-            times=cast(
-                "list[float]", (times.metadata().values[times.points] / dt).tolist()
+    n_trajectories = kwargs.get("n_trajectories", 1)  # type: ignore lib
+    data = cast(
+        "Any",
+        sse_solver_py.solve_sse_banded(  # type: ignore lib
+            [x.item() for x in initial_state_converted.raw_data],
+            banded_h,
+            banded_collapse,
+            sse_solver_py.SimulationConfig(  # type: ignore lib
+                times=cast(
+                    "list[float]", (times.metadata().values[times.points] / dt).tolist()
+                ),
+                dt=1,
+                delta=(None, target_delta, None),
+                n_trajectories=n_trajectories,  # type: ignore lib
+                n_realizations=kwargs.get("n_realizations", 1),  # type: ignore lib
+                method=kwargs.get("method", "Euler"),  # type: ignore lib
             ),
-            dt=1,
-            delta=(None, target_delta, None),
-            n_trajectories=kwargs.get("n_trajectories", 1),
-            n_realizations=n_realizations,
-            method=kwargs.get("method", "Euler"),
         ),
     )
 
@@ -210,7 +213,7 @@ def solve_stochastic_schrodinger_equation_banded[
         TupleBasis(
             (
                 TupleBasis(
-                    (FundamentalBasis.from_size(n_realizations), times)
+                    (FundamentalBasis.from_size(n_trajectories), times)  # type: ignore lib
                 ).upcast(),
                 hamiltonian_tuple.basis.children[0],
             )
