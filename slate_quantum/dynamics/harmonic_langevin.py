@@ -3,7 +3,6 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, TypedDict, Unpack
 
 import numpy as np
-import sse_solver_py
 from scipy.constants import Boltzmann, hbar  # type: ignore lib
 from slate_core import (
     Array,
@@ -139,18 +138,15 @@ def solve_harmonic_langevin[
     """
     ts = datetime.datetime.now(tz=datetime.UTC)
 
-    # The actual coherent step is H / hbar not H, so to get the correct
-    # step size we need to multiply by hbar
-    times = basis.as_index(times)
-
     if sse_solver_py is None:
         msg = "sse_solver_py is not installed, please install it using `pip install slate_quantum[sse_solver_py]`"
         raise ImportError(msg)
 
-    print("start solver")  # noqa: T201
-
+    times_basis = basis.as_index(times)
     normalized_params, (lengthscale, hbar), normalized_times = (
-        _get_normalized_parameters(parameters, times.metadata().values[times.points])
+        _get_normalized_parameters(
+            parameters, times_basis.metadata().values[times_basis.points]
+        )
     )
 
     target_delta = kwargs.get("target_delta", 1e-3)
@@ -169,10 +165,12 @@ def solve_harmonic_langevin[
     )
 
     te = datetime.datetime.now(tz=datetime.UTC)
-    print(f"solve rust banded took: {(te - ts).total_seconds()} sec")  # noqa: T201
+    print(f"solve_harmonic_langevin took: {(te - ts).total_seconds()} sec")  # noqa: T201
 
     x_res, p_res = _split_simulation_result(
         np.array(data), lengthscale=lengthscale, hbar=hbar
     )
-    out_basis = TupleBasis((FundamentalBasis.from_size(n_trajectories), times)).upcast()
+    out_basis = TupleBasis(
+        (FundamentalBasis.from_size(n_trajectories), times_basis)
+    ).upcast()
     return (Array(out_basis, x_res), Array(out_basis, p_res))
