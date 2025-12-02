@@ -65,7 +65,7 @@ def _get_normalized_parameters(  # type: ignore lib
     np.ndarray[tuple[int], np.dtype[np.floating]],
 ]:
     characteristic_length = np.sqrt(
-        parameters.hbar / (2 * parameters.mass * parameters.omega)
+        parameters.hbar / (2 * parameters.mass * parameters.kbt_div_hbar)
     )
 
     characteristic_time = 1 / parameters.kbt_div_hbar
