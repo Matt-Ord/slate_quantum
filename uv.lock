@@ -628,7 +628,7 @@ requires-dist = [
     { name = "scipy", specifier = ">=1.14.1,<2.0.0" },
     { name = "slate-core", git = "https://github.com/Matt-Ord/slate.git?rev=b27da58" },
     { name = "slate-core", extras = ["plot"], marker = "extra == 'plot'" },
-    { name = "sse-solver-py", marker = "extra == 'sse-solver-py'", git = "https://github.com/Matt-Ord/sse_solver.git?subdirectory=sse_solver_py&rev=8bf0a42" },
+    { name = "sse-solver-py", marker = "extra == 'sse-solver-py'", git = "https://github.com/Matt-Ord/sse_solver.git?subdirectory=sse_solver_py&rev=b435975518976d6920b1e6884b87e1fc00ebfc8d" },
 ]
 provides-extras = ["plot", "qutip", "sse-solver-py"]
 
@@ -745,7 +745,7 @@ wheels = [
 [[package]]
 name = "sse-solver-py"
 version = "0.1.0"
-source = { git = "https://github.com/Matt-Ord/sse_solver.git?subdirectory=sse_solver_py&rev=8bf0a42#8bf0a42cdc81deb5f78dfe254247b206a6fac7ec" }
+source = { git = "https://github.com/Matt-Ord/sse_solver.git?subdirectory=sse_solver_py&rev=b435975518976d6920b1e6884b87e1fc00ebfc8d#b435975518976d6920b1e6884b87e1fc00ebfc8d" }
 
 [[package]]
 name = "ty"
