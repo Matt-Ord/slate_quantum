@@ -112,6 +112,7 @@ class SSEConfig(TypedDict, total=False):
     n_trajectories: int
     method: SSEMethod
     target_delta: float
+    adaptive: bool
 
 
 @timed
@@ -154,13 +155,14 @@ def solve_harmonic_langevin[
 
     target_delta = kwargs.get("target_delta", 1e-3)  # type: ignore lib
     n_trajectories = kwargs.get("n_trajectories", 1)  # type: ignore lib
+    adaptive = kwargs.get("adaptive", False)  # type: ignore lib
     data = sse_solver_py.solve_harmonic_langevin(  # type: ignore lib
         _get_initial_alpha(initial_state, lengthscale=lengthscale, hbar=hbar),
         normalized_params,
         sse_solver_py.SimulationConfig(  # type: ignore lib
             times=normalized_times.tolist(),
             dt=target_delta,
-            delta=(None, target_delta, None),
+            delta=(None, target_delta, None) if adaptive else None,
             n_trajectories=n_trajectories,
             n_realizations=1,
             method=kwargs.get("method", "Euler"),  # type: ignore lib
