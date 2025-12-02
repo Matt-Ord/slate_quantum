@@ -216,8 +216,6 @@ def solve_harmonic_langevin[
     ImportError
         If the rust sse_solver_py is not installed
     """
-    ts = datetime.datetime.now(tz=datetime.UTC)
-
     if sse_solver_py is None:
         msg = "sse_solver_py is not installed, please install it using `pip install slate_quantum[sse_solver_py]`"
         raise ImportError(msg)
@@ -233,6 +231,8 @@ def solve_harmonic_langevin[
 
     target_delta = kwargs.get("target_delta", 1e-3)
     n_trajectories = kwargs.get("n_trajectories", 1)
+
+    ts = datetime.datetime.now(tz=datetime.UTC)
     data = sse_solver_py.solve_harmonic_langevin(  # type: ignore lib
         _rescale_alpha(
             initial_state, in_parameter=parameters, out_parameter=normalized_params
@@ -247,10 +247,9 @@ def solve_harmonic_langevin[
             method=kwargs.get("method", "Euler"),
         ),
     )
-    data = np.array(cast("list[complex]", data))  # pyright: ignore[reportUnnecessaryCast]
-
     te = datetime.datetime.now(tz=datetime.UTC)
     print(f"solve_harmonic_langevin took: {(te - ts).total_seconds()} sec")  # noqa: T201
+    data = np.array(cast("list[complex]", data))  # pyright: ignore[reportUnnecessaryCast]
 
     alpha_res = _rescale_alpha_arr(
         data, out_parameter=parameters, in_parameter=normalized_params
