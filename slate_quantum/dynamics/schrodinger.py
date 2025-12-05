@@ -90,9 +90,7 @@ def solve_schrodinger_equation[M: BasisMetadata, MT: TimeMetadata](
     hamiltonian_data = hamiltonian_as_tuple.raw_data.reshape(
         hamiltonian_as_tuple.basis.shape
     )
-    hamiltonian_qobj = qutip.Qobj(
-        hamiltonian_data / hbar,
-    )
+    hamiltonian_qobj = qutip.Qobj(hamiltonian_data / hbar)
     state_basis = cast(
         "Basis[M, Ctype[np.complexfloating]]", hamiltonian_as_tuple.basis.children[0]
     )
