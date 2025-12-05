@@ -128,7 +128,8 @@
         "ipython",
         "pygments",
         "nbconvert",
-        "jshtml"
+        "jshtml",
+        "ipykernel"
     ],
     "flagWords": [
         "hte",
