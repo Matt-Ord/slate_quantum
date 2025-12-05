@@ -166,10 +166,10 @@ def rescale_alpha_arr(
     return alpha.real * sf_len + 1j * alpha.imag / (sf_len * sf_time)
 
 
-SSEMethod = Literal[
+type SSEMethod = Literal[
     "Euler",
     "NormalizedEuler",
-    "Milsten",
+    "Milstein",
     "Order2ExplicitWeak",
     "NormalizedOrder2ExplicitWeak",
     "Order2ExplicitWeakR5",

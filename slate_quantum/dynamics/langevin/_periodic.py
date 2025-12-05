@@ -30,7 +30,7 @@ except ImportError:
 
 if TYPE_CHECKING:
     from slate_core import Basis, Ctype
-    from sse_solver_py import PeriodicLangevinSystemParameters
+    from sse_solver_py import PeriodicLangevinSystemParameters  # type: ignore lib
 
     from slate_quantum.dynamics._realization import RealizationListIndexMetadata
     from slate_quantum.operator._operator import Operator, OperatorBasis

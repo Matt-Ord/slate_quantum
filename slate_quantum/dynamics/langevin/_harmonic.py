@@ -25,7 +25,7 @@ except ImportError:
 
 if TYPE_CHECKING:
     from slate_core import Basis, Ctype
-    from sse_solver_py import HarmonicLangevinSystemParameters
+    from sse_solver_py import HarmonicLangevinSystemParameters  # type: ignore lib
 
     from slate_quantum.dynamics._realization import RealizationListIndexMetadata
     from slate_quantum.dynamics.langevin._util import LangevinParameters
