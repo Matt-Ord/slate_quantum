@@ -13,7 +13,6 @@ from slate_core.util import timed
 from slate_quantum.dynamics.langevin._util import (
     SSEConfig,
     rescale_alpha,
-    rescale_alpha_arr,
     rescale_times,
 )
 from slate_quantum.metadata import TimeMetadata
@@ -74,8 +73,8 @@ def solve_harmonic_langevin[
 
     normalized_times = rescale_times(
         times_basis.metadata().values[times_basis.points],
-        in_characteristic_time=parameters.characteristic_time,
-        out_characteristic_time=normalized_params.characteristic_time,
+        in_parameter=parameters,
+        out_parameter=normalized_params,
     )
 
     target_delta = kwargs.get("target_delta", 1e-3)
@@ -103,7 +102,7 @@ def solve_harmonic_langevin[
     print(f"solve_harmonic_langevin took: {(te - ts).total_seconds()} sec")  # noqa: T201
     data = np.array(cast("list[complex]", data))  # pyright: ignore[reportUnnecessaryCast]
 
-    alpha_res = rescale_alpha_arr(
+    alpha_res = rescale_alpha(
         data, out_parameter=parameters, in_parameter=normalized_params
     )
     out_basis = TupleBasis(
@@ -148,8 +147,8 @@ def solve_harmonic_stable_quantum_langevin[
     normalized_params = parameters.normalized_parameters
     normalized_times = rescale_times(
         times_basis.metadata().values[times_basis.points],
-        in_characteristic_time=parameters.characteristic_time,
-        out_characteristic_time=normalized_params.characteristic_time,
+        in_parameter=parameters,
+        out_parameter=normalized_params,
     )
 
     target_delta = kwargs.get("target_delta", 1e-3)
@@ -183,7 +182,7 @@ def solve_harmonic_stable_quantum_langevin[
     te = datetime.datetime.now(tz=datetime.UTC)
     print(f"solve_harmonic_langevin took: {(te - ts).total_seconds()} sec")  # noqa: T201
 
-    alpha_res = rescale_alpha_arr(
+    alpha_res = rescale_alpha(
         data[:, :, 0], out_parameter=parameters, in_parameter=normalized_params
     )
     out_basis = TupleBasis(
