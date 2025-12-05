@@ -1,4 +1,3 @@
-import dataclasses
 from dataclasses import dataclass
 from typing import Any, Literal, TypedDict, overload
 
@@ -90,80 +89,61 @@ class LangevinParameters:
 
     @property
     def normalized_parameters(self: LangevinParameters) -> LangevinParameters:
-        characteristic_time = 1 / self.kbt_div_hbar
+        sf = self.characteristic_time
 
         out = LangevinParameters(
             temperature=self.temperature,
-            lambda_=self.lambda_ * characteristic_time,
+            lambda_=self.lambda_ * sf,
             mass=self.mass,
-            hbar=self.hbar * characteristic_time,
-            boltzmann=self.boltzmann * characteristic_time**2,
+            hbar=self.hbar * sf,
+            boltzmann=self.boltzmann * sf**2,
             lengthscale=self.characteristic_length,
         )
+        assert np.isclose(out.characteristic_time, 1.0)
+        assert np.isclose(out.dimensionless_mass, 1.0)
 
-        return dataclasses.replace(out, lengthscale=out.characteristic_length)
+        return out
 
 
 def rescale_times(
     times: np.ndarray[tuple[int], np.dtype[np.floating]],
     *,
-    in_characteristic_time: float,
-    out_characteristic_time: float,
+    in_parameter: LangevinParameters,
+    out_parameter: LangevinParameters,
 ) -> np.ndarray[tuple[int], np.dtype[np.floating]]:
     """Rescale the times to the characteristic time."""
-    return times * (out_characteristic_time / in_characteristic_time)
+    sf_time = out_parameter.characteristic_time / in_parameter.characteristic_time
+    return times * sf_time
 
 
 @overload
-def rescale_energy(
-    energy: float,
+def rescale_alpha(
+    alpha: np.ndarray[Any, np.dtype[np.complexfloating]],
     *,
-    in_characteristic_time: float,
-    out_characteristic_time: float,
-) -> float: ...
+    in_parameter: LangevinParameters,
+    out_parameter: LangevinParameters,
+) -> np.ndarray[Any, np.dtype[np.complexfloating]]: ...
 
 
 @overload
-def rescale_energy(
-    energy: np.ndarray[Any, np.dtype[np.floating]],
-    *,
-    in_characteristic_time: float,
-    out_characteristic_time: float,
-) -> np.ndarray[tuple[int], np.dtype[np.floating]]: ...
-
-
-def rescale_energy(
-    energy: float | np.ndarray[Any, np.dtype[np.floating]],
-    *,
-    in_characteristic_time: float,
-    out_characteristic_time: float,
-) -> np.ndarray[tuple[int], np.dtype[np.floating]] | float:
-    """Rescale the times to the characteristic time."""
-    return energy * (in_characteristic_time / out_characteristic_time)
-
-
 def rescale_alpha(
     alpha: complex,
     *,
     in_parameter: LangevinParameters,
     out_parameter: LangevinParameters,
-) -> complex:
-    """Get the initial alpha for the harmonic oscillator coherent state."""
-    sf_len = out_parameter.lengthscale / in_parameter.lengthscale
-    sf_time = out_parameter.characteristic_time / in_parameter.characteristic_time
-    return alpha.real * sf_len + 1j * alpha.imag / (sf_len * sf_time)
+) -> complex: ...
 
 
-def rescale_alpha_arr(
-    alpha: np.ndarray[Any, np.dtype[np.complexfloating]],
+def rescale_alpha(
+    alpha: complex | np.ndarray[Any, np.dtype[np.complexfloating]],
     *,
     in_parameter: LangevinParameters,
     out_parameter: LangevinParameters,
-) -> np.ndarray[Any, np.dtype[np.complexfloating]]:
-    """Get the initial alpha for the harmonic oscillator coherent state."""
+) -> complex | np.ndarray[Any, np.dtype[np.complexfloating]]:
+    """Rescale the coherent state alpha parameter."""
     sf_len = out_parameter.lengthscale / in_parameter.lengthscale
-    sf_time = out_parameter.characteristic_time / in_parameter.characteristic_time
-    return alpha.real * sf_len + 1j * alpha.imag / (sf_len * sf_time)
+
+    return alpha.real / sf_len + 1j * alpha.imag * sf_len
 
 
 type SSEMethod = Literal[
