@@ -88,7 +88,10 @@ def cos_potential(
     metadata: EvenlySpacedVolumeMetadata,
     height: float,
 ) -> Potential[EvenlySpacedLengthMetadata, AxisDirections]:
-    """Build a cosine potential."""
+    """Build a cosine potential.
+
+    The height here gives the distance between the maximum and minimum of the potential.
+    """
     transformed_basis = basis.transformed_from_metadata(metadata)
     # We need only the three lowest fourier components to represent this potential
     cropped = basis.with_modified_children(
@@ -106,7 +109,10 @@ def sin_potential(
     metadata: EvenlySpacedVolumeMetadata,
     height: float,
 ) -> Potential[EvenlySpacedLengthMetadata, AxisDirections]:
-    """Build a cosine potential."""
+    """Build a sin potential.
+
+    The height here gives the distance between the maximum and minimum of the potential.
+    """
     transformed_basis = basis.transformed_from_metadata(metadata)
     # We need only the three lowest fourier components to represent this potential
     cropped = basis.with_modified_children(
