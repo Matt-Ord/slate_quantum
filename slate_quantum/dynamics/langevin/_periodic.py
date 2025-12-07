@@ -77,7 +77,7 @@ def get_dimensionless_potential_params[
     lengthscale = parameters.characteristic_length
 
     as_diagonal = array.extract_diagonal(potential).as_array() / parameters.kbt
-    real_components = np.fft.rfft(as_diagonal.real)
+    real_components = np.fft.rfft(as_diagonal.real, norm="forward")
     return (dk * lengthscale, _truncate_potential(real_components))
 
 
