@@ -234,7 +234,7 @@ def solve_harmonic_quantum_langevin[
 
     target_delta = kwargs.get("target_delta", 1e-3)
     n_trajectories = kwargs.get("n_trajectories", 1)
-    data = sse_solver_py.solve_harmonic_stable_quantum_langevin(  # type: ignore lib
+    data = sse_solver_py.solve_harmonic_quantum_langevin(  # type: ignore lib
         (
             rescale_alpha(
                 initial_state[0],
@@ -242,6 +242,7 @@ def solve_harmonic_quantum_langevin[
                 out_parameter=normalized_params,
             ),
             initial_state[1],
+            initial_state[2].as_array().tolist(),
         ),
         get_internal_parameters(
             normalized_params,
@@ -271,6 +272,6 @@ def solve_harmonic_quantum_langevin[
     ).upcast()
     out_states = StateList(
         TupleBasis((out_basis, basis.as_fundamental(initial_state[2].basis))).upcast(),
-        data[:, 0, 2:],
+        data[:, :, 2:],
     )
     return (Array(out_basis, alpha_res), Array(out_basis, data[:, :, 1]), out_states)
