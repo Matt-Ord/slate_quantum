@@ -265,7 +265,7 @@ def solve_periodic_quantum_langevin[
     ],
     StateList[RealizationListBasis[MT, MS], np.dtype[np.complexfloating]],
 ]:
-    r"""Solve the dynamics of a harmonic oscillator coupled to a thermal bath using the harmonic Langevin equation.
+    r"""Solve the dynamics of a periodic system coupled to a thermal bath using the local Langevin equation.
 
     Raises
     ------
@@ -325,6 +325,6 @@ def solve_periodic_quantum_langevin[
     ).upcast()
     out_states = StateList(
         TupleBasis((out_basis, basis.as_fundamental(initial_state[2].basis))).upcast(),
-        data[:, 0, 2:],
+        data[:, :, 2:],
     )
     return (Array(out_basis, alpha_res), Array(out_basis, data[:, :, 1]), out_states)
