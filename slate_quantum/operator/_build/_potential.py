@@ -262,9 +262,7 @@ class DoubleHarmonicParameters:
     @property
     def stiffness(self) -> float:
         """Get the stiffness."""
-        return self.omega_barrier**2 / (
-            self.left_distance * (self.left_distance + self.right_distance)
-        )
+        return self.omega_barrier**2 / (self.left_distance * self.right_distance)
 
     @overload
     def eval(self, x: float) -> float: ...
