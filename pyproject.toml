@@ -27,7 +27,7 @@ dev = [
 plot = ["matplotlib >=3.9.2,<4.0.0", "slate_core[plot]"]
 qutip = ["qutip >=5.0.0,<6.0.0"]
 sse_solver_py = [
-    "sse_solver_py @ git+https://github.com/Matt-Ord/sse_solver.git@290d62d521ac1c93cf66d56af05e10bd4f473860#subdirectory=sse_solver_py",
+    "sse_solver_py @ git+https://github.com/Matt-Ord/sse_solver.git@7428b7ded57bdafed9bd8d7a9175a503ed4d4937#subdirectory=sse_solver_py",
 ]
 
 
