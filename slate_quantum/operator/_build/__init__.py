@@ -34,9 +34,11 @@ from slate_quantum.operator._build._position import (
 )
 from slate_quantum.operator._build._potential import (
     CorrugatedMorseParameters,
+    DoubleHarmonicParameters,
     MorseParameters,
     corrugated_morse_potential,
     cos_potential,
+    double_harmonic_potential,
     fcc_potential,
     harmonic_potential,
     morse_potential,
@@ -49,6 +51,7 @@ from slate_quantum.state._build import get_displacements_x_stacked
 
 __all__ = [
     "CorrugatedMorseParameters",
+    "DoubleHarmonicParameters",
     "MorseParameters",
     "all_axis_periodic_operators",
     "all_axis_scattering_operators",
@@ -61,6 +64,7 @@ __all__ = [
     "caldeira_leggett_shift",
     "corrugated_morse_potential",
     "cos_potential",
+    "double_harmonic_potential",
     "fcc_potential",
     "filter_scatter",
     "get_displacements_x",

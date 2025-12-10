@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Never, cast
+from typing import TYPE_CHECKING, Any, Never, cast, overload
 
 import numpy as np
 from slate_core import (
@@ -233,6 +233,77 @@ def harmonic_potential[M: VolumeMetadata](
     )
 
 
+@dataclass
+class DoubleHarmonicParameters:
+    """Parameters for the double harmonic Langevin system."""
+
+    omega_barrier: float
+    left_distance: float
+    right_distance: float
+
+    @property
+    def omega_left(self) -> float:
+        """Get the left frequency."""
+        return np.sqrt(
+            self.stiffness
+            * self.left_distance
+            * (self.left_distance + self.right_distance)
+        )
+
+    @property
+    def omega_right(self) -> float:
+        """Get the right frequency."""
+        return np.sqrt(
+            self.stiffness
+            * self.right_distance
+            * (self.left_distance + self.right_distance)
+        )
+
+    @property
+    def stiffness(self) -> float:
+        """Get the stiffness."""
+        return self.omega_barrier**2 / (
+            self.left_distance * (self.left_distance + self.right_distance)
+        )
+
+    @overload
+    def eval(self, x: float) -> float: ...
+
+    @overload
+    def eval(
+        self, x: np.ndarray[Any, np.dtype[np.floating]]
+    ) -> np.ndarray[Any, np.dtype[np.floating]]: ...
+
+    def eval(
+        self, x: float | np.ndarray[Any, np.dtype[np.floating]]
+    ) -> float | np.ndarray[Any, np.dtype[np.floating]]:
+        """Evaluate the double harmonic potential at position x."""
+        prefactor = self.stiffness / 12
+        c4 = 3
+        c3 = 4 * (self.left_distance - self.right_distance)
+        c2 = -6 * self.left_distance * self.right_distance
+        return prefactor * (c4 * x**4 + c3 * x**3 + c2 * x**2)
+
+
+def double_harmonic_potential[M: VolumeMetadata](
+    metadata: M,
+    params: DoubleHarmonicParameters,
+    *,
+    axis: int = -1,
+    offset: tuple[float, ...] | None = None,
+) -> Operator[OperatorBasis[M], np.dtype[np.complexfloating]]:
+    """Build a harmonic potential.
+
+    V(x) = 0.5 * frequency^2 * ||x||^2
+    """
+    return potential_from_function(
+        metadata,
+        lambda x: params.eval(x[axis]).astype(np.complexfloating),
+        wrapped=True,
+        offset=offset,
+    )
+
+
 @dataclass(frozen=True, kw_only=True)
 class MorseParameters:
     """Parameters for the Morse potential."""
@@ -241,26 +312,23 @@ class MorseParameters:
     height: float
     offset: float = 0
 
+    @overload
+    def eval(self, x: float) -> float: ...
 
-def _morse_potential_fn(
-    points: np.ndarray[Any, np.dtype[np.floating]],
-    params: MorseParameters,
-) -> np.ndarray[Any, np.dtype[np.floating]]:
-    """
-    Evaluate Morse potential.
+    @overload
+    def eval(
+        self, x: np.ndarray[Any, np.dtype[np.floating]]
+    ) -> np.ndarray[Any, np.dtype[np.floating]]: ...
 
-    The morse potential is given by
-    .. math::
-        V(x) = D_e (e^{-2(x - x_e)/a} - 2 e^{-(x - x_e)/a})
-
-    where :math:`D_e` is the depth, :math:`x_e` is the origin, and :math:`a`
-    is the height parameter.
-    """
-    points = np.copy(points)
-    points -= params.offset
-    return params.depth * (
-        np.exp(-2 * (points) / params.height) - 2 * np.exp(-(points) / params.height)
-    )
+    def eval(
+        self, x: float | np.ndarray[Any, np.dtype[np.floating]]
+    ) -> float | np.ndarray[Any, np.dtype[np.floating]]:
+        """Evaluate the double harmonic potential at position x."""
+        x = np.copy(x)
+        x -= self.offset
+        return self.depth * (
+            np.exp(-2 * x / self.height) - 2 * np.exp(-x / self.height)
+        )
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -349,7 +417,7 @@ def corrugated_morse_potential_function(
         x: tuple[np.ndarray[Any, np.dtype[np.floating]], ...],
     ) -> np.ndarray[Any, np.dtype[np.complex128]]:
         """Evaluate the corrugated Morse potential."""
-        base = _morse_potential_fn(x[axis], params)
+        base = MorseParameters.eval(params, x[axis])
         corrugation = _morse_corrugation_potential_fn(x[axis], params)
 
         corrugation_xy = np.sum(
@@ -414,7 +482,7 @@ def morse_potential[M: VolumeMetadata](
     )
     out_basis = position_operator_basis(basis_children.upcast())
     out_basis = AsUpcast(out_basis, TupleMetadata((metadata, metadata)))
-    data = _morse_potential_fn(metadata.children[axis].values, params) * np.sqrt(
+    data = MorseParameters.eval(params, metadata.children[axis].values) * np.sqrt(
         basis_children.fundamental_size / basis_children.children[axis].fundamental_size
     )
 
@@ -429,7 +497,7 @@ def corrugated_morse_potential[M: VolumeMetadata](
     *,
     axis: int = -1,
 ) -> Operator[OperatorBasis[M], np.dtype[np.complexfloating]]:
-    """Build a Morse potential.
+    """Build a corrugated Morse potential.
 
     The morse potential is given by
     .. math::
@@ -485,8 +553,8 @@ def corrugated_morse_potential[M: VolumeMetadata](
 
         data[idx_pos] += corrugation
         data[idx_neg] += corrugation
-    data[index_along_axis] += _morse_potential_fn(
-        metadata.children[axis].values, params
+    data[index_along_axis] += MorseParameters.eval(
+        params, metadata.children[axis].values
     )
     data *= np.sqrt(
         basis_children.fundamental_size / basis_children.children[axis].fundamental_size
