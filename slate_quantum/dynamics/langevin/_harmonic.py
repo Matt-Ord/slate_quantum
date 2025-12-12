@@ -11,13 +11,13 @@ from slate_core import (
 from slate_core.metadata import SimpleMetadata
 from slate_core.util import timed
 
-from slate_quantum import StateList
 from slate_quantum.dynamics.langevin._util import (
-    SSEConfig,
+    RustSSEConfig,
     rescale_alpha,
     rescale_times,
 )
 from slate_quantum.metadata import TimeMetadata
+from slate_quantum.state import StateList
 
 try:
     import sse_solver_py  # type: ignore lib
@@ -56,7 +56,7 @@ def solve_harmonic_langevin[
     times: Basis[MT, Ctype[np.complexfloating]],
     parameters: LangevinParameters,
     omega: float,
-    **kwargs: Unpack[SSEConfig],
+    **kwargs: Unpack[RustSSEConfig],
 ) -> Array[
     Basis[RealizationListIndexMetadata[MT]],
     np.dtype[np.complexfloating],
@@ -123,7 +123,7 @@ def solve_harmonic_stable_quantum_langevin[
     times: Basis[MT, Ctype[np.complexfloating]],
     parameters: LangevinParameters,
     omega: float,
-    **kwargs: Unpack[SSEConfig],
+    **kwargs: Unpack[RustSSEConfig],
 ) -> tuple[
     Array[
         Basis[RealizationListIndexMetadata[MT]],
@@ -189,10 +189,11 @@ def solve_harmonic_stable_quantum_langevin[
     alpha_res = rescale_alpha(
         data[:, :, 0], out_parameter=parameters, in_parameter=normalized_params
     )
+    ratio_res = data[:, :, 1]
     out_basis = TupleBasis(
         (FundamentalBasis.from_size(n_trajectories), times_basis)
     ).upcast()
-    return (Array(out_basis, alpha_res), Array(out_basis, data[:, :, 1]))
+    return (Array(out_basis, alpha_res), Array(out_basis, ratio_res))
 
 
 @timed
@@ -206,7 +207,7 @@ def solve_harmonic_quantum_langevin[
     times: Basis[MT, Ctype[np.complexfloating]],
     parameters: LangevinParameters,
     omega: float,
-    **kwargs: Unpack[SSEConfig],
+    **kwargs: Unpack[RustSSEConfig],
 ) -> tuple[
     Array[
         Basis[RealizationListIndexMetadata[MT]],
@@ -267,6 +268,7 @@ def solve_harmonic_quantum_langevin[
     alpha_res = rescale_alpha(
         data[:, :, 0], out_parameter=parameters, in_parameter=normalized_params
     )
+    ratio_res = data[:, :, 1]
     out_basis = TupleBasis(
         (FundamentalBasis.from_size(n_trajectories), times_basis)
     ).upcast()
@@ -274,4 +276,4 @@ def solve_harmonic_quantum_langevin[
         TupleBasis((out_basis, basis.as_fundamental(initial_state[2].basis))).upcast(),
         data[:, :, 2:],
     )
-    return (Array(out_basis, alpha_res), Array(out_basis, data[:, :, 1]), out_states)
+    return (Array(out_basis, alpha_res), Array(out_basis, ratio_res), out_states)
