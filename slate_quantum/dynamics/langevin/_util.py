@@ -2,7 +2,10 @@ from dataclasses import dataclass
 from typing import Any, Literal, TypedDict, overload
 
 import numpy as np
+import slate_core
 from scipy.constants import Boltzmann, hbar  # type: ignore lib
+from slate_core import EvenlySpacedLengthMetadata
+from slate_core.metadata import AxisDirections, TupleMetadata
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -146,6 +149,22 @@ def rescale_alpha(
     return alpha.real / sf_len + 1j * alpha.imag * sf_len
 
 
+def rescale_simulation_metadata[M: EvenlySpacedLengthMetadata, E: AxisDirections](
+    metadata: TupleMetadata[tuple[M, ...], E],
+    in_parameters: LangevinParameters,
+    out_parameters: LangevinParameters,
+) -> TupleMetadata[tuple[EvenlySpacedLengthMetadata, ...], AxisDirections]:
+    """Create a basis with n_repeat repeats of the periodic potential."""
+    vectors = slate_core.metadata.volume.fundamental_stacked_delta_x(metadata)
+    vectors = tuple(
+        v * (out_parameters.lengthscale / in_parameters.lengthscale) for v in vectors
+    )
+    return slate_core.metadata.volume.spaced_volume_metadata_from_stacked_delta_x(
+        vectors,
+        shape=metadata.shape,
+    )
+
+
 type SSEMethod = Literal[
     "Euler",
     "NormalizedEuler",
@@ -161,6 +180,51 @@ class SSEConfig(TypedDict, total=False):
     """Configuration for the stochastic schrodinger equation solver."""
 
     n_trajectories: int
-    method: SSEMethod
     target_delta: float
+
+
+type RustSSEMethod = Literal[
+    "Euler",
+    "NormalizedEuler",
+    "Milstein",
+    "Order2ExplicitWeak",
+    "NormalizedOrder2ExplicitWeak",
+    "Order2ExplicitWeakR5",
+    "NormalizedOrder2ExplicitWeakR5",
+]
+
+
+class RustSSEConfig(SSEConfig, total=False):
+    """Configuration for the stochastic schrodinger equation solver in rust."""
+
+    method: RustSSEMethod
     adaptive: bool
+
+
+type QutipSSEMethod = Literal[
+    "Euler",
+    "Platen",
+    "Rouchon",
+    "Order1.5Explicit",
+]
+
+
+class QutipSSEConfig(SSEConfig, total=False):
+    """Configuration for the stochastic schrodinger equation solver in qutip."""
+
+    method: QutipSSEMethod
+
+
+def as_qutip_name(method: QutipSSEMethod) -> str:
+    match method:
+        case "Euler":
+            return "euler"
+        case "Platen":
+            return "platen"
+        case "Rouchon":
+            return "rouchon"
+        case "Order1.5Explicit":
+            return "explicit1.5"
+        case _:
+            msg = f"Unknown method: {method}"
+            raise ValueError(msg)
