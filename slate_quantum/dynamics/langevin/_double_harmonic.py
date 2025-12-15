@@ -89,7 +89,11 @@ def solve_double_harmonic_langevin[
 
     target_delta = kwargs.get("target_delta", 1e-3)
     n_trajectories = kwargs.get("n_trajectories", 1)
-
+    adaptive = kwargs.get("adaptive", False)
+    if not adaptive:
+        print(  # noqa: T201
+            f"Simulating a total of {normalized_times[-1] / target_delta:0.2g} timesteps"
+        )
     ts = datetime.datetime.now(tz=datetime.UTC)
     data = sse_solver_py.solve_double_harmonic_langevin(  # type: ignore lib
         rescale_alpha(
@@ -107,7 +111,7 @@ def solve_double_harmonic_langevin[
         sse_solver_py.SimulationConfig(  # type: ignore lib
             times=normalized_times.tolist(),
             dt=target_delta,
-            delta=(None, target_delta, None) if kwargs.get("adaptive") else None,
+            delta=(None, target_delta, None) if adaptive else None,
             n_trajectories=n_trajectories,
             n_realizations=1,
             method=kwargs.get("method", "Euler"),
@@ -168,6 +172,11 @@ def solve_double_harmonic_stable_quantum_langevin[
 
     target_delta = kwargs.get("target_delta", 1e-3)
     n_trajectories = kwargs.get("n_trajectories", 1)
+    adaptive = kwargs.get("adaptive", False)
+    if not adaptive:
+        print(  # noqa: T201
+            f"Simulating a total of {normalized_times[-1] / target_delta:0.2g} timesteps"
+        )
     data = sse_solver_py.solve_double_harmonic_stable_quantum_langevin(  # type: ignore lib
         (
             rescale_alpha(
@@ -189,7 +198,7 @@ def solve_double_harmonic_stable_quantum_langevin[
         sse_solver_py.SimulationConfig(  # type: ignore lib
             times=normalized_times.tolist(),
             dt=target_delta,
-            delta=(None, target_delta, None) if kwargs.get("adaptive") else None,
+            delta=(None, target_delta, None) if adaptive else None,
             n_trajectories=n_trajectories,
             n_realizations=1,
             method=kwargs.get("method", "Euler"),
@@ -251,6 +260,11 @@ def solve_double_harmonic_quantum_langevin[
 
     target_delta = kwargs.get("target_delta", 1e-3)
     n_trajectories = kwargs.get("n_trajectories", 1)
+    adaptive = kwargs.get("adaptive", False)
+    if not adaptive:
+        print(  # noqa: T201
+            f"Simulating a total of {normalized_times[-1] / target_delta:0.2g} timesteps"
+        )
     data = sse_solver_py.solve_double_harmonic_quantum_langevin(  # type: ignore lib
         (
             rescale_alpha(
@@ -273,7 +287,7 @@ def solve_double_harmonic_quantum_langevin[
         sse_solver_py.SimulationConfig(  # type: ignore lib
             times=normalized_times.tolist(),
             dt=target_delta,
-            delta=(None, target_delta, None) if kwargs.get("adaptive") else None,
+            delta=(None, target_delta, None) if adaptive else None,
             n_trajectories=n_trajectories,
             n_realizations=1,
             method=kwargs.get("method", "Euler"),
