@@ -66,7 +66,8 @@
         "pickler",
         "Caldeira",
         "lanczos",
-        "Langevin"
+        "Langevin",
+        "Rouchon"
     ],
     "ignoreWords": [
         "toarray",
