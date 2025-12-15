@@ -8,8 +8,10 @@ from slate_quantum.dynamics._realization import (
     select_realization,
 )
 from slate_quantum.dynamics.caldeira_leggett import (
-    CaldeiraLeggettCondition,
-    simulate_caldeira_leggett_realizations,
+    solve as solve_caldeira_leggett,
+)
+from slate_quantum.dynamics.langevin import (
+    LangevinParameters,
 )
 from slate_quantum.dynamics.schrodinger import (
     solve_schrodinger_equation,
@@ -20,13 +22,13 @@ from slate_quantum.dynamics.stochastic_schrodinger import (
 )
 
 __all__ = [
-    "CaldeiraLeggettCondition",
+    "LangevinParameters",
     "RealizationList",
     "RealizationListBasis",
     "RealizationListMetadata",
     "RealizationMetadata",
     "select_realization",
-    "simulate_caldeira_leggett_realizations",
+    "solve_caldeira_leggett",
     "solve_schrodinger_equation",
     "solve_schrodinger_equation_decomposition",
     "solve_stochastic_schrodinger_equation_banded",
