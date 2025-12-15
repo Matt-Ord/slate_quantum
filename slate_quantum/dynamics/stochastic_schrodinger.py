@@ -1,5 +1,5 @@
 import datetime
-from typing import TYPE_CHECKING, Any, TypedDict, Unpack, cast
+from typing import TYPE_CHECKING, Any, Unpack, cast
 
 import numpy as np
 import slate_core.linalg
@@ -24,12 +24,13 @@ except ImportError:
 
 if TYPE_CHECKING:
     from slate_core.basis import Basis
-    from sse_solver_py import BandedData, SSEMethod  # type: ignore lib
+    from sse_solver_py import BandedData  # type: ignore lib
 
     from slate_quantum.dynamics._realization import (
         RealizationList,
         RealizationListBasis,
     )
+    from slate_quantum.dynamics.langevin._util import RustSSEConfig
     from slate_quantum.metadata import EigenvalueMetadata, TimeMetadata
     from slate_quantum.operator import OperatorList
     from slate_quantum.operator._operator import (
@@ -89,16 +90,6 @@ def _get_banded_operators(  # type: ignore lib
     return [_get_banded_operator(o, threshold) for o in operators]  # type: ignore lib
 
 
-class SSEConfig(TypedDict, total=False):
-    """Configuration for the stochastic schrodinger equation solver."""
-
-    n_trajectories: int
-    n_realizations: int
-    method: SSEMethod
-    r_threshold: float
-    target_delta: float
-
-
 @timed
 def solve_stochastic_schrodinger_equation_banded[
     M: BasisMetadata,
@@ -111,7 +102,7 @@ def solve_stochastic_schrodinger_equation_banded[
         OperatorListBasis[EigenvalueMetadata, OperatorMetadata[M]],
         np.dtype[np.complexfloating],
     ],
-    **kwargs: Unpack[SSEConfig],
+    **kwargs: Unpack[RustSSEConfig],
 ) -> RealizationList[RealizationListBasis[MT, M]]:
     r"""Given an initial state, use the stochastic schrodinger equation to solve the dynamics of the system.
 

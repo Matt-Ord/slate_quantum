@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING, Any, Never
 
 import numpy as np
-from scipy.constants import hbar  # type: ignore stubs
+from scipy.constants import hbar as hbar_value  # type: ignore stubs
 from slate_core import BasisMetadata, Ctype, TupleMetadata, basis
 from slate_core import metadata as _metadata
 from slate_core.metadata import (
@@ -49,7 +49,7 @@ def k[M: EvenlySpacedLengthMetadata, E: AxisDirections](
 
 
 def p[M: EvenlySpacedLengthMetadata, E: AxisDirections](
-    metadata: TupleMetadata[tuple[M, ...], E], *, axis: int
+    metadata: TupleMetadata[tuple[M, ...], E], *, axis: int, hbar: float = hbar_value
 ) -> MomentumOperator[M, E, Ctype[Never], np.dtype[np.complexfloating]]:
     """Get the p operator."""
     if any(c.interpolation == "DST" for c in metadata.children):
