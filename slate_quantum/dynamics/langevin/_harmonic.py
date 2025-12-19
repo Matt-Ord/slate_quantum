@@ -193,7 +193,9 @@ def solve_harmonic_stable_quantum_langevin[
     )
 
     te = datetime.datetime.now(tz=datetime.UTC)
-    print(f"solve_harmonic_langevin took: {(te - ts).total_seconds()} sec")  # noqa: T201
+    print(  # noqa: T201
+        f"solve_harmonic_stable_quantum_langevin took: {(te - ts).total_seconds()} sec"
+    )
 
     alpha_res = rescale_alpha(
         data[:, :, 0], out_parameter=parameters, in_parameter=normalized_params
@@ -277,7 +279,7 @@ def solve_harmonic_quantum_langevin[
     )
 
     te = datetime.datetime.now(tz=datetime.UTC)
-    print(f"solve_harmonic_langevin took: {(te - ts).total_seconds()} sec")  # noqa: T201
+    print(f"solve_harmonic_quantum_langevin took: {(te - ts).total_seconds()} sec")  # noqa: T201
 
     alpha_res = rescale_alpha(
         data[:, :, 0], out_parameter=parameters, in_parameter=normalized_params
