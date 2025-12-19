@@ -959,7 +959,7 @@ requires-dist = [
     { name = "scipy", specifier = ">=1.14.1,<2.0.0" },
     { name = "slate-core", git = "https://github.com/Matt-Ord/slate.git?rev=6a78fd1" },
     { name = "slate-core", extras = ["plot"], marker = "extra == 'plot'" },
-    { name = "sse-solver-py", marker = "extra == 'sse-solver-py'", git = "https://github.com/Matt-Ord/sse_solver.git?subdirectory=sse_solver_py&rev=a6627a7249b6e56a5eabae3e22615f28c5a1954b" },
+    { name = "sse-solver-py", marker = "extra == 'sse-solver-py'", git = "https://github.com/Matt-Ord/sse_solver.git?subdirectory=sse_solver_py&rev=f50e2dd532dc939df7b21cba1805924da632c18e" },
 ]
 provides-extras = ["plot", "qutip", "sse-solver-py"]
 
@@ -1077,7 +1077,7 @@ wheels = [
 [[package]]
 name = "sse-solver-py"
 version = "0.1.0"
-source = { git = "https://github.com/Matt-Ord/sse_solver.git?subdirectory=sse_solver_py&rev=a6627a7249b6e56a5eabae3e22615f28c5a1954b#a6627a7249b6e56a5eabae3e22615f28c5a1954b" }
+source = { git = "https://github.com/Matt-Ord/sse_solver.git?subdirectory=sse_solver_py&rev=f50e2dd532dc939df7b21cba1805924da632c18e#f50e2dd532dc939df7b21cba1805924da632c18e" }
 
 [[package]]
 name = "stack-data"
