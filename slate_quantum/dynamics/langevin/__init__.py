@@ -6,6 +6,7 @@ from slate_quantum.dynamics.langevin._double_harmonic import (
     solve_double_harmonic_stable_quantum_langevin,
 )
 from slate_quantum.dynamics.langevin._harmonic import (
+    solve_harmonic_full_quantum_langevin,
     solve_harmonic_langevin,
     solve_harmonic_quantum_langevin,
     solve_harmonic_stable_quantum_langevin,
@@ -28,6 +29,7 @@ __all__ = [
     "solve_double_harmonic_langevin",
     "solve_double_harmonic_quantum_langevin",
     "solve_double_harmonic_stable_quantum_langevin",
+    "solve_harmonic_full_quantum_langevin",
     "solve_harmonic_langevin",
     "solve_harmonic_quantum_langevin",
     "solve_harmonic_stable_quantum_langevin",
