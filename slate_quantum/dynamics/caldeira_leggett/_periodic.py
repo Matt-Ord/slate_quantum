@@ -42,7 +42,7 @@ if TYPE_CHECKING:
     from slate_quantum.state._state import StateWithMetadata
 
 
-DT_RATIO = 10000
+DEFAULT_TARGET_DELTA = 1e-4
 
 
 def _get_periodic_basis[M: EvenlySpacedLengthMetadata, E: AxisDirections](
@@ -110,11 +110,13 @@ def solve[
     ],
     **kwargs: Unpack[QutipSSEConfig],
 ) -> RealizationList[RealizationListBasis[MT, TupleMetadata[tuple[M, ...], E]]]:
-    """Simulate the Caldeira-Leggett model using the Stochastic Schrödinger Equation (SSE).
+    """Simulate the Caldeira-Leggett model using the Periodic Approach.
 
-    To avoid numerical instabilities, the simulation uses a hard-wall boundary condition,
-    centered at the origin. This is achieved by generating the initial hamiltonian and
-    environment operators in a repeat of the simulation basis, which is then truncated.
+    To avoid numerical instabilities, the simulation uses a set of periodic
+    environment operators (sin(x) and cos(x)).
+    Thestrength of the environmental interaction is carefully
+    chosen to match the behavior of the "standard" approach, which
+    must use hard wall or adsorbing boundary conditions to avoid instabilities.
 
     This function also pre-calculates a suitable set of natural units
     for the simulation based on the Hamiltonian and initial state provided in the `condition`.
@@ -153,14 +155,18 @@ def solve[
         Operator(
             operator_basis(normalized_basis).upcast(),
             potential.with_basis(operator_basis(unnormalized_basis).upcast()).raw_data
-            * normalized_params.kbt
-            / parameters.kbt,
+            * (normalized_params.kbt / parameters.kbt),
         ),
         normalized_params.mass,
         hbar=normalized_params.hbar,
     )
+    # TODO: is this correct ???
     environment_operators = _build_environment_operators(
         normalized_basis, normalized_params
+    )
+
+    print(  # noqa: T201
+        f"Starting solve, approximate {normalized_times[-1] / kwargs.get('target_delta', DEFAULT_TARGET_DELTA):.2g} time steps"
     )
 
     # Simulates an SSE defined as in eqn 4.76 in https://doi.org/10.1017/CBO9780511813948
@@ -180,7 +186,7 @@ def solve[
             "store_states": True,
             "keep_runs_results": True,
             "method": as_qutip_name(kwargs.get("method", "Euler")),
-            "dt": 1 / DT_RATIO,
+            "dt": kwargs.get("target_delta", DEFAULT_TARGET_DELTA),
         },
         heterodyne=True,
     )
