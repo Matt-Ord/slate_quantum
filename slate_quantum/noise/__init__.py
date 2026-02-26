@@ -73,7 +73,6 @@ __all__ = [
     "AxisKernel",
     "DiagonalKernelBasis",
     "DiagonalNoiseKernel",
-    "DiagonalNoiseKernel",
     "DiagonalNoiseKernelWithMetadata",
     "DiagonalNoiseOperatorList",
     "IsotropicKernelBasis",

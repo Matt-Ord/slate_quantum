@@ -10,18 +10,18 @@ if TYPE_CHECKING:
     from slate_core.basis import AsUpcast
 
 
-type ListMetadata[
+type ListMetadata[  # noqa: RUF067
     M0: BasisMetadata = BasisMetadata,
     M1: BasisMetadata = BasisMetadata,
 ] = TupleMetadata[tuple[M0, M1], Any]
 
-type ListBasis[
+type ListBasis[  # noqa: RUF067
     M0: BasisMetadata = BasisMetadata,
     M1: BasisMetadata = BasisMetadata,
 ] = Basis[ListMetadata[M0, M1]]
 
 
-def with_list_basis[M1: BasisMetadata, B1: Basis, DT: np.dtype[np.generic]](
+def with_list_basis[M1: BasisMetadata, B1: Basis, DT: np.dtype[np.generic]](  # noqa: RUF067
     array: Array[ListBasis[Any, M1], DT], basis: B1
 ) -> Array[
     AsUpcast[
