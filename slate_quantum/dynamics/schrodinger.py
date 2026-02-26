@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING, Any, cast
 
 import numpy as np
-from scipy.constants import hbar  # type: ignore lib
+from scipy.constants import hbar as hbar_value  # type: ignore lib
 from slate_core import Array, Ctype, TupleBasis, array, basis
 from slate_core.metadata import BasisMetadata
 
@@ -37,6 +37,8 @@ def _solve_schrodinger_equation_diagonal[M: BasisMetadata, MT: TimeMetadata](
         ],
         np.dtype[np.number],
     ],
+    *,
+    hbar: float = hbar_value,
 ) -> StateList[
     AsUpcast[TupleBasis[tuple[Basis[MT], Basis[M]], None], RealizationMetadata[MT, M]]
 ]:
@@ -58,19 +60,25 @@ def solve_schrodinger_equation_decomposition[M: BasisMetadata, MT: TimeMetadata]
     initial_state: State[Basis],
     times: Basis[MT],
     hamiltonian: Operator[OperatorBasis[M], np.dtype[np.complexfloating]],
+    *,
+    hbar: float = hbar_value,
 ) -> StateList[
     AsUpcast[TupleBasis[tuple[Basis[MT], Basis[M]], None], RealizationMetadata[MT, M]]
 ]:
     """Solve the schrodinger equation by directly finding eigenstates for the given initial state and hamiltonian."""
     diagonal = into_diagonal_hermitian(hamiltonian)
     diagonal = array.cast_basis(diagonal, diagonal.basis.inner)
-    return _solve_schrodinger_equation_diagonal(initial_state, times, diagonal)  # type: ignore lib
+    return _solve_schrodinger_equation_diagonal(
+        initial_state, times, diagonal, hbar=hbar
+    )  # type: ignore lib
 
 
 def solve_schrodinger_equation[M: BasisMetadata, MT: TimeMetadata](
     initial_state: State[Basis[M, Ctype[np.complexfloating]]],
     times: Basis[MT],
     hamiltonian: Operator[OperatorBasis[M], np.dtype[np.complexfloating]],
+    *,
+    hbar: float = hbar_value,
 ) -> StateList[RealizationBasis[MT, M]]:
     """Solve the schrodinger equation iteratively for the given initial state and hamiltonian.
 

@@ -41,7 +41,7 @@ if TYPE_CHECKING:
     from slate_quantum.state._state import StateWithMetadata
 
 
-DT_RATIO = 10000
+DEFAULT_TARGET_DELTA = 1e-4
 
 
 def _get_hardwall_basis[M: EvenlySpacedLengthMetadata, E: AxisDirections](
@@ -117,9 +117,7 @@ def solve[
         # a `mul` basis, we can just scale the operator data directly
         Operator(
             operator_basis(normalized_basis).upcast(),
-            # TODO: this factor of 2 accounts for some bug somewhere - we need to investigate this!  # noqa: FIX002
-            2
-            * potential.with_basis(operator_basis(unnormalized_basis).upcast()).raw_data
+            potential.with_basis(operator_basis(unnormalized_basis).upcast()).raw_data
             * (normalized_params.kbt / parameters.kbt),
         ),
         normalized_params.mass,
@@ -138,7 +136,7 @@ def solve[
     )
 
     print(  # noqa: T201
-        f"Starting solve, approximate {normalized_times[-1] * DT_RATIO:.2g} time steps"
+        f"Starting solve, approximate {normalized_times[-1] / kwargs.get('target_delta', DEFAULT_TARGET_DELTA):.2g} time steps"
     )
     # raise AssertionError
     # Simulates an SSE defined as in eqn 4.76 in https://doi.org/10.1017/CBO9780511813948
@@ -159,7 +157,7 @@ def solve[
             "store_states": True,
             "keep_runs_results": True,
             "method": as_qutip_name(kwargs.get("method", "Euler")),
-            "dt": 1 / DT_RATIO,
+            "dt": kwargs.get("target_delta", DEFAULT_TARGET_DELTA),
         },
         heterodyne=True,
     )

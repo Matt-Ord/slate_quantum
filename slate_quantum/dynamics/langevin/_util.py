@@ -157,7 +157,8 @@ def rescale_simulation_metadata[M: EvenlySpacedLengthMetadata, E: AxisDirections
     """Create a basis with n_repeat repeats of the periodic potential."""
     vectors = slate_core.metadata.volume.fundamental_stacked_delta_x(metadata)
     vectors = tuple(
-        v * (out_parameters.lengthscale / in_parameters.lengthscale) for v in vectors
+        v * (out_parameters.characteristic_length / in_parameters.characteristic_length)
+        for v in vectors
     )
     return slate_core.metadata.volume.spaced_volume_metadata_from_stacked_delta_x(
         vectors,
