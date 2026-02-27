@@ -57,7 +57,7 @@ def _truncate_diagonal_to_qutip(
 
     length = col_end - col_start
     if length <= 0:
-        return np.array([])
+        return np.array([], dtype=diag_values.dtype)
 
     # 2. Scipy stores the value for A[j-offset, j] at diag_values[j]
     # So we simply slice the buffer from the first valid column to the last.
