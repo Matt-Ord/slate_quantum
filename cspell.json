@@ -161,7 +161,8 @@
         ".gitignore",
         "build/**",
         "docs/**",
-        "*.egg-info/**"
+        "*.egg-info/**",
+        "*.html"
     ],
     "noConfigSearch": true
 }

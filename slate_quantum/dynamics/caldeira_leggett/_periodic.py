@@ -11,7 +11,7 @@ from slate_core.metadata import (
 from slate_core.util import timed
 
 from slate_quantum import operator
-from slate_quantum.dynamics.caldeira_leggett._util import operator_as_qobj
+from slate_quantum.dynamics.caldeira_leggett._util import operator_as_diagonal_qobj
 from slate_quantum.dynamics.langevin._util import (
     QutipSSEConfig,
     as_qutip_name,
@@ -60,39 +60,47 @@ def _get_periodic_basis[M: EvenlySpacedLengthMetadata, E: AxisDirections](
 def _build_environment_operators[M: EvenlySpacedLengthMetadata, E: AxisDirections](
     basis: Basis[TupleMetadata[tuple[M, ...], E]],
     params: LangevinParameters,
-) -> list[np.ndarray[tuple[int, int], np.dtype[np.complexfloating]]]:
+) -> list[
+    Operator[
+        OperatorBasis[TupleMetadata[tuple[M, ...], E]], np.dtype[np.complexfloating]
+    ]
+]:
     """Build the environment operators for the Caldeira-Leggett model with periodic boundaries."""
     out_basis = operator_basis(basis).upcast()
-    p_operator = (
-        operator.build.p(basis.metadata(), axis=0, hbar=params.hbar)
-        .with_basis(out_basis)
-        .raw_data.reshape(basis.size, basis.size)
-    )
-    friction_const = 2 * params.kbt_div_hbar * params.mass
-    dk = slate_core.metadata.volume.fundamental_stacked_dk(basis.metadata())[0][0]
+
     cos_x = (
-        operator.build.potential_from_function(
-            basis.metadata(), lambda x: np.cos(dk * x[0])
-        )
+        operator.build.cos_potential(basis.metadata(), 2.0, offset=-1.0)
         .with_basis(out_basis)
         .raw_data.reshape(basis.size, basis.size)
     )
+
     sin_x = (
-        operator.build.potential_from_function(
-            basis.metadata(), lambda x: np.sin(dk * x[0])
-        )
+        operator.build.sin_potential(basis.metadata(), 2.0, offset=-1.0)
         .with_basis(out_basis)
         .raw_data.reshape(basis.size, basis.size)
     )
 
     correction_prefactor = 1j / (params.kbt_div_hbar * params.mass)
+    p_operator = (
+        operator.build.p(basis.metadata(), axis=0, hbar=params.hbar)
+        .with_basis(out_basis)
+        .raw_data.reshape(basis.size, basis.size)
+    )
     cos_x_correction = -correction_prefactor * (p_operator @ sin_x + sin_x @ p_operator)
     sin_x_correction = correction_prefactor * (p_operator @ cos_x + cos_x @ p_operator)
 
+    dk = slate_core.metadata.volume.fundamental_stacked_dk(basis.metadata())[0][0]
     operator_prefactor = 1 / (np.sqrt(2) * dk)
+    friction_const = 2 * params.kbt_div_hbar * params.mass
     return [
-        np.sqrt(friction_const) * (operator_prefactor * cos_x + cos_x_correction),
-        np.sqrt(friction_const) * (operator_prefactor * sin_x + sin_x_correction),
+        Operator(
+            out_basis,
+            np.sqrt(friction_const) * (operator_prefactor * cos_x + cos_x_correction),
+        ),
+        Operator(
+            out_basis,
+            np.sqrt(friction_const) * (operator_prefactor * sin_x + sin_x_correction),
+        ),
     ]
 
 
@@ -160,7 +168,7 @@ def solve[
         normalized_params.mass,
         hbar=normalized_params.hbar,
     )
-    # TODO: is this correct ???
+
     environment_operators = _build_environment_operators(
         normalized_basis, normalized_params
     )
@@ -176,16 +184,21 @@ def solve[
     #             + (S - (<S + S dagger> / 2)) |psi(t)> dW
     n_trajectories = kwargs.get("n_trajectories", 1)
     result = qutip.ssesolve(  # type: ignore lib
-        H=operator_as_qobj((hamiltonian), normalized_basis) / normalized_params.hbar,
+        H=operator_as_diagonal_qobj(hamiltonian, normalized_basis)
+        / normalized_params.hbar,
         psi0=qutip.Qobj(initial_state.with_basis(unnormalized_basis).raw_data),
         tlist=normalized_times,
         ntraj=n_trajectories,
-        sc_ops=[qutip.Qobj(op) for op in environment_operators],
+        sc_ops=[
+            operator_as_diagonal_qobj(op, normalized_basis)
+            for op in environment_operators
+        ],
         options={
             "progress_bar": "enhanced",
             "store_states": True,
             "keep_runs_results": True,
             "method": as_qutip_name(kwargs.get("method", "Euler")),
+            "normalize_output": False,
             "dt": kwargs.get("target_delta", DEFAULT_TARGET_DELTA),
         },
         heterodyne=True,

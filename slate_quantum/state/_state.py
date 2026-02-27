@@ -227,7 +227,19 @@ def all_inner_product[
     return linalg.einsum("(j i'),(k i) ->(j k)", state_0, state_1)
 
 
-def normalize_all[
+def normalization_each[
+    M0: BasisMetadata,
+    M1: BasisMetadata,
+    DT: np.dtype[np.complexfloating],
+](
+    state: StateList[TupleBasisLike[tuple[M0, M1], None], DT],
+) -> Array[Basis[M0], np.dtype[np.floating]]:
+    """Calculate the normalization of a state."""
+    product = inner_product_each(state, state)
+    return array.abs(product)
+
+
+def normalize_each[
     M: TupleMetadata[tuple[BasisMetadata, BasisMetadata], None],
     DT: np.dtype[np.complexfloating],
 ](

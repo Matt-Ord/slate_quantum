@@ -57,7 +57,7 @@ def all_potential_from_function[
         states.basis.metadata().children[1], fn=fn, wrapped=wrapped, offset=offset
     )
 
-    normalized = _state.normalize_all(states)
+    normalized = _state.normalize_each(states)
     return array.real(expectation_of_each(momentum, normalized))  # type: ignore bad inference
 
 
@@ -204,7 +204,7 @@ def all_x[
         states.basis.metadata().children[1], axis=axis, offset=offset, wrapped=wrapped
     )
 
-    normalized = _state.normalize_all(states)
+    normalized = _state.normalize_each(states)
     return array.real(expectation_of_each(momentum, normalized))  # type: ignore bad inference
 
 
@@ -231,7 +231,7 @@ def _get_all_fundamental_scatter[
     n_k = tuple(1 if i == axis else 0 for i in range(n_dim))
     scatter = scattering_operator(states.basis.metadata().children[1], n_k=n_k)
 
-    normalized = _state.normalize_all(states)
+    normalized = _state.normalize_each(states)
     return expectation_of_each(scatter, normalized)  # type: ignore bad inference
 
 
@@ -331,7 +331,7 @@ def all_k[
     """Get the momentum of all states."""
     momentum = _build.k(states.basis.metadata().children[1], axis=axis)
 
-    normalized = _state.normalize_all(states)
+    normalized = _state.normalize_each(states)
     return array.real(expectation_of_each(momentum, normalized))  # type: ignore bad inference
 
 
