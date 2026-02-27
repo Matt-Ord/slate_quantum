@@ -87,6 +87,8 @@ def repeat_potential(
 def cos_potential(
     metadata: EvenlySpacedVolumeMetadata,
     height: float,
+    *,
+    offset: float = 0,
 ) -> Potential[EvenlySpacedLengthMetadata, AxisDirections]:
     """Build a cosine potential.
 
@@ -99,7 +101,9 @@ def cos_potential(
         lambda _i, y: CroppedBasis(3, y).upcast(),
     ).upcast()
     n_dim = len(cropped.inner.shape)
-    data = outer_product(*(np.array([2, 1, 1], dtype=np.complex128),) * n_dim)
+    data = outer_product(
+        *(np.array([2 * (1 + offset), 1, 1], dtype=np.complex128),) * n_dim
+    )
     return potential(
         cropped, 0.25**n_dim * height * data * np.sqrt(transformed_basis.size)
     )
@@ -108,6 +112,8 @@ def cos_potential(
 def sin_potential(
     metadata: EvenlySpacedVolumeMetadata,
     height: float,
+    *,
+    offset: float = 0,
 ) -> Potential[EvenlySpacedLengthMetadata, AxisDirections]:
     """Build a sin potential.
 
@@ -120,7 +126,7 @@ def sin_potential(
         lambda _i, y: CroppedBasis(3, y).upcast(),
     ).upcast()
     n_dim = len(cropped.inner.shape)
-    data = outer_product(*(np.array([2, 1j, -1j]),) * n_dim)
+    data = outer_product(*(np.array([2 * (1 + offset), 1j, -1j]),) * n_dim)
     return potential(
         cropped, 0.25**n_dim * height * data * np.sqrt(transformed_basis.size)
     )
@@ -227,7 +233,7 @@ def harmonic_potential[M: VolumeMetadata](
     """
     return potential_from_function(
         metadata,
-        lambda x: (0.5 * frequency**2 * np.linalg.norm(x, axis=0) ** 2),
+        lambda x: 0.5 * frequency**2 * np.linalg.norm(x, axis=0) ** 2,
         wrapped=True,
         offset=offset,
     )

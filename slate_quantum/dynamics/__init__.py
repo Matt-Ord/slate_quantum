@@ -10,6 +10,9 @@ from slate_quantum.dynamics._realization import (
 from slate_quantum.dynamics.caldeira_leggett import (
     solve as solve_caldeira_leggett,
 )
+from slate_quantum.dynamics.caldeira_leggett import (
+    solve_periodic as solve_periodic_caldeira_leggett,
+)
 from slate_quantum.dynamics.langevin import (
     LangevinParameters,
 )
@@ -29,6 +32,7 @@ __all__ = [
     "RealizationMetadata",
     "select_realization",
     "solve_caldeira_leggett",
+    "solve_periodic_caldeira_leggett",
     "solve_schrodinger_equation",
     "solve_schrodinger_equation_decomposition",
     "solve_stochastic_schrodinger_equation_banded",

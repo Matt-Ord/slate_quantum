@@ -15,8 +15,9 @@ from slate_quantum.state._state import (
     inner_product,
     inner_product_each,
     normalization,
+    normalization_each,
     normalize,
-    normalize_all,
+    normalize_each,
 )
 
 __all__ = [
@@ -34,6 +35,7 @@ __all__ = [
     "inner_product",
     "inner_product_each",
     "normalization",
+    "normalization_each",
     "normalize",
-    "normalize_all",
+    "normalize_each",
 ]
