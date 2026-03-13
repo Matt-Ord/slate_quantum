@@ -4,7 +4,7 @@ from typing import Any, Literal, TypedDict, overload
 import numpy as np
 import slate_core
 from scipy.constants import Boltzmann, hbar  # type: ignore lib
-from slate_core import EvenlySpacedLengthMetadata
+from slate_core import Array, Basis, BasisMetadata, EvenlySpacedLengthMetadata, array
 from slate_core.metadata import AxisDirections, TupleMetadata
 
 
@@ -78,14 +78,34 @@ class LangevinParameters:
     ) -> tuple[
         np.ndarray[Any, np.dtype[np.floating]], np.ndarray[Any, np.dtype[np.floating]]
     ]: ...
+    @overload
+    def eval_xp[M: BasisMetadata](
+        self,
+        alpha: Array[Basis[M], np.dtype[np.complexfloating]],
+    ) -> tuple[
+        Array[Basis[M], np.dtype[np.floating]],
+        Array[Basis[M], np.dtype[np.floating]],
+    ]: ...
 
     def eval_xp(
-        self, alpha: complex | np.ndarray[Any, np.dtype[np.complexfloating]]
+        self,
+        alpha: complex
+        | np.ndarray[Any, np.dtype[np.complexfloating]]
+        | Array[Basis[Any], np.dtype[np.complexfloating]],
     ) -> tuple[
-        float | np.ndarray[Any, np.dtype[np.floating]],
-        float | np.ndarray[Any, np.dtype[np.floating]],
+        float
+        | np.ndarray[Any, np.dtype[np.floating]]
+        | Array[Basis[Any], np.dtype[np.floating]],
+        float
+        | np.ndarray[Any, np.dtype[np.floating]]
+        | Array[Basis[Any], np.dtype[np.floating]],
     ]:
         """Evaluate the coherent state alpha parameter for the harmonic oscillator."""
+        if isinstance(alpha, Array):
+            return (
+                array.real(alpha) * (np.sqrt(2) * self.lengthscale),
+                array.imag(alpha) * (np.sqrt(2) * (self.hbar / self.lengthscale)),
+            )
         x = (alpha.real * np.sqrt(2)) * self.lengthscale
         p = (alpha.imag * np.sqrt(2)) * (self.hbar / self.lengthscale)
         return (x, p)

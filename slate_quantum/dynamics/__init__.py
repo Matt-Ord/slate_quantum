@@ -3,6 +3,7 @@
 from slate_quantum.dynamics._realization import (
     RealizationList,
     RealizationListBasis,
+    RealizationListIndexMetadata,
     RealizationListMetadata,
     RealizationMetadata,
     select_realization,
@@ -28,6 +29,7 @@ __all__ = [
     "LangevinParameters",
     "RealizationList",
     "RealizationListBasis",
+    "RealizationListIndexMetadata",
     "RealizationListMetadata",
     "RealizationMetadata",
     "select_realization",

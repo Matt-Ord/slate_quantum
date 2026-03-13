@@ -1,3 +1,4 @@
+import warnings
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -17,6 +18,7 @@ if TYPE_CHECKING:
     from slate_core import Basis
 
     from slate_quantum.operator import Operator, OperatorBasis
+    from slate_quantum.state._state import State
 
 
 def operator_as_qobj[
@@ -119,3 +121,33 @@ def operator_as_diagonal_qobj[
         .raw_data.reshape((basis.size, basis.size))
     )
     return _full_to_qutip_diagonal(raw_data)
+
+
+def state_as_qobj[
+    M: EvenlySpacedLengthMetadata,
+    E: AxisDirections,
+](
+    state: State[Basis[TupleMetadata[tuple[M, ...], E]]],
+    basis: Basis[TupleMetadata[tuple[M, ...], E]],
+) -> Qobj:  # type: ignore lib
+    """Convert a state to a qutip Qobj.
+
+    Raises
+    ------
+    ImportError
+        If the qutip package is not installed.
+    """
+    if qutip is None:
+        msg = "The qutip package is required to use this function. Please install it with `pip install qutip`."
+        raise ImportError(msg)
+
+    state_raw = state.with_basis(basis).raw_data
+    if np.abs(np.linalg.norm(state_raw) - 1) > 1e-3:  # noqa: PLR2004
+        msg = (
+            "Warning: Initial state is not normalized when converted to the simulation basis. "
+            "This is usually because the initial state has significant occupation outside the simulation basis. "
+            f"This may lead to numerical instabilities. Norm: {np.linalg.norm(state_raw)}"
+        )
+        warnings.warn(msg, stacklevel=3, category=UserWarning)
+        state_raw /= np.linalg.norm(state_raw)
+    return qutip.Qobj(state_raw)
