@@ -11,7 +11,7 @@ From the repository root:
 
 ```bash
 # Automatically generate API docs from docstrings
-uv run sphinx-apidoc --force --module-first -o docs/source/ slate_quantum/
+uv run sphinx-apidoc -o docs/source/ slate_quantum/
 # Build the docs
 cd docs
 make html
