@@ -102,7 +102,12 @@ def _full_to_qutip_diagonal(
     if qutip is None:
         msg = "The qutip package is required to use this function. Please install it with `pip install qutip`."
         raise ImportError(msg)
-    return qutip.qdiags(clean_diags, clean_offsets, dims=(data.shape[0], data.shape[1]))  # type: ignore[unknown] # cspell: disable-line
+    return qutip.qdiags(  # type: ignore[unknown] # cspell: disable-line
+        clean_diags,
+        clean_offsets,
+        dims=(data.shape[0], data.shape[1]),
+        shape=data.shape,
+    )
 
 
 def operator_as_diagonal_qobj[

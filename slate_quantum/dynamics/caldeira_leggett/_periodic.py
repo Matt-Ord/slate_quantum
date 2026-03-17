@@ -90,18 +90,20 @@ def _build_environment_operators[M: EvenlySpacedLengthMetadata, E: AxisDirection
         .raw_data.reshape(basis.size, basis.size)
     )
 
-    correction_prefactor = 1j / (4 * params.kbt_div_hbar * params.mass)
-    p_operator = (
-        operator.build.p(basis.metadata(), axis=0, hbar=params.hbar)
+    correction_prefactor = (
+        1j * params.hbar / (8 * np.sqrt(2) * params.kbt_div_hbar * params.mass)
+    )
+    k_operator = (
+        operator.build.k(basis.metadata(), axis=0)
         .with_basis(out_basis)
         .raw_data.reshape(basis.size, basis.size)
     )
-    cos_x_correction = -correction_prefactor * (p_operator @ sin_x + sin_x @ p_operator)
-    sin_x_correction = correction_prefactor * (p_operator @ cos_x + cos_x @ p_operator)
+    cos_x_correction = -correction_prefactor * (k_operator @ sin_x + sin_x @ k_operator)
+    sin_x_correction = correction_prefactor * (k_operator @ cos_x + cos_x @ k_operator)
 
     dk = slate_core.metadata.volume.fundamental_stacked_dk(basis.metadata())[0][0]
     operator_prefactor = 1 / (np.sqrt(2) * dk)
-    friction_const = 2 * params.kbt_div_hbar * params.mass
+    friction_const = 2 * params.kbt_div_hbar * params.mass * params.lambda_
     return [
         Operator(
             out_basis,

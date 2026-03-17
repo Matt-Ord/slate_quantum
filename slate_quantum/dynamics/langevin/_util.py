@@ -112,18 +112,18 @@ class LangevinParameters:
 
     @property
     def normalized_parameters(self: LangevinParameters) -> LangevinParameters:
-        sf = self.characteristic_time
 
         out = LangevinParameters(
-            temperature=self.temperature,
-            lambda_=self.lambda_ * sf,
-            mass=self.mass,
-            hbar=self.hbar * sf,
-            boltzmann=self.boltzmann * sf**2,
-            lengthscale=self.characteristic_length,
+            temperature=1.0,
+            lambda_=self.dimensionless_lambda,
+            mass=1.0,
+            hbar=1.0,
+            boltzmann=1.0,
+            lengthscale=1 / np.sqrt(2),
         )
         assert np.isclose(out.characteristic_time, 1.0)
         assert np.isclose(out.dimensionless_mass, 1.0)
+        assert np.isclose(out.hbar, 1.0)
 
         return out
 
@@ -164,9 +164,11 @@ def rescale_alpha(
     out_parameter: LangevinParameters,
 ) -> complex | np.ndarray[Any, np.dtype[np.complexfloating]]:
     """Rescale the coherent state alpha parameter."""
-    sf_len = out_parameter.lengthscale / in_parameter.lengthscale
+    sf_alpha = (out_parameter.lengthscale / in_parameter.lengthscale) * (
+        in_parameter.characteristic_length / out_parameter.characteristic_length
+    )
 
-    return alpha.real / sf_len + 1j * alpha.imag * sf_len
+    return alpha.real / sf_alpha + 1j * alpha.imag * sf_alpha
 
 
 def rescale_simulation_metadata[M: EvenlySpacedLengthMetadata, E: AxisDirections](
