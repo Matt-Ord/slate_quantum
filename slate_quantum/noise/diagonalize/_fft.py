@@ -42,12 +42,16 @@ def get_periodic_noise_operators_isotropic_fft[M: BasisMetadata](
     r"""
     For an isotropic noise kernel, the noise operators are independent in k space.
 
-    beta(x - x') = 1 / N \sum_k |f(k)|^2 e^(ikx) for some f(k)
-    |f(k)|^2 = \sum_x beta(x) e^(-ik.x)
+    .. math::
+        \beta(x - x') = \frac{1}{N} \sum_k |f(k)|^2 e^{ikx}
+
+    .. math::
+        |f(k)|^2 = \sum_x \beta(x) e^{-ik.x}
 
     The independent noise operators are then given by
 
-    L(k) = 1 / N \sum_x e^(ikx) S(x)
+    .. math::
+        L(k) = \frac{1}{N} \sum_x e^{ikx} S(x)
 
     The inddependent operators can therefore be found directly using a FFT
     of the noise beta(x).
@@ -136,12 +140,16 @@ def get_periodic_noise_operators_isotropic_stacked_fft[M: BasisMetadata, E](
     r"""
     For an isotropic noise kernel, the noise operators are independent in k space.
 
-    beta(x - x') = 1 / N \sum_k |f(k)|^2 e^(ikx) for some f(k)
-    |f(k)|^2 = \sum_x beta(x) e^(-ik.x)
+    .. math::
+        \beta(x - x') = \frac{1}{N} \sum_k |f(k)|^2 e^{ikx}
+
+    .. math::
+        |f(k)|^2 = \sum_x \beta(x) e^{-ik.x}
 
     The independent noise operators are then given by
 
-    L(k) = 1 / N \sum_x e^(ikx) S(x)
+    .. math::
+        L(k) = \frac{1}{N} \sum_x e^{ikx} S(x)
 
     The independent operators can therefore be found directly using a FFT
     of the noise beta(x).

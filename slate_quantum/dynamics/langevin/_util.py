@@ -31,7 +31,7 @@ class LangevinParameters:
 
     @property
     def dimensionless_lambda(self) -> float:
-        """Return the dimensionless lambda_."""
+        """Return the dimensionless ``lambda_``."""
         return self.lambda_ / self.kbt_div_hbar
 
     @property

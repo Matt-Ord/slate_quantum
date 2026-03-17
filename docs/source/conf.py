@@ -2,7 +2,11 @@ project = "Slate Quantum"
 author = "Matthew Ord"
 version = "0.0.1"
 
-extensions = ["sphinx.ext.autodoc"]
+extensions = ["sphinx.ext.autodoc", "sphinx.ext.intersphinx"]
+intersphinx_mapping = {
+    "slate": ("https://matt-ord.github.io/slate/", None),
+}
+
 
 templates_path = ["_templates"]
 exclude_patterns = []
