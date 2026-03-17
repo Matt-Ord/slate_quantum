@@ -5,14 +5,12 @@ from slate_core import (
     SimpleMetadata,
     TupleMetadata,
 )
-from slate_core.basis import AsUpcast, TupleBasis
+from slate_core.basis import AsUpcast, Basis, TupleBasis
 from slate_core.metadata import BasisMetadata
 
 from slate_quantum.state import StateList
 
 if TYPE_CHECKING:
-    from slate_core.basis import Basis
-
     from slate_quantum.metadata import TimeMetadata
 
 type RealizationMetadata[MT: TimeMetadata, M: BasisMetadata] = TupleMetadata[

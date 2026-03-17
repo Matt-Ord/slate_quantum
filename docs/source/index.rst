@@ -1,6 +1,6 @@
 
 Slate Quantum Documentation
-===================
+===========================
 
 **SLATE** is a Python package designed to simplify 
 the representation and manipulation of sparse or compressed matrices through a hierarchical,

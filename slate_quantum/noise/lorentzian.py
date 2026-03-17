@@ -85,7 +85,7 @@ def get_lorentzian_operators_explicit_taylor[M: VolumeMetadata](
     """Calculate the noise operators for an isotropic lorentzian noise kernel, using an explicit Taylor expansion.
 
     This function makes use of the analytical expression for the Taylor expansion of lorentzian
-    noise lambda_/(x^2 + lambda_^2) about origin to find the 2n+1 lowest fourier coefficients.
+    noise ``lambda_ / (x^2 + lambda_^2)`` about origin to find the 2n+1 lowest fourier coefficients.
     """
     # currently only support 1D
     assert len(shallow_shape_from_nested(basis.fundamental_shape)) == 1
