@@ -4,6 +4,8 @@ version = "0.0.1"
 
 extensions = ["sphinx.ext.autodoc", "sphinx.ext.intersphinx"]
 intersphinx_mapping = {
+    "python": ("https://docs.python.org/3", None),
+    "numpy": ("https://numpy.org/doc/stable", None),
     "slate": ("https://matt-ord.github.io/slate/", None),
 }
 
