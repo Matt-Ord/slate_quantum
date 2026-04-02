@@ -18,6 +18,7 @@ class LangevinParameters:
     hbar: float = hbar
     boltzmann: float = Boltzmann
     lengthscale: float = 1.0
+    """The length we use to define the parameter alpha"""
 
     @property
     def kbt(self) -> float:
@@ -164,11 +165,11 @@ def rescale_alpha(
     out_parameter: LangevinParameters,
 ) -> complex | np.ndarray[Any, np.dtype[np.complexfloating]]:
     """Rescale the coherent state alpha parameter."""
-    sf_alpha = (out_parameter.lengthscale / in_parameter.lengthscale) * (
-        in_parameter.characteristic_length / out_parameter.characteristic_length
+    sf_alpha = np.sqrt(
+        out_parameter.dimensionless_mass / in_parameter.dimensionless_mass
     )
 
-    return alpha.real / sf_alpha + 1j * alpha.imag * sf_alpha
+    return (alpha.real * sf_alpha) + 1j * (alpha.imag / sf_alpha)
 
 
 def rescale_simulation_metadata[M: EvenlySpacedLengthMetadata, E: AxisDirections](
