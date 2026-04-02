@@ -25,6 +25,7 @@ from slate_quantum.dynamics.caldeira_leggett._util import (
 from slate_quantum.dynamics.langevin._util import (
     QutipSSEConfig,
     as_qutip_name,
+    rescale_alpha,
     rescale_simulation_metadata,
     rescale_times,
 )
@@ -533,6 +534,13 @@ def solve_locations[
         heterodyne=True,
     )
 
+    alpha = normalized_params.eval_alpha(
+        np.unwrap(
+            np.angle(np.array(result.runs_expect[0], dtype=np.complex128))  # type: ignore lib
+        )
+        * (normalized_basis.metadata().children[0].delta / (2 * np.pi)),
+        normalized_params.hbar * np.array(result.runs_expect[1], dtype=np.float64),  # type: ignore lib
+    )
     return (
         Array(
             TupleBasis(
@@ -541,12 +549,10 @@ def solve_locations[
                     basis.as_fundamental(times),
                 )
             ).upcast(),
-            parameters.eval_alpha(
-                np.unwrap(
-                    np.angle(np.array(result.runs_expect[0], dtype=np.complex128))  # type: ignore lib
-                )
-                * (unnormalized_basis.metadata().children[0].delta / (2 * np.pi)),
-                np.array(result.runs_expect[1], dtype=np.float64),  # type: ignore lib
+            rescale_alpha(
+                alpha,
+                in_parameter=normalized_params,
+                out_parameter=parameters,
             ),
         ),
         Array(
