@@ -104,7 +104,7 @@ def _build_environment_operators[M: EvenlySpacedLengthMetadata, E: AxisDirection
 
     dk = slate_core.metadata.volume.fundamental_stacked_dk(basis.metadata())[0][0]
     operator_prefactor = 1 / (np.sqrt(2) * dk)
-    friction_const = 2 * params.kbt_div_hbar * params.mass * params.lambda_
+    friction_const = 4 * params.kbt_div_hbar * params.mass * params.lambda_
     return [
         Operator(
             out_basis,
