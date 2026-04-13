@@ -215,6 +215,7 @@ def solve[
             "method": as_qutip_name(kwargs.get("method", "Euler")),
             "normalize_output": False,
             "dt": kwargs.get("target_delta", DEFAULT_TARGET_DELTA),
+            "map": "parallel" if n_trajectories > 1 else None,
         },
         heterodyne=True,
     )
@@ -386,6 +387,7 @@ def solve_energies[
             "keep_runs_results": True,
             "method": as_qutip_name(kwargs.get("method", "Euler")),
             "dt": kwargs.get("target_delta", DEFAULT_TARGET_DELTA),
+            "map": "parallel" if n_trajectories > 1 else None,
         },
         heterodyne=True,
     )
@@ -530,6 +532,7 @@ def solve_locations[
             "keep_runs_results": True,
             "method": as_qutip_name(kwargs.get("method", "Euler")),
             "dt": kwargs.get("target_delta", DEFAULT_TARGET_DELTA),
+            "map": "parallel" if n_trajectories > 1 else None,
         },
         heterodyne=True,
     )
