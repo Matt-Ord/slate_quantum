@@ -15,7 +15,6 @@ from slate_core import (
 from slate_core import metadata as _metadata
 from slate_core.basis import (
     CroppedBasis,
-    DiagonalBasis,
     TruncatedBasis,
     Truncation,
     TupleBasisLike,
@@ -38,7 +37,7 @@ from slate_quantum.operator._diagonal import (
     position_operator_basis,
     with_outer_basis,
 )
-from slate_quantum.operator._operator import Operator, OperatorBasis, operator_basis
+from slate_quantum.operator._operator import Operator
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -192,10 +191,11 @@ def fcc_potential(
 
 
 def potential_from_function[
-    M: TupleMetadata[tuple[LengthMetadata, ...], AxisDirections],
-    DT: np.dtype[np.number],
+    M: LengthMetadata,
+    E: AxisDirections,
+    DT: np.dtype[np.complexfloating],
 ](
-    metadata: M,
+    metadata: TupleMetadata[tuple[M, ...], E],
     fn: Callable[
         [tuple[np.ndarray[Any, np.dtype[np.floating]], ...]],
         np.ndarray[Any, DT],
@@ -203,7 +203,7 @@ def potential_from_function[
     *,
     wrapped: bool = False,
     offset: tuple[float, ...] | None = None,
-) -> Operator[OperatorBasis[M], DT]:
+) -> Potential[M, E, Ctype[Never], DT]:
     """Get the potential operator."""
     positions = _metadata.volume.fundamental_stacked_x_points(
         metadata, offset=offset, wrapped=wrapped
@@ -213,20 +213,15 @@ def potential_from_function[
         weights = metadata.basis_weights
         points /= cast("np.ndarray[Any, DT]", np.square(weights).astype(points.dtype))
 
-    return Operator(
-        DiagonalBasis(
-            operator_basis(AsUpcast(basis.from_metadata(metadata), metadata))
-        ).upcast(),
-        cast("np.ndarray[Any, DT]", points),
-    )
+    return potential(basis.from_metadata(metadata).upcast(), points)
 
 
-def harmonic_potential[M: VolumeMetadata](
-    metadata: M,
+def harmonic_potential[M: LengthMetadata, E: AxisDirections](
+    metadata: TupleMetadata[tuple[M, ...], E],
     frequency: float,
     *,
     offset: tuple[float, ...] | None = None,
-) -> Operator[OperatorBasis[M], np.dtype[np.complexfloating]]:
+) -> Potential[M, E]:
     """Build a harmonic potential.
 
     V(x) = 0.5 * frequency^2 * ||x||^2
@@ -289,13 +284,13 @@ class DoubleHarmonicParameters:
         return prefactor * (c4 * x**4 + c3 * x**3 + c2 * x**2)
 
 
-def double_harmonic_potential[M: VolumeMetadata](
-    metadata: M,
+def double_harmonic_potential[M: LengthMetadata, E: AxisDirections](
+    metadata: TupleMetadata[tuple[M, ...], E],
     params: DoubleHarmonicParameters,
     *,
     axis: int = -1,
     offset: tuple[float, ...] | None = None,
-) -> Operator[OperatorBasis[M], np.dtype[np.complexfloating]]:
+) -> Potential[M, E]:
     """Build a harmonic potential.
 
     V(x) = 0.5 * frequency^2 * ||x||^2
@@ -437,12 +432,12 @@ def corrugated_morse_potential_function(
     return _fn
 
 
-def morse_potential[M: VolumeMetadata](
-    metadata: M,
+def morse_potential[M: LengthMetadata, E: AxisDirections](
+    metadata: TupleMetadata[tuple[M, ...], E],
     params: MorseParameters,
     *,
     axis: int = -1,
-) -> Operator[OperatorBasis[M], np.dtype[np.complexfloating]]:
+) -> Potential[M, E]:
     """Build a Morse potential.
 
     The morse potential is given by
@@ -458,25 +453,22 @@ def morse_potential[M: VolumeMetadata](
         for i, c in enumerate(metadata.children)
         if i != axis
     ):
-        return cast(
-            "Operator[OperatorBasis[M], np.dtype[np.complexfloating]]",
-            potential_from_function(
+        return potential_from_function(
+            metadata,
+            corrugated_morse_potential_function(
                 metadata,
-                corrugated_morse_potential_function(
-                    metadata,
-                    CorrugatedMorseParameters(
-                        depth=params.depth,
-                        height=params.height,
-                        offset=params.offset,
-                    ),
-                    axis=axis,
+                CorrugatedMorseParameters(
+                    depth=params.depth,
+                    height=params.height,
+                    offset=params.offset,
                 ),
+                axis=axis,
             ),
         )
     basis_children = TupleBasis(
         tuple(
             (
-                CroppedBasis(1, TransformedBasis(FundamentalBasis(c)))
+                AsUpcast(CroppedBasis(1, TransformedBasis(FundamentalBasis(c))), c)
                 if i != axis
                 else FundamentalBasis(c)
             )
@@ -484,23 +476,22 @@ def morse_potential[M: VolumeMetadata](
         ),
         metadata.extra,
     )
-    out_basis = position_operator_basis(basis_children.upcast())
-    out_basis = AsUpcast(out_basis, TupleMetadata((metadata, metadata)))
+
     data = MorseParameters.eval(params, metadata.children[axis].values) * np.sqrt(
         basis_children.fundamental_size / basis_children.children[axis].fundamental_size
     )
 
     if SIMPLE_FEATURE not in metadata.children[axis].features:
         data /= np.square(metadata.children[axis].basis_weights)
-    return Operator(out_basis, data.astype(np.complex128))
+    return potential(basis_children.upcast(), data.astype(np.complex128))
 
 
-def corrugated_morse_potential[M: VolumeMetadata](
-    metadata: M,
+def corrugated_morse_potential[M: LengthMetadata, E: AxisDirections](
+    metadata: TupleMetadata[tuple[M, ...], E],
     params: CorrugatedMorseParameters,
     *,
     axis: int = -1,
-) -> Operator[OperatorBasis[M], np.dtype[np.complexfloating]]:
+) -> Potential[M, E]:
     """Build a corrugated Morse potential.
 
     The morse potential is given by
@@ -516,18 +507,15 @@ def corrugated_morse_potential[M: VolumeMetadata](
         for i, c in enumerate(metadata.children)
         if i != axis
     ):
-        return cast(
-            "Operator[OperatorBasis[M], np.dtype[np.complexfloating]]",
-            potential_from_function(
-                metadata,
-                corrugated_morse_potential_function(metadata, params, axis=axis),
-            ),
+        return potential_from_function(
+            metadata,
+            corrugated_morse_potential_function(metadata, params, axis=axis),
         )
 
     basis_children = TupleBasis(
         tuple(
             (
-                CroppedBasis(3, TransformedBasis(FundamentalBasis(c)))
+                AsUpcast(CroppedBasis(3, TransformedBasis(FundamentalBasis(c))), c)
                 if i != axis
                 else FundamentalBasis(c)
             )
@@ -535,8 +523,7 @@ def corrugated_morse_potential[M: VolumeMetadata](
         ),
         metadata.extra,
     )
-    out_basis = position_operator_basis(basis_children)
-    out_basis = AsUpcast(out_basis, TupleMetadata((metadata, metadata)))
+
     data = np.zeros(basis_children.shape, dtype=np.complex128)
 
     index_along_axis = tuple(
@@ -569,4 +556,4 @@ def corrugated_morse_potential[M: VolumeMetadata](
                 recast_along_axes(data.shape, {axis})
             )
         )
-    return Operator(out_basis, data.astype(np.complex128))
+    return potential(basis_children.upcast(), data.astype(np.complex128))
