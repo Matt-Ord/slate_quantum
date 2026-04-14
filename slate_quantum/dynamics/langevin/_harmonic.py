@@ -120,7 +120,7 @@ def solve_harmonic_langevin[
 
 
 @timed
-def solve_harmonic_stable_quantum_langevin[
+def solve_harmonic_semiclassical_langevin[
     MT: TimeMetadata,
 ](
     initial_state: tuple[complex, complex],

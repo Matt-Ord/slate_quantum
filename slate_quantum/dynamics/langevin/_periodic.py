@@ -160,7 +160,7 @@ def solve_periodic_langevin[
 
 
 @timed
-def solve_periodic_stable_quantum_langevin[
+def solve_periodic_semiclassical_langevin[
     MT: TimeMetadata,
     M: EvenlySpacedLengthMetadata,
     E: AxisDirections,
