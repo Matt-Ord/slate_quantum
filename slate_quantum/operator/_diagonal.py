@@ -118,7 +118,7 @@ type PositionOperatorBasis[
 ]
 
 
-def _assert_position_ty[M: BasisMetadata, E](  # type: ignore this is just a type test
+def _assert_position_ty[M: BasisMetadata, E](  # pyright: ignore[reportUnusedFunction]
     basis: PositionOperatorBasis[M, E],
 ) -> DiagonalOperatorBasisWithMetadata[TupleMetadata[tuple[M, ...], E]]:
     return basis
