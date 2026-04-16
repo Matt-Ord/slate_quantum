@@ -83,7 +83,7 @@ def get_dimensionless_potential_params[
     as_diagonal = array.extract_diagonal(potential).as_array() / parameters.kbt
     real_components = np.fft.rfft(as_diagonal.real, norm="forward")
     # There is some sqrt(2) bug in sse-solver_py which requires this re-scaling.
-    # TODO: Maybe this breaks non-classical dynamics in some way?
+    # TODO: Maybe this breaks non-classical dynamics in some way?  # noqa: FIX002
     real_components /= np.sqrt(2)
     return (dk * lengthscale, _truncate_potential(real_components))
 
