@@ -184,6 +184,9 @@ def solve_periodic_semiclassical_langevin[
 ]:
     r"""Solve the dynamics of a harmonic oscillator coupled to a thermal bath using the harmonic Langevin equation.
 
+    Returns the value of alpha(t) and the squeeze_ratio(t)
+    for each trajectory.
+
     Raises
     ------
     ImportError
