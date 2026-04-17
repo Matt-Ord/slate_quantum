@@ -434,6 +434,10 @@ def solve_locations[
     ],
     Array[
         TupleBasis[tuple[FundamentalBasis, Basis[MT]], None],
+        np.dtype[np.complexfloating],
+    ],
+    Array[
+        TupleBasis[tuple[FundamentalBasis, Basis[MT]], None],
         np.dtype[np.floating],
     ],
 ]:
@@ -450,7 +454,7 @@ def solve_locations[
 
     Internally, this uses the `ssesolve` function from the `QuTiP` library.
 
-    This returns a tuple of arrays (state_alpha, state_norm)
+    This returns a tuple of arrays (state_alpha, squeeze_ratio, state_norm)
     where each array has shape (n_trajectories, n_time_points).
 
     Raises
@@ -537,12 +541,23 @@ def solve_locations[
         heterodyne=True,
     )
 
+    d_k = (2 * np.pi) / normalized_basis.metadata().children[0].delta
     alpha = normalized_params.eval_alpha(
         np.unwrap(
             np.angle(np.array(result.runs_expect[0], dtype=np.complex128))  # type: ignore lib
         )
-        * (normalized_basis.metadata().children[0].delta / (2 * np.pi)),
+        / d_k,
         normalized_params.hbar * np.array(result.runs_expect[1], dtype=np.float64),  # type: ignore lib
+    )
+    # |e^(i q x)| is equal to exp(-q^2 <delta x^2>/2)
+    # delta_x^2 is therefore -2 log(|e^(i q x)|) / d_k^2
+    delta_x_square = (-2 / d_k**2) * np.log(
+        np.abs(np.array(result.runs_expect[0], dtype=np.complex128))  # type: ignore lib
+    )
+    # For now we assume the squeeze ratio is real. In this case
+    # delta_x ^2 = dimensionless_mass * length**2 / (2 * squeeze_ratio)
+    squeeze_ratio = (normalized_params.mass * normalized_params.lengthscale**2) / (
+        2 * delta_x_square
     )
     return (
         Array(
@@ -557,6 +572,15 @@ def solve_locations[
                 in_parameter=normalized_params,
                 out_parameter=parameters,
             ),
+        ),
+        Array(
+            TupleBasis(
+                (
+                    FundamentalBasis.from_size(n_trajectories),
+                    basis.as_fundamental(times),
+                )
+            ).upcast(),
+            squeeze_ratio,
         ),
         Array(
             TupleBasis(
