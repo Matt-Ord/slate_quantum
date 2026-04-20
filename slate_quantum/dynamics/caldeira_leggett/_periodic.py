@@ -556,9 +556,9 @@ def solve_locations[
     )
     # For now we assume the squeeze ratio is real. In this case
     # delta_x ^2 = dimensionless_mass * length**2 / (2 * squeeze_ratio)
-    squeeze_ratio = (normalized_params.mass * normalized_params.lengthscale**2) / (
-        2 * delta_x_square
-    )
+    squeeze_ratio = (
+        normalized_params.dimensionless_mass * normalized_params.lengthscale**2
+    ) / (2 * delta_x_square)
     return (
         Array(
             TupleBasis(
