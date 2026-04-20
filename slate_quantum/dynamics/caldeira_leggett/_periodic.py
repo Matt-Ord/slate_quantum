@@ -580,7 +580,7 @@ def solve_locations[
                     basis.as_fundamental(times),
                 )
             ).upcast(),
-            squeeze_ratio,
+            squeeze_ratio.astype(np.complex128),
         ),
         Array(
             TupleBasis(
