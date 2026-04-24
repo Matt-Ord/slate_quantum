@@ -120,6 +120,77 @@ def solve_harmonic_langevin[
 
 
 @timed
+def solve_harmonic_ballistic_langevin[
+    MT: TimeMetadata,
+](
+    initial_state: complex,
+    times: Basis[MT, Ctype[np.complexfloating]],
+    parameters: LangevinParameters,
+    omega: float,
+    **kwargs: Unpack[RustSSEConfig],
+) -> Array[
+    Basis[RealizationListIndexMetadata[MT]],
+    np.dtype[np.complexfloating],
+]:
+    r"""Solve the dynamics of a harmonic oscillator coupled to a thermal bath using the harmonic Langevin equation.
+
+    Raises
+    ------
+    ImportError
+        If the rust sse_solver_py is not installed
+    """
+    if sse_solver_py is None:
+        msg = "sse_solver_py is not installed, please install it using `pip install slate_quantum[sse_solver_py]`"
+        raise ImportError(msg)
+
+    times_basis = basis.as_index(times)
+    normalized_params = parameters.normalized_parameters
+
+    normalized_times = rescale_times(
+        times_basis.metadata().values[times_basis.points],
+        in_parameter=parameters,
+        out_parameter=normalized_params,
+    )
+
+    target_delta = kwargs.get("target_delta", 1e-3)
+    n_trajectories = kwargs.get("n_trajectories", 1)
+    adaptive = kwargs.get("adaptive", False)
+    if not adaptive:
+        print(  # noqa: T201
+            f"Simulating a total of {normalized_times[-1] / target_delta:0.2g} timesteps"
+        )
+    ts = datetime.datetime.now(tz=datetime.UTC)
+    data = sse_solver_py.solve_harmonic_ballistic_langevin(  # type: ignore lib
+        rescale_alpha(
+            initial_state, in_parameter=parameters, out_parameter=normalized_params
+        ),
+        get_internal_parameters(
+            normalized_params,
+            dimensionless_omega=omega / parameters.kbt_div_hbar,
+        ),
+        sse_solver_py.SimulationConfig(  # type: ignore lib
+            times=normalized_times.tolist(),
+            dt=target_delta,
+            delta=(None, target_delta, None) if adaptive else None,
+            n_trajectories=n_trajectories,
+            n_realizations=1,
+            method=kwargs.get("method", "Euler"),
+        ),
+    )
+    te = datetime.datetime.now(tz=datetime.UTC)
+    print(f"solve_harmonic_ballistic_langevin took: {(te - ts).total_seconds()} sec")  # noqa: T201
+    data = np.array(cast("list[complex]", data))  # pyright: ignore[reportUnnecessaryCast]
+
+    alpha_res = rescale_alpha(
+        data, out_parameter=parameters, in_parameter=normalized_params
+    )
+    out_basis = TupleBasis(
+        (FundamentalBasis.from_size(n_trajectories), times_basis)
+    ).upcast()
+    return Array(out_basis, alpha_res)
+
+
+@timed
 def solve_harmonic_semiclassical_langevin[
     MT: TimeMetadata,
 ](
@@ -166,7 +237,7 @@ def solve_harmonic_semiclassical_langevin[
         print(  # noqa: T201
             f"Simulating a total of {normalized_times[-1] / target_delta:0.2g} timesteps"
         )
-    data = sse_solver_py.solve_harmonic_stable_quantum_langevin(  # type: ignore lib
+    data = sse_solver_py.solve_harmonic_semiclassical_langevin(  # type: ignore lib
         (
             rescale_alpha(
                 initial_state[0],
@@ -194,7 +265,7 @@ def solve_harmonic_semiclassical_langevin[
 
     te = datetime.datetime.now(tz=datetime.UTC)
     print(  # noqa: T201
-        f"solve_harmonic_stable_quantum_langevin took: {(te - ts).total_seconds()} sec"
+        f"solve_harmonic_semiclassical_langevin took: {(te - ts).total_seconds()} sec"
     )
 
     alpha_res = rescale_alpha(
