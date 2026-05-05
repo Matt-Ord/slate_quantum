@@ -8,7 +8,7 @@ requires-python = ">=3.14,<3.15"
 dependencies = [
     "numpy >=2.0.0,<3.0.0",
     "scipy >=1.14.1,<2.0.0",
-    "slate_core @ git+https://github.com/Matt-Ord/slate.git@58261ad6141e166804322083bac390574f0312ac",
+    "slate_core @ git+https://github.com/Matt-Ord/slate.git@b314941",
 ]
 
 [dependency-groups]
@@ -17,7 +17,7 @@ dev = [
     "pytest >=9.0.0,<10.0.0",
     "pyright ==1.1.408",
     "sphinx >=9.1.0,<10.0.0",
-    "pydata-sphinx-theme >=0.16.0,<0.17.0",
+    "pydata-sphinx-theme >=0.17.0,<0.18.0",
     "ty",
     "ipykernel>=7.1.0",
 ]

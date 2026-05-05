@@ -6,7 +6,7 @@
 			"shellautocompletion": true,
 			"version": "latest"
 		},
-		"ghcr.io/devcontainers/features/node:1": {
+		"ghcr.io/devcontainers/features/node:2": {
 			"version": "lts"
 		},
 		"ghcr.io/devcontainers/features/rust:1": {
