@@ -48,6 +48,20 @@ def k[M: EvenlySpacedLengthMetadata, E: AxisDirections](
     return momentum(basis.transformed_from_metadata(metadata).upcast(), points)
 
 
+def k_squared[M: EvenlySpacedLengthMetadata, E: AxisDirections](
+    metadata: TupleMetadata[tuple[M, ...], E], *, axis: int
+) -> MomentumOperator[M, E, Ctype[Never], np.dtype[np.complexfloating]]:
+    """Get the k operator."""
+    if any(c.interpolation == "DST" for c in metadata.children):
+        msg = "Currently, we only support k operators for periodic axes."
+        raise NotImplementedError(msg)
+
+    points = _metadata.volume.fundamental_stacked_k_points(metadata)[axis].astype(
+        np.complex128
+    )
+    return momentum(basis.transformed_from_metadata(metadata).upcast(), points**2)
+
+
 def p[M: EvenlySpacedLengthMetadata, E: AxisDirections](
     metadata: TupleMetadata[tuple[M, ...], E], *, axis: int, hbar: float = hbar_value
 ) -> MomentumOperator[M, E, Ctype[Never], np.dtype[np.complexfloating]]:

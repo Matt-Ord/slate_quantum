@@ -22,12 +22,14 @@ from slate_quantum.dynamics.langevin._util import (
     LangevinParameters,
     SSEConfig,
     SSEMethod,
+    eval_delta_xp,
 )
 
 __all__ = [
     "LangevinParameters",
     "SSEConfig",
     "SSEMethod",
+    "eval_delta_xp",
     "solve_double_harmonic_ballistic_langevin",
     "solve_double_harmonic_langevin",
     "solve_double_harmonic_quantum_langevin",

@@ -118,11 +118,7 @@ def _build_environment_operators[M: EvenlySpacedLengthMetadata, E: AxisDirection
 
 
 @timed
-def solve[
-    M: EvenlySpacedLengthMetadata,
-    E: AxisDirections,
-    MT: TimeMetadata,
-](
+def solve[M: EvenlySpacedLengthMetadata, E: AxisDirections, MT: TimeMetadata](
     initial_state: StateWithMetadata[TupleMetadata[tuple[M, ...], E]],
     times: Basis[MT, Ctype[np.complexfloating]],
     parameters: LangevinParameters,
@@ -528,6 +524,10 @@ def solve_locations[
                 operator.build.k(normalized_metadata, axis=0),
                 normalized_basis,
             ),
+            operator_as_diagonal_qobj(
+                operator.build.k_squared(normalized_metadata, axis=0),
+                normalized_basis,
+            ),
             qutip.qeye(normalized_basis.size),  # type: ignore lib # cspell: disable-line
         ],
         options={
@@ -551,14 +551,18 @@ def solve_locations[
     )
     # |e^(i q x)| is equal to exp(-q^2 <delta x^2>/2)
     # delta_x^2 is therefore -2 log(|e^(i q x)|) / d_k^2
-    delta_x_square = (-2 / d_k**2) * np.log(
-        np.abs(np.array(result.runs_expect[0], dtype=np.complex128))  # type: ignore lib
+    delta_k_square = (
+        np.array(result.runs_expect[2], dtype=np.float64)  # type: ignore lib
+        - np.array(result.runs_expect[1], dtype=np.float64) ** 2  # type: ignore lib
     )
     # For now we assume the squeeze ratio is real. In this case
-    # delta_x ^2 = dimensionless_mass * length**2 / (2 * squeeze_ratio)
+    # delta_x ^2 = 1 / (2 * delta_k_square) = dimensionless_mass * length**2 / (2 * squeeze_ratio)
     squeeze_ratio = (
-        normalized_params.dimensionless_mass * normalized_params.lengthscale**2
-    ) / (2 * delta_x_square)
+        normalized_params.dimensionless_mass
+        * normalized_params.lengthscale**2
+        * delta_k_square
+    )
+
     return (
         Array(
             TupleBasis(
