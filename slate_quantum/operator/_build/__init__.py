@@ -13,6 +13,7 @@ from slate_quantum.operator._build._momentum import (
     all_filter_scatter,
     filter_scatter,
     k,
+    k_squared,
     momentum_from_function,
     p,
 )
@@ -71,6 +72,7 @@ __all__ = [
     "get_displacements_x_stacked",
     "harmonic_potential",
     "k",
+    "k_squared",
     "kinetic_basis",
     "kinetic_energy",
     "kinetic_hamiltonian",

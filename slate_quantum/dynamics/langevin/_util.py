@@ -172,6 +172,55 @@ def rescale_alpha(
     return (alpha.real * sf_alpha) + 1j * (alpha.imag / sf_alpha)
 
 
+@overload
+def eval_delta_xp(
+    params: LangevinParameters, ratio: complex
+) -> tuple[float, float]: ...
+
+
+@overload
+def eval_delta_xp(
+    params: LangevinParameters, ratio: np.ndarray[Any, np.dtype[np.complexfloating]]
+) -> tuple[
+    np.ndarray[Any, np.dtype[np.floating]], np.ndarray[Any, np.dtype[np.floating]]
+]: ...
+@overload
+def eval_delta_xp[M: BasisMetadata](
+    params: LangevinParameters,
+    ratio: Array[Basis[M], np.dtype[np.complexfloating]],
+) -> tuple[
+    Array[Basis[M], np.dtype[np.floating]],
+    Array[Basis[M], np.dtype[np.floating]],
+]: ...
+
+
+def eval_delta_xp(
+    params: LangevinParameters,
+    ratio: complex
+    | np.ndarray[Any, np.dtype[np.complexfloating]]
+    | Array[Basis[Any], np.dtype[np.complexfloating]],
+) -> tuple[
+    float
+    | np.ndarray[Any, np.dtype[np.floating]]
+    | Array[Basis[Any], np.dtype[np.floating]],
+    float
+    | np.ndarray[Any, np.dtype[np.floating]]
+    | Array[Basis[Any], np.dtype[np.floating]],
+]:
+    """Evaluate the coherent state alpha parameter for the harmonic oscillator."""
+    if isinstance(ratio, Array):
+        ratio = array.as_fundamental_basis(ratio)
+        ratio_raw = ratio.raw_data
+        delta_x = (params.dimensionless_mass * params.lengthscale**2) / (
+            2 * np.abs(ratio_raw)
+        )
+        delta_p = params.hbar / (2 * delta_x)
+        return (Array(ratio.basis, delta_x), Array(ratio.basis, delta_p))
+    delta_x = (params.dimensionless_mass * params.lengthscale**2) / (2 * np.abs(ratio))
+    delta_p = params.hbar / (2 * delta_x)
+    return (delta_x, delta_p)
+
+
 def rescale_simulation_metadata[M: EvenlySpacedLengthMetadata, E: AxisDirections](
     metadata: TupleMetadata[tuple[M, ...], E],
     in_parameters: LangevinParameters,
