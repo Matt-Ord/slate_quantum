@@ -336,12 +336,18 @@ def test_build_fcc_operator() -> None:
     eta = 2 * np.pi * (2 / np.sqrt(3))
     expected = operator.build.potential_from_function(
         metadata,
-        lambda x: (1 / 3)
-        + (2 / 9)
-        * (
-            np.cos(eta * x[0] + 0 * x[1])
-            + np.cos(eta * np.cos(np.pi / 3) * x[0] + eta * np.sin(np.pi / 3) * x[1])
-            + np.cos(-eta * np.cos(np.pi / 3) * x[0] + eta * np.sin(np.pi / 3) * x[1])
+        lambda x: (
+            (1 / 3)
+            + (2 / 9)
+            * (
+                np.cos(eta * x[0] + 0 * x[1])
+                + np.cos(
+                    eta * np.cos(np.pi / 3) * x[0] + eta * np.sin(np.pi / 3) * x[1]
+                )
+                + np.cos(
+                    -eta * np.cos(np.pi / 3) * x[0] + eta * np.sin(np.pi / 3) * x[1]
+                )
+            )
         ),
     )
     np.testing.assert_allclose(actual.as_array(), expected.as_array())
@@ -379,13 +385,17 @@ def test_build_periodic_cl_operators() -> None:
         [
             operator.build.potential_from_function(
                 metadata,
-                lambda x: np.cos(2 * np.pi * x[0] / delta_x)
-                / np.sqrt(metadata.children[0].fundamental_size),
+                lambda x: (
+                    np.cos(2 * np.pi * x[0] / delta_x)
+                    / np.sqrt(metadata.children[0].fundamental_size)
+                ),
             ),
             operator.build.potential_from_function(
                 metadata,
-                lambda x: np.sin(2 * np.pi * x[0] / delta_x)
-                / np.sqrt(metadata.children[0].fundamental_size),
+                lambda x: (
+                    np.sin(2 * np.pi * x[0] / delta_x)
+                    / np.sqrt(metadata.children[0].fundamental_size)
+                ),
             ),
         ]
     )
@@ -396,13 +406,17 @@ def test_build_periodic_cl_operators() -> None:
         [
             operator.build.potential_from_function(
                 metadata,
-                lambda x: np.exp(-1j * 2 * np.pi * x[0] / delta_x)
-                / np.sqrt(metadata.children[0].fundamental_size),
+                lambda x: (
+                    np.exp(-1j * 2 * np.pi * x[0] / delta_x)
+                    / np.sqrt(metadata.children[0].fundamental_size)
+                ),
             ),
             operator.build.potential_from_function(
                 metadata,
-                lambda x: np.exp(1j * 2 * np.pi * x[0] / delta_x)
-                / np.sqrt(metadata.children[0].fundamental_size),
+                lambda x: (
+                    np.exp(1j * 2 * np.pi * x[0] / delta_x)
+                    / np.sqrt(metadata.children[0].fundamental_size)
+                ),
             ),
         ]
     )
