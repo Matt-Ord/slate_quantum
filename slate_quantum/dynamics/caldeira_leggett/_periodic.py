@@ -556,8 +556,8 @@ def solve_locations[
         - np.array(result.runs_expect[1], dtype=np.float64) ** 2  # type: ignore lib
     )
     # For now we assume the squeeze ratio is real. In this case
-    # delta_x ^2 = 1 / (2 * delta_k_square) = dimensionless_mass * length**2 / (2 * squeeze_ratio)
-    squeeze_ratio = (
+    # delta_k ^2 = (2 * squeeze_ratio) / (dimensionless_mass * length**2 )
+    squeeze_ratio = 0.5 * (
         normalized_params.dimensionless_mass
         * normalized_params.lengthscale**2
         * delta_k_square
