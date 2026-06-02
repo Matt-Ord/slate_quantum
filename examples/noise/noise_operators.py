@@ -30,7 +30,7 @@ if __name__ == "__main__":
         array.as_inner_basis(array.as_outer_basis(array.as_inner_basis(kernel)))
     )
     fig, ax, _ = plot.array_against_axes_1d(full_data)
-    ax.set_title(r"Isotropic Gaussian Kernel with $\sigma = \pi / 2$")
+    ax.set_title(r"Isotropic Gaussian Kernel with $\sigma = \pi / 2$")  # type: ignore[unknown]
     fig.show()
 
     # To represent the noise we need some choice of noise operators.
@@ -51,7 +51,7 @@ if __name__ == "__main__":
             measure="real",
         )
     fig.show()
-    ax.set_title("The real part of the first three noise operators")
+    ax.set_title("The real part of the first three noise operators")  # type: ignore[unknown]
 
     # If we take only the first few operators, we can see that they
     # approximate the kernel.
@@ -71,8 +71,8 @@ if __name__ == "__main__":
     line.set_linestyle("--")
     _, _, line = plot.array_against_axes_1d(restored_data, ax=ax)
     line.set_label("Restored kernel")
-    ax.set_title("Restored noise kernel, from the first 3 operators")
-    ax.legend()
+    ax.set_title("Restored noise kernel, from the first 3 operators")  # type: ignore[unknown]
+    ax.legend()  # type: ignore[unknown]
     fig.show()
 
     plot.wait_for_close()

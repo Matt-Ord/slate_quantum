@@ -42,8 +42,8 @@ energies, norms = caldeira_leggett.solve_periodic_energies(
 )
 norm = norms[0, :]
 fig, ax, line = array_against_basis(norm)
-fig.savefig("temp.png")
+fig.savefig("temp.png")  # type: ignore[unknown]
 
 
 fig, ax, line = array_against_basis(energies[0, :], measure="abs")
-fig.savefig("temp1.png")
+fig.savefig("temp1.png")  # type: ignore[unknown]
