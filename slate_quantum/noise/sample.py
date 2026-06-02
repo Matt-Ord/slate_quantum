@@ -21,7 +21,6 @@ if TYPE_CHECKING:
         DiagonalNoiseKernelWithMetadata,
         NoiseOperatorList,
     )
-    from slate_quantum.operator._operator import OperatorListWithMetadata
 
 
 def sample_noise_from_operators[M: BasisMetadata](
