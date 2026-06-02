@@ -30,13 +30,13 @@ if __name__ == "__main__":
         array.as_inner_basis(array.as_outer_basis(array.as_inner_basis(kernel)))
     )
     fig, ax, _ = plot.array_against_axes_1d(full_data)
-    ax.set_title(r"Isotropic Gaussian Kernel with $\sigma = \pi / \sqrt{2}$")
+    ax.set_title(r"Isotropic Gaussian Kernel with $\sigma = \pi / \sqrt{2}$")  # type: ignore[unknown]
     fig.show()
     # We can also plot the 'full' isotropic kernel, to see the correlation
     # between all points in the system.
     diagonal_data = array.flatten(array.as_outer_basis(array.as_inner_basis(kernel)))  # type: ignore refactor
     fig, ax, _ = plot.array_against_axes_2d(diagonal_data)  # type: ignore refactor
-    ax.set_title(r"Isotropic Gaussian Kernel with $\sigma = \pi / \sqrt{2}$")
+    ax.set_title(r"Isotropic Gaussian Kernel with $\sigma = \pi / \sqrt{2}$")  # type: ignore[unknown]
     fig.show()
 
     # If we want to represent the noise using the caldeira-leggett model
@@ -52,8 +52,8 @@ if __name__ == "__main__":
     line.set_label("Gaussian Kernel")
     _, _, line = plot.array_against_axes_1d(cl_data, ax=ax)
     line.set_label("Caldeira Leggett Kernel")
-    ax.legend()
-    ax.set_title("Comaprison of CL approximation to Gaussian Kernel")
+    ax.legend()  # type: ignore[unknown]
+    ax.set_title("Comaprison of CL approximation to Gaussian Kernel")  # type: ignore[unknown]
     fig.show()
     # We find that the CL kernel is a good approximation to the Gaussian kernel
     # for small displacements, but this approximation falls apart as we

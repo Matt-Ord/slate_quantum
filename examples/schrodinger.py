@@ -35,22 +35,22 @@ if __name__ == "__main__":
     )
     # The state changes in time, but only by a phase difference
     fig, ax, _anim0 = animate_data_over_list_1d_x(evolution, measure="real")
-    ax.set_title("Real part of the state")
+    ax.set_title("Real part of the state")  # type: ignore[unknown]
     fig.show()
     # If we plot the absolute value of the state, we see no change
     fig, ax, _anim1 = animate_data_over_list_1d_x(evolution, measure="abs")
-    ax.set_title("Abs state, which does not change with time")
+    ax.set_title("Abs state, which does not change with time")  # type: ignore[unknown]
     fig.show()
 
     # We can also use Qutip to solve the same problem without using eigenvalue decomposition.
     evolution = solve_schrodinger_equation(initial_state, times, hamiltonian)
     # The state changes in time, but only by a phase difference
     fig, ax, _anim2 = animate_data_over_list_1d_x(evolution, measure="real")
-    ax.set_title("Real part of the state as simulated by Qutip")
+    ax.set_title("Real part of the state as simulated by Qutip")  # type: ignore[unknown]
     fig.show()
     # If we plot the absolute value of the state, we see no change
     fig, ax, _anim3 = animate_data_over_list_1d_x(evolution, measure="abs")
-    ax.set_title("Abs state, which does not change with time as simulated by Qutip")
+    ax.set_title("Abs state, which does not change with time as simulated by Qutip")  # type: ignore[unknown]
     fig.show()
 
     plot.wait_for_close()

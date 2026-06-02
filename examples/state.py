@@ -36,10 +36,10 @@ if __name__ == "__main__":
     line.set_label("Coherent State from Function")
     line.set_linestyle("--")
 
-    ax.set_title("Quantum States Visualization")
-    ax.set_xlabel("Position /m")
-    ax.set_ylabel(r"np.real($\psi(x)$)")
-    ax.legend()
+    ax.set_title("Quantum States Visualization")  # type: ignore[unknown]
+    ax.set_xlabel("Position /m")  # type: ignore[unknown]
+    ax.set_ylabel(r"np.real($\psi(x)$)")  # type: ignore[unknown]
+    ax.legend()  # type: ignore[unknown]
     fig.show()
 
     plot.wait_for_close()

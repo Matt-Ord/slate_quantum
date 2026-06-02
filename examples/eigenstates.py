@@ -20,13 +20,13 @@ if __name__ == "__main__":
     fig, ax = get_figure()
     for state in list(eigenstates)[:3]:
         plot.array_against_axes_1d(state, ax=ax, measure="abs")
-    ax.set_title("Free Particle Eigenstates in Position Space")
+    ax.set_title("Free Particle Eigenstates in Position Space")  # type: ignore[unknown]
     fig.show()
 
     fig, ax = get_figure()
     for state in list(eigenstates)[:3]:
         plot.array_against_axes_1d_k(state, ax=ax, measure="abs")
-    ax.set_title("Free Particle Eigenstates in Momentum Space")
+    ax.set_title("Free Particle Eigenstates in Momentum Space")  # type: ignore[unknown]
     fig.show()
 
     # Now we modify the potential to have a barrier
@@ -38,7 +38,7 @@ if __name__ == "__main__":
     fig, ax = get_figure()
     for state in list(eigenstates)[:3]:
         plot.array_against_axes_1d(state, ax=ax, measure="abs")
-    ax.set_title("Particle in a Potential Well Eigenstates in Position Space")
+    ax.set_title("Particle in a Potential Well Eigenstates in Position Space")  # type: ignore[unknown]
     fig.show()
 
     plot.wait_for_close()
