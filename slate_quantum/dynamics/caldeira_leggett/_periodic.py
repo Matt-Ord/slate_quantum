@@ -593,6 +593,6 @@ def solve_locations[
                     basis.as_fundamental(times),
                 )
             ).upcast(),
-            np.array(result.runs_expect[2], dtype=np.float64),  # type: ignore lib
+            np.array(result.runs_expect[3], dtype=np.float64),  # type: ignore lib
         ),
     )
