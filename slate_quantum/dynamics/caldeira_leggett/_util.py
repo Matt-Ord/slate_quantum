@@ -105,7 +105,6 @@ def _full_to_qutip_diagonal(
     return qutip.qdiags(  # type: ignore[unknown] # cspell: disable-line
         clean_diags,
         clean_offsets,
-        dims=(data.shape[0], data.shape[1]),
         shape=data.shape,
     )
 
