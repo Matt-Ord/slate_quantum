@@ -1,4 +1,5 @@
 """Representation of Quantum Operators."""
+from __future__ import annotations
 
 from slate_quantum.operator import _build as build
 from slate_quantum.operator import _linalg as linalg

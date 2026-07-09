@@ -1,3 +1,4 @@
+from __future__ import annotations
 from slate_quantum.noise.build._build import (  # noqa: D104
     axis_kernel_from_function_stacked,
     gaussian_correlation_fn,

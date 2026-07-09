@@ -1,4 +1,5 @@
 """Solvers for the Langevin, and local basis Quantum langevin technique."""
+from __future__ import annotations
 
 from slate_quantum.dynamics.langevin._double_harmonic import (
     solve_double_harmonic_ballistic_langevin,

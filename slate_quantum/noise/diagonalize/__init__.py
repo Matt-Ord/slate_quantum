@@ -1,3 +1,4 @@
+from __future__ import annotations
 from slate_quantum.noise.diagonalize._eigenvalue import (  # noqa: D104
     get_periodic_noise_operators_diagonal_eigenvalue,
     get_periodic_noise_operators_eigenvalue,

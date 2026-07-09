@@ -1,4 +1,5 @@
 """Simulations of the Caldeira-Leggett model."""
+from __future__ import annotations
 
 from slate_quantum.dynamics.caldeira_leggett._periodic import (
     get_eigenstate_energies as get_eigenstate_energies_periodic,
