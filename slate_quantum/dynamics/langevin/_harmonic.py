@@ -14,6 +14,7 @@ from slate_core.util import timed
 from slate_quantum.dynamics.langevin._util import (
     RustSSEConfig,
     rescale_alpha,
+    rescale_local_state,
     rescale_times,
 )
 from slate_quantum.metadata import TimeMetadata
@@ -330,7 +331,12 @@ def solve_harmonic_quantum_langevin[
                 out_parameter=normalized_params,
             ),
             initial_state[1],
-            initial_state[2].as_array().tolist(),
+            rescale_local_state(
+                initial_state[2].as_array(),
+                initial_state[1],
+                in_parameter=parameters,
+                out_parameter=normalized_params,
+            ).tolist(),
         ),
         get_internal_parameters(
             normalized_params,
@@ -361,6 +367,11 @@ def solve_harmonic_quantum_langevin[
     ).upcast()
     out_states = StateList(
         TupleBasis((out_basis, basis.as_fundamental(initial_state[2].basis))).upcast(),
-        data[:, :, 2:],
+        rescale_local_state(
+            data[:, :, 2:],
+            ratio_res,
+            in_parameter=normalized_params,
+            out_parameter=parameters,
+        ),
     )
     return (Array(out_basis, alpha_res), Array(out_basis, ratio_res), out_states)

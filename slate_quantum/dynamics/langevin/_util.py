@@ -172,6 +172,34 @@ def rescale_alpha(
     return (alpha.real * sf_alpha) + 1j * (alpha.imag / sf_alpha)
 
 
+def rescale_local_state(
+    psi: np.ndarray[Any, np.dtype[np.complexfloating]],
+    ratio: complex | np.ndarray[Any, np.dtype[np.complexfloating]],
+    *,
+    in_parameter: LangevinParameters,
+    out_parameter: LangevinParameters,
+) -> np.ndarray[Any, np.dtype[np.complexfloating]]:
+    r"""Rescale the amplitudes of a state in the local squeezed number basis.
+
+    The squeeze ratio :math:`R` and the local ground state do not depend on the
+    lengthscale, but the phase of the local lowering operator does,
+
+    .. math::
+        \hat{b} \propto \frac{R}{\Theta + R}(\hat{x} + i \kappa \hat{p}),
+
+    so the amplitude of :math:`|\alpha, R; n\rangle` picks up a phase
+    :math:`e^{i n (\arg(\Theta_{in} + R) - \arg(\Theta_{out} + R))}`.
+
+    ``psi`` has shape ``(..., n_states)`` and ``ratio`` has shape ``(...)``.
+    """
+    n = np.arange(psi.shape[-1])
+    ratio = np.asarray(ratio)
+    phase = np.angle(in_parameter.dimensionless_mass + ratio) - np.angle(
+        out_parameter.dimensionless_mass + ratio
+    )
+    return psi * np.exp(1j * n * phase[..., np.newaxis])
+
+
 @overload
 def eval_delta_xp(
     params: LangevinParameters, ratio: complex
