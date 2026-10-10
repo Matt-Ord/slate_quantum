@@ -1,5 +1,6 @@
 import warnings
-from typing import TYPE_CHECKING
+from contextlib import contextmanager
+from typing import TYPE_CHECKING, Any, Never, override
 
 import numpy as np
 import scipy.sparse  # type: ignore[unknown]
@@ -10,10 +11,16 @@ from slate_quantum.operator import operator_basis
 
 try:
     import qutip  # type: ignore lib
+    import qutip.solver.sode.rouchon  # type: ignore lib
+    import qutip.solver.sode.sode  # type: ignore lib
+    from qutip.solver.sode._noise import Wiener  # type: ignore lib
 except ImportError:
     qutip = None
+    Wiener = object
 
 if TYPE_CHECKING:
+    from collections.abc import Iterator
+
     from qutip import Qobj  # type: ignore lib
     from slate_core import Basis
 
@@ -155,3 +162,47 @@ def state_as_qobj[
         warnings.warn(msg, stacklevel=3, category=UserWarning)
         state_raw /= np.linalg.norm(state_raw)
     return qutip.Qobj(state_raw)
+
+
+class _WindowedWiener(Wiener):  # type: ignore lib
+    """A Wiener process which only stores the noise of the current integration step.
+
+    The qutip Wiener process stores the full history of the noise, and copies it
+    each time the history is extended. For long simulations this history exhausts
+    the available memory, and copying it dominates the run time.
+    The same random numbers are drawn in the same order, so the noise is identical.
+    """
+
+    _offset: int = 0
+
+    def dW(self, t: float, N: int) -> np.ndarray[Any, np.dtype[np.float64]]:  # noqa: N802, N803
+        """Get the noise for the N steps starting at t, discarding all earlier noise."""
+        idx0 = round((t - self.t0) / self.dt)  # type: ignore lib
+        self.noise = self.noise[idx0 - self._offset :]  # type: ignore lib
+        self._offset = idx0
+        if self.noise.shape[0] < N:  # type: ignore lib
+            self._extend(N)  # type: ignore lib
+        return self.noise[:N]  # type: ignore lib
+
+    @override
+    def __call__(self, t: float) -> Never:  # type: ignore lib
+        msg = "The history of a windowed Wiener process is not stored."
+        raise NotImplementedError(msg)
+
+
+@contextmanager
+def windowed_wiener() -> Iterator[None]:
+    """Use a Wiener process without a stored history in the qutip stochastic solvers.
+
+    qutip runs parallel trajectories in forked processes, which inherit the patch.
+    Inside the context, the Wiener process cannot be used as feedback.
+    """
+    modules = (qutip.solver.sode.sode, qutip.solver.sode.rouchon)  # type: ignore lib
+    originals = [module.Wiener for module in modules]  # type: ignore lib
+    for module in modules:
+        module.Wiener = _WindowedWiener  # type: ignore lib
+    try:
+        yield
+    finally:
+        for module, original in zip(modules, originals, strict=True):
+            module.Wiener = original  # type: ignore lib
