@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Unpack
+from typing import TYPE_CHECKING, Any, Unpack
 
 import numpy as np
 import slate_core
@@ -413,6 +413,66 @@ def solve_energies[
     )
 
 
+def _squeeze_ratio_from_expectations(
+    scattering: np.ndarray[Any, np.dtype[np.complex128]],
+    scattering_k: np.ndarray[Any, np.dtype[np.complex128]],
+    *,
+    d_k: float,
+    parameters: LangevinParameters,
+) -> np.ndarray[Any, np.dtype[np.complex128]]:
+    """Get the squeeze ratio of a Gaussian state from <e^(i d_k x)> and <e^(i d_k x) k>.
+
+    For a Gaussian wavefunction psi(x) ~ exp(-A (x - <x>)^2 + i <p> x / hbar)
+    |<e^(i q x)>| = exp(-q^2 <delta x^2> / 2), which is exact on a periodic
+    domain for a wrapped Gaussian, so <delta x^2> = -2 log(|<e^(i q x)>|) / q^2.
+    The covariance of x and p is found from
+    <e^(i q x) p> / <e^(i q x)> = <p> - hbar q / 2 + i q <{x - <x>, p - <p>}> / 2.
+    Re(A) = 1 / (4 <delta x^2>) and Im(A) = -2 Re(A) covariance_xp / hbar.
+    The squeeze ratio is R = 2 * dimensionless_mass * lengthscale^2 * A, such that
+    <delta x^2> = dimensionless_mass * lengthscale^2 / (R + R*) and
+    <delta p^2> = hbar^2 |R|^2 / (dimensionless_mass * lengthscale^2 (R + R*)).
+    """
+    delta_x_square = -2 * np.log(np.abs(scattering)) / d_k**2
+    covariance_xp = parameters.hbar * np.imag(scattering_k / scattering) / d_k
+    width_parameter = (1 - 2j * covariance_xp / parameters.hbar) / (4 * delta_x_square)
+    return (
+        2 * parameters.dimensionless_mass * parameters.lengthscale**2 * width_parameter
+    ).astype(np.complex128)
+
+
+def _get_location_observables(
+    result: Any,  # noqa: ANN401
+    *,
+    scattering_scale: float,
+    d_k: float,
+    parameters: LangevinParameters,
+) -> tuple[
+    np.ndarray[Any, np.dtype[np.complexfloating]],
+    np.ndarray[Any, np.dtype[np.complex128]],
+    np.ndarray[Any, np.dtype[np.float64]],
+]:
+    """Get (alpha, squeeze_ratio, norm) from the expectation values of solve_locations.
+
+    The expectations are of e^(i d_k x) (up to a factor scattering_scale),
+    k, the identity and e^(i d_k x) k.
+    """
+    norm = np.array(result.runs_expect[2], dtype=np.float64)
+    scattering = np.array(result.runs_expect[0], dtype=np.complex128) / (
+        norm * scattering_scale
+    )
+    scattering_k = np.array(result.runs_expect[3], dtype=np.complex128) / (
+        norm * scattering_scale
+    )
+    alpha = parameters.eval_alpha(
+        np.unwrap(np.angle(scattering)) / d_k,
+        parameters.hbar * np.array(result.runs_expect[1], dtype=np.float64) / norm,
+    )
+    squeeze_ratio = _squeeze_ratio_from_expectations(
+        scattering, scattering_k, d_k=d_k, parameters=parameters
+    )
+    return alpha, squeeze_ratio, norm
+
+
 @timed
 def solve_locations[
     M: EvenlySpacedLengthMetadata,
@@ -508,6 +568,10 @@ def solve_locations[
     #             - (S dagger S / 2 - <S + S dagger> S / 2 + <S + S dagger>^2 / 8) |psi(t)> dt
     #             + (S - (<S + S dagger> / 2)) |psi(t)> dW
     n_trajectories = kwargs.get("n_trajectories", 1)
+    scattering_qobj = operator_as_diagonal_qobj(
+        operator.build.scattering_operator(normalized_metadata, n_k=(1,)),
+        normalized_basis,
+    )
     with windowed_wiener():
         result = qutip.ssesolve(  # type: ignore lib
             H=operator_as_diagonal_qobj(hamiltonian, normalized_basis)
@@ -520,19 +584,17 @@ def solve_locations[
                 for op in environment_operators
             ],
             e_ops=[
-                operator_as_diagonal_qobj(
-                    operator.build.scattering_operator(normalized_metadata, n_k=(1,)),
-                    normalized_basis,
-                ),
+                scattering_qobj,
                 operator_as_diagonal_qobj(
                     operator.build.k(normalized_metadata, axis=0),
                     normalized_basis,
                 ),
-                operator_as_diagonal_qobj(
-                    operator.build.k_squared(normalized_metadata, axis=0),
+                qutip.qeye(normalized_basis.size),  # type: ignore lib # cspell: disable-line
+                scattering_qobj  # type: ignore lib
+                * operator_as_diagonal_qobj(
+                    operator.build.k(normalized_metadata, axis=0),
                     normalized_basis,
                 ),
-                qutip.qeye(normalized_basis.size),  # type: ignore lib # cspell: disable-line
             ],
             options={
                 "progress_bar": "enhanced",
@@ -545,29 +607,13 @@ def solve_locations[
             heterodyne=True,
         )
 
-    d_k = (2 * np.pi) / normalized_basis.metadata().children[0].delta
-    alpha = normalized_params.eval_alpha(
-        np.unwrap(
-            np.angle(np.array(result.runs_expect[0], dtype=np.complex128))  # type: ignore lib
-        )
-        / d_k,
-        normalized_params.hbar * np.array(result.runs_expect[1], dtype=np.float64),  # type: ignore lib
+    alpha, squeeze_ratio, norm = _get_location_observables(
+        result,
+        scattering_scale=np.abs(scattering_qobj.full()).max(),  # type: ignore lib
+        d_k=(2 * np.pi) / normalized_basis.metadata().children[0].delta,
+        parameters=normalized_params,
     )
-    # |e^(i q x)| is equal to exp(-q^2 <delta x^2>/2)
-    # delta_x^2 is therefore -2 log(|e^(i q x)|) / d_k^2
-    delta_k_square = (
-        np.array(result.runs_expect[2], dtype=np.float64)  # type: ignore lib
-        - np.array(result.runs_expect[1], dtype=np.float64) ** 2  # type: ignore lib
-    )
-    # For now we assume the squeeze ratio is real. In this case
-    # delta_k ^2 = (0.5 * squeeze_ratio) / (dimensionless_mass * length**2 )
-    squeeze_ratio = 2 * (
-        normalized_params.dimensionless_mass
-        * normalized_params.lengthscale**2
-        * delta_k_square
-    )
-
-    return (
+    return (  # pyright: ignore[reportReturnType] the basis is upcast
         Array(
             TupleBasis(
                 (
@@ -597,6 +643,6 @@ def solve_locations[
                     basis.as_fundamental(times),
                 )
             ).upcast(),
-            np.array(result.runs_expect[3], dtype=np.float64),  # type: ignore lib
+            norm,
         ),
     )
