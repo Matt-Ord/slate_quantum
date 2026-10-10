@@ -21,6 +21,7 @@ from slate_quantum import operator
 from slate_quantum.dynamics.caldeira_leggett._util import (
     operator_as_diagonal_qobj,
     state_as_qobj,
+    windowed_wiener,
 )
 from slate_quantum.dynamics.langevin._util import (
     QutipSSEConfig,
@@ -194,27 +195,28 @@ def solve[M: EvenlySpacedLengthMetadata, E: AxisDirections, MT: TimeMetadata](
     #             - (S dagger S / 2 - <S + S dagger> S / 2 + <S + S dagger>^2 / 8) |psi(t)> dt
     #             + (S - (<S + S dagger> / 2)) |psi(t)> dW
     n_trajectories = kwargs.get("n_trajectories", 1)
-    result = qutip.ssesolve(  # type: ignore lib
-        H=operator_as_diagonal_qobj(hamiltonian, normalized_basis)
-        / normalized_params.hbar,
-        psi0=state_as_qobj(initial_state, unnormalized_basis),
-        tlist=normalized_times,
-        ntraj=n_trajectories,
-        sc_ops=[
-            operator_as_diagonal_qobj(op, normalized_basis)
-            for op in environment_operators
-        ],
-        options={
-            "progress_bar": "enhanced",
-            "store_states": True,
-            "keep_runs_results": True,
-            "method": as_qutip_name(kwargs.get("method", "Euler")),
-            "normalize_output": False,
-            "dt": kwargs.get("target_delta", DEFAULT_TARGET_DELTA),
-            "map": "parallel" if n_trajectories > 1 else None,
-        },
-        heterodyne=True,
-    )
+    with windowed_wiener():
+        result = qutip.ssesolve(  # type: ignore lib
+            H=operator_as_diagonal_qobj(hamiltonian, normalized_basis)
+            / normalized_params.hbar,
+            psi0=state_as_qobj(initial_state, unnormalized_basis),
+            tlist=normalized_times,
+            ntraj=n_trajectories,
+            sc_ops=[
+                operator_as_diagonal_qobj(op, normalized_basis)
+                for op in environment_operators
+            ],
+            options={
+                "progress_bar": "enhanced",
+                "store_states": True,
+                "keep_runs_results": True,
+                "method": as_qutip_name(kwargs.get("method", "Euler")),
+                "normalize_output": False,
+                "dt": kwargs.get("target_delta", DEFAULT_TARGET_DELTA),
+                "map": "parallel" if n_trajectories > 1 else None,
+            },
+            heterodyne=True,
+        )
 
     return StateList(
         TupleBasis(
@@ -367,26 +369,27 @@ def solve_energies[
     #             + (S - (<S + S dagger> / 2)) |psi(t)> dW
     n_trajectories = kwargs.get("n_trajectories", 1)
     hamiltonian_qutip = operator_as_diagonal_qobj(hamiltonian, normalized_basis)
-    result = qutip.ssesolve(  # type: ignore lib
-        H=hamiltonian_qutip / normalized_params.hbar,
-        psi0=state_as_qobj(initial_state, unnormalized_basis),
-        tlist=normalized_times,
-        ntraj=n_trajectories,
-        sc_ops=[
-            operator_as_diagonal_qobj(op, normalized_basis)
-            for op in environment_operators
-        ],
-        e_ops=[hamiltonian_qutip, qutip.qeye(normalized_basis.size)],  # type: ignore lib # cspell: disable-line
-        options={
-            "progress_bar": "enhanced",
-            "store_states": False,
-            "keep_runs_results": True,
-            "method": as_qutip_name(kwargs.get("method", "Euler")),
-            "dt": kwargs.get("target_delta", DEFAULT_TARGET_DELTA),
-            "map": "parallel" if n_trajectories > 1 else None,
-        },
-        heterodyne=True,
-    )
+    with windowed_wiener():
+        result = qutip.ssesolve(  # type: ignore lib
+            H=hamiltonian_qutip / normalized_params.hbar,
+            psi0=state_as_qobj(initial_state, unnormalized_basis),
+            tlist=normalized_times,
+            ntraj=n_trajectories,
+            sc_ops=[
+                operator_as_diagonal_qobj(op, normalized_basis)
+                for op in environment_operators
+            ],
+            e_ops=[hamiltonian_qutip, qutip.qeye(normalized_basis.size)],  # type: ignore lib # cspell: disable-line
+            options={
+                "progress_bar": "enhanced",
+                "store_states": False,
+                "keep_runs_results": True,
+                "method": as_qutip_name(kwargs.get("method", "Euler")),
+                "dt": kwargs.get("target_delta", DEFAULT_TARGET_DELTA),
+                "map": "parallel" if n_trajectories > 1 else None,
+            },
+            heterodyne=True,
+        )
 
     return (
         Array(
@@ -505,41 +508,42 @@ def solve_locations[
     #             - (S dagger S / 2 - <S + S dagger> S / 2 + <S + S dagger>^2 / 8) |psi(t)> dt
     #             + (S - (<S + S dagger> / 2)) |psi(t)> dW
     n_trajectories = kwargs.get("n_trajectories", 1)
-    result = qutip.ssesolve(  # type: ignore lib
-        H=operator_as_diagonal_qobj(hamiltonian, normalized_basis)
-        / normalized_params.hbar,
-        psi0=state_as_qobj(initial_state, unnormalized_basis),
-        tlist=normalized_times,
-        ntraj=n_trajectories,
-        sc_ops=[
-            operator_as_diagonal_qobj(op, normalized_basis)
-            for op in environment_operators
-        ],
-        e_ops=[
-            operator_as_diagonal_qobj(
-                operator.build.scattering_operator(normalized_metadata, n_k=(1,)),
-                normalized_basis,
-            ),
-            operator_as_diagonal_qobj(
-                operator.build.k(normalized_metadata, axis=0),
-                normalized_basis,
-            ),
-            operator_as_diagonal_qobj(
-                operator.build.k_squared(normalized_metadata, axis=0),
-                normalized_basis,
-            ),
-            qutip.qeye(normalized_basis.size),  # type: ignore lib # cspell: disable-line
-        ],
-        options={
-            "progress_bar": "enhanced",
-            "store_states": False,
-            "keep_runs_results": True,
-            "method": as_qutip_name(kwargs.get("method", "Euler")),
-            "dt": kwargs.get("target_delta", DEFAULT_TARGET_DELTA),
-            "map": "parallel" if n_trajectories > 1 else None,
-        },
-        heterodyne=True,
-    )
+    with windowed_wiener():
+        result = qutip.ssesolve(  # type: ignore lib
+            H=operator_as_diagonal_qobj(hamiltonian, normalized_basis)
+            / normalized_params.hbar,
+            psi0=state_as_qobj(initial_state, unnormalized_basis),
+            tlist=normalized_times,
+            ntraj=n_trajectories,
+            sc_ops=[
+                operator_as_diagonal_qobj(op, normalized_basis)
+                for op in environment_operators
+            ],
+            e_ops=[
+                operator_as_diagonal_qobj(
+                    operator.build.scattering_operator(normalized_metadata, n_k=(1,)),
+                    normalized_basis,
+                ),
+                operator_as_diagonal_qobj(
+                    operator.build.k(normalized_metadata, axis=0),
+                    normalized_basis,
+                ),
+                operator_as_diagonal_qobj(
+                    operator.build.k_squared(normalized_metadata, axis=0),
+                    normalized_basis,
+                ),
+                qutip.qeye(normalized_basis.size),  # type: ignore lib # cspell: disable-line
+            ],
+            options={
+                "progress_bar": "enhanced",
+                "store_states": False,
+                "keep_runs_results": True,
+                "method": as_qutip_name(kwargs.get("method", "Euler")),
+                "dt": kwargs.get("target_delta", DEFAULT_TARGET_DELTA),
+                "map": "parallel" if n_trajectories > 1 else None,
+            },
+            heterodyne=True,
+        )
 
     d_k = (2 * np.pi) / normalized_basis.metadata().children[0].delta
     alpha = normalized_params.eval_alpha(
